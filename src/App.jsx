@@ -1,0 +1,90 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { LunaProvider } from './context/LunaContext';
+
+import { Landing } from './pages/Landing';
+import { Login } from './pages/Login';
+import { Signup } from './pages/Signup';
+import { Onboarding } from './pages/Onboarding';
+
+import { Sidebar } from './components/common/Sidebar';
+import { Navbar } from './components/common/Navbar';
+import { QuickActions } from './components/common/QuickActions';
+
+import { DashboardPage } from './pages/app/DashboardPage';
+import { ChatPage } from './pages/app/ChatPage';
+import { ExpensesPage } from './pages/app/ExpensesPage';
+import { PlannerPage } from './pages/app/PlannerPage';
+import { MemoriesPage } from './pages/app/MemoriesPage';
+import { SummaryPage } from './pages/app/SummaryPage';
+import { SettingsPage } from './pages/app/SettingsPage';
+
+function AppLayout() {
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
+      <Sidebar />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowX: 'hidden' }}>
+        <Navbar />
+        <main style={{ flex: 1 }}>
+          <Outlet />
+        </main>
+      </div>
+      <QuickActions />
+    </div>
+  );
+}
+
+function ProtectedRoute() {
+  const { user, token, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'var(--bg-primary)', color: 'var(--accent-primary)', fontSize: '1rem', fontWeight: '600'
+      }}>
+        Verifying Session...
+      </div>
+    );
+  }
+
+  if (!token && !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <AppLayout />;
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <LunaProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+
+            {/* Main Application Protected Shell Routes */}
+            <Route path="/app" element={<ProtectedRoute />}>
+              <Route index element={<Navigate to="/app/chat" replace />} />
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="chat" element={<ChatPage />} />
+              <Route path="expenses" element={<ExpensesPage />} />
+              <Route path="planner" element={<PlannerPage />} />
+              <Route path="memories" element={<MemoriesPage />} />
+              <Route path="summary" element={<SummaryPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+            </Route>
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </LunaProvider>
+    </AuthProvider>
+  );
+}
