@@ -148,6 +148,111 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--accent-primary);
 }
 
+/* Sidebar Responsive & Collapsed Styles */
+.sidebar-container {
+  width: 260px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px;
+  z-index: 100;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s ease, padding 0.3s ease;
+}
+
+.sidebar-container.collapsed {
+  width: 76px;
+  padding: 20px 10px;
+}
+
+.sidebar-container.collapsed .sidebar-text,
+.sidebar-container.collapsed .sidebar-badge {
+  display: none !important;
+}
+
+.sidebar-container.collapsed .sidebar-header {
+  justify-content: center;
+  padding: 0 0 20px 0 !important;
+}
+
+.sidebar-container.collapsed .sidebar-footer-user {
+  justify-content: center;
+}
+
+.sidebar-container.collapsed .sidebar-user-details {
+  display: none !important;
+}
+
+/* Mobile Sidebar Drawer Overlay */
+.sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .sidebar-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sidebar-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    width: 280px !important;
+    z-index: 1000;
+    transform: translateX(-100%);
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+  }
+
+  .sidebar-container.mobile-open {
+    transform: translateX(0);
+  }
+}
+
+/* Responsive Grid & Layout Utility Classes */
+@media (max-width: 768px) {
+  .responsive-grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .responsive-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .responsive-form-4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .responsive-form-5 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .navbar-container {
+    padding: 0 14px !important;
+  }
+
+  .page-container {
+    padding: 16px !important;
+  }
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }

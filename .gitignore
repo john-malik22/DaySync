@@ -19,3 +19,5 @@ Thumbs.db
 
 # Local database
 server/data_store.json
+.vercel
+.env*

@@ -62,7 +62,7 @@ export function FinancialInsights() {
   return (
     <div className="glass-card" style={{ padding: '24px' }}>
       {/* Header & Target Setting Option */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <h3>FINANCIAL INSIGHTS & CASH FLOW</h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
@@ -102,7 +102,7 @@ export function FinancialInsights() {
       </div>
 
       {/* 3 Overview Cards: Total Income, Total Expenses, Net Savings */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+      <div className="responsive-grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
         <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
           <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <ArrowUpRight size={14} color="var(--accent-success)" /> Income Received

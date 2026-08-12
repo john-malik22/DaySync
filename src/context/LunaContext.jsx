@@ -14,6 +14,29 @@ export function LunaProvider({ children }) {
   const [suggestion, setSuggestion] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Sidebar Hide / Show & Collapse State
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('luna_sidebar_collapsed') === 'true';
+  });
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile drawer state
+
+  const toggleSidebar = () => {
+    // Check if on mobile screen (< 1024px)
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(prev => !prev);
+    } else {
+      setSidebarCollapsed(prev => {
+        const nextState = !prev;
+        localStorage.setItem('luna_sidebar_collapsed', nextState.toString());
+        return nextState;
+      });
+    }
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
   const fetchData = async () => {
     try {
       const [mems, tsks, exps, ntcs, sug, chat, sums] = await Promise.allSettled([
@@ -118,6 +141,10 @@ export function LunaProvider({ children }) {
         summaries,
         suggestion,
         loading,
+        sidebarCollapsed,
+        sidebarOpen,
+        toggleSidebar,
+        closeSidebar,
         sendMessage,
         addMemory,
         deleteMemory,
