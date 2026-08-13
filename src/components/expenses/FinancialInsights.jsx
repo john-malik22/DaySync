@@ -62,7 +62,7 @@ export function FinancialInsights() {
         <div>
           <h3>Financial Insights & Cash Flow</h3>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-            Track total money received, expenses spent, and budget progress.
+            Track money received, expenses spent, and monthly budget progress.
           </p>
         </div>
 
@@ -92,32 +92,32 @@ export function FinancialInsights() {
         )}
       </div>
 
-      {/* 3 Overview Cards */}
-      <div className="mobile-grid-2" style={{ marginBottom: 'var(--space-lg)' }}>
-        <div style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+      {/* Cash Flow Overview: Even 3-Column Pill Arrangement */}
+      <div className="grid-3" style={{ marginBottom: 'var(--space-lg)', gap: 'var(--space-sm)' }}>
+        <div style={{ padding: '12px 14px', borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <ArrowUpRight size={14} color="var(--accent-success)" /> Income
           </div>
-          <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-success)', marginTop: '4px' }}>
+          <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent-success)', marginTop: '4px' }}>
             +₹{totalIncome.toLocaleString()}
           </div>
         </div>
 
-        <div style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+        <div style={{ padding: '12px 14px', borderRadius: 'var(--radius-md)', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <ArrowDownRight size={14} color="var(--accent-warning)" /> Expenses
+            <ArrowDownRight size={14} color="var(--accent-warning)" /> Spent
           </div>
-          <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-warning)', marginTop: '4px' }}>
+          <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent-warning)', marginTop: '4px' }}>
             -₹{totalSpent.toLocaleString()}
           </div>
         </div>
 
-        <div style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.3)', gridColumn: 'span 2' }}>
+        <div style={{ padding: '12px 14px', borderRadius: 'var(--radius-md)', background: 'var(--accent-tint)', border: '1px solid var(--border-glow)' }}>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Wallet size={14} color="var(--accent-primary)" /> Net Cash Balance
+            <Wallet size={14} color="var(--accent-primary)" /> Balance
           </div>
           <div style={{
-            fontSize: '1.2rem', fontWeight: '800', marginTop: '4px',
+            fontSize: '1.15rem', fontWeight: '800', marginTop: '4px',
             color: netBalance >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)'
           }}>
             {netBalance >= 0 ? '+' : ''}₹{netBalance.toLocaleString()}
@@ -125,10 +125,10 @@ export function FinancialInsights() {
         </div>
       </div>
 
-      {/* Spend Progress Bar */}
+      {/* Budget Usage Progress Bar */}
       <div style={{ marginBottom: 'var(--space-lg)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>
-          <span>Spent: ₹{totalSpent.toLocaleString()} / ₹{budgetTarget.toLocaleString()} Target</span>
+          <span>Budget Usage: ₹{totalSpent.toLocaleString()} / ₹{budgetTarget.toLocaleString()}</span>
           <span style={{ color: percentUsed > 85 ? 'var(--accent-danger)' : 'var(--accent-success)' }}>
             {percentUsed}%
           </span>
@@ -157,7 +157,7 @@ export function FinancialInsights() {
           padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
           border: '1px solid var(--border-color)', fontSize: '13px'
         }}>
-          📈 <strong>Cash Flow:</strong> Received ₹{totalIncome.toLocaleString()} and spent ₹{totalSpent.toLocaleString()}.
+          📈 <strong>Net Cash Flow:</strong> Received ₹{totalIncome.toLocaleString()} and spent ₹{totalSpent.toLocaleString()}.
         </div>
       </div>
 

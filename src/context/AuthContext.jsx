@@ -7,10 +7,16 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('luna_token') || null);
   const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState(() => localStorage.getItem('daysync_theme') || 'light');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('daysync_theme', theme);
   }, [theme]);
 
   // Restore authenticated user profile from token on mount / refresh
