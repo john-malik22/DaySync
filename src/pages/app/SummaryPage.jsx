@@ -28,6 +28,7 @@ export function SummaryPage() {
             key={t}
             onClick={() => setTab(t)}
             className={tab === t ? 'btn-primary' : 'btn-secondary'}
+            style={{ padding: '6px 14px', minHeight: '38px', fontSize: '13px' }}
           >
             {t} Summary
           </button>
@@ -36,56 +37,56 @@ export function SummaryPage() {
 
       {/* Summary Card Layout */}
       <div className="glass-card animate-fade-in">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-5)', borderBottom: '1px solid var(--border-color)', paddingBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-lg)', borderBottom: '1px solid var(--border-color)', paddingBottom: 'var(--space-md)', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
           <div>
-            <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               YOUR {tab.toUpperCase()} REPORT
             </span>
-            <h2 style={{ fontSize: '1.4rem', marginTop: '2px' }}>
+            <h2 style={{ fontSize: '1.2rem', marginTop: '2px' }}>
               {tab === 'Daily' ? "Today's Overview" : tab === 'Weekly' ? "This Week's Overview" : 'Monthly Performance'}
             </h2>
           </div>
-          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-            Date: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+            {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </span>
         </div>
 
-        {/* Breakdown Grid */}
-        <div className="grid-3" style={{ marginBottom: 'var(--space-6)' }}>
-          <div style={{ padding: '16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
-              <Clock size={14} color="var(--accent-primary)" /> Tasks Assigned
+        {/* Breakdown Grid - 2 Column on Wide Mobile, 1 Column on 320px */}
+        <div className="mobile-grid-2" style={{ marginBottom: 'var(--space-xl)' }}>
+          <div style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
+              <Clock size={14} color="var(--accent-primary)" /> Tasks
             </div>
-            <div style={{ fontSize: '1.4rem', fontWeight: '800' }}>
+            <div style={{ fontSize: '1.3rem', fontWeight: '800' }}>
               {tasks.length} Total
             </div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{pendingTasks} Pending</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pendingTasks} Pending</span>
           </div>
 
-          <div style={{ padding: '16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
-              <CheckCircle2 size={14} color="var(--accent-success)" /> Tasks Status
+          <div style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
+              <CheckCircle2 size={14} color="var(--accent-success)" /> Status
             </div>
-            <div style={{ fontSize: '1.4rem', fontWeight: '800' }}>{completedTasks} Done</div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{pendingTasks} pending</span>
+            <div style={{ fontSize: '1.3rem', fontWeight: '800' }}>{completedTasks} Done</div>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pendingTasks} pending</span>
           </div>
 
-          <div style={{ padding: '16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
+          <div style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', gridColumn: 'span 2' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
               <CreditCard size={14} color="var(--accent-warning)" /> Spending
             </div>
-            <div style={{ fontSize: '1.4rem', fontWeight: '800' }}>₹{totalSpent.toLocaleString()}</div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Logged Expenses</span>
+            <div style={{ fontSize: '1.3rem', fontWeight: '800' }}>₹{totalSpent.toLocaleString()}</div>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Logged Expenses</span>
           </div>
         </div>
 
         {/* AI Dynamic Executive Synthesis */}
         <div style={{
-          padding: '16px 20px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-glow)', fontSize: '0.92rem', lineHeight: '1.6'
+          padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)',
+          border: '1px solid var(--border-glow)', fontSize: '13px', lineHeight: '1.5'
         }}>
           <strong style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-            <Sparkles size={16} /> Luna Executive Synthesis:
+            <Sparkles size={15} /> Luna Executive Synthesis:
           </strong>
           
           {!hasActivity ? (

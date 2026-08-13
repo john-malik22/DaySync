@@ -30,35 +30,38 @@ export function ChatPage() {
 
   return (
     <div className="page-container" style={{
-      height: 'calc(100vh - 64px)',
+      height: 'calc(100vh - 60px)',
       display: 'flex',
       flexDirection: 'column',
       maxWidth: '900px',
-      margin: '0 auto',
-      padding: 'var(--space-5) var(--space-6)'
+      margin: '0 auto'
     }}>
-      {/* Chat Header */}
-      <div className="page-header" style={{ textAlign: 'center', marginBottom: 'var(--space-3)' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--accent-primary)', fontWeight: '700', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          <Sparkles size={15} /> Central AI Workspace
+      {/* Page Header */}
+      <div className="page-header" style={{ textAlign: 'center', marginBottom: 'var(--space-sm)' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--accent-primary)', fontWeight: '700', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <Sparkles size={14} /> Central AI Workspace
         </div>
-        <h1 style={{ fontSize: 'clamp(1.3rem, 2vw, 1.6rem)', margin: '4px 0' }}>Chat with Luna AI</h1>
-        <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
-          Ask questions, log income/expenses, track tasks, or save memory context naturally.
-        </p>
+        <h1>Chat with Luna AI</h1>
+        <p>Log transactions, manage tasks, or save memory context naturally.</p>
       </div>
 
-      {/* Suggested Prompt Chips */}
-      <div className="scroll-row" style={{ marginBottom: 'var(--space-3)', justifyContent: 'center' }}>
+      {/* Prompt Chips - Controlled Horizontal Scroll ONLY */}
+      <div className="scroll-row" style={{ marginBottom: 'var(--space-sm)', flexShrink: 0 }}>
         {promptSuggestions.map((prompt, i) => (
           <button
             key={i}
             onClick={() => sendMessage(prompt)}
             style={{
-              padding: '6px 14px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)',
-              background: 'var(--bg-secondary)', color: 'var(--text-secondary)',
-              fontSize: '0.82rem', whiteSpace: 'nowrap', cursor: 'pointer',
-              transition: 'all 0.15s ease'
+              padding: '6px 12px',
+              borderRadius: 'var(--radius-full)',
+              border: '1px solid var(--border-color)',
+              background: 'var(--bg-secondary)',
+              color: 'var(--text-secondary)',
+              fontSize: '13px',
+              whiteSpace: 'nowrap',
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'background-color 0.15s ease'
             }}
           >
             💬 "{prompt}"
@@ -66,11 +69,11 @@ export function ChatPage() {
         ))}
       </div>
 
-      {/* Message Feed Container */}
+      {/* Conversation Feed */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        paddingRight: '6px',
+        paddingRight: '4px',
         display: 'flex',
         flexDirection: 'column'
       }}>
@@ -78,7 +81,7 @@ export function ChatPage() {
           <ChatBubble key={msg.id} msg={msg} />
         ))}
         {loading && (
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic', margin: '8px 0' }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '13px', fontStyle: 'italic', margin: '8px 0' }}>
             Luna is thinking & processing intent...
           </div>
         )}
@@ -87,10 +90,12 @@ export function ChatPage() {
 
       {/* Message Composer */}
       <form onSubmit={handleSend} style={{
-        marginTop: 'var(--space-3)',
+        marginTop: 'var(--space-sm)',
         display: 'flex',
         alignItems: 'center',
-        gap: 'var(--space-2)'
+        gap: 'var(--space-sm)',
+        width: '100%',
+        flexShrink: 0
       }}>
         <input
           type="text"
@@ -99,13 +104,13 @@ export function ChatPage() {
           onChange={(e) => setInput(e.target.value)}
           style={{
             flex: 1,
-            minHeight: '46px',
-            borderRadius: 'var(--radius-lg)',
+            minHeight: '44px',
+            borderRadius: 'var(--radius-md)',
             border: '1px solid var(--border-color)',
             background: 'var(--bg-secondary)',
             color: 'var(--text-primary)',
-            fontSize: '0.94rem',
-            padding: '0 16px',
+            fontSize: '14px',
+            padding: '0 14px',
             outline: 'none'
           }}
         />
@@ -115,12 +120,13 @@ export function ChatPage() {
           disabled={!input.trim() || loading}
           className="btn-primary"
           style={{
-            width: '46px',
-            height: '46px',
-            minHeight: '46px',
-            borderRadius: 'var(--radius-lg)',
+            width: '44px',
+            height: '44px',
+            minHeight: '44px',
+            borderRadius: 'var(--radius-md)',
             padding: 0,
             justifyContent: 'center',
+            flexShrink: 0,
             opacity: input.trim() ? 1 : 0.6
           }}
         >

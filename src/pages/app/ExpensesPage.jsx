@@ -12,7 +12,7 @@ export function ExpensesPage() {
         </p>
       </div>
 
-      <div className="grid-2" style={{ gridTemplateColumns: '1.2fr 1fr', alignItems: 'start' }}>
+      <div className="expenses-layout">
         <ExpenseForm />
         <FinancialInsights />
       </div>

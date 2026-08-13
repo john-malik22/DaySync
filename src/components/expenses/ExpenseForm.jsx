@@ -28,13 +28,11 @@ const INCOME_CATEGORIES = [
 export function ExpenseForm() {
   const { expenses, addExpense, updateExpense, deleteExpense } = useLuna();
   
-  // Transaction Mode: 'expense' | 'income'
   const [txType, setTxType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('Recharges');
   const [description, setDescription] = useState('');
 
-  // Inline Edit State
   const [editingId, setEditingId] = useState(null);
   const [editTxType, setEditTxType] = useState('expense');
   const [editAmount, setEditAmount] = useState('');
@@ -86,14 +84,13 @@ export function ExpenseForm() {
   const activeCategories = txType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-      {/* 1. Log Financial Entry Form */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
+      {/* 1. Log Transaction Form */}
       <div className="glass-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-lg)', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
           <h3>Log Transaction</h3>
           
-          {/* Toggle Switch */}
-          <div style={{ display: 'flex', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '4px', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '3px', border: '1px solid var(--border-color)' }}>
             <button
               type="button"
               onClick={() => handleTypeSwitch('expense')}
@@ -101,11 +98,11 @@ export function ExpenseForm() {
                 padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
                 background: txType === 'expense' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
                 color: txType === 'expense' ? 'var(--accent-danger)' : 'var(--text-secondary)',
-                fontWeight: txType === 'expense' ? '700' : '500', fontSize: '0.85rem',
+                fontWeight: txType === 'expense' ? '700' : '500', fontSize: '13px',
                 display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s ease'
               }}
             >
-              <ArrowDownRight size={15} /> Spent (Expense)
+              <ArrowDownRight size={14} /> Spent
             </button>
             <button
               type="button"
@@ -114,19 +111,19 @@ export function ExpenseForm() {
                 padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
                 background: txType === 'income' ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
                 color: txType === 'income' ? 'var(--accent-success)' : 'var(--text-secondary)',
-                fontWeight: txType === 'income' ? '700' : '500', fontSize: '0.85rem',
+                fontWeight: txType === 'income' ? '700' : '500', fontSize: '13px',
                 display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s ease'
               }}
             >
-              <ArrowUpRight size={15} /> Received (Income)
+              <ArrowUpRight size={14} /> Received
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid-3" style={{ gridTemplateColumns: '1fr 1.2fr 1.5fr auto', gap: 'var(--space-2)' }}>
+        <form onSubmit={handleSubmit} className="mobile-stack-form" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1.5fr auto', gap: 'var(--space-sm)' }}>
           <input
             type="number"
-            placeholder={txType === 'income' ? "Income Amount (₹)" : "Expense Amount (₹)"}
+            placeholder={txType === 'income' ? "Amount (₹)" : "Amount (₹)"}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required
@@ -141,29 +138,29 @@ export function ExpenseForm() {
           </select>
           <input
             type="text"
-            placeholder={txType === 'income' ? "Description (e.g. Salary credited)" : "Description (e.g. Jio recharge)"}
+            placeholder="Description (e.g. Jio recharge)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
           <button
             type="submit"
             className="btn-primary"
-            style={{ background: txType === 'income' ? 'var(--accent-success)' : 'var(--accent-gradient)', justifyContent: 'center' }}
+            style={{ background: txType === 'income' ? 'var(--accent-success)' : 'var(--accent-gradient)' }}
           >
             <Plus size={16} /> Save
           </button>
         </form>
       </div>
 
-      {/* 2. Recent Transactions List */}
+      {/* 2. Recent Activity */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-4)' }}>Recent Financial Activity</h3>
+        <h3 style={{ marginBottom: 'var(--space-lg)' }}>Recent Financial Activity</h3>
         {expenses.length === 0 ? (
-          <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
             No financial transactions logged yet.
           </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
             {expenses.map((exp) => {
               const isEditing = editingId === exp.id;
               const isIncome = exp.type === 'income';
@@ -171,8 +168,8 @@ export function ExpenseForm() {
               if (isEditing) {
                 const editActiveCategories = editTxType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
                 return (
-                  <div key={exp.id} className="grid-3" style={{
-                    gridTemplateColumns: '1fr 1fr 1.2fr 1.5fr auto auto', gap: 'var(--space-2)',
+                  <div key={exp.id} className="mobile-stack-form" style={{
+                    display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr 1.5fr auto auto', gap: 'var(--space-sm)',
                     padding: '12px', borderRadius: 'var(--radius-md)', background: 'var(--bg-tertiary)',
                     border: '1px solid var(--accent-primary)', alignItems: 'center'
                   }}>
@@ -204,14 +201,14 @@ export function ExpenseForm() {
                     <button
                       onClick={() => handleSaveEdit(exp.id)}
                       className="btn-primary"
-                      style={{ padding: '8px 12px', fontSize: '0.8rem', justifyContent: 'center', minHeight: 'auto' }}
+                      style={{ padding: '8px 12px', fontSize: '13px' }}
                     >
                       <Check size={14} /> Save
                     </button>
                     <button
                       onClick={() => setEditingId(null)}
                       className="btn-secondary"
-                      style={{ padding: '8px 12px', fontSize: '0.8rem', justifyContent: 'center', minHeight: 'auto' }}
+                      style={{ padding: '8px 12px', fontSize: '13px' }}
                     >
                       <X size={14} />
                     </button>
@@ -222,31 +219,31 @@ export function ExpenseForm() {
               return (
                 <div key={exp.id} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)',
+                  padding: '12px 14px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)',
                   border: `1px solid ${isIncome ? 'rgba(16, 185, 129, 0.3)' : 'var(--border-color)'}`,
-                  flexWrap: 'wrap', gap: '10px'
+                  flexWrap: 'wrap', gap: '8px'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{
-                      width: '36px', height: '36px', borderRadius: 'var(--radius-md)',
+                      width: '34px', height: '34px', borderRadius: 'var(--radius-sm)',
                       background: isIncome ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                     }}>
-                      {isIncome ? <ArrowUpRight size={18} color="var(--accent-success)" /> : <ArrowDownRight size={18} color="var(--accent-warning)" />}
+                      {isIncome ? <ArrowUpRight size={16} color="var(--accent-success)" /> : <ArrowDownRight size={16} color="var(--accent-warning)" />}
                     </div>
                     <div>
-                      <div style={{ fontWeight: '600', fontSize: '0.92rem' }}>{exp.description}</div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                      <div style={{ fontWeight: '600', fontSize: '14px' }}>{exp.description}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                         <span style={{ color: isIncome ? 'var(--accent-success)' : 'var(--text-secondary)', fontWeight: '600' }}>
-                          {isIncome ? 'Received (Income)' : 'Spent (Expense)'}
+                          {isIncome ? 'Received' : 'Spent'}
                         </span> • {exp.category} • {exp.date}
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
                     <span style={{
-                      fontSize: '1rem', fontWeight: '700',
+                      fontSize: '15px', fontWeight: '700',
                       color: isIncome ? 'var(--accent-success)' : 'var(--accent-warning)'
                     }}>
                       {isIncome ? '+' : '-'} ₹{exp.amount.toLocaleString()}
@@ -255,7 +252,7 @@ export function ExpenseForm() {
                       onClick={() => startEdit(exp)}
                       className="btn-secondary"
                       title="Edit Entry"
-                      style={{ padding: '6px 10px', minHeight: 'auto', fontSize: '0.78rem' }}
+                      style={{ padding: '6px 10px', minHeight: '34px', fontSize: '12px' }}
                     >
                       <Edit2 size={13} />
                     </button>
@@ -263,7 +260,7 @@ export function ExpenseForm() {
                       onClick={() => deleteExpense(exp.id)}
                       className="btn-secondary"
                       title="Delete Entry"
-                      style={{ padding: '6px 10px', minHeight: 'auto', color: 'var(--accent-danger)', fontSize: '0.78rem' }}
+                      style={{ padding: '6px 10px', minHeight: '34px', color: 'var(--accent-danger)', fontSize: '12px' }}
                     >
                       <Trash2 size={13} />
                     </button>

@@ -45,30 +45,30 @@ export function SettingsPage() {
 
       {/* Account Info */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-4)' }}>Account Profile</h3>
-        <div className="grid-2" style={{ fontSize: '0.9rem' }}>
+        <h3 style={{ marginBottom: 'var(--space-md)' }}>Account Profile</h3>
+        <div className="mobile-grid-2" style={{ fontSize: '13px' }}>
           <div>
             <span style={{ color: 'var(--text-muted)' }}>Name</span>
-            <div style={{ fontWeight: '600', marginTop: '2px' }}>{user?.name || 'User'}</div>
+            <div style={{ fontWeight: '600', marginTop: '2px', fontSize: '14px' }}>{user?.name || 'User'}</div>
           </div>
           <div>
             <span style={{ color: 'var(--text-muted)' }}>Email</span>
-            <div style={{ fontWeight: '600', marginTop: '2px' }}>{user?.email || 'user@example.com'}</div>
+            <div style={{ fontWeight: '600', marginTop: '2px', fontSize: '14px' }}>{user?.email || 'user@example.com'}</div>
           </div>
         </div>
       </div>
 
       {/* AI Memory & Privacy Toggles */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ShieldCheck color="var(--accent-success)" /> AI Privacy & Controls
+        <h3 style={{ marginBottom: 'var(--space-md)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ShieldCheck size={18} color="var(--accent-success)" /> AI Privacy & Controls
         </h3>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             <div>
-              <div style={{ fontWeight: '600', fontSize: '0.92rem' }}>Memory Extraction</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Allow Luna AI to prompt for implicit memory confirmation</div>
+              <div style={{ fontWeight: '600', fontSize: '14px' }}>Memory Extraction</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Allow Luna AI to prompt for implicit memory confirmation</div>
             </div>
             <input
               type="checkbox"
@@ -78,10 +78,10 @@ export function SettingsPage() {
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             <div>
-              <div style={{ fontWeight: '600', fontSize: '0.92rem' }}>Proactive Personalization</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Allow DaySync Notices & personalized recommendations</div>
+              <div style={{ fontWeight: '600', fontSize: '14px' }}>Proactive Personalization</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Allow DaySync Notices & personalized recommendations</div>
             </div>
             <input
               type="checkbox"
@@ -95,23 +95,23 @@ export function SettingsPage() {
 
       {/* Data Management & Permanent Deletion */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-4)' }}>Data Management & Account Control</h3>
+        <h3 style={{ marginBottom: 'var(--space-md)' }}>Data Management & Account Control</h3>
 
-        <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-          <button onClick={handleClearHistory} className="btn-secondary" style={{ color: 'var(--accent-warning)' }}>
-            <Trash2 size={16} /> Clear Chat History
+        <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
+          <button onClick={handleClearHistory} className="btn-secondary" style={{ color: 'var(--accent-warning)', fontSize: '13px' }}>
+            <Trash2 size={15} /> Clear Chat History
           </button>
 
-          <button onClick={handleLogout} className="btn-secondary">
-            <LogOut size={16} /> Log Out
+          <button onClick={handleLogout} className="btn-secondary" style={{ fontSize: '13px' }}>
+            <LogOut size={15} /> Log Out
           </button>
 
           <button
             onClick={handleDeleteAccount}
             className="btn-secondary"
-            style={{ color: 'var(--accent-danger)', border: '1px solid var(--accent-danger)', background: 'rgba(239, 68, 68, 0.1)' }}
+            style={{ color: 'var(--accent-danger)', border: '1px solid var(--accent-danger)', background: 'rgba(239, 68, 68, 0.1)', fontSize: '13px' }}
           >
-            <UserX size={16} /> Delete Account Permanently
+            <UserX size={15} /> Delete Account Permanently
           </button>
         </div>
       </div>
