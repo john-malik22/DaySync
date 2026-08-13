@@ -10,7 +10,6 @@ import { Onboarding } from './pages/Onboarding';
 
 import { Sidebar } from './components/common/Sidebar';
 import { Navbar } from './components/common/Navbar';
-import { QuickActions } from './components/common/QuickActions';
 
 import { DashboardPage } from './pages/app/DashboardPage';
 import { ChatPage } from './pages/app/ChatPage';
@@ -30,7 +29,6 @@ function AppLayout() {
           <Outlet />
         </main>
       </div>
-      <QuickActions />
     </div>
   );
 }
