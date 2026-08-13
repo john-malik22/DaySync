@@ -20,7 +20,7 @@ export function Navbar() {
       top: 0,
       zIndex: 90
     }}>
-      {/* Single Sidebar Toggle Button & AI Status */}
+      {/* Single Sidebar Toggle Button & Status */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <button
           onClick={toggleSidebar}
@@ -41,7 +41,7 @@ export function Navbar() {
             flexShrink: 0
           }} />
           <span style={{ fontSize: '0.88rem', fontWeight: '500', color: 'var(--text-secondary)' }}>
-            DaySync Engine • Luna AI Active
+            DaySync Engine Active
           </span>
         </div>
       </div>

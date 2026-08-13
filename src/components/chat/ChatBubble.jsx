@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, User, Brain, Check, X, ShieldAlert } from 'lucide-react';
+import { Sparkles, User, Brain, Check, X } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 
 export function ChatBubble({ msg }) {
@@ -19,15 +19,15 @@ export function ChatBubble({ msg }) {
   return (
     <div className="animate-fade-in" style={{
       display: 'flex',
-      gap: '14px',
-      marginBottom: '20px',
+      gap: '12px',
+      marginBottom: '16px',
       flexDirection: isAssistant ? 'row' : 'row-reverse'
     }}>
       {/* Avatar Icon */}
       <div style={{
-        width: '38px',
-        height: '38px',
-        borderRadius: '12px',
+        width: '36px',
+        height: '36px',
+        borderRadius: 'var(--radius-md)',
         background: isAssistant ? 'var(--accent-gradient)' : 'var(--bg-tertiary)',
         display: 'flex',
         alignItems: 'center',
@@ -36,12 +36,12 @@ export function ChatBubble({ msg }) {
         boxShadow: isAssistant ? 'var(--shadow-glow)' : 'none',
         border: isAssistant ? 'none' : '1px solid var(--border-color)'
       }}>
-        {isAssistant ? <Sparkles size={20} color="#fff" /> : <User size={20} color="var(--accent-primary)" />}
+        {isAssistant ? <Sparkles size={18} color="#fff" /> : <User size={18} color="var(--accent-primary)" />}
       </div>
 
-      {/* Bubble Box */}
+      {/* Bubble Content Container */}
       <div style={{
-        maxWidth: '75%',
+        maxWidth: '82%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: isAssistant ? 'flex-start' : 'flex-end'
@@ -52,7 +52,7 @@ export function ChatBubble({ msg }) {
           marginBottom: '4px',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px'
+          gap: '6px'
         }}>
           <span>{isAssistant ? 'Luna AI' : 'You'}</span>
           {msg.intent && isAssistant && (
@@ -70,21 +70,22 @@ export function ChatBubble({ msg }) {
         </div>
 
         <div className="glass-card" style={{
-          padding: '14px 18px',
-          borderRadius: isAssistant ? '4px 16px 16px 16px' : '16px 4px 16px 16px',
+          padding: '12px 16px',
+          borderRadius: isAssistant ? '4px 14px 14px 14px' : '14px 4px 14px 14px',
           background: isAssistant ? 'var(--bg-card)' : 'var(--accent-primary)',
           color: isAssistant ? 'var(--text-primary)' : '#ffffff',
-          fontSize: '0.94rem',
-          lineHeight: '1.5'
+          fontSize: '0.92rem',
+          lineHeight: '1.5',
+          wordBreak: 'break-word'
         }}>
           {msg.message}
 
           {/* Tool Receipts / Data Output */}
           {msg.data && (
             <div style={{
-              marginTop: '12px',
-              padding: '12px',
-              borderRadius: '10px',
+              marginTop: '10px',
+              padding: '10px 12px',
+              borderRadius: 'var(--radius-sm)',
               background: 'var(--bg-secondary)',
               border: '1px solid var(--border-color)',
               fontSize: '0.85rem'
@@ -107,33 +108,33 @@ export function ChatBubble({ msg }) {
             </div>
           )}
 
-          {/* Memory Permission System Modal Prompt (Rule 8: Memory Permission System) */}
+          {/* Memory Permission System Prompt */}
           {msg.memoryPrompt && (
             <div style={{
-              marginTop: '14px',
-              padding: '14px',
-              borderRadius: '12px',
+              marginTop: '12px',
+              padding: '12px',
+              borderRadius: 'var(--radius-md)',
               background: 'rgba(139, 92, 246, 0.15)',
               border: '1px solid var(--accent-secondary)',
               fontSize: '0.85rem'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600', color: 'var(--accent-secondary)', marginBottom: '6px' }}>
-                <Brain size={16} /> Memory Confirmation Requested
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600', color: 'var(--accent-secondary)', marginBottom: '4px' }}>
+                <Brain size={15} /> Memory Confirmation Requested
               </div>
               <p style={{ color: 'var(--text-primary)', marginBottom: '10px' }}>
                 {msg.memoryPrompt.promptText}
               </p>
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   onClick={() => handleRememberConsent(msg.memoryPrompt)}
                   className="btn-primary"
-                  style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+                  style={{ padding: '6px 12px', fontSize: '0.8rem', minHeight: '34px' }}
                 >
                   <Check size={14} /> Remember
                 </button>
                 <button
                   className="btn-secondary"
-                  style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+                  style={{ padding: '6px 12px', fontSize: '0.8rem', minHeight: '34px' }}
                 >
                   <X size={14} /> Not Now
                 </button>

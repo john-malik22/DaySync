@@ -1,21 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Mic, Sparkles, CornerDownLeft } from 'lucide-react';
+import { Send, Sparkles } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 import { ChatBubble } from '../../components/chat/ChatBubble';
-import { voice } from '../../services/voice';
 
 export function ChatPage() {
   const { conversations, sendMessage, loading } = useLuna();
   const [input, setInput] = useState('');
-  const [isListening, setIsListening] = useState(false);
   const chatEndRef = useRef(null);
 
   const promptSuggestions = [
-    "What should I do today?",
+    "What tasks do I have pending?",
     "I spent ₹400 on food.",
-    "Remember I have class at 10 tomorrow.",
-    "Why am I spending so much this month?",
-    "Plan my evening."
+    "Received ₹5000 salary today.",
+    "Remember I prefer dark theme.",
+    "Show my financial summary."
   ];
 
   useEffect(() => {
@@ -30,57 +28,37 @@ export function ChatPage() {
     await sendMessage(text);
   };
 
-  const handleVoiceListen = () => {
-    if (!voice.isSupported()) {
-      alert('Speech recognition is not supported in this browser environment.');
-      return;
-    }
-    setIsListening(true);
-    voice.listen(
-      (transcript) => {
-        setIsListening(false);
-        sendMessage(transcript, true);
-      },
-      (err) => {
-        setIsListening(false);
-        console.error('Voice error:', err);
-      }
-    );
-  };
-
   return (
-    <div style={{
+    <div className="page-container" style={{
       height: 'calc(100vh - 64px)',
       display: 'flex',
       flexDirection: 'column',
       maxWidth: '900px',
       margin: '0 auto',
-      padding: '20px 24px'
+      padding: 'var(--space-5) var(--space-6)'
     }}>
-      {/* Header Title */}
-      <div style={{ marginBottom: '16px', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)', fontWeight: '700', fontSize: '0.85rem' }}>
-          <Sparkles size={16} /> CENTRAL INTERFACE
+      {/* Chat Header */}
+      <div className="page-header" style={{ textAlign: 'center', marginBottom: 'var(--space-3)' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--accent-primary)', fontWeight: '700', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <Sparkles size={15} /> Central AI Workspace
         </div>
-        <h2 style={{ fontSize: '1.6rem', fontWeight: '800' }}>Talk to Luna</h2>
-        <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
-          Luna detects your intent and connects your memories, routines, expenses, and tasks automatically.
+        <h1 style={{ fontSize: 'clamp(1.3rem, 2vw, 1.6rem)', margin: '4px 0' }}>Chat with Luna AI</h1>
+        <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
+          Ask questions, log income/expenses, track tasks, or save memory context naturally.
         </p>
       </div>
 
       {/* Suggested Prompt Chips */}
-      <div style={{
-        display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '12px'
-      }}>
+      <div className="scroll-row" style={{ marginBottom: 'var(--space-3)', justifyContent: 'center' }}>
         {promptSuggestions.map((prompt, i) => (
           <button
             key={i}
             onClick={() => sendMessage(prompt)}
             style={{
-              padding: '6px 14px', borderRadius: '99px', border: '1px solid var(--border-color)',
+              padding: '6px 14px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)',
               background: 'var(--bg-secondary)', color: 'var(--text-secondary)',
               fontSize: '0.82rem', whiteSpace: 'nowrap', cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.15s ease'
             }}
           >
             💬 "{prompt}"
@@ -88,11 +66,11 @@ export function ChatPage() {
         ))}
       </div>
 
-      {/* Message Feed */}
+      {/* Message Feed Container */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        paddingRight: '8px',
+        paddingRight: '6px',
         display: 'flex',
         flexDirection: 'column'
       }}>
@@ -101,67 +79,46 @@ export function ChatPage() {
         ))}
         {loading && (
           <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic', margin: '8px 0' }}>
-            Luna is thinking & classifying intent...
+            Luna is thinking & processing intent...
           </div>
         )}
         <div ref={chatEndRef} />
       </div>
 
-      {/* Input Box Bar */}
+      {/* Message Composer */}
       <form onSubmit={handleSend} style={{
-        marginTop: '16px',
-        position: 'relative',
+        marginTop: 'var(--space-3)',
         display: 'flex',
         alignItems: 'center',
-        gap: '10px'
+        gap: 'var(--space-2)'
       }}>
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-glow)',
-          borderRadius: '16px',
-          padding: '4px 16px',
-          boxShadow: 'var(--shadow-glow)'
-        }}>
-          <input
-            type="text"
-            placeholder={isListening ? "Listening..." : "Ask Luna anything..."}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '14px 0',
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--text-primary)',
-              fontSize: '0.96rem',
-              outline: 'none'
-            }}
-          />
-
-          <button
-            type="button"
-            onClick={handleVoiceListen}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer', padding: '6px',
-              color: isListening ? 'var(--accent-danger)' : 'var(--text-muted)'
-            }}
-            title="Speak to Luna"
-          >
-            <Mic size={20} />
-          </button>
-        </div>
+        <input
+          type="text"
+          placeholder="Message Luna AI..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          style={{
+            flex: 1,
+            minHeight: '46px',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid var(--border-color)',
+            background: 'var(--bg-secondary)',
+            color: 'var(--text-primary)',
+            fontSize: '0.94rem',
+            padding: '0 16px',
+            outline: 'none'
+          }}
+        />
 
         <button
           type="submit"
           disabled={!input.trim() || loading}
           className="btn-primary"
           style={{
-            width: '50px',
-            height: '50px',
-            borderRadius: '16px',
+            width: '46px',
+            height: '46px',
+            minHeight: '46px',
+            borderRadius: 'var(--radius-lg)',
             padding: 0,
             justifyContent: 'center',
             opacity: input.trim() ? 1 : 0.6

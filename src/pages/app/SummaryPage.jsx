@@ -1,28 +1,28 @@
 import React, { useState } from 'react';
-import { Calendar, FileText, CheckCircle2, Clock, CreditCard, Sparkles } from 'lucide-react';
+import { Clock, CheckCircle2, CreditCard, Sparkles } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 
 export function SummaryPage() {
   const { tasks, expenses } = useLuna();
-  const [tab, setTab] = useState('Daily'); // 'Daily', 'Weekly', 'Monthly'
+  const [tab, setTab] = useState('Daily');
 
   const completedTasks = tasks.filter(t => t.completed).length;
   const pendingTasks = tasks.filter(t => !t.completed).length;
-  const totalSpent = expenses.reduce((a, b) => a + b.amount, 0);
+  const totalSpent = expenses.filter(e => e.type !== 'income').reduce((a, b) => a + b.amount, 0);
 
   const hasActivity = tasks.length > 0 || expenses.length > 0;
 
   return (
-    <div style={{ padding: '28px', maxWidth: '1000px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: '800' }}>Everyday Summaries</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+    <div className="page-container">
+      <div className="page-header">
+        <h1>Everyday Summaries</h1>
+        <p>
           Synthesized reports of your activities, spending, and task completions.
         </p>
       </div>
 
       {/* Tab Selector */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+      <div className="scroll-row">
         {['Daily', 'Weekly', 'Monthly'].map(t => (
           <button
             key={t}
@@ -35,14 +35,14 @@ export function SummaryPage() {
       </div>
 
       {/* Summary Card Layout */}
-      <div className="glass-card animate-fade-in" style={{ padding: '32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+      <div className="glass-card animate-fade-in">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-5)', borderBottom: '1px solid var(--border-color)', paddingBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
           <div>
-            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               YOUR {tab.toUpperCase()} REPORT
             </span>
-            <h2 style={{ fontSize: '1.5rem', marginTop: '4px' }}>
-              {tab === 'Daily' ? 'Today\'s Overview' : tab === 'Weekly' ? 'This Week\'s Overview' : 'Monthly Performance'}
+            <h2 style={{ fontSize: '1.4rem', marginTop: '2px' }}>
+              {tab === 'Daily' ? "Today's Overview" : tab === 'Weekly' ? "This Week's Overview" : 'Monthly Performance'}
             </h2>
           </div>
           <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
@@ -51,18 +51,18 @@ export function SummaryPage() {
         </div>
 
         {/* Breakdown Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '28px' }}>
-          <div style={{ padding: '16px', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+        <div className="grid-3" style={{ marginBottom: 'var(--space-6)' }}>
+          <div style={{ padding: '16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
-              <Clock size={14} color="var(--accent-primary)" /> Daily Agenda
+              <Clock size={14} color="var(--accent-primary)" /> Tasks Assigned
             </div>
             <div style={{ fontSize: '1.4rem', fontWeight: '800' }}>
-              {tasks.length > 0 ? `${tasks.length} Time Blocks` : '0 Scheduled'}
+              {tasks.length} Total
             </div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Noticed Activity</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{pendingTasks} Pending</span>
           </div>
 
-          <div style={{ padding: '16px', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+          <div style={{ padding: '16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
               <CheckCircle2 size={14} color="var(--accent-success)" /> Tasks Status
             </div>
@@ -70,7 +70,7 @@ export function SummaryPage() {
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{pendingTasks} pending</span>
           </div>
 
-          <div style={{ padding: '16px', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+          <div style={{ padding: '16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
               <CreditCard size={14} color="var(--accent-warning)" /> Spending
             </div>
@@ -81,16 +81,16 @@ export function SummaryPage() {
 
         {/* AI Dynamic Executive Synthesis */}
         <div style={{
-          padding: '20px', borderRadius: '14px', background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-glow)', fontSize: '0.94rem', lineHeight: '1.6'
+          padding: '16px 20px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)',
+          border: '1px solid var(--border-glow)', fontSize: '0.92rem', lineHeight: '1.6'
         }}>
-          <strong style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+          <strong style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
             <Sparkles size={16} /> Luna Executive Synthesis:
           </strong>
           
           {!hasActivity ? (
             <span style={{ color: 'var(--text-secondary)' }}>
-              No activity logged yet. Add your tasks in Planner or record an expense, and Luna will automatically synthesize your daily, weekly, and monthly performance reports!
+              No activity logged yet. Add your tasks or record an expense, and Luna will automatically synthesize your daily, weekly, and monthly performance reports!
             </span>
           ) : (
             <span>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Brain, Trash2, Edit3, ShieldCheck, Plus, Check } from 'lucide-react';
+import { Trash2, ShieldCheck, Plus } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 
 export function MemoryCenter() {
@@ -27,30 +27,30 @@ export function MemoryCenter() {
   };
 
   return (
-    <div className="glass-card" style={{ padding: '24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div className="glass-card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
         <div>
-          <h3>MY MEMORIES</h3>
+          <h3>Memory Center</h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Every memory saved by Luna is under your direct control.
+            Review, add, or forget personal context and AI facts.
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--accent-success)', background: 'rgba(16, 185, 129, 0.12)', padding: '4px 12px', borderRadius: '99px', fontWeight: '600' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: 'var(--accent-success)', background: 'rgba(16, 185, 129, 0.12)', padding: '4px 12px', borderRadius: 'var(--radius-full)', fontWeight: '600' }}>
           <ShieldCheck size={14} /> Explicit Consent Protection
         </div>
       </div>
 
       {/* Filter Chips */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', pb: '4px' }}>
+      <div className="scroll-row" style={{ marginBottom: 'var(--space-4)' }}>
         {categories.map(cat => (
           <button
             key={cat}
             onClick={() => setFilter(cat)}
             style={{
-              padding: '6px 14px', borderRadius: '99px', border: '1px solid var(--border-color)',
+              padding: '6px 14px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)',
               background: filter === cat ? 'var(--accent-gradient)' : 'var(--bg-secondary)',
               color: filter === cat ? '#fff' : 'var(--text-secondary)',
-              fontSize: '0.82rem', fontWeight: '500', cursor: 'pointer'
+              fontSize: '0.82rem', fontWeight: '500', cursor: 'pointer', whiteSpace: 'nowrap'
             }}
           >
             {cat}
@@ -59,24 +59,16 @@ export function MemoryCenter() {
       </div>
 
       {/* Manual Memory Form */}
-      <form onSubmit={handleManualAdd} style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+      <form onSubmit={handleManualAdd} className="grid-3" style={{ gridTemplateColumns: '1fr auto auto', gap: 'var(--space-2)', marginBottom: 'var(--space-5)' }}>
         <input
           type="text"
           placeholder="Add something for Luna to remember (e.g. Prefers night study)"
           value={newContent}
           onChange={(e) => setNewContent(e.target.value)}
-          style={{
-            flex: 1, padding: '10px 14px', borderRadius: '10px',
-            border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: '#fff'
-          }}
         />
         <select
           value={newType}
           onChange={(e) => setNewType(e.target.value)}
-          style={{
-            padding: '10px 12px', borderRadius: '10px',
-            border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: '#fff'
-          }}
         >
           <option value="Preferences">Preferences</option>
           <option value="Routine">Routine</option>
@@ -89,12 +81,12 @@ export function MemoryCenter() {
       </form>
 
       {/* Memory Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+      <div className="grid-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-3)' }}>
         {filteredMemories.map((mem) => {
           const confidencePct = Math.round((mem.confidence || 0.9) * 100);
           return (
             <div key={mem.id} style={{
-              padding: '16px', borderRadius: '14px', background: 'var(--bg-secondary)',
+              padding: '16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)',
               border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
             }}>
               <div>
@@ -110,7 +102,7 @@ export function MemoryCenter() {
                     Confidence: {confidencePct}%
                   </span>
                 </div>
-                <p style={{ fontSize: '0.92rem', color: 'var(--text-primary)', lineHeight: '1.4' }}>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', lineHeight: '1.4' }}>
                   "{mem.content}"
                 </p>
               </div>
@@ -125,7 +117,8 @@ export function MemoryCenter() {
                 <button
                   onClick={() => deleteMemory(mem.id)}
                   className="btn-secondary"
-                  style={{ padding: '4px 8px', fontSize: '0.75rem', color: 'var(--accent-danger)' }}
+                  title="Forget Memory"
+                  style={{ padding: '4px 8px', minHeight: 'auto', fontSize: '0.75rem', color: 'var(--accent-danger)' }}
                 >
                   <Trash2 size={13} /> Forget
                 </button>
