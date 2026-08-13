@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, ArrowRight, UserPlus, LogIn as LogInIcon } from 'lucide-react';
+import { Sparkles, UserPlus, LogIn as LogInIcon } from 'lucide-react';
 
 export function Landing() {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ export function Landing() {
           }}>
             <Sparkles size={20} color="#fff" />
           </div>
-          <span style={{ fontSize: '1.4rem', fontWeight: '800', fontFamily: 'var(--font-heading)' }}>LUNA</span>
+          <span style={{ fontSize: '1.4rem', fontWeight: '800', fontFamily: 'var(--font-heading)' }}>DaySync</span>
         </div>
 
         <div style={{ display: 'flex', gap: '16px' }}>
@@ -34,15 +34,15 @@ export function Landing() {
           background: 'rgba(99, 102, 241, 0.15)', border: '1px solid var(--border-glow)',
           fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: '600', marginBottom: '24px'
         }}>
-          <Sparkles size={16} /> Your AI for Everyday Life
+          <Sparkles size={16} /> Powered by Luna AI Companion
         </div>
 
         <h1 style={{ fontSize: '3.8rem', fontWeight: '800', lineHeight: '1.15', marginBottom: '20px', letterSpacing: '-1.5px' }}>
-          A personal AI layer between you <br /> and your everyday life.
+          DaySync — Your Smart Life Companion
         </h1>
 
         <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', maxWidth: '720px', margin: '0 auto 40px', lineHeight: '1.6' }}>
-          Don't think about which feature to open. Simply tell Luna what you need. Luna understands context, remembers preferences with explicit permission, manages expenses, and organizes your daily agenda.
+          Organize your everyday life effortlessly. DaySync brings together task tracking, expense management, and AI memory context in one seamless application.
         </p>
 
         {/* Main CTA Buttons: Log In & Sign Up */}

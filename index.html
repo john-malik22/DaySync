@@ -3,10 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>LUNA - Your AI for Everyday Life</title>
-    <meta name="description" content="Luna is your personal AI companion that understands conversations, remembers useful context, manages expenses, and proactively assists your everyday life." />
-    <meta name="theme-color" content="#0B0F19" />
-    <link rel="manifest" href="/manifest.json" />
+    <title>DaySync - Smart Life Companion with Luna AI</title>
+    <meta name="description" content="DaySync is your smart life companion powered by Luna AI that manages tasks, tracks income & expenses, remembers useful context, and assists your daily routine." />
+    <meta name="theme-color" content="#0A0E17" />
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,15 +14,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <script>
-      // Unregister any active Service Worker during local dev so UI changes show instantly
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for(let registration of registrations) {
-            registration.unregister();
-          }
-        });
-      }
-    </script>
   </body>
 </html>

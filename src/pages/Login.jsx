@@ -50,7 +50,7 @@ export function Login() {
             <Sparkles size={20} color="#fff" />
           </div>
           <div>
-            <h2 style={{ fontSize: '1.3rem' }}>Log In to Luna</h2>
+            <h2 style={{ fontSize: '1.3rem' }}>Log In to DaySync</h2>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Welcome back!</p>
           </div>
         </div>

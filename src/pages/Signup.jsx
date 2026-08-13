@@ -52,8 +52,8 @@ export function Signup() {
             <Sparkles size={20} color="#fff" />
           </div>
           <div>
-            <h2 style={{ fontSize: '1.3rem' }}>Create Luna Account</h2>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Your AI for Everyday Life</p>
+            <h2 style={{ fontSize: '1.3rem' }}>Create DaySync Account</h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Smart Life Companion with Luna AI</p>
           </div>
         </div>
 

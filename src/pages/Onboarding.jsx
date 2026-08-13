@@ -9,10 +9,10 @@ export function Onboarding() {
   const [selected, setSelected] = useState(['Daily planning', 'Expenses', 'Reminders', 'Learning']);
 
   const options = [
-    'Daily planning',
-    'Expenses',
+    'Task Management',
+    'Expense & Income Tracking',
     'Reminders',
-    'Learning'
+    'AI Memory Context'
   ];
 
   const toggleOption = (opt) => {
@@ -24,8 +24,7 @@ export function Onboarding() {
   const handleFinish = async () => {
     if (!user) {
       try {
-        // Automatically register session if user came directly to onboarding without logging in
-        await signup('Guest User', `guest_${Date.now()}@luna.ai`, 'guest_pass_123');
+        await signup('Guest User', `guest_${Date.now()}@daysync.ai`, 'guest_pass_123');
       } catch (e) {
         console.log('Session fallback:', e);
       }
@@ -47,16 +46,16 @@ export function Onboarding() {
             <Sparkles size={22} color="#fff" />
           </div>
           <div>
-            <h2 style={{ fontSize: '1.4rem' }}>Welcome to Luna</h2>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Your AI for Everyday Life</p>
+            <h2 style={{ fontSize: '1.4rem' }}>Welcome to DaySync</h2>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Smart Life Companion with Luna AI</p>
           </div>
         </div>
 
         <h3 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>
-          What would you like Luna to help with?
+          What would you like DaySync to help with?
         </h3>
         <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', marginBottom: '24px' }}>
-          This gives Luna an initial context to personalize your daily planner and notices.
+          Select your primary goals to personalize your workspace.
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -92,7 +91,7 @@ export function Onboarding() {
           className="btn-primary"
           style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '1rem', cursor: 'pointer' }}
         >
-          Continue to Luna Command Center <ArrowRight size={18} />
+          Continue to DaySync Dashboard <ArrowRight size={18} />
         </button>
       </div>
     </div>

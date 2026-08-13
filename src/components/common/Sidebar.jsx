@@ -4,14 +4,11 @@ import {
   MessageSquare, 
   LayoutDashboard, 
   CreditCard, 
-  Calendar, 
   FileText, 
   Brain, 
   Settings, 
   Sparkles,
   ShieldCheck,
-  PanelLeftClose,
-  PanelLeftOpen,
   X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -19,21 +16,20 @@ import { useLuna } from '../../context/LunaContext';
 
 export function Sidebar() {
   const { user } = useAuth();
-  const { sidebarCollapsed, sidebarOpen, toggleSidebar, closeSidebar } = useLuna();
+  const { sidebarCollapsed, sidebarOpen, closeSidebar } = useLuna();
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Navigation Items without Planner
   const navItems = [
-    { label: 'Chat', icon: MessageSquare, path: '/app/chat', highlight: true },
+    { label: 'Chat (Luna AI)', icon: MessageSquare, path: '/app/chat', highlight: true },
     { label: 'Dashboard', icon: LayoutDashboard, path: '/app/dashboard' },
-    { label: 'Planner', icon: Calendar, path: '/app/planner' },
     { label: 'Expenses', icon: CreditCard, path: '/app/expenses' },
     { label: 'Memories', icon: Brain, path: '/app/memories' },
     { label: 'Summary', icon: FileText, path: '/app/summary' },
   ];
 
   const handleNavClick = () => {
-    // Close mobile drawer when user selects a link
     closeSidebar();
   };
 
@@ -47,7 +43,7 @@ export function Sidebar() {
 
       {/* Main Sidebar Element */}
       <aside className={`sidebar-container ${sidebarCollapsed ? 'collapsed' : ''} ${sidebarOpen ? 'mobile-open' : ''}`}>
-        {/* Brand Header & Hide/Show Sidebar Toggle Button */}
+        {/* Brand Header */}
         <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px 24px 8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
@@ -64,32 +60,28 @@ export function Sidebar() {
               <Sparkles size={22} color="#ffffff" />
             </div>
             <div className="sidebar-text">
-              <h2 style={{ fontSize: '1.3rem', letterSpacing: '-0.5px' }}>LUNA</h2>
+              <h2 style={{ fontSize: '1.3rem', letterSpacing: '-0.5px' }}>DaySync</h2>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>AI Companion</p>
             </div>
           </div>
 
-          {/* Desktop & Mobile Hide/Show Sidebar Toggle Button */}
-          <button
-            onClick={toggleSidebar}
-            className="btn-secondary"
-            title={sidebarCollapsed ? "Expand Sidebar" : "Hide / Collapse Sidebar"}
-            style={{
-              padding: '6px',
-              borderRadius: '8px',
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-secondary)'
-            }}
-          >
-            {sidebarOpen ? (
+          {/* Close button for Mobile Drawer view only */}
+          {sidebarOpen && (
+            <button
+              onClick={closeSidebar}
+              className="btn-secondary"
+              title="Close Menu"
+              style={{
+                padding: '6px',
+                borderRadius: '8px',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-secondary)'
+              }}
+            >
               <X size={20} />
-            ) : sidebarCollapsed ? (
-              <PanelLeftOpen size={20} />
-            ) : (
-              <PanelLeftClose size={20} />
-            )}
-          </button>
+            </button>
+          )}
         </div>
 
         {/* Main Navigation Links */}
@@ -132,7 +124,7 @@ export function Sidebar() {
                     padding: '2px 8px',
                     borderRadius: '99px',
                     fontWeight: '600'
-                  }}>Central</span>
+                  }}>AI</span>
                 )}
               </NavLink>
             );

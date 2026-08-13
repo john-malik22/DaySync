@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckSquare, CreditCard, Brain, Calendar } from 'lucide-react';
+import { CheckSquare, CreditCard, Brain } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 
 export function SummaryCards() {
@@ -9,7 +9,7 @@ export function SummaryCards() {
   const budgetTarget = savedTarget ? parseFloat(savedTarget) : 20000;
 
   const pendingTasks = tasks.filter(t => !t.completed).length;
-  const totalSpent = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalSpent = expenses.filter(e => e.type !== 'income').reduce((acc, curr) => acc + curr.amount, 0);
 
   const cards = [
     {
@@ -35,14 +35,6 @@ export function SummaryCards() {
       icon: Brain,
       color: 'var(--accent-secondary)',
       badge: 'Context'
-    },
-    {
-      title: 'Planner Agenda',
-      value: 'Scheduled',
-      subtitle: 'Daily time blocks',
-      icon: Calendar,
-      color: 'var(--accent-success)',
-      badge: 'Schedule'
     }
   ];
 

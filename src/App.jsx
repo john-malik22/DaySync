@@ -14,7 +14,6 @@ import { Navbar } from './components/common/Navbar';
 import { DashboardPage } from './pages/app/DashboardPage';
 import { ChatPage } from './pages/app/ChatPage';
 import { ExpensesPage } from './pages/app/ExpensesPage';
-import { PlannerPage } from './pages/app/PlannerPage';
 import { MemoriesPage } from './pages/app/MemoriesPage';
 import { SummaryPage } from './pages/app/SummaryPage';
 import { SettingsPage } from './pages/app/SettingsPage';
@@ -72,7 +71,7 @@ export default function App() {
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="chat" element={<ChatPage />} />
               <Route path="expenses" element={<ExpensesPage />} />
-              <Route path="planner" element={<PlannerPage />} />
+              <Route path="planner" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="memories" element={<MemoriesPage />} />
               <Route path="summary" element={<SummaryPage />} />
               <Route path="settings" element={<SettingsPage />} />
