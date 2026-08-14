@@ -20,18 +20,22 @@ export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Navigation Items per wireframe specification
+  // Navigation Items per exact wireframe specification
   const navItems = [
     { label: 'Chat (AI)', icon: MessageSquare, path: '/app/chat' },
     { label: 'Dashboard', icon: LayoutDashboard, path: '/app/dashboard' },
     { label: 'Expenses', icon: CreditCard, path: '/app/expenses' },
     { label: 'Memory', icon: Brain, path: '/app/memories' },
-    { label: 'Task', icon: CheckSquare, path: '/app/dashboard' }
+    { label: 'Task', icon: CheckSquare, path: '/app/task' }
   ];
 
   const handleNavClick = () => {
     closeSidebar();
   };
+
+  // Get user's first name & initial
+  const firstName = user?.name ? user.name.split(' ')[0] : 'User';
+  const initial = user?.name ? user.name[0].toUpperCase() : 'U';
 
   return (
     <>
@@ -44,7 +48,7 @@ export function Sidebar() {
       {/* Main Sidebar Element */}
       <aside className={`sidebar-container ${sidebarCollapsed ? 'collapsed' : ''} ${sidebarOpen ? 'mobile-open' : ''}`}>
         {/* Brand & Collapse Header */}
-        <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '20px', borderBottom: '1px solid var(--border-color)', marginBottom: '16px' }}>
+        <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '20px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
               width: '36px',
@@ -61,7 +65,7 @@ export function Sidebar() {
               <Sparkles size={20} />
             </div>
             <div className="sidebar-text">
-              <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>DaySync</h2>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#EBF2F7' }}>DaySync</h2>
             </div>
           </div>
 
@@ -74,7 +78,7 @@ export function Sidebar() {
               borderRadius: 'var(--radius-sm)',
               background: 'transparent',
               border: 'none',
-              color: 'var(--text-secondary)'
+              color: '#9BAEB8'
             }}
           >
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
@@ -101,77 +105,67 @@ export function Sidebar() {
                   justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                   borderRadius: 'var(--radius-sm)',
                   textDecoration: 'none',
-                  color: isActive ? '#FFFFFF' : 'var(--text-secondary)',
+                  color: isActive ? '#FFFFFF' : '#9BAEB8',
                   background: isActive ? 'var(--accent-primary)' : 'transparent',
                   fontWeight: isActive ? '700' : '500',
                   fontSize: '0.9rem',
                   transition: 'all 0.15s ease'
                 }}
               >
-                <Icon size={18} color={isActive ? '#FFFFFF' : 'var(--accent-primary)'} style={{ flexShrink: 0 }} />
+                <Icon size={18} color={isActive ? '#FFFFFF' : '#A8D5CF'} style={{ flexShrink: 0 }} />
                 <span className="sidebar-text">{item.label}</span>
               </NavLink>
             );
           })}
         </nav>
 
-        {/* User Footer & Settings */}
+        {/* User Footer: [ J ]  FirstName              ⚙ */}
         <div style={{
           marginTop: 'auto',
           paddingTop: '16px',
-          borderTop: '1px solid var(--border-color)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
-          flexDirection: 'column',
-          gap: '10px'
+          alignItems: 'center',
+          justifyContent: 'space-between'
         }}>
-          {/* User Profile Info */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
             <div style={{
               width: '34px',
               height: '34px',
               borderRadius: '50%',
-              background: 'var(--accent-secondary)',
+              background: 'var(--accent-primary)',
               color: '#FFFFFF',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: '700',
-              fontSize: '13px',
+              fontSize: '14px',
               flexShrink: 0
             }}>
-              {user?.name ? user.name[0] : 'U'}
+              {initial}
             </div>
-            <div className="sidebar-user-details" style={{ minWidth: 0 }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)', truncate: true }}>
-                {user?.name || 'User'}
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                {user?.email || 'user@daysync.ai'}
-              </div>
+            <div className="sidebar-text" style={{ fontSize: '0.9rem', fontWeight: '600', color: '#EBF2F7', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+              {firstName}
             </div>
           </div>
 
-          {/* Settings Nav Item */}
-          <NavLink
-            to="/app/settings"
-            onClick={handleNavClick}
+          {/* Settings Icon Button */}
+          <button
+            onClick={() => { handleNavClick(); navigate('/app/settings'); }}
+            title="Settings"
             style={{
+              background: 'transparent',
+              border: 'none',
+              color: location.pathname === '/app/settings' ? 'var(--accent-primary)' : '#9BAEB8',
+              cursor: 'pointer',
+              padding: '6px',
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
-              padding: sidebarCollapsed ? '10px 0' : '10px 14px',
-              justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-              borderRadius: 'var(--radius-sm)',
-              textDecoration: 'none',
-              color: location.pathname === '/app/settings' ? '#FFFFFF' : 'var(--text-secondary)',
-              background: location.pathname === '/app/settings' ? 'var(--accent-primary)' : 'transparent',
-              fontWeight: location.pathname === '/app/settings' ? '700' : '500',
-              fontSize: '0.9rem'
+              justifyContent: 'center'
             }}
           >
-            <Settings size={18} color={location.pathname === '/app/settings' ? '#FFFFFF' : 'var(--accent-primary)'} style={{ flexShrink: 0 }} />
-            <span className="sidebar-text">Settings</span>
-          </NavLink>
+            <Settings size={18} />
+          </button>
         </div>
       </aside>
     </>

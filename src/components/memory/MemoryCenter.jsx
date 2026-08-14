@@ -28,19 +28,19 @@ export function MemoryCenter({ searchFilter }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-      {/* 1. Add Something Form Card */}
+      {/* 1. Add Memory Form Card */}
       <div className="glass-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
-          <h3 style={{ color: 'var(--accent-primary)' }}>Add Something</h3>
+          <h3 style={{ color: 'var(--accent-primary)' }}>ADD MEMORY</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--accent-primary)' }}>
-            <ShieldCheck size={14} /> Explicit Consent
+            <ShieldCheck size={14} /> Explicit Consent Protection
           </div>
         </div>
 
         <form onSubmit={handleManualAdd} className="mobile-stack-form" style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 'var(--space-sm)' }}>
           <input
             type="text"
-            placeholder="Add something for Luna to remember..."
+            placeholder="Add something Luna should remember..."
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
           />
@@ -68,12 +68,12 @@ export function MemoryCenter({ searchFilter }) {
             style={{
               padding: '6px 14px', borderRadius: 'var(--radius-full)',
               border: '1px solid var(--border-color)',
-              background: filter === cat ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+              background: filter === cat ? 'var(--accent-primary)' : 'var(--bg-card)',
               color: filter === cat ? '#FFFFFF' : 'var(--text-secondary)',
               fontSize: '13px', fontWeight: filter === cat ? '700' : '500', cursor: 'pointer', whiteSpace: 'nowrap'
             }}
           >
-            [ {cat} ]
+            {cat}
           </button>
         ))}
       </div>

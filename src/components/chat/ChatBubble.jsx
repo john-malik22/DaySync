@@ -40,7 +40,7 @@ export function ChatBubble({ msg }) {
 
       {/* Bubble Content Container */}
       <div style={{
-        maxWidth: '82%',
+        maxWidth: '85%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: isAssistant ? 'flex-start' : 'flex-end'
@@ -56,7 +56,7 @@ export function ChatBubble({ msg }) {
           <span>{isAssistant ? 'Luna AI' : 'User'}</span>
           {msg.intent && isAssistant && (
             <span style={{
-              background: 'var(--accent-tint)',
+              background: 'var(--bg-secondary)',
               color: 'var(--accent-primary)',
               padding: '1px 6px',
               borderRadius: '4px',

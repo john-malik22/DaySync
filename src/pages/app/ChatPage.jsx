@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
 import { ChatBubble } from '../../components/chat/ChatBubble';
@@ -35,9 +35,7 @@ export function ChatPage() {
     <div className="page-container" style={{
       height: 'calc(100vh - 40px)',
       display: 'flex',
-      flexDirection: 'column',
-      maxWidth: '900px',
-      margin: '0 auto'
+      flexDirection: 'column'
     }}>
       {/* Top Header Row: Page Title on Left | Search on Right */}
       <PageHeaderRow title="Chat with Luna AI" onSearch={setSearch} />
@@ -52,7 +50,7 @@ export function ChatPage() {
               padding: '6px 14px',
               borderRadius: 'var(--radius-full)',
               border: '1px solid var(--border-color)',
-              background: 'var(--bg-secondary)',
+              background: 'var(--bg-card)',
               color: 'var(--text-secondary)',
               fontSize: '13px',
               whiteSpace: 'nowrap',
@@ -60,18 +58,19 @@ export function ChatPage() {
               flexShrink: 0
             }}
           >
-            [ {prompt} ]
+            💬 {prompt}
           </button>
         ))}
       </div>
 
-      {/* Conversation Feed */}
+      {/* Conversation Feed - Full Width */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
         paddingRight: '4px',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        gap: 'var(--space-sm)'
       }}>
         {filteredConversations.map((msg) => (
           <ChatBubble key={msg.id} msg={msg} />
@@ -103,7 +102,7 @@ export function ChatPage() {
             minHeight: '44px',
             borderRadius: 'var(--radius-md)',
             border: '1px solid var(--border-color)',
-            background: 'var(--bg-secondary)',
+            background: 'var(--bg-card)',
             color: 'var(--text-primary)',
             fontSize: '14px',
             padding: '0 14px'

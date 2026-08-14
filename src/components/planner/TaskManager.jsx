@@ -23,14 +23,16 @@ export function TaskManager({ searchFilter }) {
   };
 
   const filteredTasks = tasks.filter(t => !searchFilter || t.title.toLowerCase().includes(searchFilter.toLowerCase()));
+  const pendingFilteredTasks = filteredTasks.filter(t => !t.completed);
+  const completedFilteredTasks = filteredTasks.filter(t => t.completed);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-      {/* Top Row: Task & Reminders (Left) | Completed (Right) */}
+      {/* Top Row: TASK & REMINDERS (Left) | COMPLETED (Right) */}
       <div className="grid-2" style={{ gridTemplateColumns: '1.4fr 1fr', alignItems: 'start' }}>
-        {/* Task & Reminders Card */}
+        {/* TASK & REMINDERS Form Card */}
         <div className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)' }}>Task & Reminders</h3>
+          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)' }}>TASK & REMINDERS</h3>
           <form onSubmit={handleAddTask} className="mobile-stack-form" style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 'var(--space-sm)' }}>
             <input
               type="text"
@@ -53,9 +55,9 @@ export function TaskManager({ searchFilter }) {
           </form>
         </div>
 
-        {/* Completed Card */}
+        {/* COMPLETED Card */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '120px' }}>
-          <h3 style={{ marginBottom: '4px', color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase' }}>Completed</h3>
+          <h3 style={{ marginBottom: '4px', color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase' }}>COMPLETED</h3>
           <div style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <CheckCircle2 size={24} /> {completedCount} Done
           </div>
@@ -63,9 +65,9 @@ export function TaskManager({ searchFilter }) {
         </div>
       </div>
 
-      {/* Bottom Row: Recent Task To Do Card */}
+      {/* Bottom Row: RECENT TASK TO DO Card */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-secondary)' }}>Recent Task To Do</h3>
+        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-secondary)' }}>RECENT TASK TO DO</h3>
 
         {filteredTasks.length === 0 ? (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
@@ -107,7 +109,7 @@ export function TaskManager({ searchFilter }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{
                     fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px',
-                    background: 'var(--accent-tint)',
+                    background: 'var(--bg-tertiary)',
                     color: 'var(--accent-primary)'
                   }}>
                     {task.priority}

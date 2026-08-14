@@ -1,36 +1,35 @@
-/* DaySync Design System - Light Dusty Rose (#A87C7C) Palette */
+/* DaySync Design System - Navy & Teal Palette (Light Theme Default) */
 
 :root, [data-theme='light'] {
-  /* Exact Color Palette Tokens */
-  --bg-primary: #F6EFEE;       /* Warm Light Neutral Background */
-  --bg-card: #FFF9F8;          /* Crisp Warm Off-White Card Surface */
-  --bg-secondary: #EFE4E2;     /* Elevated Light Neutral */
-  --bg-tertiary: #E5D5D3;      /* Secondary Input & Container Surface */
+  --bg-primary: #F5F7F7;       /* Main Light Background */
+  --bg-card: #FFFFFF;          /* Crisp White Surface */
+  --bg-secondary: #EEF3F2;     /* Soft Surface Level 2 */
+  --bg-tertiary: #E2EBE9;      /* Container Level 3 */
 
-  --border-color: #E0CFCD;     /* Soft Muted Rose Border */
-  --border-subtle: rgba(126, 99, 99, 0.15);
-  --border-highlight: #A87C7C;  /* Light Dusty Rose Focus Highlight */
+  --border-color: #D9E2E0;     /* Light Border */
+  --border-subtle: rgba(24, 59, 86, 0.1);
+  --border-highlight: #2F7D78;  /* Primary Teal Focus Highlight */
 
-  --accent-primary: #A87C7C;    /* LIGHT DUSTY ROSE - HIGHEST VISUAL PRIORITY */
-  --accent-secondary: #7E6363;  /* DUSTY ROSE - SECONDARY ACCENT */
-  --accent-dark: #503C3C;       /* DEEP MUTED BROWN */
-  --accent-deep: #3E3232;       /* DARK BROWN */
+  --sidebar-bg: #183B56;        /* Deep Navy Sidebar Background */
+  --sidebar-text: #EBF2F7;
+  --sidebar-muted: #9BAEB8;
 
-  --accent-gradient: linear-gradient(135deg, #A87C7C 0%, #966B6B 100%);
-  --accent-tint: #F3E7E6;
+  --accent-primary: #2F7D78;    /* Primary Teal */
+  --accent-light: #A8D5CF;      /* Light Teal Tint */
+  --accent-dark: #183B56;       /* Primary Dark Navy */
 
-  --accent-success: #688F6D;
-  --accent-warning: #C98B57;
-  --accent-danger: #C55E5E;
+  --accent-success: #3E8E6B;
+  --accent-warning: #D98B38;
+  --accent-danger: #C85C5C;
 
-  --text-primary: #3E3232;     /* Dark Brown Primary Text */
-  --text-secondary: #665050;   /* Muted Dusty Rose Secondary Text */
-  --text-muted: #9E8686;       /* Muted Text */
+  --text-primary: #183B56;     /* Primary Dark Navy Text */
+  --text-secondary: #6B7C85;   /* Muted Text */
+  --text-muted: #8E9FA8;
 
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  /* Standard Spacing Tokens */
+  /* Spacing Scale */
   --space-xs: 8px;
   --space-sm: 12px;
   --space-md: 16px;
@@ -38,44 +37,43 @@
   --space-xl: 32px;
   --space-2xl: 40px;
 
-  /* Standard Border Radius Tokens */
+  /* Border Radius */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-xl: 20px;
   --radius-full: 9999px;
 
   /* Elevation */
-  --shadow-sm: 0 1px 3px rgba(62, 50, 50, 0.08);
-  --shadow-md: 0 4px 12px rgba(62, 50, 50, 0.08);
-  --shadow-lg: 0 8px 24px rgba(62, 50, 50, 0.12);
+  --shadow-sm: 0 1px 3px rgba(24, 59, 86, 0.06);
+  --shadow-md: 0 4px 12px rgba(24, 59, 86, 0.08);
+  --shadow-lg: 0 8px 24px rgba(24, 59, 86, 0.12);
 }
 
 [data-theme='dark'] {
-  --bg-primary: #3E3232;       /* DARK BROWN Deepest Background */
-  --bg-card: #503C3C;          /* DEEP MUTED BROWN Cards & Surfaces */
-  --bg-secondary: #453535;     /* Dark Surface Level 2 */
-  --bg-tertiary: #342727;      /* Dark Surface Level 3 */
+  --bg-primary: #0F1B26;       /* Deepest Dark Background */
+  --bg-card: #162635;          /* Dark Surface Card */
+  --bg-secondary: #1D3140;     /* Soft Surface Level 2 */
+  --bg-tertiary: #12202E;      /* Deep Container Surface */
 
-  --border-color: #665050;     /* Muted Dusty Rose Border */
-  --border-subtle: rgba(168, 124, 124, 0.2);
-  --border-highlight: #A87C7C;  /* Light Dusty Rose Highlight */
+  --border-color: #2A404F;     /* Dark Border */
+  --border-subtle: rgba(85, 183, 173, 0.2);
+  --border-highlight: #55B7AD;  /* Primary Teal Highlight */
 
-  --accent-primary: #A87C7C;    /* LIGHT DUSTY ROSE - Primary Accent */
-  --accent-secondary: #7E6363;  /* DUSTY ROSE */
-  --accent-dark: #503C3C;
-  --accent-deep: #3E3232;
+  --sidebar-bg: #0B1722;        /* Darkest Sidebar Background */
+  --sidebar-text: #F5F8FA;
+  --sidebar-muted: #9BAEB8;
 
-  --accent-gradient: linear-gradient(135deg, #A87C7C 0%, #966B6B 100%);
-  --accent-tint: rgba(168, 124, 124, 0.15);
+  --accent-primary: #55B7AD;    /* Dark Mode Primary Teal */
+  --accent-light: #8ED3CB;      /* Dark Mode Light Teal */
+  --accent-dark: #DDEAF0;
 
-  --accent-success: #A87C7C;
-  --accent-warning: #D89F6B;
-  --accent-danger: #E57373;
+  --accent-success: #64B48D;
+  --accent-warning: #E09F5A;
+  --accent-danger: #E17878;
 
-  --text-primary: #F6EFEE;     /* Warm Off-White Primary Text */
-  --text-secondary: #D9C5C5;   /* Light Rose Secondary Text */
-  --text-muted: #A89090;
+  --text-primary: #F5F8FA;     /* Warm Light Main Text */
+  --text-secondary: #9BAEB8;   /* Muted Text */
+  --text-muted: #6B808E;
 
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
@@ -106,7 +104,7 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* App Core Shell Layout (Left Sidebar + Main Content) */
+/* App Core Shell Layout */
 .app-shell-layout {
   display: flex;
   min-height: 100vh;
@@ -125,7 +123,7 @@ body {
 /* Typography Hierarchy */
 h1 {
   font-family: var(--font-heading);
-  font-size: clamp(22px, 4vw, 28px);
+  font-size: clamp(24px, 4vw, 32px);
   font-weight: 700;
   line-height: 1.25;
   color: var(--text-primary);
@@ -134,7 +132,7 @@ h1 {
 
 h2 {
   font-family: var(--font-heading);
-  font-size: clamp(18px, 3.5vw, 22px);
+  font-size: clamp(20px, 3.5vw, 24px);
   font-weight: 600;
   line-height: 1.3;
   color: var(--text-primary);
@@ -142,7 +140,7 @@ h2 {
 
 h3 {
   font-family: var(--font-heading);
-  font-size: clamp(15px, 3vw, 18px);
+  font-size: clamp(16px, 3vw, 18px);
   font-weight: 600;
   line-height: 1.35;
   color: var(--text-primary);
@@ -150,7 +148,7 @@ h3 {
 
 h4 {
   font-family: var(--font-heading);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -160,15 +158,15 @@ p {
   color: var(--text-secondary);
 }
 
-/* Shared Page Layout Container */
+/* Page Container (Max-Width 1200px - 1400px) */
 .page-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
-  padding: var(--space-lg);
+  padding: var(--space-xl) var(--space-2xl); /* 32px - 40px desktop padding */
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-xl);
 }
 
 /* Page Header Row (Page Title on Left | Search on Right) */
@@ -186,11 +184,11 @@ p {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   padding: 8px 14px;
   border-radius: var(--radius-full);
-  min-width: 220px;
+  min-width: 240px;
   color: var(--text-secondary);
   font-size: 13px;
   transition: border-color 0.15s ease;
@@ -219,7 +217,7 @@ p {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   padding: var(--space-lg);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .glass-card:hover {
@@ -252,8 +250,8 @@ p {
 }
 
 .btn-secondary {
-  background: var(--accent-secondary);
-  color: #FFFFFF;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   border: 1px solid var(--border-color);
   padding: 10px 16px;
   min-height: 42px;
@@ -271,7 +269,7 @@ p {
 }
 
 .btn-secondary:hover {
-  background-color: var(--accent-primary);
+  background-color: var(--border-color);
   border-color: var(--accent-primary);
 }
 
@@ -288,7 +286,7 @@ textarea {
   padding: 10px 14px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 14px;
@@ -305,14 +303,14 @@ input:focus, select:focus, textarea:focus {
   font-size: 14px;
 }
 
-/* Sidebar Responsive Architecture */
+/* Sidebar Responsive Shell */
 .sidebar-container {
-  width: 240px;
+  width: 250px;
   height: 100vh;
   position: sticky;
   top: 0;
-  background: var(--bg-primary);
-  border-right: 1px solid var(--border-color);
+  background: var(--sidebar-bg);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   padding: var(--space-lg);
@@ -362,6 +360,10 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
+  .page-container {
+    padding: var(--space-lg) var(--space-lg); /* 24px tablet padding */
+  }
+
   .grid-2, .grid-3 {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -410,7 +412,7 @@ input:focus, select:focus, textarea:focus {
   }
 
   .page-container {
-    padding: var(--space-md);
+    padding: var(--space-md); /* 16px mobile padding */
     gap: var(--space-md);
   }
 

@@ -28,7 +28,7 @@ export function SummaryPage() {
             className={tab === t ? 'btn-primary' : 'btn-secondary'}
             style={{ padding: '6px 16px', minHeight: '36px', fontSize: '13px' }}
           >
-            [ {t} ]
+            {t}
           </button>
         ))}
       </div>
@@ -49,7 +49,7 @@ export function SummaryPage() {
           </span>
         </div>
 
-        {/* Breakdown Grid */}
+        {/* Summary Metrics Grid */}
         <div className="grid-3" style={{ marginBottom: 'var(--space-lg)' }}>
           <div style={{ padding: '14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
