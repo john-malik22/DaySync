@@ -9,7 +9,6 @@ import { Signup } from './pages/Signup';
 import { Onboarding } from './pages/Onboarding';
 
 import { Sidebar } from './components/common/Sidebar';
-import { Navbar } from './components/common/Navbar';
 
 import { DashboardPage } from './pages/app/DashboardPage';
 import { ChatPage } from './pages/app/ChatPage';
@@ -20,13 +19,10 @@ import { SettingsPage } from './pages/app/SettingsPage';
 
 function AppLayout() {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
+    <div className="app-shell-layout">
       <Sidebar />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowX: 'hidden' }}>
-        <Navbar />
-        <main style={{ flex: 1 }}>
-          <Outlet />
-        </main>
+      <div className="main-content-area">
+        <Outlet />
       </div>
     </div>
   );

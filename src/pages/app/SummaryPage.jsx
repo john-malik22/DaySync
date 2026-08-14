@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { Clock, CheckCircle2, CreditCard, Sparkles } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 
 export function SummaryPage() {
   const { tasks, expenses } = useLuna();
   const [tab, setTab] = useState('Daily');
+  const [search, setSearch] = useState('');
 
   const completedTasks = tasks.filter(t => t.completed).length;
   const pendingTasks = tasks.filter(t => !t.completed).length;
@@ -14,12 +16,8 @@ export function SummaryPage() {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1>Everyday Summaries</h1>
-        <p>
-          Synthesized reports of your activities, spending, and task completions.
-        </p>
-      </div>
+      {/* Top Header Row: Page Title on Left | Search on Right */}
+      <PageHeaderRow title="Summary" onSearch={setSearch} />
 
       {/* Tab Selector */}
       <div className="scroll-row">
@@ -28,16 +26,16 @@ export function SummaryPage() {
             key={t}
             onClick={() => setTab(t)}
             className={tab === t ? 'btn-primary' : 'btn-secondary'}
-            style={{ padding: '6px 14px', minHeight: '38px', fontSize: '13px' }}
+            style={{ padding: '6px 16px', minHeight: '36px', fontSize: '13px' }}
           >
-            {t} Summary
+            [ {t} ]
           </button>
         ))}
       </div>
 
-      {/* Summary Card Layout */}
+      {/* Single Report Container */}
       <div className="glass-card animate-fade-in">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-lg)', borderBottom: '1px solid var(--border-color)', paddingBottom: 'var(--space-md)', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-lg)', borderBottom: '1px solid var(--border-color)', paddingBottom: 'var(--space-sm)', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
           <div>
             <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               YOUR {tab.toUpperCase()} REPORT
@@ -47,43 +45,43 @@ export function SummaryPage() {
             </h2>
           </div>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            Date: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </span>
         </div>
 
-        {/* Breakdown Grid - 2 Column on Wide Mobile, 1 Column on 320px */}
-        <div className="mobile-grid-2" style={{ marginBottom: 'var(--space-xl)' }}>
-          <div style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+        {/* Breakdown Grid */}
+        <div className="grid-3" style={{ marginBottom: 'var(--space-lg)' }}>
+          <div style={{ padding: '14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
               <Clock size={14} color="var(--accent-primary)" /> Tasks
             </div>
-            <div style={{ fontSize: '1.3rem', fontWeight: '800' }}>
+            <div style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--text-primary)' }}>
               {tasks.length} Total
             </div>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pendingTasks} Pending</span>
           </div>
 
-          <div style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+          <div style={{ padding: '14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
-              <CheckCircle2 size={14} color="var(--accent-success)" /> Status
+              <CheckCircle2 size={14} color="var(--accent-primary)" /> Status
             </div>
-            <div style={{ fontSize: '1.3rem', fontWeight: '800' }}>{completedTasks} Done</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--text-primary)' }}>{completedTasks} Done</div>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pendingTasks} pending</span>
           </div>
 
-          <div style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', gridColumn: 'span 2' }}>
+          <div style={{ padding: '14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
               <CreditCard size={14} color="var(--accent-warning)" /> Spending
             </div>
-            <div style={{ fontSize: '1.3rem', fontWeight: '800' }}>₹{totalSpent.toLocaleString()}</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--accent-warning)' }}>₹{totalSpent.toLocaleString()}</div>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Logged Expenses</span>
           </div>
         </div>
 
-        {/* AI Dynamic Executive Synthesis */}
+        {/* Luna Executive Synthesis */}
         <div style={{
-          padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-glow)', fontSize: '13px', lineHeight: '1.5'
+          padding: '14px 16px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+          border: '1px solid var(--border-color)', fontSize: '13px', lineHeight: '1.5'
         }}>
           <strong style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
             <Sparkles size={15} /> Luna Executive Synthesis:
@@ -91,7 +89,7 @@ export function SummaryPage() {
           
           {!hasActivity ? (
             <span style={{ color: 'var(--text-secondary)' }}>
-              No activity logged yet. Add your tasks or record an expense, and Luna will automatically synthesize your daily, weekly, and monthly performance reports!
+              No activity logged yet. Add your tasks or record an expense, and Luna will automatically synthesize your performance reports!
             </span>
           ) : (
             <span>

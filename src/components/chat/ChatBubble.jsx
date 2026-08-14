@@ -27,16 +27,15 @@ export function ChatBubble({ msg }) {
       <div style={{
         width: '36px',
         height: '36px',
-        borderRadius: 'var(--radius-md)',
-        background: isAssistant ? 'var(--accent-gradient)' : 'var(--bg-tertiary)',
+        borderRadius: 'var(--radius-sm)',
+        background: isAssistant ? 'var(--bg-card)' : 'var(--accent-primary)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
-        boxShadow: isAssistant ? 'var(--shadow-glow)' : 'none',
-        border: isAssistant ? 'none' : '1px solid var(--border-color)'
+        border: '1px solid var(--border-color)'
       }}>
-        {isAssistant ? <Sparkles size={18} color="#fff" /> : <User size={18} color="var(--accent-primary)" />}
+        {isAssistant ? <Sparkles size={18} color="var(--accent-primary)" /> : <User size={18} color="#1C2528" />}
       </div>
 
       {/* Bubble Content Container */}
@@ -47,7 +46,7 @@ export function ChatBubble({ msg }) {
         alignItems: isAssistant ? 'flex-start' : 'flex-end'
       }}>
         <div style={{
-          fontSize: '0.75rem',
+          fontSize: '12px',
           color: 'var(--text-muted)',
           marginBottom: '4px',
           display: 'flex',
@@ -57,11 +56,11 @@ export function ChatBubble({ msg }) {
           <span>{isAssistant ? 'Luna AI' : 'You'}</span>
           {msg.intent && isAssistant && (
             <span style={{
-              background: 'rgba(99, 102, 241, 0.15)',
+              background: 'rgba(156, 176, 128, 0.15)',
               color: 'var(--accent-primary)',
               padding: '1px 6px',
               borderRadius: '4px',
-              fontSize: '0.68rem',
+              fontSize: '11px',
               fontWeight: '600'
             }}>
               Intent: {msg.intent}
@@ -71,12 +70,13 @@ export function ChatBubble({ msg }) {
 
         <div className="glass-card" style={{
           padding: '12px 16px',
-          borderRadius: isAssistant ? '4px 14px 14px 14px' : '14px 4px 14px 14px',
+          borderRadius: isAssistant ? '4px 12px 12px 12px' : '12px 4px 12px 12px',
           background: isAssistant ? 'var(--bg-card)' : 'var(--accent-primary)',
-          color: isAssistant ? 'var(--text-primary)' : '#ffffff',
-          fontSize: '0.92rem',
+          color: isAssistant ? 'var(--text-primary)' : '#1C2528',
+          fontSize: '14px',
           lineHeight: '1.5',
-          wordBreak: 'break-word'
+          wordBreak: 'break-word',
+          border: '1px solid var(--border-color)'
         }}>
           {msg.message}
 
@@ -88,11 +88,11 @@ export function ChatBubble({ msg }) {
               borderRadius: 'var(--radius-sm)',
               background: 'var(--bg-secondary)',
               border: '1px solid var(--border-color)',
-              fontSize: '0.85rem'
+              fontSize: '13px'
             }}>
               {msg.data.type === 'EXPENSE_ADDED' && (
                 <div style={{ color: 'var(--text-primary)' }}>
-                  <strong style={{ color: 'var(--accent-success)' }}>✓ Expense Logged:</strong> ₹{msg.data.expense.amount} ({msg.data.expense.category})
+                  <strong style={{ color: 'var(--accent-primary)' }}>✓ Expense Logged:</strong> ₹{msg.data.expense.amount} ({msg.data.expense.category})
                 </div>
               )}
               {msg.data.type === 'TASK_CREATED' && (
@@ -102,23 +102,23 @@ export function ChatBubble({ msg }) {
               )}
               {msg.data.type === 'MEMORY_SAVED' && (
                 <div style={{ color: 'var(--text-primary)' }}>
-                  <strong style={{ color: 'var(--accent-secondary)' }}>✓ Saved Fact:</strong> {msg.data.memory.content}
+                  <strong style={{ color: 'var(--accent-primary)' }}>✓ Saved Fact:</strong> {msg.data.memory.content}
                 </div>
               )}
             </div>
           )}
 
-          {/* Memory Permission System Prompt */}
+          {/* Memory Permission Prompt */}
           {msg.memoryPrompt && (
             <div style={{
               marginTop: '12px',
               padding: '12px',
               borderRadius: 'var(--radius-md)',
-              background: 'rgba(139, 92, 246, 0.15)',
-              border: '1px solid var(--accent-secondary)',
-              fontSize: '0.85rem'
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--accent-primary)',
+              fontSize: '13px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600', color: 'var(--accent-secondary)', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600', color: 'var(--accent-primary)', marginBottom: '4px' }}>
                 <Brain size={15} /> Memory Confirmation Requested
               </div>
               <p style={{ color: 'var(--text-primary)', marginBottom: '10px' }}>
@@ -128,13 +128,13 @@ export function ChatBubble({ msg }) {
                 <button
                   onClick={() => handleRememberConsent(msg.memoryPrompt)}
                   className="btn-primary"
-                  style={{ padding: '6px 12px', fontSize: '0.8rem', minHeight: '34px' }}
+                  style={{ padding: '6px 12px', fontSize: '12px', minHeight: '34px' }}
                 >
                   <Check size={14} /> Remember
                 </button>
                 <button
                   className="btn-secondary"
-                  style={{ padding: '6px 12px', fontSize: '0.8rem', minHeight: '34px' }}
+                  style={{ padding: '6px 12px', fontSize: '12px', minHeight: '34px' }}
                 >
                   <X size={14} /> Not Now
                 </button>

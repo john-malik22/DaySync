@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Trash2, LogOut, UserX } from 'lucide-react';
+import { ShieldCheck, Trash2, LogOut, UserX, Sun, Moon } from 'lucide-react';
+import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 
 export function SettingsPage() {
-  const { user, logout, deleteAccount } = useAuth();
+  const { user, theme, toggleTheme, logout, deleteAccount } = useAuth();
   const navigate = useNavigate();
+  const [search, setSearch] = useState('');
   const [memoryEnabled, setMemoryEnabled] = useState(true);
   const [personalizationEnabled, setPersonalizationEnabled] = useState(true);
 
@@ -36,39 +38,53 @@ export function SettingsPage() {
 
   return (
     <div className="page-container" style={{ maxWidth: '900px' }}>
-      <div className="page-header">
-        <h1>Privacy & Settings</h1>
-        <p>
-          Manage your account profile, privacy controls, and data history.
-        </p>
-      </div>
+      {/* Top Header Row: Page Title on Left | Search on Right */}
+      <PageHeaderRow title="Privacy & Settings" onSearch={setSearch} />
 
-      {/* Account Info */}
+      {/* 1. Account Profile Card */}
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-md)' }}>Account Profile</h3>
-        <div className="mobile-grid-2" style={{ fontSize: '13px' }}>
+        <div className="grid-2" style={{ fontSize: '13px' }}>
           <div>
             <span style={{ color: 'var(--text-muted)' }}>Name</span>
-            <div style={{ fontWeight: '600', marginTop: '2px', fontSize: '14px' }}>{user?.name || 'User'}</div>
+            <div style={{ fontWeight: '600', marginTop: '2px', fontSize: '14px', color: 'var(--text-primary)' }}>{user?.name || 'User'}</div>
           </div>
           <div>
-            <span style={{ color: 'var(--text-muted)' }}>Email</span>
-            <div style={{ fontWeight: '600', marginTop: '2px', fontSize: '14px' }}>{user?.email || 'user@example.com'}</div>
+            <span style={{ color: 'var(--text-muted)' }}>User Email</span>
+            <div style={{ fontWeight: '600', marginTop: '2px', fontSize: '14px', color: 'var(--text-primary)' }}>{user?.email || 'user@daysync.ai'}</div>
           </div>
         </div>
       </div>
 
-      {/* AI Memory & Privacy Toggles */}
+      {/* 2. Appearance Card */}
+      <div className="glass-card">
+        <h3 style={{ marginBottom: 'var(--space-md)' }}>Appearance</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+          <div>
+            <div style={{ fontWeight: '600', fontSize: '14px' }}>Theme Preference</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Currently set to {theme.toUpperCase()} mode</div>
+          </div>
+          <button
+            onClick={toggleTheme}
+            className="btn-secondary"
+            style={{ padding: '6px 14px', fontSize: '13px', minHeight: '36px' }}
+          >
+            {theme === 'dark' ? <><Sun size={14} color="var(--accent-warning)" /> Dark Mode</> : <><Moon size={14} color="var(--accent-primary)" /> Light Mode</>}
+          </button>
+        </div>
+      </div>
+
+      {/* 3. Privacy Options Card */}
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-md)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ShieldCheck size={18} color="var(--accent-success)" /> AI Privacy & Controls
+          <ShieldCheck size={18} color="var(--accent-primary)" /> Privacy Options
         </h3>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             <div>
               <div style={{ fontWeight: '600', fontSize: '14px' }}>Memory Extraction</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Allow Luna AI to prompt for implicit memory confirmation</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Allow Luna AI to prompt for implicit memory confirmation</div>
             </div>
             <input
               type="checkbox"
@@ -78,10 +94,10 @@ export function SettingsPage() {
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             <div>
               <div style={{ fontWeight: '600', fontSize: '14px' }}>Proactive Personalization</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Allow DaySync Notices & personalized recommendations</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Allow DaySync Notices & personalized recommendations</div>
             </div>
             <input
               type="checkbox"
@@ -93,13 +109,13 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* Data Management & Permanent Deletion */}
+      {/* 4. Data Management & Account Card */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-md)' }}>Data Management & Account Control</h3>
+        <h3 style={{ marginBottom: 'var(--space-md)' }}>Data Management & Account</h3>
 
         <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
           <button onClick={handleClearHistory} className="btn-secondary" style={{ color: 'var(--accent-warning)', fontSize: '13px' }}>
-            <Trash2 size={15} /> Clear Chat History
+            <Trash2 size={15} /> Clear History
           </button>
 
           <button onClick={handleLogout} className="btn-secondary" style={{ fontSize: '13px' }}>
@@ -109,9 +125,9 @@ export function SettingsPage() {
           <button
             onClick={handleDeleteAccount}
             className="btn-secondary"
-            style={{ color: 'var(--accent-danger)', border: '1px solid var(--accent-danger)', background: 'rgba(239, 68, 68, 0.1)', fontSize: '13px' }}
+            style={{ color: 'var(--accent-danger)', border: '1px solid var(--accent-danger)', background: 'rgba(229, 115, 115, 0.1)', fontSize: '13px' }}
           >
-            <UserX size={15} /> Delete Account Permanently
+            <UserX size={15} /> Delete Account
           </button>
         </div>
       </div>

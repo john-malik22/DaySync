@@ -1,19 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles } from 'lucide-react';
+import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
 import { ChatBubble } from '../../components/chat/ChatBubble';
 
 export function ChatPage() {
   const { conversations, sendMessage, loading } = useLuna();
   const [input, setInput] = useState('');
+  const [search, setSearch] = useState('');
   const chatEndRef = useRef(null);
 
   const promptSuggestions = [
     "What tasks do I have pending?",
     "I spent ₹400 on food.",
     "Received ₹5000 salary today.",
-    "Remember I prefer dark theme.",
-    "Show my financial summary."
+    "Remember I prefer dark theme."
   ];
 
   useEffect(() => {
@@ -28,31 +29,27 @@ export function ChatPage() {
     await sendMessage(text);
   };
 
+  const filteredConversations = conversations.filter(msg => !search || msg.message.toLowerCase().includes(search.toLowerCase()));
+
   return (
     <div className="page-container" style={{
-      height: 'calc(100vh - 60px)',
+      height: 'calc(100vh - 40px)',
       display: 'flex',
       flexDirection: 'column',
       maxWidth: '900px',
       margin: '0 auto'
     }}>
-      {/* Page Header */}
-      <div className="page-header" style={{ textAlign: 'center', marginBottom: 'var(--space-sm)' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--accent-primary)', fontWeight: '700', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          <Sparkles size={14} /> Central AI Workspace
-        </div>
-        <h1>Chat with Luna AI</h1>
-        <p>Log transactions, manage tasks, or save memory context naturally.</p>
-      </div>
+      {/* Top Header Row: Page Title on Left | Search on Right */}
+      <PageHeaderRow title="Chat with Luna AI" onSearch={setSearch} />
 
-      {/* Prompt Chips - Controlled Horizontal Scroll ONLY */}
+      {/* Prompt Chips Row */}
       <div className="scroll-row" style={{ marginBottom: 'var(--space-sm)', flexShrink: 0 }}>
         {promptSuggestions.map((prompt, i) => (
           <button
             key={i}
             onClick={() => sendMessage(prompt)}
             style={{
-              padding: '6px 12px',
+              padding: '6px 14px',
               borderRadius: 'var(--radius-full)',
               border: '1px solid var(--border-color)',
               background: 'var(--bg-secondary)',
@@ -60,11 +57,10 @@ export function ChatPage() {
               fontSize: '13px',
               whiteSpace: 'nowrap',
               cursor: 'pointer',
-              flexShrink: 0,
-              transition: 'background-color 0.15s ease'
+              flexShrink: 0
             }}
           >
-            💬 "{prompt}"
+            [ {prompt} ]
           </button>
         ))}
       </div>
@@ -77,7 +73,7 @@ export function ChatPage() {
         display: 'flex',
         flexDirection: 'column'
       }}>
-        {conversations.map((msg) => (
+        {filteredConversations.map((msg) => (
           <ChatBubble key={msg.id} msg={msg} />
         ))}
         {loading && (
@@ -93,7 +89,7 @@ export function ChatPage() {
         marginTop: 'var(--space-sm)',
         display: 'flex',
         alignItems: 'center',
-        gap: 'var(--space-sm)',
+        gap: 'var(--space-xs)',
         width: '100%',
         flexShrink: 0
       }}>
@@ -110,8 +106,7 @@ export function ChatPage() {
             background: 'var(--bg-secondary)',
             color: 'var(--text-primary)',
             fontSize: '14px',
-            padding: '0 14px',
-            outline: 'none'
+            padding: '0 14px'
           }}
         />
 
@@ -120,17 +115,12 @@ export function ChatPage() {
           disabled={!input.trim() || loading}
           className="btn-primary"
           style={{
-            width: '44px',
-            height: '44px',
+            padding: '0 20px',
             minHeight: '44px',
-            borderRadius: 'var(--radius-md)',
-            padding: 0,
-            justifyContent: 'center',
-            flexShrink: 0,
             opacity: input.trim() ? 1 : 0.6
           }}
         >
-          <Send size={18} />
+          <Send size={16} /> Send
         </button>
       </form>
     </div>

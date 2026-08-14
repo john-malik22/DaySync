@@ -4,11 +4,11 @@ import {
   MessageSquare, 
   LayoutDashboard, 
   CreditCard, 
-  FileText, 
   Brain, 
+  CheckSquare,
   Settings, 
   Sparkles,
-  ShieldCheck,
+  Menu,
   X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -16,17 +16,17 @@ import { useLuna } from '../../context/LunaContext';
 
 export function Sidebar() {
   const { user } = useAuth();
-  const { sidebarCollapsed, sidebarOpen, closeSidebar } = useLuna();
+  const { sidebarCollapsed, sidebarOpen, toggleSidebar, closeSidebar } = useLuna();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Navigation Items without Planner
+  // Navigation Items per wireframe specification
   const navItems = [
-    { label: 'Chat (Luna AI)', icon: MessageSquare, path: '/app/chat', highlight: true },
+    { label: 'Chat (AI)', icon: MessageSquare, path: '/app/chat' },
     { label: 'Dashboard', icon: LayoutDashboard, path: '/app/dashboard' },
     { label: 'Expenses', icon: CreditCard, path: '/app/expenses' },
-    { label: 'Memories', icon: Brain, path: '/app/memories' },
-    { label: 'Summary', icon: FileText, path: '/app/summary' },
+    { label: 'Memory', icon: Brain, path: '/app/memories' },
+    { label: 'Task', icon: CheckSquare, path: '/app/dashboard' }
   ];
 
   const handleNavClick = () => {
@@ -43,56 +43,53 @@ export function Sidebar() {
 
       {/* Main Sidebar Element */}
       <aside className={`sidebar-container ${sidebarCollapsed ? 'collapsed' : ''} ${sidebarOpen ? 'mobile-open' : ''}`}>
-        {/* Brand Header */}
-        <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px 24px 8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Brand & Collapse Header */}
+        <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '20px', borderBottom: '1px solid var(--border-color)', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
-              background: 'var(--accent-gradient)',
+              width: '36px',
+              height: '36px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--accent-primary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: 'var(--shadow-glow)',
+              color: '#1C2528',
+              fontWeight: '800',
               flexShrink: 0
             }}>
-              <Sparkles size={22} color="#ffffff" />
+              <Sparkles size={20} />
             </div>
             <div className="sidebar-text">
-              <h2 style={{ fontSize: '1.3rem', letterSpacing: '-0.5px' }}>DaySync</h2>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>AI Companion</p>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>DaySync</h2>
             </div>
           </div>
 
-          {/* Close button for Mobile Drawer view only */}
-          {sidebarOpen && (
-            <button
-              onClick={closeSidebar}
-              className="btn-secondary"
-              title="Close Menu"
-              style={{
-                padding: '6px',
-                borderRadius: '8px',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-secondary)'
-              }}
-            >
-              <X size={20} />
-            </button>
-          )}
+          <button
+            onClick={toggleSidebar}
+            className="btn-secondary"
+            title="Toggle Sidebar"
+            style={{
+              padding: '6px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-secondary)'
+            }}
+          >
+            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
         </div>
 
         {/* Main Navigation Links */}
-        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', overflowY: 'auto' }}>
+        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto' }}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
 
             return (
               <NavLink
-                key={item.path}
+                key={item.label}
                 to={item.path}
                 onClick={handleNavClick}
                 title={sidebarCollapsed ? item.label : undefined}
@@ -100,84 +97,83 @@ export function Sidebar() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  padding: sidebarCollapsed ? '11px 0' : '11px 14px',
+                  padding: sidebarCollapsed ? '10px 0' : '10px 14px',
                   justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-sm)',
                   textDecoration: 'none',
-                  color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                  background: isActive 
-                    ? item.highlight ? 'var(--accent-gradient)' : 'var(--bg-tertiary)' 
-                    : 'transparent',
-                  fontWeight: isActive ? '600' : '500',
-                  fontSize: '0.92rem',
-                  transition: 'all 0.2s ease'
+                  color: isActive ? '#FFFFFF' : 'var(--text-secondary)',
+                  background: isActive ? 'var(--bg-card)' : 'transparent',
+                  border: isActive ? '1px solid var(--accent-primary)' : '1px solid transparent',
+                  fontWeight: isActive ? '700' : '500',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                <Icon size={18} color={isActive ? '#ffffff' : 'var(--accent-primary)'} style={{ flexShrink: 0 }} />
+                <Icon size={18} color={isActive ? 'var(--accent-primary)' : 'var(--text-muted)'} style={{ flexShrink: 0 }} />
                 <span className="sidebar-text">{item.label}</span>
-                {item.highlight && !isActive && (
-                  <span className="sidebar-badge" style={{
-                    marginLeft: 'auto',
-                    background: 'rgba(99, 102, 241, 0.2)',
-                    color: 'var(--accent-primary)',
-                    fontSize: '0.7rem',
-                    padding: '2px 8px',
-                    borderRadius: '99px',
-                    fontWeight: '600'
-                  }}>AI</span>
-                )}
               </NavLink>
             );
           })}
         </nav>
 
-        {/* User Footer Profile & Settings Option */}
-        <div className="sidebar-footer-user" style={{
+        {/* User Footer & Settings */}
+        <div style={{
           marginTop: 'auto',
           paddingTop: '16px',
           borderTop: '1px solid var(--border-color)',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
+          flexDirection: 'column',
+          gap: '10px'
         }}>
+          {/* User Profile Info */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
-              width: '36px',
-              height: '36px',
+              width: '34px',
+              height: '34px',
               borderRadius: '50%',
-              background: 'var(--bg-tertiary)',
-              color: 'var(--accent-primary)',
+              background: 'var(--accent-secondary)',
+              color: '#FFFFFF',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: '700',
-              border: '1px solid var(--border-color)',
+              fontSize: '13px',
               flexShrink: 0
             }}>
               {user?.name ? user.name[0] : 'U'}
             </div>
-            <div className="sidebar-user-details">
-              <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>{user?.name || 'User'}</div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <ShieldCheck size={12} color="var(--accent-success)" /> Privacy Shield
+            <div className="sidebar-user-details" style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)', truncate: true }}>
+                {user?.name || 'User'}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                {user?.email || 'user@daysync.ai'}
               </div>
             </div>
           </div>
 
-          <button
-            onClick={() => { handleNavClick(); navigate('/app/settings'); }}
-            className="btn-secondary sidebar-text"
-            title="Settings & Privacy"
+          {/* Settings Nav Item */}
+          <NavLink
+            to="/app/settings"
+            onClick={handleNavClick}
             style={{
-              padding: '8px',
-              borderRadius: '10px',
-              background: location.pathname === '/app/settings' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-              color: location.pathname === '/app/settings' ? '#ffffff' : 'var(--text-secondary)',
-              border: '1px solid var(--border-color)'
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: sidebarCollapsed ? '10px 0' : '10px 14px',
+              justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+              borderRadius: 'var(--radius-sm)',
+              textDecoration: 'none',
+              color: location.pathname === '/app/settings' ? '#FFFFFF' : 'var(--text-secondary)',
+              background: location.pathname === '/app/settings' ? 'var(--bg-card)' : 'transparent',
+              border: location.pathname === '/app/settings' ? '1px solid var(--accent-primary)' : '1px solid transparent',
+              fontWeight: location.pathname === '/app/settings' ? '700' : '500',
+              fontSize: '0.9rem'
             }}
           >
-            <Settings size={18} />
-          </button>
+            <Settings size={18} color={location.pathname === '/app/settings' ? 'var(--accent-primary)' : 'var(--text-muted)'} style={{ flexShrink: 0 }} />
+            <span className="sidebar-text">Settings</span>
+          </NavLink>
         </div>
       </aside>
     </>
