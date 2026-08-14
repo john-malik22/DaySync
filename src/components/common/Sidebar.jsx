@@ -54,7 +54,7 @@ export function Sidebar() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#1C2528',
+              color: '#FFFFFF',
               fontWeight: '800',
               flexShrink: 0
             }}>
@@ -102,14 +102,13 @@ export function Sidebar() {
                   borderRadius: 'var(--radius-sm)',
                   textDecoration: 'none',
                   color: isActive ? '#FFFFFF' : 'var(--text-secondary)',
-                  background: isActive ? 'var(--bg-card)' : 'transparent',
-                  border: isActive ? '1px solid var(--accent-primary)' : '1px solid transparent',
+                  background: isActive ? 'var(--accent-primary)' : 'transparent',
                   fontWeight: isActive ? '700' : '500',
                   fontSize: '0.9rem',
                   transition: 'all 0.15s ease'
                 }}
               >
-                <Icon size={18} color={isActive ? 'var(--accent-primary)' : 'var(--text-muted)'} style={{ flexShrink: 0 }} />
+                <Icon size={18} color={isActive ? '#FFFFFF' : 'var(--accent-primary)'} style={{ flexShrink: 0 }} />
                 <span className="sidebar-text">{item.label}</span>
               </NavLink>
             );
@@ -165,13 +164,12 @@ export function Sidebar() {
               borderRadius: 'var(--radius-sm)',
               textDecoration: 'none',
               color: location.pathname === '/app/settings' ? '#FFFFFF' : 'var(--text-secondary)',
-              background: location.pathname === '/app/settings' ? 'var(--bg-card)' : 'transparent',
-              border: location.pathname === '/app/settings' ? '1px solid var(--accent-primary)' : '1px solid transparent',
+              background: location.pathname === '/app/settings' ? 'var(--accent-primary)' : 'transparent',
               fontWeight: location.pathname === '/app/settings' ? '700' : '500',
               fontSize: '0.9rem'
             }}
           >
-            <Settings size={18} color={location.pathname === '/app/settings' ? 'var(--accent-primary)' : 'var(--text-muted)'} style={{ flexShrink: 0 }} />
+            <Settings size={18} color={location.pathname === '/app/settings' ? '#FFFFFF' : 'var(--accent-primary)'} style={{ flexShrink: 0 }} />
             <span className="sidebar-text">Settings</span>
           </NavLink>
         </div>

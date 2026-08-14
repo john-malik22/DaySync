@@ -35,7 +35,7 @@ export function ChatBubble({ msg }) {
         flexShrink: 0,
         border: '1px solid var(--border-color)'
       }}>
-        {isAssistant ? <Sparkles size={18} color="var(--accent-primary)" /> : <User size={18} color="#1C2528" />}
+        {isAssistant ? <Sparkles size={18} color="var(--accent-primary)" /> : <User size={18} color="#FFFFFF" />}
       </div>
 
       {/* Bubble Content Container */}
@@ -53,10 +53,10 @@ export function ChatBubble({ msg }) {
           alignItems: 'center',
           gap: '6px'
         }}>
-          <span>{isAssistant ? 'Luna AI' : 'You'}</span>
+          <span>{isAssistant ? 'Luna AI' : 'User'}</span>
           {msg.intent && isAssistant && (
             <span style={{
-              background: 'rgba(156, 176, 128, 0.15)',
+              background: 'var(--accent-tint)',
               color: 'var(--accent-primary)',
               padding: '1px 6px',
               borderRadius: '4px',
@@ -72,7 +72,7 @@ export function ChatBubble({ msg }) {
           padding: '12px 16px',
           borderRadius: isAssistant ? '4px 12px 12px 12px' : '12px 4px 12px 12px',
           background: isAssistant ? 'var(--bg-card)' : 'var(--accent-primary)',
-          color: isAssistant ? 'var(--text-primary)' : '#1C2528',
+          color: isAssistant ? 'var(--text-primary)' : '#FFFFFF',
           fontSize: '14px',
           lineHeight: '1.5',
           wordBreak: 'break-word',

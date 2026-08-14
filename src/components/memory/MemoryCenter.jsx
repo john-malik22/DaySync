@@ -31,7 +31,7 @@ export function MemoryCenter({ searchFilter }) {
       {/* 1. Add Something Form Card */}
       <div className="glass-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
-          <h3>Add Memory Fact</h3>
+          <h3 style={{ color: 'var(--accent-primary)' }}>Add Something</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--accent-primary)' }}>
             <ShieldCheck size={14} /> Explicit Consent
           </div>
@@ -40,7 +40,7 @@ export function MemoryCenter({ searchFilter }) {
         <form onSubmit={handleManualAdd} className="mobile-stack-form" style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 'var(--space-sm)' }}>
           <input
             type="text"
-            placeholder="Add something for Luna to remember (e.g. Prefers night study)"
+            placeholder="Add something for Luna to remember..."
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
           />
@@ -69,18 +69,18 @@ export function MemoryCenter({ searchFilter }) {
               padding: '6px 14px', borderRadius: 'var(--radius-full)',
               border: '1px solid var(--border-color)',
               background: filter === cat ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-              color: filter === cat ? '#1C2528' : 'var(--text-secondary)',
+              color: filter === cat ? '#FFFFFF' : 'var(--text-secondary)',
               fontSize: '13px', fontWeight: filter === cat ? '700' : '500', cursor: 'pointer', whiteSpace: 'nowrap'
             }}
           >
-            {cat}
+            [ {cat} ]
           </button>
         ))}
       </div>
 
-      {/* 3. Recent's Memory Grid */}
+      {/* 3. Recent Memory Grid */}
       <div>
-        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-secondary)' }}>Recent's</h3>
+        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-secondary)' }}>Recent</h3>
         {filteredMemories.length === 0 ? (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>No memories saved yet.</p>
         ) : (
@@ -91,7 +91,7 @@ export function MemoryCenter({ searchFilter }) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{
                       fontSize: '11px', fontWeight: '700', textTransform: 'uppercase',
-                      color: 'var(--accent-primary)', background: 'rgba(156, 176, 128, 0.15)',
+                      color: '#FFFFFF', background: 'var(--accent-primary)',
                       padding: '2px 8px', borderRadius: '4px'
                     }}>
                       {mem.type}

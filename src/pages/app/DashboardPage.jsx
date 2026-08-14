@@ -5,7 +5,7 @@ import { FinancialInsights } from '../../components/expenses/FinancialInsights';
 import { MemoryCenter } from '../../components/memory/MemoryCenter';
 import { useLuna } from '../../context/LunaContext';
 import { useAuth } from '../../context/AuthContext';
-import { CheckCircle2, CreditCard, Sparkles, Brain } from 'lucide-react';
+import { CheckCircle2, Sparkles } from 'lucide-react';
 
 export function DashboardPage() {
   const { tasks, expenses, memories } = useLuna();
@@ -21,37 +21,37 @@ export function DashboardPage() {
   return (
     <div className="page-container">
       {/* Top Header Row: Page Title on Left | Search on Right */}
-      <PageHeaderRow title={`Hello ${user?.name || 'User'}`} onSearch={setSearch} />
+      <PageHeaderRow title={`Hello, ${user?.name || 'User'}`} onSearch={setSearch} />
 
-      {/* Wireframe Row 1: TASK (Left) | MONTHLY EXPENSES (Right) */}
+      {/* Wireframe Row 1: Task (Left) | Monthly Expenses (Right) */}
       <div className="grid-2" style={{ alignItems: 'start' }}>
-        {/* TASK Section */}
+        {/* Task Section */}
         <div className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)' }}>TASK</h3>
+          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)' }}>Task</h3>
           <TaskManager searchFilter={search} />
         </div>
 
-        {/* MONTHLY EXPENSES Section */}
+        {/* Monthly Expenses Section */}
         <div className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)' }}>MONTHLY EXPENSES</h3>
+          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)' }}>Monthly Expenses</h3>
           <FinancialInsights />
         </div>
       </div>
 
-      {/* Wireframe Row 2: REMEMBER (Left) | PROGRESS & SUMMARY (Right) */}
+      {/* Wireframe Row 2: Remember (Left) | Progress & Summary (Right) */}
       <div className="grid-2" style={{ alignItems: 'start' }}>
-        {/* REMEMBER Section */}
+        {/* Remember Section */}
         <div className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)' }}>REMEMBER</h3>
+          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)' }}>Remember</h3>
           <MemoryCenter searchFilter={search} />
         </div>
 
-        {/* PROGRESS & SUMMARY Section */}
+        {/* Progress & Summary Stacked Section */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-          {/* PROGRESS Card */}
+          {/* Progress Card */}
           <div className="glass-card">
             <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle2 size={18} color="var(--accent-primary)" /> PROGRESS
+              <CheckCircle2 size={18} color="var(--accent-primary)" /> Progress
             </h3>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
               <span>Task Completion Rate</span>
@@ -65,10 +65,10 @@ export function DashboardPage() {
             </div>
           </div>
 
-          {/* SUMMARY Card */}
+          {/* Summary Card */}
           <div className="glass-card">
             <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={18} color="var(--accent-primary)" /> SUMMARY
+              <Sparkles size={18} color="var(--accent-primary)" /> Summary
             </h3>
             <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
               Overall status shows <strong>{completedTasks}</strong> tasks done, <strong>₹{totalSpent.toLocaleString()}</strong> spent, and <strong>{memories.length}</strong> facts saved in memory context.

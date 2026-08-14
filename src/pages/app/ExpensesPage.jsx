@@ -23,15 +23,15 @@ export function ExpensesPage() {
       {/* Top Header Row: Page Title on Left | Search on Right */}
       <PageHeaderRow title="Expenses" onSearch={setSearch} />
 
-      {/* Wireframe Row 1: LOG TRANSACTION (Left) | TOTAL BALANCE (Right) */}
+      {/* Wireframe Row 1: Log Transaction (Left) | Total Balance (Right) */}
       <div className="grid-2" style={{ gridTemplateColumns: '1.4fr 1fr', alignItems: 'start' }}>
-        {/* LOG TRANSACTION Card */}
+        {/* Log Transaction Card */}
         <ExpenseForm searchFilter={search} />
 
-        {/* TOTAL BALANCE Card */}
+        {/* Total Balance Card */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '180px' }}>
           <h3 style={{ marginBottom: 'var(--space-xs)', color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            TOTAL BALANCE
+            Total Balance
           </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0' }}>
             <Wallet size={24} color="var(--accent-primary)" />
@@ -49,11 +49,11 @@ export function ExpensesPage() {
         </div>
       </div>
 
-      {/* Wireframe Row 2: RECENT ACTIVITY (Left) | SPENT & RECEIVED (Right) */}
+      {/* Wireframe Row 2: Recent Activity (Left) | Spent & Received (Right) */}
       <div className="grid-2" style={{ gridTemplateColumns: '1.4fr 1fr', alignItems: 'start' }}>
-        {/* RECENT ACTIVITY Card */}
+        {/* Recent Activity Card */}
         <div className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)' }}>RECENT ACTIVITY</h3>
+          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)' }}>Recent Activity</h3>
           {expenses.length === 0 ? (
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
               No transactions logged yet.
@@ -73,7 +73,7 @@ export function ExpensesPage() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{
                           width: '32px', height: '32px', borderRadius: 'var(--radius-sm)',
-                          background: isIncome ? 'rgba(156, 176, 128, 0.2)' : 'rgba(217, 160, 91, 0.2)',
+                          background: isIncome ? 'rgba(168, 124, 124, 0.2)' : 'rgba(201, 139, 87, 0.2)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                         }}>
                           {isIncome ? <ArrowUpRight size={16} color="var(--accent-primary)" /> : <ArrowDownRight size={16} color="var(--accent-warning)" />}
@@ -93,19 +93,19 @@ export function ExpensesPage() {
           )}
         </div>
 
-        {/* Stacked SPENT & RECEIVED Cards */}
+        {/* Stacked Spent & Received Cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-          {/* SPENT Card */}
+          {/* Spent Card */}
           <div className="glass-card">
-            <h3 style={{ marginBottom: '4px', color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase' }}>SPENT</h3>
+            <h3 style={{ marginBottom: '4px', color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase' }}>Spent</h3>
             <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--accent-warning)' }}>
               -₹{totalSpent.toLocaleString()}
             </div>
           </div>
 
-          {/* RECEIVED Card */}
+          {/* Received Card */}
           <div className="glass-card">
-            <h3 style={{ marginBottom: '4px', color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase' }}>RECEIVED</h3>
+            <h3 style={{ marginBottom: '4px', color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase' }}>Received</h3>
             <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
               +₹{totalIncome.toLocaleString()}
             </div>

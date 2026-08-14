@@ -28,11 +28,11 @@ export function PageHeaderRow({ title, onSearch }) {
           <Menu size={18} />
         </button>
 
-        <h1 style={{ margin: 0 }}>{title}</h1>
+        <h1 style={{ margin: 0, color: 'var(--text-primary)' }}>{title}</h1>
       </div>
 
       <div className="header-search-bar">
-        <Search size={15} color="var(--text-muted)" />
+        <Search size={15} color="var(--accent-primary)" />
         <input
           type="text"
           placeholder="Search..."

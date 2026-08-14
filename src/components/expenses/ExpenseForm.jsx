@@ -85,10 +85,10 @@ export function ExpenseForm() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
-      {/* 1. Log Transaction Form */}
+      {/* 1. Log Transaction Form Card */}
       <div className="glass-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-lg)', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
-          <h3>Log Transaction</h3>
+          <h3 style={{ color: 'var(--accent-primary)' }}>Log Transaction</h3>
           
           <div style={{ display: 'flex', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '3px', border: '1px solid var(--border-color)' }}>
             <button
@@ -96,8 +96,8 @@ export function ExpenseForm() {
               onClick={() => handleTypeSwitch('expense')}
               style={{
                 padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
-                background: txType === 'expense' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                color: txType === 'expense' ? 'var(--accent-danger)' : 'var(--text-secondary)',
+                background: txType === 'expense' ? 'var(--accent-primary)' : 'transparent',
+                color: txType === 'expense' ? '#FFFFFF' : 'var(--text-secondary)',
                 fontWeight: txType === 'expense' ? '700' : '500', fontSize: '13px',
                 display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s ease'
               }}
@@ -109,8 +109,8 @@ export function ExpenseForm() {
               onClick={() => handleTypeSwitch('income')}
               style={{
                 padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
-                background: txType === 'income' ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
-                color: txType === 'income' ? 'var(--accent-success)' : 'var(--text-secondary)',
+                background: txType === 'income' ? 'var(--accent-primary)' : 'transparent',
+                color: txType === 'income' ? '#FFFFFF' : 'var(--text-secondary)',
                 fontWeight: txType === 'income' ? '700' : '500', fontSize: '13px',
                 display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s ease'
               }}
@@ -145,7 +145,6 @@ export function ExpenseForm() {
           <button
             type="submit"
             className="btn-primary"
-            style={{ background: txType === 'income' ? 'var(--accent-success)' : 'var(--accent-gradient)' }}
           >
             <Plus size={16} /> Save
           </button>
@@ -154,7 +153,7 @@ export function ExpenseForm() {
 
       {/* 2. Recent Activity */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-lg)' }}>Recent Financial Activity</h3>
+        <h3 style={{ marginBottom: 'var(--space-lg)', color: 'var(--accent-primary)' }}>Recent Activity</h3>
         {expenses.length === 0 ? (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
             No financial transactions logged yet.
@@ -220,21 +219,21 @@ export function ExpenseForm() {
                 <div key={exp.id} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   padding: '12px 14px', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)',
-                  border: `1px solid ${isIncome ? 'rgba(16, 185, 129, 0.3)' : 'var(--border-color)'}`,
+                  border: '1px solid var(--border-color)',
                   flexWrap: 'wrap', gap: '8px'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{
                       width: '34px', height: '34px', borderRadius: 'var(--radius-sm)',
-                      background: isIncome ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                      background: 'rgba(168, 124, 124, 0.2)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                     }}>
-                      {isIncome ? <ArrowUpRight size={16} color="var(--accent-success)" /> : <ArrowDownRight size={16} color="var(--accent-warning)" />}
+                      {isIncome ? <ArrowUpRight size={16} color="var(--accent-primary)" /> : <ArrowDownRight size={16} color="var(--accent-warning)" />}
                     </div>
                     <div>
-                      <div style={{ fontWeight: '600', fontSize: '14px' }}>{exp.description}</div>
+                      <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>{exp.description}</div>
                       <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                        <span style={{ color: isIncome ? 'var(--accent-success)' : 'var(--text-secondary)', fontWeight: '600' }}>
+                        <span style={{ color: 'var(--accent-primary)', fontWeight: '600' }}>
                           {isIncome ? 'Received' : 'Spent'}
                         </span> • {exp.category} • {exp.date}
                       </div>
@@ -244,7 +243,7 @@ export function ExpenseForm() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
                     <span style={{
                       fontSize: '15px', fontWeight: '700',
-                      color: isIncome ? 'var(--accent-success)' : 'var(--accent-warning)'
+                      color: isIncome ? 'var(--accent-primary)' : 'var(--text-primary)'
                     }}>
                       {isIncome ? '+' : '-'} ₹{exp.amount.toLocaleString()}
                     </span>
