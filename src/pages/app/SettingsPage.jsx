@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, LogOut, UserX, Sun, Moon, Download, RefreshCw, Mail, CheckCircle2 } from 'lucide-react';
+import { Trash2, LogOut, UserX, Sun, Moon, Download, RefreshCw, Mail, Sliders } from 'lucide-react';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -15,16 +15,32 @@ export function SettingsPage() {
     return localStorage.getItem('daysync_startup_page') || '/app/dashboard';
   });
 
-  // 2. Check for Updates State
-  const [updateStatus, setUpdateStatus] = useState('idle'); // 'idle' | 'checking' | 'latest'
+  // 2. Dashboard Widgets Visibility Preference (Change 6)
+  const [widgetSettings, setWidgetSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('daysync_dashboard_widgets');
+      return saved ? JSON.parse(saved) : { task: true, expense: true, memory: true, habit: true, progress: true };
+    } catch (e) {
+      return { task: true, expense: true, memory: true, habit: true, progress: true };
+    }
+  });
 
-  // 3. Contact Modal / Status State
+  // Check for Updates State
+  const [updateStatus, setUpdateStatus] = useState('idle');
   const [showContactInfo, setShowContactInfo] = useState(false);
 
   const handleStartupChange = (e) => {
     const val = e.target.value;
     setStartupPage(val);
     localStorage.setItem('daysync_startup_page', val);
+  };
+
+  const toggleWidgetSetting = (key) => {
+    setWidgetSettings(prev => {
+      const updated = { ...prev, [key]: !prev[key] };
+      localStorage.setItem('daysync_dashboard_widgets', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleClearHistory = async () => {
@@ -72,10 +88,6 @@ export function SettingsPage() {
     }, 1200);
   };
 
-  const handleContactDev = () => {
-    setShowContactInfo(true);
-  };
-
   return (
     <div className="page-container" style={{ maxWidth: '950px' }}>
       {/* Page Header Row */}
@@ -100,7 +112,48 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* 2. Appearance */}
+      {/* 2. Dashboard Widgets Controls (Change 6) */}
+      <div className="glass-card">
+        <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Sliders size={18} color="var(--accent-primary)" /> Dashboard Widgets
+        </h3>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>
+          Toggle which performance widgets display on your main Dashboard view.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+          {[
+            { key: 'task', label: 'Task Performance' },
+            { key: 'expense', label: 'Expense Performance' },
+            { key: 'memory', label: 'Memory Performance' },
+            { key: 'habit', label: 'Habit Tracker' },
+            { key: 'progress', label: 'Progress & Summary' }
+          ].map(w => (
+            <div
+              key={w.key}
+              style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '10px 14px', borderRadius: 'var(--radius-sm)',
+                background: 'var(--bg-secondary)', border: '1px solid var(--border-color)'
+              }}
+            >
+              <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-primary)' }}>
+                {w.label}
+              </span>
+              <button
+                type="button"
+                onClick={() => toggleWidgetSetting(w.key)}
+                className={widgetSettings[w.key] ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '4px 14px', minHeight: '32px', fontSize: '12px', minWidth: '60px' }}
+              >
+                {widgetSettings[w.key] ? 'ON' : 'OFF'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 3. Appearance */}
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Appearance</h3>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
@@ -129,7 +182,7 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* 3. Startup */}
+      {/* 4. Startup */}
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Startup</h3>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
@@ -153,7 +206,7 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* 4. Data & Privacy */}
+      {/* 5. Data & Privacy */}
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Data & Privacy</h3>
         <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
@@ -166,7 +219,7 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* 5. Account */}
+      {/* 6. Account */}
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Account</h3>
         <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
@@ -188,7 +241,7 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* 6. About DaySync */}
+      {/* 7. About DaySync */}
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)' }}>About DaySync</h3>
         <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
@@ -196,7 +249,6 @@ export function SettingsPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* Check for Updates Action */}
           <button
             onClick={handleCheckUpdates}
             disabled={updateStatus === 'checking'}
@@ -209,9 +261,8 @@ export function SettingsPage() {
             {updateStatus === 'latest' && "You're using the latest version."}
           </button>
 
-          {/* Contact Developer Action */}
           <button
-            onClick={handleContactDev}
+            onClick={() => setShowContactInfo(true)}
             className="btn-secondary"
             style={{ fontSize: '13px' }}
           >
@@ -219,7 +270,6 @@ export function SettingsPage() {
           </button>
         </div>
 
-        {/* Developer Contact Info Container */}
         {showContactInfo && (
           <div style={{
             marginTop: 'var(--space-md)',
@@ -238,7 +288,7 @@ export function SettingsPage() {
               <strong>Developer Support:</strong> Reach out for feature inquiries or technical assistance.
             </div>
             <a
-              href="mailto:johnmalik2222@gmail.com"
+              href="mailto:support@daysync.ai"
               className="btn-primary"
               style={{ padding: '4px 12px', fontSize: '12px', minHeight: '32px', textDecoration: 'none' }}
             >

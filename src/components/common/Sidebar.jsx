@@ -49,7 +49,7 @@ export function Sidebar() {
 
       {/* Main Sidebar Element (Desktop: Expanded 250px / Collapsed 72px; Mobile Rail: 68px) */}
       <aside className={`sidebar-container ${sidebarCollapsed ? 'collapsed' : ''} ${sidebarOpen ? 'mobile-open' : ''}`}>
-        {/* Brand & Header Logo Icon */}
+        {/* Brand & Header Logo Icon + Collapse Toggle */}
         <div 
           className="sidebar-header" 
           style={{ 
@@ -62,7 +62,7 @@ export function Sidebar() {
             width: '100%'
           }}
         >
-          {/* DaySync Logo Icon */}
+          {/* Logo & Brand (Hidden text when collapsed) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
               width: '36px',
@@ -85,27 +85,26 @@ export function Sidebar() {
             )}
           </div>
 
-          {/* Desktop Hamburger Toggle Button (Hidden on Mobile Rail) */}
-          {!sidebarCollapsed && (
-            <button
-              onClick={toggleSidebar}
-              className="btn-secondary"
-              title="Collapse Sidebar"
-              style={{
-                padding: '6px',
-                borderRadius: 'var(--radius-sm)',
-                background: 'transparent',
-                border: 'none',
-                color: '#9BAEB8',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Menu size={18} />
-            </button>
-          )}
+          {/* Desktop Hamburger Toggle Control (ALWAYS visible to toggle between Expanded and Collapsed) */}
+          <button
+            onClick={toggleSidebar}
+            className="btn-secondary desktop-toggle-btn"
+            title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            style={{
+              padding: '6px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'transparent',
+              border: 'none',
+              color: '#9BAEB8',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
+          >
+            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
         </div>
 
         {/* Main Navigation Links Rail */}
@@ -142,10 +141,7 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* User Footer:
-            Desktop Expanded: [ J ]  FirstName                 ⚙
-            Desktop Collapsed / Mobile Rail:                   ⚙ (Centered Icon Only)
-        */}
+        {/* User Footer Anchored at Bottom (margin-top: auto) */}
         <div style={{
           marginTop: 'auto',
           paddingTop: '16px',
