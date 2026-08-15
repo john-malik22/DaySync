@@ -209,6 +209,11 @@ p {
   padding: 0;
 }
 
+/* Mobile-Only Hamburger Toggle Button */
+.mobile-hamburger-btn {
+  display: none !important;
+}
+
 /* Card Design System */
 .glass-card {
   width: 100%;
@@ -303,7 +308,7 @@ input:focus, select:focus, textarea:focus {
   font-size: 14px;
 }
 
-/* Sidebar Responsive Shell */
+/* Sidebar Desktop Shell */
 .sidebar-container {
   width: 250px;
   height: 100vh;
@@ -377,17 +382,22 @@ input:focus, select:focus, textarea:focus {
   }
 }
 
+/* MOBILE NAVIGATION REFINEMENT (< 768px) */
 @media (max-width: 767px) {
+  .mobile-hamburger-btn {
+    display: inline-flex !important;
+  }
+
   .sidebar-overlay {
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
     z-index: 999;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.2s ease;
   }
 
   .sidebar-overlay.active {
@@ -395,20 +405,38 @@ input:focus, select:focus, textarea:focus {
     pointer-events: auto;
   }
 
+  /* NARROW VERTICAL ICON RAIL ON MOBILE */
   .sidebar-container {
     position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
     height: 100vh;
-    width: 260px !important;
+    width: 68px !important; /* Narrow vertical icon rail */
+    padding: 16px 8px !important;
     z-index: 1000;
     transform: translateX(-100%);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .sidebar-container.mobile-open {
     transform: translateX(0);
+  }
+
+  /* Hide Text Labels & Profile Details on Mobile Navigation Rail */
+  .sidebar-container .sidebar-text,
+  .sidebar-container .sidebar-profile-details {
+    display: none !important;
+  }
+
+  .sidebar-header {
+    justify-content: center !important;
+    width: 100%;
+    margin-bottom: 12px !important;
+    padding-bottom: 12px !important;
   }
 
   .page-container {
@@ -428,7 +456,7 @@ input:focus, select:focus, textarea:focus {
   }
 
   .header-search-bar {
-    min-width: 140px;
+    min-width: 120px;
   }
 }
 

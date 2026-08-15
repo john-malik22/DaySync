@@ -45,66 +45,69 @@ export function Sidebar() {
         onClick={closeSidebar}
       />
 
-      {/* Main Sidebar Element */}
+      {/* Main Sidebar Element (Desktop: Expanded 250px / Collapsed 72px; Mobile Rail: 68px) */}
       <aside className={`sidebar-container ${sidebarCollapsed ? 'collapsed' : ''} ${sidebarOpen ? 'mobile-open' : ''}`}>
-        {/* Brand & Collapse Header */}
+        {/* Brand & Header Logo Icon */}
         <div 
           className="sidebar-header" 
           style={{ 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: sidebarCollapsed ? 'center' : 'space-between', 
-            paddingBottom: '20px', 
+            paddingBottom: '16px', 
             borderBottom: '1px solid rgba(255, 255, 255, 0.1)', 
-            marginBottom: '16px' 
+            marginBottom: '16px',
+            width: '100%'
           }}
         >
-          {/* Logo & Brand Name (Hidden when collapsed) */}
-          {!sidebarCollapsed && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: 'var(--radius-sm)',
-                background: 'var(--accent-primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#FFFFFF',
-                fontWeight: '800',
-                flexShrink: 0
-              }}>
-                <Sparkles size={20} />
-              </div>
+          {/* DaySync Logo Icon */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--accent-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#FFFFFF',
+              fontWeight: '800',
+              flexShrink: 0
+            }}>
+              <Sparkles size={20} />
+            </div>
+            {!sidebarCollapsed && (
               <div className="sidebar-text">
                 <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#EBF2F7' }}>DaySync</h2>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Hamburger / Menu Control (Centered when collapsed, Far-Right when expanded) */}
-          <button
-            onClick={toggleSidebar}
-            className="btn-secondary"
-            title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-            style={{
-              padding: '6px',
-              borderRadius: 'var(--radius-sm)',
-              background: 'transparent',
-              border: 'none',
-              color: '#9BAEB8',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
-          </button>
+          {/* Desktop Hamburger Toggle Button (Hidden on Mobile Rail) */}
+          {!sidebarCollapsed && (
+            <button
+              onClick={toggleSidebar}
+              className="btn-secondary"
+              title="Collapse Sidebar"
+              style={{
+                padding: '6px',
+                borderRadius: 'var(--radius-sm)',
+                background: 'transparent',
+                border: 'none',
+                color: '#9BAEB8',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Menu size={18} />
+            </button>
+          )}
         </div>
 
-        {/* Main Navigation Links */}
-        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto' }}>
+        {/* Main Navigation Links Rail */}
+        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', width: '100%' }}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -114,7 +117,7 @@ export function Sidebar() {
                 key={item.label}
                 to={item.path}
                 onClick={handleNavClick}
-                title={sidebarCollapsed ? item.label : undefined}
+                title={item.label}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -138,8 +141,8 @@ export function Sidebar() {
         </nav>
 
         {/* User Footer:
-            Expanded: [ J ]  FirstName                 ⚙
-            Collapsed:                                ⚙ (Centered ONLY)
+            Desktop Expanded: [ J ]  FirstName                 ⚙
+            Desktop Collapsed / Mobile Rail:                   ⚙ (Centered Icon Only)
         */}
         <div style={{
           marginTop: 'auto',
@@ -147,11 +150,12 @@ export function Sidebar() {
           borderTop: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: sidebarCollapsed ? 'center' : 'space-between'
+          justifyContent: sidebarCollapsed ? 'center' : 'space-between',
+          width: '100%'
         }}>
-          {/* User Profile Avatar & Initial (Hidden when collapsed) */}
+          {/* User Profile Details (Desktop Expanded Only) */}
           {!sidebarCollapsed && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+            <div className="sidebar-profile-details" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
               <div style={{
                 width: '34px',
                 height: '34px',
@@ -173,7 +177,7 @@ export function Sidebar() {
             </div>
           )}
 
-          {/* Settings Icon Button (Centered when collapsed, Far-Right when expanded) */}
+          {/* Settings Icon Button */}
           <button
             onClick={() => { handleNavClick(); navigate('/app/settings'); }}
             title="Settings"
