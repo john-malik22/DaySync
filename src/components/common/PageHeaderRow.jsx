@@ -13,36 +13,37 @@ export function PageHeaderRow({ title, onSearch }) {
 
   return (
     <div className="page-header-row">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: 'var(--space-sm)' }}>
-        <h1 style={{ margin: 0, color: 'var(--text-primary)' }}>{title}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', flex: 1, minWidth: 0 }}>
+        {/* Mobile-Only Hamburger Control (LEFT SIDE) */}
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          className="mobile-hamburger-btn btn-secondary"
+          title="Open Navigation"
+          style={{
+            padding: '6px 10px',
+            borderRadius: 'var(--radius-sm)',
+            minHeight: '36px',
+            flexShrink: 0
+          }}
+        >
+          <Menu size={18} />
+        </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-          {/* Header Search Bar */}
-          <div className="header-search-bar">
-            <Search size={15} color="var(--accent-primary)" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-          </div>
+        <h1 style={{ margin: 0, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {title}
+        </h1>
+      </div>
 
-          {/* Mobile-Only Hamburger Control (Opens Narrow Icon Rail) */}
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            className="mobile-hamburger-btn btn-secondary"
-            title="Open Mobile Navigation Rail"
-            style={{
-              padding: '8px',
-              borderRadius: 'var(--radius-sm)',
-              minHeight: '38px'
-            }}
-          >
-            <Menu size={18} />
-          </button>
-        </div>
+      {/* Header Search Bar */}
+      <div className="header-search-bar">
+        <Search size={15} color="var(--accent-primary)" />
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+        />
       </div>
     </div>
   );

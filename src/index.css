@@ -109,6 +109,8 @@ body {
   display: flex;
   min-height: 100vh;
   width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
   background-color: var(--bg-primary);
 }
 
@@ -117,13 +119,14 @@ body {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  width: 100%;
   background-color: var(--bg-primary);
 }
 
 /* Typography Hierarchy */
 h1 {
   font-family: var(--font-heading);
-  font-size: clamp(24px, 4vw, 32px);
+  font-size: clamp(22px, 4vw, 32px);
   font-weight: 700;
   line-height: 1.25;
   color: var(--text-primary);
@@ -132,7 +135,7 @@ h1 {
 
 h2 {
   font-family: var(--font-heading);
-  font-size: clamp(20px, 3.5vw, 24px);
+  font-size: clamp(18px, 3.5vw, 24px);
   font-weight: 600;
   line-height: 1.3;
   color: var(--text-primary);
@@ -140,7 +143,7 @@ h2 {
 
 h3 {
   font-family: var(--font-heading);
-  font-size: clamp(16px, 3vw, 18px);
+  font-size: clamp(15px, 3vw, 18px);
   font-weight: 600;
   line-height: 1.35;
   color: var(--text-primary);
@@ -148,7 +151,7 @@ h3 {
 
 h4 {
   font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -174,10 +177,10 @@ p {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
   border-bottom: 1px solid var(--border-color);
   margin-bottom: var(--space-xs);
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 .header-search-bar {
@@ -342,6 +345,37 @@ input:focus, select:focus, textarea:focus {
   display: none;
 }
 
+/* Chat Page Specific Layout Rules for Fixed Bottom Composer */
+.chat-page-layout {
+  height: calc(100vh - 20px);
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-conversation-feed {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-height: 0;
+}
+
+.chat-composer-bar {
+  margin-top: var(--space-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  flex-shrink: 0;
+  padding-top: var(--space-xs);
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-primary);
+}
+
 /* Breakpoints System */
 @media (min-width: 1024px) {
   .grid-2 {
@@ -405,7 +439,7 @@ input:focus, select:focus, textarea:focus {
     pointer-events: auto;
   }
 
-  /* NARROW VERTICAL ICON RAIL ON MOBILE */
+  /* NARROW VERTICAL ICON RAIL ON MOBILE (Left Side) */
   .sidebar-container {
     position: fixed;
     top: 0;
@@ -440,12 +474,12 @@ input:focus, select:focus, textarea:focus {
   }
 
   .page-container {
-    padding: var(--space-md); /* 16px mobile padding */
+    padding: 12px 14px; /* Sensible mobile padding within 100vw */
     gap: var(--space-md);
   }
 
   .glass-card {
-    padding: var(--space-md);
+    padding: 12px 14px;
   }
 
   .grid-2, .grid-3, .expenses-layout {
@@ -455,8 +489,14 @@ input:focus, select:focus, textarea:focus {
     width: 100%;
   }
 
+  .expenses-top-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--space-md) !important;
+  }
+
   .header-search-bar {
-    min-width: 120px;
+    min-width: 110px;
   }
 }
 

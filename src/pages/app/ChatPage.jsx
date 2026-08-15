@@ -32,16 +32,12 @@ export function ChatPage() {
   const filteredConversations = conversations.filter(msg => !search || msg.message.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="page-container" style={{
-      height: 'calc(100vh - 40px)',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      {/* Top Header Row: Page Title on Left | Search on Right */}
+    <div className="page-container chat-page-layout">
+      {/* Top Header Row */}
       <PageHeaderRow title="Chat with Luna AI" onSearch={setSearch} />
 
       {/* Prompt Chips Row */}
-      <div className="scroll-row" style={{ marginBottom: 'var(--space-sm)', flexShrink: 0 }}>
+      <div className="scroll-row" style={{ flexShrink: 0, paddingBottom: '4px' }}>
         {promptSuggestions.map((prompt, i) => (
           <button
             key={i}
@@ -63,15 +59,8 @@ export function ChatPage() {
         ))}
       </div>
 
-      {/* Conversation Feed - Full Width */}
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        paddingRight: '4px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--space-sm)'
-      }}>
+      {/* Independent Scrollable Conversation Feed */}
+      <div className="chat-conversation-feed">
         {filteredConversations.map((msg) => (
           <ChatBubble key={msg.id} msg={msg} />
         ))}
@@ -83,15 +72,8 @@ export function ChatPage() {
         <div ref={chatEndRef} />
       </div>
 
-      {/* Message Composer */}
-      <form onSubmit={handleSend} style={{
-        marginTop: 'var(--space-sm)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--space-xs)',
-        width: '100%',
-        flexShrink: 0
-      }}>
+      {/* Sticky Bottom Message Composer Bar */}
+      <form onSubmit={handleSend} className="chat-composer-bar">
         <input
           type="text"
           placeholder="Message Luna AI..."
@@ -99,7 +81,7 @@ export function ChatPage() {
           onChange={(e) => setInput(e.target.value)}
           style={{
             flex: 1,
-            minHeight: '44px',
+            minHeight: '42px',
             borderRadius: 'var(--radius-md)',
             border: '1px solid var(--border-color)',
             background: 'var(--bg-card)',
@@ -114,9 +96,10 @@ export function ChatPage() {
           disabled={!input.trim() || loading}
           className="btn-primary"
           style={{
-            padding: '0 20px',
-            minHeight: '44px',
-            opacity: input.trim() ? 1 : 0.6
+            padding: '0 18px',
+            minHeight: '42px',
+            opacity: input.trim() ? 1 : 0.6,
+            flexShrink: 0
           }}
         >
           <Send size={16} /> Send
