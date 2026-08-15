@@ -14,6 +14,7 @@ import { DashboardPage } from './pages/app/DashboardPage';
 import { ChatPage } from './pages/app/ChatPage';
 import { ExpensesPage } from './pages/app/ExpensesPage';
 import { TaskPage } from './pages/app/TaskPage';
+import { HabitsPage } from './pages/app/HabitsPage';
 import { MemoriesPage } from './pages/app/MemoriesPage';
 import { SummaryPage } from './pages/app/SummaryPage';
 import { SettingsPage } from './pages/app/SettingsPage';
@@ -75,6 +76,7 @@ export default function App() {
               <Route path="expenses" element={<ExpensesPage />} />
               <Route path="task" element={<TaskPage />} />
               <Route path="planner" element={<Navigate to="/app/task" replace />} />
+              <Route path="habits" element={<HabitsPage />} />
               <Route path="memories" element={<MemoriesPage />} />
               <Route path="summary" element={<SummaryPage />} />
               <Route path="settings" element={<SettingsPage />} />

@@ -6,6 +6,7 @@ import {
   CreditCard, 
   Brain, 
   CheckSquare,
+  Activity,
   Settings, 
   Sparkles,
   Menu,
@@ -26,7 +27,8 @@ export function Sidebar() {
     { label: 'Dashboard', icon: LayoutDashboard, path: '/app/dashboard' },
     { label: 'Expenses', icon: CreditCard, path: '/app/expenses' },
     { label: 'Memory', icon: Brain, path: '/app/memories' },
-    { label: 'Task', icon: CheckSquare, path: '/app/task' }
+    { label: 'Task', icon: CheckSquare, path: '/app/task' },
+    { label: 'Habits', icon: Activity, path: '/app/habits' }
   ];
 
   const handleNavClick = () => {

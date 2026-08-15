@@ -146,6 +146,7 @@ export function SettingsPage() {
             <option value="/app/chat">Chat</option>
             <option value="/app/expenses">Expenses</option>
             <option value="/app/task">Task</option>
+            <option value="/app/habits">Habits</option>
             <option value="/app/memories">Memory</option>
             <option value="/app/summary">Summary</option>
           </select>
