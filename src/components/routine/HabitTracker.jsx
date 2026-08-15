@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, CheckCircle2, Sparkles, Plus, Check, ChevronLeft, ChevronRight, Activity, Trash2, Edit2, Clock, X } from 'lucide-react';
+import { Calendar, CheckCircle2, Sparkles, Plus, Check, ChevronLeft, ChevronRight, Activity, Trash2, Edit2, X } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 
 export function HabitTracker({ searchFilter }) {
@@ -8,11 +8,11 @@ export function HabitTracker({ searchFilter }) {
   // Selected Date State (Defaults to current date)
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
-  // 1. Initial Habits List with optional time property
+  // 1. Initial Habits List with MINUTES GOAL (numeric duration, no clock/time-of-day)
   const [habits, setHabits] = useState([
-    { id: 'h1', title: 'Study & Skill Building', time: '08:00', category: 'Learning', goal: 30 },
-    { id: 'h2', title: 'Daily Workout & Exercise', time: '07:00', category: 'Health', goal: 20 },
-    { id: 'h3', title: 'Read Tech & AI Articles', time: '21:30', category: 'Growth', goal: 15 }
+    { id: 'h1', title: 'Study & Skill Building', category: 'Learning', goal: 30 },
+    { id: 'h2', title: 'Daily Workout & Exercise', category: 'Health', goal: 20 },
+    { id: 'h3', title: 'Read Tech & AI Articles', category: 'Growth', goal: 15 }
   ]);
 
   // 2. Real Date-Keyed Check-ins: { [habitId_YYYY-MM-DD]: true/false }
@@ -20,14 +20,12 @@ export function HabitTracker({ searchFilter }) {
 
   // Add Form State
   const [newHabitTitle, setNewHabitTitle] = useState('');
-  const [newHabitTime, setNewHabitTime] = useState('');
-  const [newHabitGoal, setNewHabitGoal] = useState('15');
+  const [newHabitGoal, setNewHabitGoal] = useState('30');
 
   // Edit Form State
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
-  const [editTime, setEditTime] = useState('');
-  const [editGoal, setEditGoal] = useState('15');
+  const [editGoal, setEditGoal] = useState('30');
 
   // Month Navigation
   const changeMonth = (offset) => {
@@ -96,13 +94,12 @@ export function HabitTracker({ searchFilter }) {
       {
         id: Date.now().toString(),
         title: newHabitTitle,
-        time: newHabitTime || '',
         category: 'Personal',
-        goal: parseInt(newHabitGoal) || 15
+        goal: parseInt(newHabitGoal) || 30
       }
     ]);
     setNewHabitTitle('');
-    setNewHabitTime('');
+    setNewHabitGoal('30');
   };
 
   const handleDeleteHabit = (habitId) => {
@@ -114,7 +111,6 @@ export function HabitTracker({ searchFilter }) {
   const startEdit = (habit) => {
     setEditingId(habit.id);
     setEditTitle(habit.title);
-    setEditTime(habit.time || '');
     setEditGoal(habit.goal.toString());
   };
 
@@ -125,24 +121,12 @@ export function HabitTracker({ searchFilter }) {
         return {
           ...h,
           title: editTitle,
-          time: editTime,
-          goal: parseInt(editGoal) || 15
+          goal: parseInt(editGoal) || 30
         };
       }
       return h;
     }));
     setEditingId(null);
-  };
-
-  // Helper format time for display (e.g. "08:00" -> "08:00 AM")
-  const formatTimeDisplay = (timeStr) => {
-    if (!timeStr) return null;
-    const [h, m] = timeStr.split(':');
-    if (!h) return timeStr;
-    const hourNum = parseInt(h);
-    const ampm = hourNum >= 12 ? 'PM' : 'AM';
-    const formattedHour = hourNum % 12 || 12;
-    return `${formattedHour.toString().padStart(2, '0')}:${m} ${ampm}`;
   };
 
   // Real Progress Metrics for current selected week
@@ -315,22 +299,27 @@ export function HabitTracker({ searchFilter }) {
             <Activity size={16} /> MY HABITS
           </h3>
 
-          {/* Quick Add Habit Form with Optional Time Field */}
+          {/* Form with MINUTES GOAL field (No time-of-day field) */}
           <form onSubmit={handleAddHabit} style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
             <input
               type="text"
               placeholder="New habit..."
               value={newHabitTitle}
               onChange={(e) => setNewHabitTitle(e.target.value)}
-              style={{ minHeight: '32px', fontSize: '12px', padding: '4px 10px', width: '130px' }}
+              style={{ minHeight: '32px', fontSize: '12px', padding: '4px 10px', width: '140px' }}
             />
-            <input
-              type="time"
-              value={newHabitTime}
-              onChange={(e) => setNewHabitTime(e.target.value)}
-              title="Optional Habit Time"
-              style={{ minHeight: '32px', fontSize: '12px', padding: '4px 6px', width: '105px' }}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <input
+                type="number"
+                placeholder="Minutes"
+                min="1"
+                max="300"
+                value={newHabitGoal}
+                onChange={(e) => setNewHabitGoal(e.target.value)}
+                style={{ minHeight: '32px', fontSize: '12px', padding: '4px 8px', width: '70px' }}
+              />
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>min</span>
+            </div>
             <button type="submit" className="btn-primary" style={{ minHeight: '32px', padding: '0 10px', fontSize: '12px' }}>
               <Plus size={14} /> Add
             </button>
@@ -344,13 +333,13 @@ export function HabitTracker({ searchFilter }) {
         ) : (
           /* Scrollable Table Wrapper */
           <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '580px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '540px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>
                   <th style={{ padding: '8px 10px', color: 'var(--text-secondary)', fontWeight: '600', position: 'sticky', left: 0, background: 'var(--bg-card)', zIndex: 2, minWidth: '170px' }}>
                     Habit
                   </th>
-                  <th style={{ padding: '8px 10px', color: 'var(--text-muted)', fontWeight: '600', width: '55px', textAlign: 'center' }}>
+                  <th style={{ padding: '8px 10px', color: 'var(--text-muted)', fontWeight: '600', width: '65px', textAlign: 'center' }}>
                     Goal
                   </th>
                   {/* Real Date Headers */}
@@ -388,12 +377,15 @@ export function HabitTracker({ searchFilter }) {
                               onChange={(e) => setEditTitle(e.target.value)}
                               style={{ minHeight: '32px', fontSize: '12px', padding: '4px 8px', flex: 1, minWidth: '130px' }}
                             />
-                            <input
-                              type="time"
-                              value={editTime}
-                              onChange={(e) => setEditTime(e.target.value)}
-                              style={{ minHeight: '32px', fontSize: '12px', padding: '4px 6px', width: '100px' }}
-                            />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <input
+                                type="number"
+                                value={editGoal}
+                                onChange={(e) => setEditGoal(e.target.value)}
+                                style={{ minHeight: '32px', fontSize: '12px', padding: '4px 6px', width: '65px' }}
+                              />
+                              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>min</span>
+                            </div>
                             <button
                               type="button"
                               onClick={() => handleSaveEdit(habit.id)}
@@ -418,7 +410,7 @@ export function HabitTracker({ searchFilter }) {
 
                   return (
                     <tr key={habit.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      {/* Sticky Habit Title & Time Column */}
+                      {/* Sticky Habit Title Column */}
                       <td style={{
                         padding: '8px 10px', color: 'var(--text-primary)',
                         position: 'sticky', left: 0, background: 'var(--bg-card)', zIndex: 2
@@ -426,16 +418,11 @@ export function HabitTracker({ searchFilter }) {
                         <div style={{ fontWeight: '600', fontSize: '13px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '170px' }}>
                           {habit.title}
                         </div>
-                        {habit.time && (
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '1px' }}>
-                            <Clock size={11} color="var(--accent-primary)" /> {formatTimeDisplay(habit.time)}
-                          </div>
-                        )}
                       </td>
 
-                      {/* Goal Value */}
-                      <td style={{ padding: '8px 10px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '12px' }}>
-                        {habit.goal}m
+                      {/* Minutes Goal Display (e.g. 30 min) */}
+                      <td style={{ padding: '8px 10px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '600' }}>
+                        {habit.goal} min
                       </td>
 
                       {/* Date-Keyed Check-in Toggles */}

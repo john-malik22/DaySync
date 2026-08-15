@@ -15,7 +15,7 @@ export function SettingsPage() {
     return localStorage.getItem('daysync_startup_page') || '/app/dashboard';
   });
 
-  // 2. Dashboard Widgets Visibility Preference (Change 6)
+  // 2. Dashboard Widgets Visibility Preference
   const [widgetSettings, setWidgetSettings] = useState(() => {
     try {
       const saved = localStorage.getItem('daysync_dashboard_widgets');
@@ -89,7 +89,7 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="page-container" style={{ maxWidth: '950px' }}>
+    <div className="page-container" style={{ width: '100%', maxWidth: '1200px' }}>
       {/* Page Header Row */}
       <PageHeaderRow title="Privacy & Settings" onSearch={setSearch} />
 
@@ -112,7 +112,7 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* 2. Dashboard Widgets Controls (Change 6) */}
+      {/* 2. Dashboard Widgets Controls */}
       <div className="glass-card">
         <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Sliders size={18} color="var(--accent-primary)" /> Dashboard Widgets
@@ -121,7 +121,7 @@ export function SettingsPage() {
           Toggle which performance widgets display on your main Dashboard view.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-xs)' }}>
           {[
             { key: 'task', label: 'Task Performance' },
             { key: 'expense', label: 'Expense Performance' },
@@ -137,14 +137,14 @@ export function SettingsPage() {
                 background: 'var(--bg-secondary)', border: '1px solid var(--border-color)'
               }}
             >
-              <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-primary)' }}>
+              <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>
                 {w.label}
               </span>
               <button
                 type="button"
                 onClick={() => toggleWidgetSetting(w.key)}
                 className={widgetSettings[w.key] ? 'btn-primary' : 'btn-secondary'}
-                style={{ padding: '4px 14px', minHeight: '32px', fontSize: '12px', minWidth: '60px' }}
+                style={{ padding: '4px 12px', minHeight: '30px', fontSize: '12px', minWidth: '55px' }}
               >
                 {widgetSettings[w.key] ? 'ON' : 'OFF'}
               </button>
