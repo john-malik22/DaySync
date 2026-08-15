@@ -22,9 +22,13 @@ export function TaskManager({ searchFilter }) {
     setTitle('');
   };
 
+  const handleDeleteTask = async (id) => {
+    if (confirm('Are you sure you want to delete this task?')) {
+      await deleteTask(id);
+    }
+  };
+
   const filteredTasks = tasks.filter(t => !searchFilter || t.title.toLowerCase().includes(searchFilter.toLowerCase()));
-  const pendingFilteredTasks = filteredTasks.filter(t => !t.completed);
-  const completedFilteredTasks = filteredTasks.filter(t => t.completed);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
@@ -71,7 +75,7 @@ export function TaskManager({ searchFilter }) {
 
         {filteredTasks.length === 0 ? (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
-            No pending tasks available.
+            No tasks found matching your query.
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
@@ -82,8 +86,11 @@ export function TaskManager({ searchFilter }) {
                 border: '1px solid var(--border-color)'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {/* True Toggle Button: Clicking toggles between completed and uncompleted */}
                   <button
-                    onClick={() => toggleTask(task.id)}
+                    type="button"
+                    onClick={() => toggleTask(task.id, task.completed)}
+                    title={task.completed ? "Mark as uncompleted" : "Mark as completed"}
                     style={{
                       width: '22px', height: '22px', borderRadius: '4px',
                       border: `2px solid ${task.completed ? 'var(--accent-primary)' : 'var(--border-color)'}`,
@@ -115,8 +122,10 @@ export function TaskManager({ searchFilter }) {
                     {task.priority}
                   </span>
                   <button
-                    onClick={() => deleteTask(task.id)}
+                    type="button"
+                    onClick={() => handleDeleteTask(task.id)}
                     className="btn-secondary"
+                    title="Delete Task"
                     style={{ padding: '4px 8px', minHeight: '30px', color: 'var(--accent-danger)' }}
                   >
                     <Trash2 size={13} />
