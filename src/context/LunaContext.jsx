@@ -21,7 +21,6 @@ export function LunaProvider({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile drawer state
 
   const toggleSidebar = () => {
-    // Check if on mobile screen (< 1024px)
     if (window.innerWidth < 1024) {
       setSidebarOpen(prev => !prev);
     } else {
@@ -89,6 +88,12 @@ export function LunaProvider({ children }) {
     return newMem;
   };
 
+  const updateMemory = async (id, data) => {
+    const updated = await api.updateMemory(id, data);
+    await fetchData();
+    return updated;
+  };
+
   const deleteMemory = async (id) => {
     await api.deleteMemory(id);
     await fetchData();
@@ -147,6 +152,7 @@ export function LunaProvider({ children }) {
         closeSidebar,
         sendMessage,
         addMemory,
+        updateMemory,
         deleteMemory,
         addTask,
         toggleTask,

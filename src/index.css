@@ -1,30 +1,31 @@
-/* DaySync Design System - Navy & Teal Palette (Light Theme Default) */
+/* DaySync Design System - Light & Dark Semantic Palette System */
 
 :root, [data-theme='light'] {
-  --bg-primary: #F5F7F7;       /* Main Light Background */
+  --bg-primary: #F6F8FB;       /* Main Light Background */
   --bg-card: #FFFFFF;          /* Crisp White Surface */
-  --bg-secondary: #EEF3F2;     /* Soft Surface Level 2 */
-  --bg-tertiary: #E2EBE9;      /* Container Level 3 */
+  --bg-secondary: #EEF3F5;     /* Soft Surface Level 2 */
+  --bg-tertiary: #E2EBEF;      /* Container Level 3 */
 
-  --border-color: #D9E2E0;     /* Light Border */
-  --border-subtle: rgba(24, 59, 86, 0.1);
-  --border-highlight: #2F7D78;  /* Primary Teal Focus Highlight */
+  --border-color: #D9E1E8;     /* Light Border */
+  --border-subtle: rgba(23, 50, 77, 0.1);
+  --border-highlight: #2F6F73;  /* Primary Teal Focus Highlight */
 
-  --sidebar-bg: #183B56;        /* Deep Navy Sidebar Background */
-  --sidebar-text: #EBF2F7;
+  --sidebar-bg: #17324D;        /* Dark Slate/Navy Sidebar Background */
+  --sidebar-text: #F4F7F9;
   --sidebar-muted: #9BAEB8;
 
-  --accent-primary: #2F7D78;    /* Primary Teal */
-  --accent-light: #A8D5CF;      /* Light Teal Tint */
-  --accent-dark: #183B56;       /* Primary Dark Navy */
+  --accent-primary: #2F6F73;    /* Primary Teal */
+  --accent-light: #4F9DA0;      /* Accent Teal */
+  --accent-tint: #DCEEEF;       /* Soft Accent Highlight */
+  --accent-dark: #17324D;       /* Deep Navy */
 
-  --accent-success: #3E8E6B;
+  --accent-success: #3F8F68;
   --accent-warning: #D98B38;
   --accent-danger: #C85C5C;
 
-  --text-primary: #183B56;     /* Primary Dark Navy Text */
-  --text-secondary: #6B7C85;   /* Muted Text */
-  --text-muted: #8E9FA8;
+  --text-primary: #17324D;     /* Dark Slate Primary Text */
+  --text-secondary: #5F6F7D;   /* Secondary Slate Text */
+  --text-muted: #7A8792;      /* Muted Text */
 
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -44,36 +45,37 @@
   --radius-full: 9999px;
 
   /* Elevation */
-  --shadow-sm: 0 1px 3px rgba(24, 59, 86, 0.06);
-  --shadow-md: 0 4px 12px rgba(24, 59, 86, 0.08);
-  --shadow-lg: 0 8px 24px rgba(24, 59, 86, 0.12);
+  --shadow-sm: 0 1px 3px rgba(23, 50, 77, 0.06);
+  --shadow-md: 0 4px 12px rgba(23, 50, 77, 0.08);
+  --shadow-lg: 0 8px 24px rgba(23, 50, 77, 0.12);
 }
 
 [data-theme='dark'] {
-  --bg-primary: #0F1B26;       /* Deepest Dark Background */
-  --bg-card: #162635;          /* Dark Surface Card */
-  --bg-secondary: #1D3140;     /* Soft Surface Level 2 */
-  --bg-tertiary: #12202E;      /* Deep Container Surface */
+  --bg-primary: #0E1A24;       /* Deepest Dark Background */
+  --bg-card: #152532;          /* Dark Surface Card */
+  --bg-secondary: #1D313F;     /* Soft Surface Level 2 */
+  --bg-tertiary: #12222E;      /* Deep Container Surface */
 
-  --border-color: #2A404F;     /* Dark Border */
-  --border-subtle: rgba(85, 183, 173, 0.2);
-  --border-highlight: #55B7AD;  /* Primary Teal Highlight */
+  --border-color: #2A3E4C;     /* Dark Border */
+  --border-subtle: rgba(88, 182, 184, 0.2);
+  --border-highlight: #58B6B8;  /* Primary Teal Highlight */
 
-  --sidebar-bg: #0B1722;        /* Darkest Sidebar Background */
-  --sidebar-text: #F5F8FA;
-  --sidebar-muted: #9BAEB8;
+  --sidebar-bg: #09131C;        /* Darkest Sidebar Background */
+  --sidebar-text: #F4F7F9;
+  --sidebar-muted: #A4B1BA;
 
-  --accent-primary: #55B7AD;    /* Dark Mode Primary Teal */
-  --accent-light: #8ED3CB;      /* Dark Mode Light Teal */
-  --accent-dark: #DDEAF0;
+  --accent-primary: #58B6B8;    /* Dark Mode Primary Teal */
+  --accent-light: #8FD0D0;      /* Dark Mode Accent Teal */
+  --accent-tint: #1D3644;       /* Dark Mode Soft Tint */
+  --accent-dark: #F4F7F9;
 
-  --accent-success: #64B48D;
+  --accent-success: #65B68B;
   --accent-warning: #E09F5A;
-  --accent-danger: #E17878;
+  --accent-danger: #E77C7C;
 
-  --text-primary: #F5F8FA;     /* Warm Light Main Text */
-  --text-secondary: #9BAEB8;   /* Muted Text */
-  --text-muted: #6B808E;
+  --text-primary: #F4F7F9;     /* Warm Light Main Text */
+  --text-secondary: #C1CED6;   /* Secondary Muted Text */
+  --text-muted: #A4B1BA;      /* Muted Text */
 
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
@@ -210,6 +212,10 @@ p {
   width: 100%;
   min-height: auto;
   padding: 0;
+}
+
+.header-search-bar input::placeholder {
+  color: var(--text-muted);
 }
 
 /* Mobile-Only Hamburger Toggle Button */

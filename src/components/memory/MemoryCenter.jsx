@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
-import { Trash2, Plus, ShieldCheck } from 'lucide-react';
+import { Trash2, Edit2, Plus, ShieldCheck, Check, X } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 
 export function MemoryCenter({ searchFilter }) {
-  const { memories, addMemory, deleteMemory } = useLuna();
+  const { memories, addMemory, updateMemory, deleteMemory } = useLuna();
   const [filter, setFilter] = useState('All');
   const [newContent, setNewContent] = useState('');
   const [newType, setNewType] = useState('Preferences');
+
+  // Edit state
+  const [editingId, setEditingId] = useState(null);
+  const [editContent, setEditContent] = useState('');
+  const [editType, setEditType] = useState('Preferences');
 
   const categories = ['All', 'Preferences', 'Routine', 'Goals', 'Financial'];
 
@@ -24,6 +29,30 @@ export function MemoryCenter({ searchFilter }) {
       approved: true
     });
     setNewContent('');
+  };
+
+  const startEdit = (mem) => {
+    setEditingId(mem.id);
+    setEditContent(mem.content);
+    setEditType(mem.type || 'Preferences');
+  };
+
+  const handleSaveEdit = async (id) => {
+    if (!editContent.trim()) return;
+    if (updateMemory) {
+      await updateMemory(id, {
+        type: editType,
+        content: editContent,
+        approved: true
+      });
+    }
+    setEditingId(null);
+  };
+
+  const handleDelete = async (id) => {
+    if (confirm('Are you sure you want to delete this memory item?')) {
+      await deleteMemory(id);
+    }
   };
 
   return (
@@ -87,62 +116,133 @@ export function MemoryCenter({ searchFilter }) {
           <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No memories saved yet.</p>
         ) : (
           <div className="grid-2" style={{ gap: 'var(--space-xs)' }}>
-            {filteredMemories.map((mem) => (
-              <div
-                key={mem.id}
-                className="glass-card"
-                style={{
-                  padding: '10px 12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '8px'
-                }}
-              >
-                {/* Category Badge & Content in same visual row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                  <span style={{
-                    fontSize: '10px', fontWeight: '700', textTransform: 'uppercase',
-                    color: '#FFFFFF', background: 'var(--accent-primary)',
-                    padding: '2px 6px', borderRadius: '4px', flexShrink: 0
-                  }}>
-                    {mem.type}
-                  </span>
+            {filteredMemories.map((mem) => {
+              const isEditing = editingId === mem.id;
 
-                  <div style={{ minWidth: 0, overflow: 'hidden' }}>
-                    <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+              if (isEditing) {
+                return (
+                  <div key={mem.id} className="glass-card" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <select
+                        value={editType}
+                        onChange={(e) => setEditType(e.target.value)}
+                        style={{ minHeight: '34px', fontSize: '12px', padding: '4px 8px' }}
+                      >
+                        <option value="Preferences">Preferences</option>
+                        <option value="Routine">Routine</option>
+                        <option value="Goals">Goals</option>
+                        <option value="Financial">Financial</option>
+                      </select>
+                      <input
+                        type="text"
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        style={{ minHeight: '34px', fontSize: '12px', flex: 1, padding: '4px 8px' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveEdit(mem.id)}
+                        className="btn-primary"
+                        style={{ padding: '4px 10px', minHeight: '30px', fontSize: '12px' }}
+                      >
+                        <Check size={13} /> Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(null)}
+                        className="btn-secondary"
+                        style={{ padding: '4px 10px', minHeight: '30px', fontSize: '12px' }}
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={mem.id}
+                  className="glass-card"
+                  style={{
+                    padding: '10px 12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: '6px'
+                  }}
+                >
+                  {/* Row 1: Category Tag on left | Source metadata on right */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{
+                      fontSize: '10px', fontWeight: '700', textTransform: 'uppercase',
+                      color: '#FFFFFF', background: 'var(--accent-primary)',
+                      padding: '2px 6px', borderRadius: '4px'
+                    }}>
+                      {mem.type}
+                    </span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      Source: {mem.approved ? 'Approved' : 'Detected'}
+                    </span>
+                  </div>
+
+                  {/* Row 2: Memory text on left | Compact [✎] [🗑] icon buttons on right */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500', minWidth: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', flex: 1 }}>
                       "{mem.content}"
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      Source: {mem.approved ? 'Approved' : 'Detected'}
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                      {/* Small Edit Icon Button [✎] */}
+                      <button
+                        type="button"
+                        onClick={() => startEdit(mem)}
+                        title="Edit Memory"
+                        style={{
+                          padding: '4px',
+                          width: '26px',
+                          height: '26px',
+                          borderRadius: 'var(--radius-sm)',
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'var(--text-secondary)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Edit2 size={13} />
+                      </button>
+
+                      {/* Small Trash/Delete Icon Button [🗑] */}
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(mem.id)}
+                        title="Delete Memory"
+                        style={{
+                          padding: '4px',
+                          width: '26px',
+                          height: '26px',
+                          borderRadius: 'var(--radius-sm)',
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'var(--accent-danger)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </div>
                 </div>
-
-                {/* Small Trash/Delete Icon Button */}
-                <button
-                  type="button"
-                  onClick={() => deleteMemory(mem.id)}
-                  title="Delete Memory"
-                  style={{
-                    padding: '4px',
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'var(--accent-danger)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                  }}
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

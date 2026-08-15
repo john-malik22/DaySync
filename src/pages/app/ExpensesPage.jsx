@@ -66,6 +66,12 @@ export function ExpensesPage() {
     setEditingId(null);
   };
 
+  const handleDelete = async (id) => {
+    if (confirm('Are you sure you want to delete this expense transaction?')) {
+      await deleteExpense(id);
+    }
+  };
+
   const filteredExpenses = expenses.filter(exp => 
     !search || 
     exp.description.toLowerCase().includes(search.toLowerCase()) || 
@@ -82,7 +88,7 @@ export function ExpensesPage() {
         {/* LOG TRANSACTION Card */}
         <ExpenseForm />
 
-        {/* TOTAL BALANCE Card with Spent/Received Summary Blocks */}
+        {/* TOTAL BALANCE Card with Compact Spent & Received Summary Blocks */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           <div>
             <h3 style={{ marginBottom: '4px', color: 'var(--text-secondary)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -100,7 +106,7 @@ export function ExpensesPage() {
             </div>
           </div>
 
-          {/* Compact Spent & Received Summary Blocks side-by-side */}
+          {/* Compact Spent & Received Summary Blocks */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-xs)', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
             <div style={{ padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Spent</div>
@@ -166,6 +172,7 @@ export function ExpensesPage() {
                       style={{ padding: '4px 8px', minHeight: '34px', fontSize: '12px' }}
                     />
                     <button
+                      type="button"
                       onClick={() => handleSaveEdit(exp.id)}
                       className="btn-primary"
                       style={{ padding: '4px 8px', minHeight: '34px', fontSize: '12px' }}
@@ -173,6 +180,7 @@ export function ExpensesPage() {
                       <Check size={14} />
                     </button>
                     <button
+                      type="button"
                       onClick={() => setEditingId(null)}
                       className="btn-secondary"
                       style={{ padding: '4px 8px', minHeight: '34px', fontSize: '12px' }}
@@ -189,11 +197,11 @@ export function ExpensesPage() {
                   padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
                   border: '1px solid var(--border-color)', gap: '8px'
                 }}>
-                  {/* Left: Transaction Info */}
+                  {/* Left: Transaction Title & Category Metadata */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
                     <div style={{
                       width: '30px', height: '30px', borderRadius: 'var(--radius-sm)',
-                      background: isIncome ? 'rgba(47, 125, 120, 0.15)' : 'rgba(200, 92, 92, 0.15)',
+                      background: isIncome ? 'rgba(47, 111, 115, 0.15)' : 'rgba(200, 92, 92, 0.15)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                     }}>
                       {isIncome ? <ArrowUpRight size={15} color="var(--accent-primary)" /> : <ArrowDownRight size={15} color="var(--accent-danger)" />}
@@ -214,7 +222,7 @@ export function ExpensesPage() {
                       {isIncome ? '+' : '-'}₹{exp.amount.toLocaleString()}
                     </span>
 
-                    {/* Small Edit Icon Button */}
+                    {/* Small Edit Icon Button [✎] */}
                     <button
                       type="button"
                       onClick={() => startEdit(exp)}
@@ -236,10 +244,10 @@ export function ExpensesPage() {
                       <Edit2 size={13} />
                     </button>
 
-                    {/* Small Trash/Delete Icon Button */}
+                    {/* Small Trash/Delete Icon Button [🗑] */}
                     <button
                       type="button"
-                      onClick={() => deleteExpense(exp.id)}
+                      onClick={() => handleDelete(exp.id)}
                       title="Delete Transaction"
                       style={{
                         padding: '4px',
