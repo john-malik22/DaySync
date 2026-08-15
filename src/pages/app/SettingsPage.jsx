@@ -237,7 +237,7 @@ export function SettingsPage() {
               <strong>Developer Support:</strong> Reach out for feature inquiries or technical assistance.
             </div>
             <a
-              href="mailto:support@daysync.ai"
+              href="mailto:johnmalik2222@gmail.com"
               className="btn-primary"
               style={{ padding: '4px 12px', fontSize: '12px', minHeight: '32px', textDecoration: 'none' }}
             >
