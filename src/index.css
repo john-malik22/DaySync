@@ -171,7 +171,8 @@ p {
   padding: var(--space-xl) var(--space-2xl); /* 32px - 40px desktop padding */
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
+  box-sizing: border-box;
 }
 
 /* Page Header Row (Page Title on Left | Search on Right) */
@@ -428,6 +429,11 @@ input:focus, select:focus, textarea:focus {
     display: inline-flex !important;
   }
 
+  /* Hide the desktop collapse toggle inside the mobile sidebar drawer */
+  .desktop-toggle-btn {
+    display: none !important;
+  }
+
   .sidebar-overlay {
     display: block;
     position: fixed;
@@ -466,9 +472,10 @@ input:focus, select:focus, textarea:focus {
     transform: translateX(0);
   }
 
-  /* Hide Text Labels & Profile Details on Mobile Navigation Rail */
+  /* Hide Text Labels, Profile Details, AND Logo on Mobile Navigation Rail */
   .sidebar-container .sidebar-text,
-  .sidebar-container .sidebar-profile-details {
+  .sidebar-container .sidebar-profile-details,
+  .sidebar-container .sidebar-logo-block {
     display: none !important;
   }
 
@@ -480,12 +487,15 @@ input:focus, select:focus, textarea:focus {
   }
 
   .page-container {
-    padding: 12px 14px; /* Sensible mobile padding within 100vw */
+    padding: 14px 16px;
     gap: var(--space-md);
+    width: 100%;
+    max-width: 100%;
   }
 
   .glass-card {
-    padding: 12px 14px;
+    padding: 14px 16px;
+    width: 100%;
   }
 
   .grid-2, .grid-3, .expenses-layout {
@@ -502,7 +512,13 @@ input:focus, select:focus, textarea:focus {
   }
 
   .header-search-bar {
-    min-width: 110px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  /* Stack 3-column form grids on mobile */
+  .mobile-stack-form {
+    grid-template-columns: 1fr !important;
   }
 }
 

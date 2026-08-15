@@ -53,7 +53,7 @@ export function DashboardPage() {
       <div className="grid-2" style={{ alignItems: 'start', gap: 'var(--space-md)' }}>
         {/* TASK PERFORMANCE Card */}
         {widgetSettings.task && (
-          <div className="glass-card" style={{ padding: '14px 16px' }}>
+          <div className="glass-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h3 style={{ color: 'var(--accent-primary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <CheckSquare size={16} color="var(--accent-primary)" /> TASK PERFORMANCE
@@ -86,7 +86,7 @@ export function DashboardPage() {
 
         {/* MONTHLY EXPENSES Card (ONLY Total Amount + Total Spent) */}
         {widgetSettings.expense && (
-          <div className="glass-card" style={{ padding: '14px 16px' }}>
+          <div className="glass-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h3 style={{ color: 'var(--accent-primary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <CreditCard size={16} color="var(--accent-primary)" /> MONTHLY EXPENSES
@@ -115,7 +115,7 @@ export function DashboardPage() {
 
         {/* MEMORY PERFORMANCE Card */}
         {widgetSettings.memory && (
-          <div className="glass-card" style={{ padding: '14px 16px' }}>
+          <div className="glass-card">
             <h3 style={{ marginBottom: '8px', fontSize: '14px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Brain size={16} color="var(--accent-primary)" /> MEMORY PERFORMANCE
             </h3>
@@ -137,7 +137,7 @@ export function DashboardPage() {
 
         {/* HABIT TRACKER PERFORMANCE WIDGET */}
         {widgetSettings.habit && (
-          <div className="glass-card" style={{ padding: '14px 16px' }}>
+          <div className="glass-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h3 style={{ color: 'var(--accent-primary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Activity size={16} color="var(--accent-primary)" /> HABIT TRACKER
@@ -167,7 +167,7 @@ export function DashboardPage() {
       {/* Row 2: PROGRESS & SUMMARY Card */}
       {widgetSettings.progress && (
         <div className="grid-2" style={{ alignItems: 'start', gap: 'var(--space-md)', marginTop: 'var(--space-md)' }}>
-          <div className="glass-card" style={{ padding: '14px 16px' }}>
+          <div className="glass-card">
             <h3 style={{ marginBottom: '8px', fontSize: '14px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <CheckCircle2 size={16} color="var(--accent-primary)" /> PROGRESS
             </h3>
@@ -180,7 +180,7 @@ export function DashboardPage() {
             </div>
           </div>
 
-          <div className="glass-card" style={{ padding: '14px 16px' }}>
+          <div className="glass-card">
             <h3 style={{ marginBottom: '8px', fontSize: '14px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Sparkles size={16} color="var(--accent-primary)" /> SUMMARY
             </h3>

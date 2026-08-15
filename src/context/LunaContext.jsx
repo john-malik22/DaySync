@@ -21,7 +21,7 @@ export function LunaProvider({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile drawer state
 
   const toggleSidebar = () => {
-    if (window.innerWidth < 1024) {
+    if (window.innerWidth < 768) {
       setSidebarOpen(prev => !prev);
     } else {
       setSidebarCollapsed(prev => {

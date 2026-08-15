@@ -62,8 +62,8 @@ export function Sidebar() {
             width: '100%'
           }}
         >
-          {/* Logo & Brand (Hidden text when collapsed) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Logo & Brand (Hidden on mobile via .sidebar-logo-block, text hidden when collapsed) */}
+          <div className="sidebar-logo-block" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
               width: '36px',
               height: '36px',

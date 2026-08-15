@@ -89,7 +89,7 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="page-container" style={{ width: '100%', maxWidth: '1200px' }}>
+    <div className="page-container">
       {/* Page Header Row */}
       <PageHeaderRow title="Privacy & Settings" onSearch={setSearch} />
 
