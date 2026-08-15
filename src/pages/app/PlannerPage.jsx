@@ -1,21 +1,17 @@
-import React from 'react';
-import { TimelinePlanner } from '../../components/planner/TimelinePlanner';
-import { TaskManager } from '../../components/planner/TaskManager';
+import React, { useState } from 'react';
+import { PageHeaderRow } from '../../components/common/PageHeaderRow';
+import { HabitTracker } from '../../components/routine/HabitTracker';
 
 export function PlannerPage() {
-  return (
-    <div style={{ padding: '28px', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: '800' }}>AI Daily Planner & Tasks</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-          Organize your agenda, set priorities, and follow daily scheduled time blocks.
-        </p>
-      </div>
+  const [search, setSearch] = useState('');
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
-        <TimelinePlanner />
-        <TaskManager />
-      </div>
+  return (
+    <div className="page-container">
+      {/* Top Page Header Row */}
+      <PageHeaderRow title="Health & Habit Tracker" onSearch={setSearch} />
+
+      {/* Compact Habit & Health Tracker */}
+      <HabitTracker />
     </div>
   );
 }
