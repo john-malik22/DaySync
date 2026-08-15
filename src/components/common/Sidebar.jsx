@@ -48,37 +48,55 @@ export function Sidebar() {
       {/* Main Sidebar Element */}
       <aside className={`sidebar-container ${sidebarCollapsed ? 'collapsed' : ''} ${sidebarOpen ? 'mobile-open' : ''}`}>
         {/* Brand & Collapse Header */}
-        <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '20px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--accent-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FFFFFF',
-              fontWeight: '800',
-              flexShrink: 0
-            }}>
-              <Sparkles size={20} />
+        <div 
+          className="sidebar-header" 
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: sidebarCollapsed ? 'center' : 'space-between', 
+            paddingBottom: '20px', 
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)', 
+            marginBottom: '16px' 
+          }}
+        >
+          {/* Logo & Brand Name (Hidden when collapsed) */}
+          {!sidebarCollapsed && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--accent-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#FFFFFF',
+                fontWeight: '800',
+                flexShrink: 0
+              }}>
+                <Sparkles size={20} />
+              </div>
+              <div className="sidebar-text">
+                <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#EBF2F7' }}>DaySync</h2>
+              </div>
             </div>
-            <div className="sidebar-text">
-              <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#EBF2F7' }}>DaySync</h2>
-            </div>
-          </div>
+          )}
 
+          {/* Hamburger / Menu Control (Centered when collapsed, Far-Right when expanded) */}
           <button
             onClick={toggleSidebar}
             className="btn-secondary"
-            title="Toggle Sidebar"
+            title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
             style={{
               padding: '6px',
               borderRadius: 'var(--radius-sm)',
               background: 'transparent',
               border: 'none',
-              color: '#9BAEB8'
+              color: '#9BAEB8',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
@@ -86,7 +104,7 @@ export function Sidebar() {
         </div>
 
         {/* Main Navigation Links */}
-        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto' }}>
+        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto' }}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -113,43 +131,49 @@ export function Sidebar() {
                 }}
               >
                 <Icon size={18} color={isActive ? '#FFFFFF' : '#A8D5CF'} style={{ flexShrink: 0 }} />
-                <span className="sidebar-text">{item.label}</span>
+                {!sidebarCollapsed && <span className="sidebar-text">{item.label}</span>}
               </NavLink>
             );
           })}
         </nav>
 
-        {/* User Footer: [ J ]  FirstName              ⚙ */}
+        {/* User Footer:
+            Expanded: [ J ]  FirstName                 ⚙
+            Collapsed:                                ⚙ (Centered ONLY)
+        */}
         <div style={{
           marginTop: 'auto',
           paddingTop: '16px',
           borderTop: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: sidebarCollapsed ? 'center' : 'space-between'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-            <div style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '50%',
-              background: 'var(--accent-primary)',
-              color: '#FFFFFF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: '700',
-              fontSize: '14px',
-              flexShrink: 0
-            }}>
-              {initial}
+          {/* User Profile Avatar & Initial (Hidden when collapsed) */}
+          {!sidebarCollapsed && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+              <div style={{
+                width: '34px',
+                height: '34px',
+                borderRadius: '50%',
+                background: 'var(--accent-primary)',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '700',
+                fontSize: '14px',
+                flexShrink: 0
+              }}>
+                {initial}
+              </div>
+              <div className="sidebar-text" style={{ fontSize: '0.9rem', fontWeight: '600', color: '#EBF2F7', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                {firstName}
+              </div>
             </div>
-            <div className="sidebar-text" style={{ fontSize: '0.9rem', fontWeight: '600', color: '#EBF2F7', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-              {firstName}
-            </div>
-          </div>
+          )}
 
-          {/* Settings Icon Button */}
+          {/* Settings Icon Button (Centered when collapsed, Far-Right when expanded) */}
           <button
             onClick={() => { handleNavClick(); navigate('/app/settings'); }}
             title="Settings"

@@ -29,6 +29,11 @@ function AppLayout() {
   );
 }
 
+function AppIndexRedirect() {
+  const startupPath = localStorage.getItem('daysync_startup_page') || '/app/dashboard';
+  return <Navigate to={startupPath} replace />;
+}
+
 function ProtectedRoute() {
   const { user, token, loading } = useAuth();
 
@@ -64,7 +69,7 @@ export default function App() {
 
             {/* Main Application Protected Shell Routes */}
             <Route path="/app" element={<ProtectedRoute />}>
-              <Route index element={<Navigate to="/app/chat" replace />} />
+              <Route index element={<AppIndexRedirect />} />
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="chat" element={<ChatPage />} />
               <Route path="expenses" element={<ExpensesPage />} />
