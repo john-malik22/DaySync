@@ -6,15 +6,10 @@ import { useAuth } from '../../context/AuthContext';
 import { CheckSquare, CreditCard, Brain, CheckCircle2, Sparkles, Activity, ArrowRight, Wallet, Edit2, Check, X } from 'lucide-react';
 
 export function DashboardPage() {
-  const { tasks, expenses, memories, routines } = useLuna();
+  const { tasks, expenses, memories, routines, startingBalance, updateStartingBalance } = useLuna();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
 
-  // User-defined Starting Account Amount state with localStorage persistence
-  const [startingAmount, setStartingAmount] = useState(() => {
-    const saved = localStorage.getItem('daysync_starting_account_amount') || localStorage.getItem('luna_monthly_budget_target');
-    return saved !== null && saved !== '' ? parseFloat(saved) : null;
-  });
   const [isEditingAmount, setIsEditingAmount] = useState(false);
   const [inputAmount, setInputAmount] = useState('');
 
@@ -22,16 +17,13 @@ export function DashboardPage() {
 
   const handleSaveAmount = (e) => {
     e.preventDefault();
-    const val = parseFloat(inputAmount);
-    if (!isNaN(val) && val >= 0) {
-      setStartingAmount(val);
-      localStorage.setItem('daysync_starting_account_amount', val.toString());
-      setIsEditingAmount(false);
-    }
+    if (!inputAmount) return;
+    updateStartingBalance(inputAmount);
+    setIsEditingAmount(false);
   };
 
   const handleStartEdit = () => {
-    setInputAmount(startingAmount !== null ? startingAmount.toString() : '');
+    setInputAmount(startingBalance !== null ? startingBalance.toString() : '');
     setIsEditingAmount(true);
   };
 
@@ -58,7 +50,7 @@ export function DashboardPage() {
   // Financial Balance Metrics (Starting Amount + Total Received - Total Spent)
   const totalReceived = expenses.filter(e => e.type === 'income').reduce((a, b) => a + b.amount, 0);
   const totalSpent = expenses.filter(e => e.type !== 'income').reduce((a, b) => a + b.amount, 0);
-  const currentBalance = (startingAmount !== null ? startingAmount : 0) + totalReceived - totalSpent;
+  const currentBalance = (startingBalance !== null ? startingBalance : 0) + totalReceived - totalSpent;
 
   const formattedBalance = currentBalance >= 0 
     ? `+₹${currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
@@ -127,10 +119,10 @@ export function DashboardPage() {
             </h3>
 
             {/* Account Amount Form or Balance Display */}
-            {startingAmount === null || isEditingAmount ? (
+            {startingBalance === null || isEditingAmount ? (
               <div style={{ marginBottom: '14px' }}>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '6px' }}>
-                  {startingAmount === null ? 'Set your available account amount' : 'Total Account Amount'}
+                  {startingBalance === null ? 'Starting Account Balance not set' : 'Starting Account Balance'}
                 </div>
                 <form onSubmit={handleSaveAmount} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                   <input
@@ -146,7 +138,7 @@ export function DashboardPage() {
                   <button type="submit" className="btn-primary" title="Save" style={{ minHeight: '36px', padding: '0 12px', fontSize: '13px', flexShrink: 0 }}>
                     <Check size={14} /> Save
                   </button>
-                  {isEditingAmount && startingAmount !== null && (
+                  {isEditingAmount && startingBalance !== null && (
                     <button type="button" onClick={handleCancelEdit} className="btn-secondary" title="Cancel" style={{ minHeight: '36px', padding: '0 8px', fontSize: '13px', flexShrink: 0 }}>
                       <X size={14} />
                     </button>

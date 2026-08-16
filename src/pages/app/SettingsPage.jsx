@@ -1,14 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, LogOut, UserX, Sun, Moon, Download, RefreshCw, Mail, Sliders } from 'lucide-react';
+import { Trash2, LogOut, UserX, Sun, Moon, Download, RefreshCw, Mail, Sliders, Wallet } from 'lucide-react';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useAuth } from '../../context/AuthContext';
+import { useLuna } from '../../context/LunaContext';
 import { api } from '../../services/api';
 
 export function SettingsPage() {
   const { user, theme, toggleTheme, logout, deleteAccount } = useAuth();
+  const { startingBalance, updateStartingBalance } = useLuna();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+
+  const [startingBalanceInput, setStartingBalanceInput] = useState('');
+
+  useEffect(() => {
+    if (startingBalance !== null) {
+      setStartingBalanceInput(startingBalance.toString());
+    }
+  }, [startingBalance]);
+
+  const handleSaveStartingBalance = (e) => {
+    e.preventDefault();
+    if (!startingBalanceInput) return;
+    updateStartingBalance(startingBalanceInput);
+  };
 
   // 1. Startup Page Preference
   const [startupPage, setStartupPage] = useState(() => {
@@ -206,7 +222,32 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* 5. Data & Privacy */}
+      {/* 5. Financial Settings */}
+      <div className="glass-card">
+        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Financial Settings</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>Starting Account Balance</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+            Single source of truth used to compute Total Balance across Dashboard and Expenses.
+          </div>
+          <form onSubmit={handleSaveStartingBalance} style={{ display: 'flex', gap: '8px', maxWidth: '380px', marginTop: '4px' }}>
+            <input
+              type="number"
+              placeholder="e.g. 50000"
+              min="0"
+              step="any"
+              value={startingBalanceInput}
+              onChange={(e) => setStartingBalanceInput(e.target.value)}
+              style={{ flex: 1, minHeight: '38px', fontSize: '13px', padding: '6px 12px' }}
+            />
+            <button type="submit" className="btn-primary" style={{ minHeight: '38px', padding: '0 16px', fontSize: '13px' }}>
+              Save
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* 6. Data & Privacy */}
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Data & Privacy</h3>
         <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>

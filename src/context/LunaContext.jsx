@@ -20,6 +20,20 @@ export function LunaProvider({ children }) {
   });
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile drawer state
 
+  // Single Shared Starting Account Balance (One Source of Truth)
+  const [startingBalance, setStartingBalanceState] = useState(() => {
+    const saved = localStorage.getItem('daysync_starting_account_amount') || localStorage.getItem('luna_monthly_budget_target');
+    return saved !== null && saved !== '' ? parseFloat(saved) : null;
+  });
+
+  const updateStartingBalance = (amount) => {
+    const val = parseFloat(amount);
+    if (!isNaN(val) && val >= 0) {
+      setStartingBalanceState(val);
+      localStorage.setItem('daysync_starting_account_amount', val.toString());
+    }
+  };
+
   const toggleSidebar = () => {
     if (window.innerWidth < 768) {
       setSidebarOpen(prev => !prev);
@@ -148,6 +162,8 @@ export function LunaProvider({ children }) {
         loading,
         sidebarCollapsed,
         sidebarOpen,
+        startingBalance,
+        updateStartingBalance,
         toggleSidebar,
         closeSidebar,
         sendMessage,
