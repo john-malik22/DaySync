@@ -44,16 +44,16 @@ export function AuthProvider({ children }) {
           }
         } catch (err) {
           console.error('Auth initialization response:', err);
-          // Only clear token if server explicitly returned 401 Unauthorized or 403 Forbidden
-          if (err && (err.status === 401 || err.status === 403)) {
-            console.warn('Token explicitly rejected (401/403). Clearing session.');
+          // ONLY clear token if server explicitly returned HTTP 401 Unauthorized
+          if (err && err.status === 401) {
+            console.warn('Token explicitly rejected with HTTP 401 Unauthorized. Clearing session.');
             localStorage.removeItem('luna_token');
             localStorage.removeItem('daysync_user_profile');
             setToken(null);
             setUser(null);
           } else {
-            // Temporary network failure, server restart, Render sleeping, 500 error, timeout
-            // Preserve stored token and user session state
+            // HTTP 500, 502, 503, network failure, fetch failure, timeout, Render cold start
+            // Preserve stored token and user session state without logging out
             console.warn('Temporary network/server error during getMe. Preserving token and session.');
           }
         }

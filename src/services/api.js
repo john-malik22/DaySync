@@ -9,6 +9,14 @@ function getAuthHeader() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+export class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
 async function request(url, options = {}) {
   const config = {
     ...options,
@@ -23,9 +31,10 @@ async function request(url, options = {}) {
     const res = await fetch(`${API_BASE}${url}`, config);
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
-      const error = new Error(errorData.error || `HTTP ${res.status}`);
-      error.status = res.status;
-      throw error;
+      throw new ApiError(
+        errorData.error || `HTTP ${res.status}`,
+        res.status
+      );
     }
     return await res.json();
   } catch (err) {
