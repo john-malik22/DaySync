@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
 import { useAuth } from '../../context/AuthContext';
-import { CheckSquare, CreditCard, Brain, CheckCircle2, Sparkles, Activity, ArrowRight } from 'lucide-react';
+import { CheckSquare, CreditCard, Brain, CheckCircle2, Sparkles, Activity, ArrowRight, Wallet } from 'lucide-react';
 
 export function DashboardPage() {
   const { tasks, expenses, memories, routines } = useLuna();
@@ -28,11 +28,17 @@ export function DashboardPage() {
   const pendingTasks = totalTasks - completedTasks;
   const taskPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
 
-  // Monthly Expenses Metrics (Total Amount & Total Spent ONLY)
-  const savedTarget = localStorage.getItem('luna_monthly_budget_target');
-  const totalAmount = savedTarget ? parseFloat(savedTarget) : 5528;
+  // Financial Balance Metrics (Net Balance, Spent, Received)
+  const totalReceived = expenses.filter(e => e.type === 'income').reduce((a, b) => a + b.amount, 0);
   const totalSpent = expenses.filter(e => e.type !== 'income').reduce((a, b) => a + b.amount, 0);
-  const budgetPct = totalAmount > 0 ? Math.min(100, Math.round((totalSpent / totalAmount) * 100)) : 0;
+  const totalBalance = totalReceived - totalSpent;
+
+  const formattedBalance = totalBalance >= 0 
+    ? `+₹${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+    : `-₹${Math.abs(totalBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const formattedSpent = `-₹${totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formattedReceived = `+₹${totalReceived.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   // Memory Performance Metrics
   const totalMemories = memories.length;
@@ -86,32 +92,36 @@ export function DashboardPage() {
           </div>
         )}
 
-        {/* MONTHLY EXPENSES Card */}
+        {/* FINANCIAL SUMMARY / TOTAL BALANCE Card */}
         {widgetSettings.expense && (
           <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h3 style={{ color: 'var(--accent-primary)', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CreditCard size={20} color="var(--accent-primary)" /> MONTHLY EXPENSES
-              </h3>
-              <span style={{ fontSize: '14px', fontWeight: '700', color: budgetPct > 85 ? 'var(--accent-danger)' : 'var(--accent-primary)', background: 'var(--bg-secondary)', padding: '4px 12px', borderRadius: 'var(--radius-full)' }}>
-                {budgetPct}% Used
-              </span>
-            </div>
+            <h3 style={{ color: 'var(--accent-primary)', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <Wallet size={20} color="var(--accent-primary)" /> TOTAL BALANCE
+            </h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-sm)', textAlign: 'center' }}>
-              <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-                <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px' }}>Total Amount</div>
-                <div style={{ fontSize: 'clamp(1.5rem, 3vw, 1.8rem)', fontWeight: '800', color: 'var(--text-primary)' }}>₹{totalAmount.toLocaleString()}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+              <div style={{
+                width: '42px', height: '42px', borderRadius: 'var(--radius-sm)',
+                background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <Wallet size={22} color="var(--accent-primary)" />
               </div>
-              <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-                <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px' }}>Total Spent</div>
-                <div style={{ fontSize: 'clamp(1.5rem, 3vw, 1.8rem)', fontWeight: '800', color: 'var(--accent-primary)' }}>₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <div style={{ fontSize: 'clamp(1.5rem, 3vw, 1.8rem)', fontWeight: '800', color: totalBalance >= 0 ? 'var(--text-primary)' : 'var(--accent-danger)' }}>
+                {formattedBalance}
               </div>
             </div>
 
-            <div style={{ marginTop: 'auto', paddingTop: '14px' }}>
-              <div style={{ width: '100%', height: '6px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                <div style={{ width: `${budgetPct}%`, height: '100%', background: budgetPct > 85 ? 'var(--accent-danger)' : 'var(--accent-primary)', transition: 'width 0.3s ease' }} />
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: 'auto' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-xs)', textAlign: 'center' }}>
+                <div style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '2px', textTransform: 'uppercase' }}>SPENT</div>
+                  <div style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)', fontWeight: '800', color: 'var(--accent-danger)' }}>{formattedSpent}</div>
+                </div>
+                <div style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '2px', textTransform: 'uppercase' }}>RECEIVED</div>
+                  <div style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)', fontWeight: '800', color: 'var(--accent-success)' }}>{formattedReceived}</div>
+                </div>
               </div>
             </div>
           </div>
