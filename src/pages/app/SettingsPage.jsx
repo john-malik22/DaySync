@@ -11,7 +11,7 @@ import { api } from '../../services/api';
 export function SettingsPage() {
   const { user, theme, toggleTheme, logout, deleteAccount } = useAuth();
   const { startingBalance, updateStartingBalance } = useLuna();
-  const { updateAvailable, checking, checkedOnce, checkForUpdates, applyUpdate } = usePWAUpdate();
+  const { updateAvailable, checking, hasCheckedManually, checkForUpdates, applyUpdate } = usePWAUpdate();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
 
@@ -331,7 +331,7 @@ export function SettingsPage() {
               <RefreshCw size={14} className={checking ? 'animate-spin' : ''} />
               {checking
                 ? 'Checking for updates...'
-                : checkedOnce
+                : hasCheckedManually
                 ? "You're using the latest version."
                 : 'Check for Updates →'}
             </button>
