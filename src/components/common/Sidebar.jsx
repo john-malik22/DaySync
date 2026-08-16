@@ -80,7 +80,7 @@ export function Sidebar() {
             </div>
             {!sidebarCollapsed && (
               <div className="sidebar-text">
-                <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#EBF2F7' }}>DaySync</h2>
+                <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--sidebar-text)' }}>DaySync</h2>
               </div>
             )}
           </div>
@@ -95,7 +95,7 @@ export function Sidebar() {
               borderRadius: 'var(--radius-sm)',
               background: 'transparent',
               border: 'none',
-              color: '#9BAEB8',
+              color: 'var(--sidebar-muted)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -127,14 +127,14 @@ export function Sidebar() {
                   justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                   borderRadius: 'var(--radius-sm)',
                   textDecoration: 'none',
-                  color: isActive ? '#FFFFFF' : '#9BAEB8',
+                  color: isActive ? '#FFFFFF' : 'var(--sidebar-muted)',
                   background: isActive ? 'var(--accent-primary)' : 'transparent',
                   fontWeight: isActive ? '700' : '500',
                   fontSize: '0.9rem',
                   transition: 'all 0.15s ease'
                 }}
               >
-                <Icon size={18} color={isActive ? '#FFFFFF' : '#A8D5CF'} style={{ flexShrink: 0 }} />
+                <Icon size={18} color={isActive ? '#FFFFFF' : 'var(--sidebar-muted)'} style={{ flexShrink: 0 }} />
                 {!sidebarCollapsed && <span className="sidebar-text">{item.label}</span>}
               </NavLink>
             );
@@ -169,7 +169,7 @@ export function Sidebar() {
               }}>
                 {initial}
               </div>
-              <div className="sidebar-text" style={{ fontSize: '0.9rem', fontWeight: '600', color: '#EBF2F7', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+              <div className="sidebar-text" style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--sidebar-text)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                 {firstName}
               </div>
             </div>
@@ -182,7 +182,7 @@ export function Sidebar() {
             style={{
               background: 'transparent',
               border: 'none',
-              color: location.pathname === '/app/settings' ? 'var(--accent-primary)' : '#9BAEB8',
+              color: location.pathname === '/app/settings' ? 'var(--accent-primary)' : 'var(--sidebar-muted)',
               cursor: 'pointer',
               padding: '6px',
               display: 'flex',

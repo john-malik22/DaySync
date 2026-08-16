@@ -1,31 +1,37 @@
 /* DaySync Design System - Light & Dark Semantic Palette System */
 
 :root, [data-theme='light'] {
-  --bg-primary: #F6F8FB;       /* Main Light Background */
-  --bg-card: #FFFFFF;          /* Crisp White Surface */
-  --bg-secondary: #EEF3F5;     /* Soft Surface Level 2 */
-  --bg-tertiary: #E2EBEF;      /* Container Level 3 */
+  --bg-primary: #F5F7FA;       /* Page background */
+  --bg-card: #FFFFFF;          /* Card / surface */
+  --bg-surface: #FFFFFF;
+  --bg-secondary: #EEF3F5;     /* Soft surface */
+  --bg-surface-soft: #EEF3F5;
+  --bg-tertiary: #E2EBEF;      /* Container level 3 */
 
-  --border-color: #D9E1E8;     /* Light Border */
-  --border-subtle: rgba(23, 50, 77, 0.1);
-  --border-highlight: #2F6F73;  /* Primary Teal Focus Highlight */
+  --border-color: #D9E1E6;     /* Light Border */
+  --border-subtle: rgba(23, 43, 58, 0.1);
+  --border-highlight: #256F73;  /* Primary Focus Highlight */
 
-  --sidebar-bg: #17324D;        /* Dark Slate/Navy Sidebar Background */
+  --sidebar-bg: #172B3A;        /* Dark Slate Sidebar Background */
   --sidebar-text: #F4F7F9;
-  --sidebar-muted: #9BAEB8;
+  --sidebar-muted: #91A0A8;
 
-  --accent-primary: #2F6F73;    /* Primary Teal */
-  --accent-light: #4F9DA0;      /* Accent Teal */
-  --accent-tint: #DCEEEF;       /* Soft Accent Highlight */
-  --accent-dark: #17324D;       /* Deep Navy */
+  --accent-primary: #256F73;    /* Primary Accent Teal */
+  --accent-light: #4A9C9F;      /* Accent Light */
+  --accent-soft: #DDF1F1;       /* Soft Accent Highlight */
+  --accent-tint: #DDF1F1;       /* Accent Tint */
+  --accent-dark: #172B3A;       /* Deep Navy */
 
-  --accent-success: #3F8F68;
-  --accent-warning: #D98B38;
-  --accent-danger: #C85C5C;
+  --accent-success: #2E8B68;
+  --accent-warning: #B87A20;
+  --accent-danger: #C65353;
+  --success-color: #2E8B68;
+  --warning-color: #B87A20;
+  --danger-color: #C65353;
 
-  --text-primary: #17324D;     /* Dark Slate Primary Text */
-  --text-secondary: #5F6F7D;   /* Secondary Slate Text */
-  --text-muted: #7A8792;      /* Muted Text */
+  --text-primary: #172B3A;     /* Primary Text */
+  --text-secondary: #526270;   /* Secondary Text */
+  --text-muted: #71808C;      /* Muted Text */
 
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -45,37 +51,43 @@
   --radius-full: 9999px;
 
   /* Elevation */
-  --shadow-sm: 0 1px 3px rgba(23, 50, 77, 0.06);
-  --shadow-md: 0 4px 12px rgba(23, 50, 77, 0.08);
-  --shadow-lg: 0 8px 24px rgba(23, 50, 77, 0.12);
+  --shadow-sm: 0 1px 3px rgba(23, 43, 58, 0.06);
+  --shadow-md: 0 4px 12px rgba(23, 43, 58, 0.08);
+  --shadow-lg: 0 8px 24px rgba(23, 43, 58, 0.12);
 }
 
 [data-theme='dark'] {
-  --bg-primary: #0E1A24;       /* Deepest Dark Background */
-  --bg-card: #152532;          /* Dark Surface Card */
-  --bg-secondary: #1D313F;     /* Soft Surface Level 2 */
-  --bg-tertiary: #12222E;      /* Deep Container Surface */
+  --bg-primary: #0F1B24;       /* Page background */
+  --bg-card: #162733;          /* Card / surface */
+  --bg-surface: #162733;
+  --bg-secondary: #1D313F;     /* Soft surface */
+  --bg-surface-soft: #1D313F;
+  --bg-tertiary: #12222E;      /* Container surface */
 
-  --border-color: #2A3E4C;     /* Dark Border */
-  --border-subtle: rgba(88, 182, 184, 0.2);
-  --border-highlight: #58B6B8;  /* Primary Teal Highlight */
+  --border-color: #2A3C47;     /* Dark Border */
+  --border-subtle: rgba(88, 185, 181, 0.2);
+  --border-highlight: #58B9B5;  /* Primary Highlight */
 
-  --sidebar-bg: #09131C;        /* Darkest Sidebar Background */
-  --sidebar-text: #F4F7F9;
-  --sidebar-muted: #A4B1BA;
+  --sidebar-bg: #0A141C;        /* Darkest Sidebar Background */
+  --sidebar-text: #F3F7F8;
+  --sidebar-muted: #91A0A8;
 
-  --accent-primary: #58B6B8;    /* Dark Mode Primary Teal */
-  --accent-light: #8FD0D0;      /* Dark Mode Accent Teal */
-  --accent-tint: #1D3644;       /* Dark Mode Soft Tint */
-  --accent-dark: #F4F7F9;
+  --accent-primary: #58B9B5;    /* Primary Accent Teal */
+  --accent-light: #7ECECB;      /* Accent Light */
+  --accent-soft: #1D4A4B;       /* Soft Accent Tint */
+  --accent-tint: #1D4A4B;
+  --accent-dark: #F3F7F8;
 
-  --accent-success: #65B68B;
-  --accent-warning: #E09F5A;
-  --accent-danger: #E77C7C;
+  --accent-success: #62B68E;
+  --accent-warning: #D3A04B;
+  --accent-danger: #E47777;
+  --success-color: #62B68E;
+  --warning-color: #D3A04B;
+  --danger-color: #E47777;
 
-  --text-primary: #F4F7F9;     /* Warm Light Main Text */
-  --text-secondary: #C1CED6;   /* Secondary Muted Text */
-  --text-muted: #A4B1BA;      /* Muted Text */
+  --text-primary: #F3F7F8;     /* Primary Text */
+  --text-secondary: #C1CDD3;   /* Secondary Text */
+  --text-muted: #91A0A8;      /* Muted Text */
 
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
@@ -312,6 +324,11 @@ textarea {
 
 input:focus, select:focus, textarea:focus {
   border-color: var(--accent-primary);
+}
+
+option {
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 ::placeholder {

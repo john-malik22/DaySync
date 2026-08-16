@@ -124,12 +124,12 @@ export function QuickActions() {
                 value={expData.amount}
                 onChange={e => setExpData({ ...expData, amount: e.target.value })}
                 required
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: '#fff' }}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
               />
               <select
                 value={expData.category}
                 onChange={e => setExpData({ ...expData, category: e.target.value })}
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: '#fff' }}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
               >
                 <option value="Food">Food</option>
                 <option value="Shopping">Shopping</option>
@@ -142,7 +142,7 @@ export function QuickActions() {
                 placeholder="Description (e.g. Lunch at café)"
                 value={expData.description}
                 onChange={e => setExpData({ ...expData, description: e.target.value })}
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: '#fff' }}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
               />
               <button type="submit" className="btn-primary" style={{ marginTop: '8px', justifyContent: 'center' }}>
                 Save Expense
@@ -170,12 +170,12 @@ export function QuickActions() {
                 value={taskData.title}
                 onChange={e => setTaskData({ ...taskData, title: e.target.value })}
                 required
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: '#fff' }}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
               />
               <select
                 value={taskData.priority}
                 onChange={e => setTaskData({ ...taskData, priority: e.target.value })}
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: '#fff' }}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
               >
                 <option value="High">High Priority</option>
                 <option value="Medium">Medium Priority</option>

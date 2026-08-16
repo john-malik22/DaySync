@@ -89,7 +89,7 @@ export function Signup() {
               onChange={(e) => setName(e.target.value)}
               placeholder="John Doe"
               required
-              style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: '#fff', marginTop: '4px' }}
+              style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px' }}
             />
           </div>
 
@@ -102,7 +102,7 @@ export function Signup() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="john@gmail.com"
               required
-              style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: '#fff', marginTop: '4px' }}
+              style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px' }}
             />
           </div>
 
@@ -115,7 +115,7 @@ export function Signup() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: '#fff', marginTop: '4px' }}
+              style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px' }}
             />
           </div>
 

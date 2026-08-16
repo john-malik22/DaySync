@@ -6,7 +6,7 @@ export function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: '#fff' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       {/* Hero Header */}
       <header style={{
         padding: '24px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',

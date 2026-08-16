@@ -40,7 +40,7 @@ export function GoalTracker() {
           onChange={(e) => setNewTitle(e.target.value)}
           style={{
             flex: 1, padding: '10px 14px', borderRadius: '10px',
-            border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: '#fff'
+            border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)'
           }}
         />
         <button type="submit" className="btn-primary">
