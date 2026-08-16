@@ -4,11 +4,14 @@ import { Trash2, LogOut, UserX, Sun, Moon, Download, RefreshCw, Mail, Sliders, W
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useAuth } from '../../context/AuthContext';
 import { useLuna } from '../../context/LunaContext';
+import { usePWAUpdate } from '../../context/PWAUpdateContext';
+import pkg from '../../../package.json';
 import { api } from '../../services/api';
 
 export function SettingsPage() {
   const { user, theme, toggleTheme, logout, deleteAccount } = useAuth();
   const { startingBalance, updateStartingBalance } = useLuna();
+  const { updateAvailable, checking, checkedOnce, checkForUpdates, applyUpdate } = usePWAUpdate();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
 
@@ -286,21 +289,53 @@ export function SettingsPage() {
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)' }}>About DaySync</h3>
         <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
-          Version 1.0.0
+          Version {pkg.version || '1.0.0'}
         </div>
 
+        {updateAvailable && (
+          <div style={{
+            marginBottom: 'var(--space-md)',
+            padding: '12px 16px',
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--accent-primary)',
+            color: 'var(--text-primary)',
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            flexWrap: 'wrap'
+          }}>
+            <div>
+              <strong>A new version of DaySync is available.</strong>
+            </div>
+            <button
+              onClick={applyUpdate}
+              className="btn-primary"
+              style={{ padding: '6px 16px', fontSize: '13px', minHeight: '34px', flexShrink: 0 }}
+            >
+              Update App
+            </button>
+          </div>
+        )}
+
         <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button
-            onClick={handleCheckUpdates}
-            disabled={updateStatus === 'checking'}
-            className="btn-secondary"
-            style={{ fontSize: '13px' }}
-          >
-            <RefreshCw size={14} className={updateStatus === 'checking' ? 'animate-spin' : ''} />
-            {updateStatus === 'idle' && 'Check for Updates →'}
-            {updateStatus === 'checking' && 'Checking for updates...'}
-            {updateStatus === 'latest' && "You're using the latest version."}
-          </button>
+          {!updateAvailable && (
+            <button
+              onClick={checkForUpdates}
+              disabled={checking}
+              className="btn-secondary"
+              style={{ fontSize: '13px' }}
+            >
+              <RefreshCw size={14} className={checking ? 'animate-spin' : ''} />
+              {checking
+                ? 'Checking for updates...'
+                : checkedOnce
+                ? "You're using the latest version."
+                : 'Check for Updates →'}
+            </button>
+          )}
 
           <button
             onClick={() => setShowContactInfo(true)}
