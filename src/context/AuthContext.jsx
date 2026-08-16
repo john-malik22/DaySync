@@ -21,10 +21,28 @@ export function AuthProvider({ children }) {
     localStorage.setItem('daysync_theme', theme);
   }, [theme]);
 
-  // Restore authenticated user profile from token on mount / refresh
+  // Restore authenticated user profile from token on mount / refresh / PWA restart
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = localStorage.getItem('luna_token');
+      let storedToken = localStorage.getItem('luna_token');
+
+      // If no access token in localStorage, attempt silent refresh via HttpOnly cookie
+      if (!storedToken) {
+        try {
+          const refreshRes = await api.refresh();
+          if (refreshRes && refreshRes.token) {
+            storedToken = refreshRes.token;
+            localStorage.setItem('luna_token', storedToken);
+            if (refreshRes.user) {
+              setUser(refreshRes.user);
+              localStorage.setItem('daysync_user_profile', JSON.stringify(refreshRes.user));
+            }
+          }
+        } catch (e) {
+          // No valid refresh token cookie exists
+        }
+      }
+
       if (storedToken) {
         setToken(storedToken);
 
@@ -44,13 +62,27 @@ export function AuthProvider({ children }) {
           }
         } catch (err) {
           console.error('Auth initialization response:', err);
-          // ONLY clear token if server explicitly returned HTTP 401 Unauthorized
+          // If access token expired or returned 401, attempt silent refresh once
           if (err && err.status === 401) {
-            console.warn('Token explicitly rejected with HTTP 401 Unauthorized. Clearing session.');
-            localStorage.removeItem('luna_token');
-            localStorage.removeItem('daysync_user_profile');
-            setToken(null);
-            setUser(null);
+            try {
+              const refreshRes = await api.refresh();
+              if (refreshRes && refreshRes.token) {
+                setToken(refreshRes.token);
+                localStorage.setItem('luna_token', refreshRes.token);
+                if (refreshRes.user) {
+                  setUser(refreshRes.user);
+                  localStorage.setItem('daysync_user_profile', JSON.stringify(refreshRes.user));
+                }
+              } else {
+                throw new Error('Refresh failed');
+              }
+            } catch (refreshErr) {
+              console.warn('Session expired or invalid refresh token. Clearing session.');
+              localStorage.removeItem('luna_token');
+              localStorage.removeItem('daysync_user_profile');
+              setToken(null);
+              setUser(null);
+            }
           } else {
             // HTTP 500, 502, 503, network failure, fetch failure, timeout, Render cold start
             // Preserve stored token and user session state without logging out
@@ -116,11 +148,17 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('luna_token');
-    localStorage.removeItem('daysync_user_profile');
-    setToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      await api.logout();
+    } catch (e) {
+      console.warn('Logout API error:', e);
+    } finally {
+      localStorage.removeItem('luna_token');
+      localStorage.removeItem('daysync_user_profile');
+      setToken(null);
+      setUser(null);
+    }
   };
 
   return (
