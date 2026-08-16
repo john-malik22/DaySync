@@ -8,14 +8,64 @@ import { classifyIntent } from './intentEngine.js';
 import { detectPotentialMemory } from './memoryEngine.js';
 import { generatePersonalizedSuggestion } from './suggestionEngine.js';
 
+import cookieParser from 'cookie-parser';
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'daysync_companion_super_secret_jwt_key_2026';
+const REFRESH_SECRET = process.env.REFRESH_SECRET || JWT_SECRET + '_refresh_secret_2026';
 
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+  'http://127.0.0.1:5173',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
+
+// --- Helper Functions for Auth Tokens & Cookies ---
+function generateTokens(user) {
+  const payload = { id: user.id, name: user.name, email: user.email };
+  const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
+  const refreshToken = jwt.sign(payload, REFRESH_SECRET, { expiresIn: '30d' });
+  return { accessToken, refreshToken };
+}
+
+function setRefreshCookie(res, refreshToken) {
+  res.cookie('daysync_refresh_token', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    path: '/api/auth',
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+  });
+}
+
+function clearRefreshCookie(res) {
+  res.clearCookie('daysync_refresh_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    path: '/api/auth'
+  });
+}
 
 // --- Authentication Middleware ---
 function authenticate(req, res, next) {
@@ -65,14 +115,19 @@ app.post('/api/auth/signup', (req, res) => {
     createdAt: new Date().toISOString()
   };
 
+  const { accessToken, refreshToken } = generateTokens(newUser);
+
   store.users.push(newUser);
+  store.refreshTokens = store.refreshTokens || [];
+  store.refreshTokens.push({ token: refreshToken, userId: newUser.id, createdAt: new Date().toISOString() });
   db.write(store);
 
   console.log(`[SIGNUP SUCCESS] Created new user: ${normalizedEmail}`);
 
-  const token = jwt.sign({ id: newUser.id, name: newUser.name, email: newUser.email }, JWT_SECRET, { expiresIn: '7d' });
+  setRefreshCookie(res, refreshToken);
+
   res.json({
-    token,
+    token: accessToken,
     user: { id: newUser.id, name: newUser.name, email: newUser.email, preferences: newUser.preferences }
   });
 });
@@ -105,11 +160,87 @@ app.post('/api/auth/login', (req, res) => {
 
   console.log(`[LOGIN SUCCESS] User authenticated: ${normalizedEmail}`);
 
-  const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+  const { accessToken, refreshToken } = generateTokens(user);
+
+  store.refreshTokens = store.refreshTokens || [];
+  store.refreshTokens.push({ token: refreshToken, userId: user.id, createdAt: new Date().toISOString() });
+  db.write(store);
+
+  setRefreshCookie(res, refreshToken);
+
   res.json({
-    token,
+    token: accessToken,
     user: { id: user.id, name: user.name, email: user.email, preferences: user.preferences }
   });
+});
+
+// 3. Silent Token Refresh Route
+app.post('/api/auth/refresh', (req, res) => {
+  const tokenFromCookie = req.cookies ? req.cookies.daysync_refresh_token : null;
+  const tokenFromHeader = req.headers['x-refresh-token'];
+  const refreshToken = tokenFromCookie || tokenFromHeader || req.body.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(401).json({ error: 'No refresh token provided.' });
+  }
+
+  const store = db.read();
+  store.refreshTokens = store.refreshTokens || [];
+
+  const savedIndex = store.refreshTokens.findIndex(r => r.token === refreshToken);
+  if (savedIndex === -1) {
+    clearRefreshCookie(res);
+    return res.status(401).json({ error: 'Invalid or revoked refresh token.' });
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, REFRESH_SECRET);
+    const user = store.users.find(u => u.id === decoded.id);
+
+    if (!user) {
+      store.refreshTokens.splice(savedIndex, 1);
+      db.write(store);
+      clearRefreshCookie(res);
+      return res.status(401).json({ error: 'User for refresh token no longer exists.' });
+    }
+
+    // Rotate refresh token
+    store.refreshTokens.splice(savedIndex, 1);
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
+    store.refreshTokens.push({ token: newRefreshToken, userId: user.id, createdAt: new Date().toISOString() });
+    db.write(store);
+
+    setRefreshCookie(res, newRefreshToken);
+
+    return res.json({
+      token: accessToken,
+      user: { id: user.id, name: user.name, email: user.email, preferences: user.preferences }
+    });
+  } catch (err) {
+    if (savedIndex !== -1) {
+      store.refreshTokens.splice(savedIndex, 1);
+      db.write(store);
+    }
+    clearRefreshCookie(res);
+    return res.status(401).json({ error: 'Expired or invalid refresh token.' });
+  }
+});
+
+// 4. Session Logout Route
+app.post('/api/auth/logout', (req, res) => {
+  const tokenFromCookie = req.cookies ? req.cookies.daysync_refresh_token : null;
+  const refreshToken = tokenFromCookie || req.body.refreshToken;
+
+  if (refreshToken) {
+    const store = db.read();
+    if (store.refreshTokens) {
+      store.refreshTokens = store.refreshTokens.filter(r => r.token !== refreshToken);
+      db.write(store);
+    }
+  }
+
+  clearRefreshCookie(res);
+  res.json({ success: true, message: 'Logged out successfully.' });
 });
 
 app.get('/api/auth/me', authenticate, (req, res) => {
@@ -121,13 +252,16 @@ app.get('/api/auth/me', authenticate, (req, res) => {
   res.json({ user: { id: user.id, name: user.name, email: user.email, preferences: user.preferences } });
 });
 
-// 3. Permanent Account Deletion Route
+// 5. Permanent Account Deletion Route
 app.delete('/api/auth/delete-account', authenticate, (req, res) => {
   const userId = req.user.id;
   const store = db.read();
 
   // Remove user record
   store.users = store.users.filter(u => u.id !== userId);
+  if (store.refreshTokens) {
+    store.refreshTokens = store.refreshTokens.filter(r => r.userId !== userId);
+  }
 
   // Cascade delete all associated user data from database
   store.conversations = store.conversations.filter(c => c.userId !== userId);
@@ -140,6 +274,7 @@ app.delete('/api/auth/delete-account', authenticate, (req, res) => {
   db.write(store);
   console.log(`[PERMANENT ACCOUNT DELETION SUCCESS] Permanently deleted user ID: ${userId} and all associated data from DB.`);
 
+  clearRefreshCookie(res);
   res.json({ success: true, message: 'Account and all associated data permanently deleted from database.' });
 });
 
