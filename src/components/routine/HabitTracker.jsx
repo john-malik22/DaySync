@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Calendar, CheckCircle2, Sparkles, Plus, Check, ChevronLeft, ChevronRight, Activity, Trash2, Edit2, X } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 
@@ -8,14 +8,23 @@ export function HabitTracker({ searchFilter }) {
   // Selected Date State (Defaults to current date)
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
-  // 1. Initial Habits List with MINUTES GOAL (numeric duration, no clock/time-of-day)
-  const [habits, setHabits] = useState([
-    { id: 'h1', title: 'Study & Skill Building', category: 'Learning', goal: 30 },
-    { id: 'h2', title: 'Daily Workout & Exercise', category: 'Health', goal: 20 },
-    { id: 'h3', title: 'Read Tech & AI Articles', category: 'Growth', goal: 15 }
-  ]);
+  // Initial Habits List (Empty by default for new users, persisted in localStorage for user-created habits)
+  const [habits, setHabits] = useState(() => {
+    try {
+      const saved = localStorage.getItem('daysync_habits');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
 
-  // 2. Real Date-Keyed Check-ins: { [habitId_YYYY-MM-DD]: true/false }
+  useEffect(() => {
+    try {
+      localStorage.setItem('daysync_habits', JSON.stringify(habits));
+    } catch (e) {}
+  }, [habits]);
+
+  // Real Date-Keyed Check-ins: { [habitId_YYYY-MM-DD]: true/false }
   const [checkIns, setCheckIns] = useState({});
 
   // Add Form State

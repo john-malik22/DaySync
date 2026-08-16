@@ -63,11 +63,20 @@ export function DashboardPage() {
   const totalMemories = memories.length;
   const approvedMemories = memories.filter(m => m.approved).length;
 
-  // Habit Tracker Performance Metrics (Compact Overview)
-  const totalHabitCount = routines ? routines.length : 3;
-  const habitChecksDone = 18;
+  // Habit Tracker Performance Metrics (Derived from saved habits or routines)
+  const userHabits = (() => {
+    try {
+      const saved = localStorage.getItem('daysync_habits');
+      return saved ? JSON.parse(saved) : (routines || []);
+    } catch (e) {
+      return routines || [];
+    }
+  })();
+  const totalHabitCount = userHabits.length;
+  const habitChecksDone = 0;
   const habitChecksTotal = totalHabitCount * 7;
   const habitPct = habitChecksTotal > 0 ? Math.round((habitChecksDone / habitChecksTotal) * 100) : 0;
+  const topHabitTitle = totalHabitCount > 0 ? userHabits[0].title : 'None';
 
   return (
     <div className="page-container">
@@ -236,7 +245,7 @@ export function DashboardPage() {
 
             <div style={{ fontSize: '14px', color: 'var(--text-secondary)', background: 'var(--bg-secondary)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', display: 'flex', justifyContent: 'space-between', marginTop: 'auto' }}>
               <span>Top Habit:</span>
-              <strong style={{ color: 'var(--accent-primary)' }}>Study & Skill Building — 82%</strong>
+              <strong style={{ color: 'var(--accent-primary)' }}>{topHabitTitle}</strong>
             </div>
           </div>
         )}
