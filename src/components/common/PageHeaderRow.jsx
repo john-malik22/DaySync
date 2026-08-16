@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Search, Menu } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 
-export function PageHeaderRow({ title, onSearch }) {
+export function PageHeaderRow({ title, onSearch, titleStyle }) {
   const { toggleSidebar } = useLuna();
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -30,7 +30,7 @@ export function PageHeaderRow({ title, onSearch }) {
           <Menu size={18} />
         </button>
 
-        <h1 style={{ margin: 0, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <h1 style={{ margin: 0, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', ...titleStyle }}>
           {title}
         </h1>
       </div>
