@@ -121,12 +121,12 @@ export function MemoryCenter({ searchFilter }) {
 
               if (isEditing) {
                 return (
-                  <div key={mem.id} className="glass-card" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ display: 'flex', gap: '6px' }}>
+                  <div key={mem.id} className="glass-card" style={{ padding: '8px 12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                       <select
                         value={editType}
                         onChange={(e) => setEditType(e.target.value)}
-                        style={{ minHeight: '34px', fontSize: '12px', padding: '4px 8px' }}
+                        style={{ minHeight: '34px', fontSize: '13px', padding: '4px 8px', width: 'auto', minWidth: '110px' }}
                       >
                         <option value="Preferences">Preferences</option>
                         <option value="Routine">Routine</option>
@@ -137,25 +137,25 @@ export function MemoryCenter({ searchFilter }) {
                         type="text"
                         value={editContent}
                         onChange={(e) => setEditContent(e.target.value)}
-                        style={{ minHeight: '34px', fontSize: '12px', flex: 1, padding: '4px 8px' }}
+                        style={{ minHeight: '34px', fontSize: '13px', flex: 1, padding: '4px 10px', minWidth: '120px' }}
                       />
-                    </div>
-                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                       <button
                         type="button"
                         onClick={() => handleSaveEdit(mem.id)}
                         className="btn-primary"
-                        style={{ padding: '4px 10px', minHeight: '30px', fontSize: '12px' }}
+                        title="Save"
+                        style={{ padding: '4px 10px', minHeight: '34px', fontSize: '13px', flexShrink: 0 }}
                       >
-                        <Check size={13} /> Save
+                        <Check size={14} /> Save
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingId(null)}
                         className="btn-secondary"
-                        style={{ padding: '4px 10px', minHeight: '30px', fontSize: '12px' }}
+                        title="Cancel"
+                        style={{ padding: '4px 8px', minHeight: '34px', fontSize: '13px', flexShrink: 0 }}
                       >
-                        <X size={13} />
+                        <X size={14} />
                       </button>
                     </div>
                   </div>
