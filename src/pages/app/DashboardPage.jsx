@@ -3,14 +3,41 @@ import { Link } from 'react-router-dom';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
 import { useAuth } from '../../context/AuthContext';
-import { CheckSquare, CreditCard, Brain, CheckCircle2, Sparkles, Activity, ArrowRight, Wallet } from 'lucide-react';
+import { CheckSquare, CreditCard, Brain, CheckCircle2, Sparkles, Activity, ArrowRight, Wallet, Edit2, Check, X } from 'lucide-react';
 
 export function DashboardPage() {
   const { tasks, expenses, memories, routines } = useLuna();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
 
+  // User-defined Starting Account Amount state with localStorage persistence
+  const [startingAmount, setStartingAmount] = useState(() => {
+    const saved = localStorage.getItem('daysync_starting_account_amount') || localStorage.getItem('luna_monthly_budget_target');
+    return saved !== null && saved !== '' ? parseFloat(saved) : null;
+  });
+  const [isEditingAmount, setIsEditingAmount] = useState(false);
+  const [inputAmount, setInputAmount] = useState('');
+
   const firstName = user?.name ? user.name.split(' ')[0] : 'User';
+
+  const handleSaveAmount = (e) => {
+    e.preventDefault();
+    const val = parseFloat(inputAmount);
+    if (!isNaN(val) && val >= 0) {
+      setStartingAmount(val);
+      localStorage.setItem('daysync_starting_account_amount', val.toString());
+      setIsEditingAmount(false);
+    }
+  };
+
+  const handleStartEdit = () => {
+    setInputAmount(startingAmount !== null ? startingAmount.toString() : '');
+    setIsEditingAmount(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingAmount(false);
+  };
 
   // Widget visibility preferences from localStorage
   const widgetSettings = (() => {
@@ -28,14 +55,14 @@ export function DashboardPage() {
   const pendingTasks = totalTasks - completedTasks;
   const taskPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
 
-  // Financial Balance Metrics (Net Balance, Spent, Received)
+  // Financial Balance Metrics (Starting Amount + Total Received - Total Spent)
   const totalReceived = expenses.filter(e => e.type === 'income').reduce((a, b) => a + b.amount, 0);
   const totalSpent = expenses.filter(e => e.type !== 'income').reduce((a, b) => a + b.amount, 0);
-  const totalBalance = totalReceived - totalSpent;
+  const currentBalance = (startingAmount !== null ? startingAmount : 0) + totalReceived - totalSpent;
 
-  const formattedBalance = totalBalance >= 0 
-    ? `+₹${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-    : `-₹${Math.abs(totalBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formattedBalance = currentBalance >= 0 
+    ? `+₹${currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+    : `-₹${Math.abs(currentBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const formattedSpent = `-₹${totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const formattedReceived = `+₹${totalReceived.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -99,18 +126,63 @@ export function DashboardPage() {
               <Wallet size={20} color="var(--accent-primary)" /> TOTAL BALANCE
             </h3>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-              <div style={{
-                width: '42px', height: '42px', borderRadius: 'var(--radius-sm)',
-                background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                <Wallet size={22} color="var(--accent-primary)" />
+            {/* Account Amount Form or Balance Display */}
+            {startingAmount === null || isEditingAmount ? (
+              <div style={{ marginBottom: '14px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '6px' }}>
+                  {startingAmount === null ? 'Set your available account amount' : 'Total Account Amount'}
+                </div>
+                <form onSubmit={handleSaveAmount} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <input
+                    type="number"
+                    placeholder="Enter amount (e.g. 50000)"
+                    min="0"
+                    step="any"
+                    value={inputAmount}
+                    onChange={(e) => setInputAmount(e.target.value)}
+                    required
+                    style={{ flex: 1, minHeight: '36px', fontSize: '13px', padding: '4px 10px', minWidth: 0 }}
+                  />
+                  <button type="submit" className="btn-primary" title="Save" style={{ minHeight: '36px', padding: '0 12px', fontSize: '13px', flexShrink: 0 }}>
+                    <Check size={14} /> Save
+                  </button>
+                  {isEditingAmount && startingAmount !== null && (
+                    <button type="button" onClick={handleCancelEdit} className="btn-secondary" title="Cancel" style={{ minHeight: '36px', padding: '0 8px', fontSize: '13px', flexShrink: 0 }}>
+                      <X size={14} />
+                    </button>
+                  )}
+                </form>
               </div>
-              <div style={{ fontSize: 'clamp(1.5rem, 3vw, 1.8rem)', fontWeight: '800', color: totalBalance >= 0 ? 'var(--text-primary)' : 'var(--accent-danger)' }}>
-                {formattedBalance}
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                  <div style={{
+                    width: '42px', height: '42px', borderRadius: 'var(--radius-sm)',
+                    background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <Wallet size={22} color="var(--accent-primary)" />
+                  </div>
+                  <div style={{ fontSize: 'clamp(1.5rem, 3vw, 1.8rem)', fontWeight: '800', color: currentBalance >= 0 ? 'var(--text-primary)' : 'var(--accent-danger)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    {formattedBalance}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleStartEdit}
+                  title="Edit Total Account Amount"
+                  style={{
+                    padding: '6px', width: '32px', height: '32px',
+                    borderRadius: 'var(--radius-sm)', background: 'transparent',
+                    border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                  }}
+                >
+                  <Edit2 size={16} />
+                </button>
               </div>
-            </div>
+            )}
 
             <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: 'auto' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-xs)', textAlign: 'center' }}>
