@@ -23,7 +23,9 @@ async function request(url, options = {}) {
     const res = await fetch(`${API_BASE}${url}`, config);
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${res.status}`);
+      const error = new Error(errorData.error || `HTTP ${res.status}`);
+      error.status = res.status;
+      throw error;
     }
     return await res.json();
   } catch (err) {
