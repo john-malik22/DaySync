@@ -161,20 +161,30 @@ export function HabitTracker({ searchFilter }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', width: '100%' }}>
-      {/* Real Month & Week Navigation Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
+      {/* Real Month & Week Navigation Header */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '8px',
+        background: 'var(--bg-card)',
+        padding: '10px 14px',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid var(--border-color)'
+      }}>
         {/* Month Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <button
             type="button"
             onClick={() => changeMonth(-1)}
             className="btn-secondary"
             title="Previous Month"
-            style={{ padding: '4px 8px', minHeight: '32px' }}
+            style={{ padding: '4px 8px', minHeight: '30px' }}
           >
             <ChevronLeft size={16} />
           </button>
-          <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+          <div style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
             {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
           </div>
           <button
@@ -182,24 +192,24 @@ export function HabitTracker({ searchFilter }) {
             onClick={() => changeMonth(1)}
             className="btn-secondary"
             title="Next Month"
-            style={{ padding: '4px 8px', minHeight: '32px' }}
+            style={{ padding: '4px 8px', minHeight: '30px' }}
           >
             <ChevronRight size={16} />
           </button>
         </div>
 
         {/* Week Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-card)', padding: '4px 10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <button
             type="button"
             onClick={() => changeWeek(-1)}
             className="btn-secondary"
             title="Previous Week"
-            style={{ padding: '2px 6px', minHeight: '28px' }}
+            style={{ padding: '4px 6px', minHeight: '28px' }}
           >
             <ChevronLeft size={14} />
           </button>
-          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
+          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', whiteSpace: 'nowrap' }}>
             {weekRangeText}
           </span>
           <button
@@ -207,32 +217,19 @@ export function HabitTracker({ searchFilter }) {
             onClick={() => changeWeek(1)}
             className="btn-secondary"
             title="Next Week"
-            style={{ padding: '2px 6px', minHeight: '28px' }}
+            style={{ padding: '4px 6px', minHeight: '28px' }}
           >
             <ChevronRight size={14} />
           </button>
         </div>
       </div>
 
-      {/* 1. DESKTOP ROW 1: Month/Date | Overall Progress */}
-      <div className="grid-2" style={{ gap: 'var(--space-md)', alignItems: 'start' }}>
-        {/* Month / Date Overview Card */}
-        <div className="glass-card" style={{ padding: '14px 16px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-            <Calendar size={13} color="var(--accent-primary)" /> SELECTED PERIOD
-          </div>
-          <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-            {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-            Week Range: {weekRangeText}
-          </div>
-        </div>
-
+      {/* OVERVIEW CARDS ROW */}
+      <div className="grid-3" style={{ gap: 'var(--space-md)', alignItems: 'stretch' }}>
         {/* Overall Progress Card */}
-        <div className="glass-card" style={{ padding: '14px 16px' }}>
+        <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>OVERALL PROGRESS</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>OVERALL PROGRESS</span>
             <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent-primary)' }}>{overallPercentage}%</span>
           </div>
           <div style={{ width: '100%', height: '7px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-full)', overflow: 'hidden', margin: '6px 0' }}>
@@ -242,85 +239,88 @@ export function HabitTracker({ searchFilter }) {
             Completed {completedChecksCount} / {totalPossibleChecks} check-ins
           </div>
         </div>
-      </div>
 
-      {/* 2. DESKTOP ROW 2: Weekly Progress | Top Habits */}
-      <div className="grid-2" style={{ gap: 'var(--space-md)', alignItems: 'start' }}>
         {/* Weekly Progress Summary Card */}
-        <div className="glass-card" style={{ padding: '14px 16px' }}>
+        <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <h3 style={{ marginBottom: '8px', fontSize: '14px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <CheckCircle2 size={15} /> WEEKLY PROGRESS
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-xs)', textAlign: 'center' }}>
-            <div style={{ padding: '8px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Habits</div>
+            <div style={{ padding: '6px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Habits</div>
               <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)' }}>{filteredHabits.length}</div>
             </div>
-            <div style={{ padding: '8px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Checks</div>
+            <div style={{ padding: '6px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Checks</div>
               <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--accent-primary)' }}>{completedChecksCount}</div>
             </div>
-            <div style={{ padding: '8px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Rate</div>
+            <div style={{ padding: '6px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Rate</div>
               <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--accent-primary)' }}>{overallPercentage}%</div>
             </div>
           </div>
         </div>
 
         {/* Top Habits List Card */}
-        <div className="glass-card" style={{ padding: '14px 16px' }}>
+        <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <h3 style={{ marginBottom: '8px', fontSize: '14px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={15} /> TOP HABITS
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {topHabitsRanked.slice(0, 3).map((item, idx) => (
-              <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
-                <span style={{ color: 'var(--text-primary)', fontWeight: '500', minWidth: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                  {idx + 1}. {item.title}
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                  <div style={{ width: '60px', height: '5px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                    <div style={{ width: `${item.pct}%`, height: '100%', background: 'var(--accent-primary)' }} />
-                  </div>
-                  <span style={{ fontWeight: '700', color: 'var(--accent-primary)', minWidth: '30px', textAlign: 'right' }}>
-                    {item.pct}%
+          {topHabitsRanked.length === 0 ? (
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>No habits recorded yet.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {topHabitsRanked.slice(0, 3).map((item, idx) => (
+                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: '500', minWidth: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    {idx + 1}. {item.title}
                   </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                    <div style={{ width: '50px', height: '5px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                      <div style={{ width: `${item.pct}%`, height: '100%', background: 'var(--accent-primary)' }} />
+                    </div>
+                    <span style={{ fontWeight: '700', color: 'var(--accent-primary)', minWidth: '28px', textAlign: 'right' }}>
+                      {item.pct}%
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* 3. MAIN HABIT TRACKER GRID TABLE */}
+      {/* MAIN HABIT TRACKER GRID TABLE */}
       <div className="glass-card" style={{ padding: '14px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-sm)', flexWrap: 'wrap', gap: '8px' }}>
-          <h3 style={{ fontSize: '15px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Activity size={16} /> MY HABITS
-          </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '15px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+              <Activity size={16} /> MY HABITS
+            </h3>
+          </div>
 
-          {/* Form with MINUTES GOAL field (No time-of-day field) */}
-          <form onSubmit={handleAddHabit} style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Form with MINUTES GOAL field (Single row layout for mobile parity) */}
+          <form onSubmit={handleAddHabit} style={{ display: 'flex', gap: '6px', alignItems: 'center', width: '100%' }}>
             <input
               type="text"
               placeholder="New habit..."
               value={newHabitTitle}
               onChange={(e) => setNewHabitTitle(e.target.value)}
-              style={{ minHeight: '32px', fontSize: '12px', padding: '4px 10px', width: '140px' }}
+              style={{ minHeight: '34px', fontSize: '13px', padding: '4px 10px', flex: 1, minWidth: 0 }}
             />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
               <input
                 type="number"
-                placeholder="Minutes"
+                placeholder="Min"
                 min="1"
                 max="300"
                 value={newHabitGoal}
                 onChange={(e) => setNewHabitGoal(e.target.value)}
-                style={{ minHeight: '32px', fontSize: '12px', padding: '4px 8px', width: '70px' }}
+                style={{ minHeight: '34px', fontSize: '13px', padding: '4px 6px', width: '52px', textAlign: 'center' }}
               />
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>min</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>min</span>
             </div>
-            <button type="submit" className="btn-primary" style={{ minHeight: '32px', padding: '0 10px', fontSize: '12px' }}>
+            <button type="submit" className="btn-primary" style={{ minHeight: '34px', padding: '0 12px', fontSize: '13px', flexShrink: 0 }}>
               <Plus size={14} /> Add
             </button>
           </form>
