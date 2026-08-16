@@ -35,6 +35,27 @@ function AppIndexRedirect() {
   return <Navigate to={startupPath} replace />;
 }
 
+function PublicOnlyRoute() {
+  const { user, token, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'var(--bg-primary)', color: 'var(--accent-primary)', fontSize: '1rem', fontWeight: '600'
+      }}>
+        Verifying Session...
+      </div>
+    );
+  }
+
+  if (token || user) {
+    return <Navigate to="/app/dashboard" replace />;
+  }
+
+  return <Outlet />;
+}
+
 function ProtectedRoute() {
   const { user, token, loading } = useAuth();
 
@@ -64,8 +85,13 @@ export default function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            
+            {/* Auth-only Unauthenticated Public Routes */}
+            <Route element={<PublicOnlyRoute />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+            </Route>
+
             <Route path="/onboarding" element={<Onboarding />} />
 
             {/* Main Application Protected Shell Routes */}
