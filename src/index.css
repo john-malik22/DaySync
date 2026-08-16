@@ -340,7 +340,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 .sidebar-container.collapsed .sidebar-text,
-.sidebar-container.collapsed .sidebar-badge {
+.sidebar-container.collapsed .sidebar-badge,
+.sidebar-container.collapsed .sidebar-logo-block {
   display: none !important;
 }
 
@@ -434,6 +435,11 @@ input:focus, select:focus, textarea:focus {
     display: none !important;
   }
 
+  /* Hide entire sidebar header (logo + toggle) on mobile — only nav icons should show */
+  .sidebar-container .sidebar-header {
+    display: none !important;
+  }
+
   .sidebar-overlay {
     display: block;
     position: fixed;
@@ -472,18 +478,10 @@ input:focus, select:focus, textarea:focus {
     transform: translateX(0);
   }
 
-  /* Hide Text Labels, Profile Details, AND Logo on Mobile Navigation Rail */
+  /* Hide Text Labels and Profile Details on Mobile Navigation Rail */
   .sidebar-container .sidebar-text,
-  .sidebar-container .sidebar-profile-details,
-  .sidebar-container .sidebar-logo-block {
+  .sidebar-container .sidebar-profile-details {
     display: none !important;
-  }
-
-  .sidebar-header {
-    justify-content: center !important;
-    width: 100%;
-    margin-bottom: 12px !important;
-    padding-bottom: 12px !important;
   }
 
   .page-container {
