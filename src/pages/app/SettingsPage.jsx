@@ -263,27 +263,7 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* 6. Account */}
-      <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Account</h3>
-        <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-          <button onClick={handleLogout} className="btn-secondary" style={{ fontSize: '13px' }}>
-            <LogOut size={15} /> Log Out
-          </button>
-          <button
-            onClick={handleDeleteAccount}
-            className="btn-secondary"
-            style={{
-              color: 'var(--accent-danger)',
-              borderColor: 'var(--accent-danger)',
-              background: 'rgba(200, 92, 92, 0.1)',
-              fontSize: '13px'
-            }}
-          >
-            <UserX size={15} /> Delete Account
-          </button>
-        </div>
-      </div>
+
 
       {/* 7. About DaySync */}
       <div className="glass-card">

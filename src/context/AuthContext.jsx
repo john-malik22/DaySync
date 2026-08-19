@@ -3,10 +3,19 @@ import { api } from '../services/api';
 
 const AuthContext = createContext();
 
+const DEFAULT_USER = { id: 'usr_default', name: 'User', email: 'user@daysync.app' };
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('luna_token') || null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    try {
+      const cached = localStorage.getItem('daysync_user_profile');
+      return cached ? JSON.parse(cached) : DEFAULT_USER;
+    } catch (e) {
+      return DEFAULT_USER;
+    }
+  });
+  const [token, setToken] = useState('daysync_default_active_token');
+  const [loading, setLoading] = useState(false);
 
   // LIGHT MODE IS THE DEFAULT THEME
   const [theme, setTheme] = useState(() => localStorage.getItem('daysync_theme') || 'light');
@@ -21,81 +30,16 @@ export function AuthProvider({ children }) {
     localStorage.setItem('daysync_theme', theme);
   }, [theme]);
 
-  // Restore authenticated user profile from token on mount / refresh / PWA restart
+  // Non-blocking user profile initialization
   useEffect(() => {
-    const initAuth = async () => {
-      let storedToken = localStorage.getItem('luna_token');
-
-      // If no access token in localStorage, attempt silent refresh via HttpOnly cookie
-      if (!storedToken) {
-        try {
-          const refreshRes = await api.refresh();
-          if (refreshRes && refreshRes.token) {
-            storedToken = refreshRes.token;
-            localStorage.setItem('luna_token', storedToken);
-            if (refreshRes.user) {
-              setUser(refreshRes.user);
-              localStorage.setItem('daysync_user_profile', JSON.stringify(refreshRes.user));
-            }
-          }
-        } catch (e) {
-          // No valid refresh token cookie exists
+    api.getMe()
+      .then(res => {
+        if (res && res.user) {
+          setUser(res.user);
+          localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
         }
-      }
-
-      if (storedToken) {
-        setToken(storedToken);
-
-        // Pre-populate cached user profile if present
-        const cachedUserStr = localStorage.getItem('daysync_user_profile');
-        if (cachedUserStr) {
-          try {
-            setUser(JSON.parse(cachedUserStr));
-          } catch (e) {}
-        }
-
-        try {
-          const res = await api.getMe();
-          if (res && res.user) {
-            setUser(res.user);
-            localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
-          }
-        } catch (err) {
-          console.error('Auth initialization response:', err);
-          // If access token expired or returned 401, attempt silent refresh once
-          if (err && err.status === 401) {
-            try {
-              const refreshRes = await api.refresh();
-              if (refreshRes && refreshRes.token) {
-                setToken(refreshRes.token);
-                localStorage.setItem('luna_token', refreshRes.token);
-                if (refreshRes.user) {
-                  setUser(refreshRes.user);
-                  localStorage.setItem('daysync_user_profile', JSON.stringify(refreshRes.user));
-                }
-              } else {
-                throw new Error('Refresh failed');
-              }
-            } catch (refreshErr) {
-              console.warn('Session expired or invalid refresh token. Clearing session.');
-              localStorage.removeItem('luna_token');
-              localStorage.removeItem('daysync_user_profile');
-              setToken(null);
-              setUser(null);
-            }
-          } else {
-            // HTTP 500, 502, 503, network failure, fetch failure, timeout, Render cold start
-            // Preserve stored token and user session state without logging out
-            console.warn('Temporary network/server error during getMe. Preserving token and session.');
-          }
-        }
-      } else {
-        setToken(null);
-        setUser(null);
-      }
-      setLoading(false);
-    };
-    initAuth();
+      })
+      .catch(() => {});
   }, []);
 
   const toggleTheme = () => {
