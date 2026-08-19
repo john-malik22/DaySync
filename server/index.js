@@ -8,11 +8,14 @@ import { classifyIntent } from './intentEngine.js';
 import { detectPotentialMemory } from './memoryEngine.js';
 import { generatePersonalizedSuggestion } from './suggestionEngine.js';
 
+import cookieParser from 'cookie-parser';
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'daysync_companion_super_secret_jwt_key_2026';
+const REFRESH_SECRET = process.env.REFRESH_SECRET || JWT_SECRET + '_refresh_secret_2026';
 
 const allowedOrigins = [
   'http://localhost:3000',
@@ -21,28 +24,65 @@ const allowedOrigins = [
   'http://127.0.0.1:3000',
   'http://127.0.0.1:3001',
   'http://127.0.0.1:5173',
-  process.env.FRONTEND_URL
+  'https://day-sync-delta.vercel.app',
+  process.env.FRONTEND_URL,
+  process.env.PREVIEW_URL
 ].filter(Boolean);
 
-app.use(cors());
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
 
-const DEFAULT_USER = { id: 'usr_default', name: 'User', email: 'user@daysync.app' };
+// --- Helper Functions for Auth Tokens & Cookies ---
+function generateTokens(user) {
+  const payload = { id: user.id, name: user.name, email: user.email };
+  const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
+  const refreshToken = jwt.sign(payload, REFRESH_SECRET, { expiresIn: '90d' });
+  return { accessToken, refreshToken };
+}
+
+function setRefreshCookie(res, refreshToken) {
+  res.cookie('daysync_refresh_token', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    path: '/api/auth',
+    maxAge: 90 * 24 * 60 * 60 * 1000 // 90 days
+  });
+}
+
+function clearRefreshCookie(res) {
+  res.clearCookie('daysync_refresh_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    path: '/api/auth'
+  });
+}
 
 // --- Authentication Middleware ---
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      req.user = decoded;
-      return next();
-    } catch (err) {}
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized. Token required.' });
   }
-  // Default fallback user so all API calls succeed without requiring login
-  req.user = DEFAULT_USER;
-  next();
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid authentication session.' });
+  }
 }
 
 // --- AUTHENTICATION ENDPOINTS (PASSWORD-BASED) ---
@@ -50,7 +90,7 @@ function authenticate(req, res, next) {
 // 1. Strict Password Signup Route
 app.post('/api/auth/signup', (req, res) => {
   const { name, email, password } = req.body;
-  if (!email || !password || !name) {
+  if (!email || !password || !name || !email.trim() || !password.trim() || !name.trim()) {
     return res.status(400).json({ error: 'Name, Email, and Password are all required.' });
   }
 
@@ -97,7 +137,7 @@ app.post('/api/auth/signup', (req, res) => {
 // 2. Strict Password Login Route
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) {
+  if (!email || !password || typeof email !== 'string' || typeof password !== 'string' || !email.trim() || !password.trim()) {
     return res.status(400).json({ error: 'Email and Password are required.' });
   }
 
@@ -140,7 +180,7 @@ app.post('/api/auth/login', (req, res) => {
 app.post('/api/auth/refresh', (req, res) => {
   const tokenFromCookie = req.cookies ? req.cookies.daysync_refresh_token : null;
   const tokenFromHeader = req.headers['x-refresh-token'];
-  const refreshToken = tokenFromCookie || tokenFromHeader || req.body.refreshToken;
+  const refreshToken = tokenFromCookie || tokenFromHeader || req.body?.refreshToken;
 
   if (!refreshToken) {
     return res.status(401).json({ error: 'No refresh token provided.' });

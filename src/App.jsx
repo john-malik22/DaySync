@@ -35,21 +35,67 @@ function AppIndexRedirect() {
   return <Navigate to={startupPath} replace />;
 }
 
+function PublicOnlyRoute() {
+  const { user, token, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'var(--bg-primary)', color: 'var(--accent-primary)', fontSize: '1rem', fontWeight: '600'
+      }}>
+        Verifying Session...
+      </div>
+    );
+  }
+
+  if (token || user) {
+    return <Navigate to="/app/dashboard" replace />;
+  }
+
+  return <Outlet />;
+}
+
+function ProtectedRoute() {
+  const { user, token, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'var(--bg-primary)', color: 'var(--accent-primary)', fontSize: '1rem', fontWeight: '600'
+      }}>
+        Verifying Session...
+      </div>
+    );
+  }
+
+  if (!token && !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <AppLayout />;
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <LunaProvider>
         <Router>
           <Routes>
-            {/* Root Direct Application Entrance */}
+            {/* Root Entrance */}
             <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
             
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            {/* Public Unauthenticated Routes */}
+            <Route element={<PublicOnlyRoute />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+            </Route>
+
             <Route path="/onboarding" element={<Onboarding />} />
 
-            {/* Main Application Shell Routes */}
-            <Route path="/app" element={<AppLayout />}>
+            {/* Main Application Protected Shell Routes */}
+            <Route path="/app" element={<ProtectedRoute />}>
               <Route index element={<AppIndexRedirect />} />
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="chat" element={<ChatPage />} />
