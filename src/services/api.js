@@ -17,10 +17,9 @@ export class ApiError extends Error {
   }
 }
 
-async function request(url, options = {}, isRetry = false) {
+async function request(url, options = {}) {
   const config = {
     ...options,
-    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader(),
@@ -32,31 +31,6 @@ async function request(url, options = {}, isRetry = false) {
     const res = await fetch(`${API_BASE}${url}`, config);
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
-
-      // Retry request ONCE after attempting silent refresh if 401 Unauthorized occurs on normal data endpoints
-      if (res.status === 401 && !isRetry && url !== '/auth/login' && url !== '/auth/signup' && url !== '/auth/refresh') {
-        try {
-          const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
-          });
-          if (refreshRes.ok) {
-            const data = await refreshRes.json();
-            if (data.token) {
-              localStorage.setItem('luna_token', data.token);
-              if (data.user) {
-                localStorage.setItem('daysync_user_profile', JSON.stringify(data.user));
-              }
-              // Re-run original request with new access token
-              return await request(url, options, true);
-            }
-          }
-        } catch (refreshErr) {
-          console.warn('Silent refresh retry failed:', refreshErr);
-        }
-      }
-
       throw new ApiError(
         errorData.error || `HTTP ${res.status}`,
         res.status
@@ -73,8 +47,6 @@ export const api = {
   // Auth & Account Management
   login: (data) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   signup: (data) => request('/auth/signup', { method: 'POST', body: JSON.stringify(data) }),
-  refresh: () => request('/auth/refresh', { method: 'POST' }),
-  logout: () => request('/auth/logout', { method: 'POST' }),
   deleteAccount: () => request('/auth/delete-account', { method: 'DELETE' }),
   getMe: () => request('/auth/me'),
 

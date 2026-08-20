@@ -12,7 +12,6 @@ const DB_FILE = path.join(__dirname, 'data_store.json');
 
 const freshInitialData = {
   users: [],
-  refreshTokens: [],
   conversations: [],
   memories: [],
   routines: [],
