@@ -5,7 +5,7 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('luna_token') || null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // LIGHT MODE IS THE DEFAULT THEME
@@ -21,48 +21,47 @@ export function AuthProvider({ children }) {
     localStorage.setItem('daysync_theme', theme);
   }, [theme]);
 
-  // Restore authenticated user profile from token on mount / refresh
+  // Restore authenticated user profile ONLY after successful token verification via api.getMe()
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('luna_token');
-      if (storedToken) {
-        setToken(storedToken);
 
-        // Pre-populate cached user profile if present
-        const cachedUserStr = localStorage.getItem('daysync_user_profile');
-        if (cachedUserStr) {
-          try {
-            setUser(JSON.parse(cachedUserStr));
-          } catch (e) {}
-        }
-
-        try {
-          const res = await api.getMe();
-          if (res && res.user) {
-            setUser(res.user);
-            localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
-          }
-        } catch (err) {
-          console.error('Auth initialization response:', err);
-          // ONLY clear token if server explicitly returned HTTP 401 Unauthorized
-          if (err && err.status === 401) {
-            console.warn('Token explicitly rejected with HTTP 401 Unauthorized. Clearing session.');
-            localStorage.removeItem('luna_token');
-            localStorage.removeItem('daysync_user_profile');
-            setToken(null);
-            setUser(null);
-          } else {
-            // HTTP 500, 502, 503, network failure, fetch failure, timeout, Render cold start
-            // Preserve stored token and user session state without logging out
-            console.warn('Temporary network/server error during getMe. Preserving token and session.');
-          }
-        }
-      } else {
+      if (!storedToken) {
         setToken(null);
         setUser(null);
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        const res = await api.getMe();
+        if (res && res.user) {
+          setUser(res.user);
+          setToken(storedToken);
+          localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
+        } else {
+          throw new Error('Invalid user response');
+        }
+      } catch (err) {
+        console.error('Auth initialization response:', err);
+        if (err && err.status === 401) {
+          console.warn('Token explicitly rejected with HTTP 401 Unauthorized. Clearing session.');
+          localStorage.removeItem('luna_token');
+          localStorage.removeItem('daysync_user_profile');
+          setToken(null);
+          setUser(null);
+        } else {
+          // Temporary network / 500 server error
+          // Do NOT set user from cached profile
+          console.warn('Temporary network/server error during getMe. User remains unauthenticated.');
+          setToken(null);
+          setUser(null);
+        }
+      } finally {
+        setLoading(false);
+      }
     };
+
     initAuth();
   }, []);
 

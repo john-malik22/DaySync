@@ -77,6 +77,24 @@ function ProtectedRoute() {
   return <AppLayout />;
 }
 
+function RootRoute() {
+  const { user, token, loading } = useAuth();
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'var(--bg-primary)', color: 'var(--accent-primary)', fontSize: '1rem', fontWeight: '600'
+      }}>
+        Verifying Session...
+      </div>
+    );
+  }
+  if (token || user) {
+    return <Navigate to="/app/dashboard" replace />;
+  }
+  return <Navigate to="/login" replace />;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -84,7 +102,7 @@ export default function App() {
         <Router>
           <Routes>
             {/* Root Entrance */}
-            <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="/" element={<RootRoute />} />
             
             {/* Public Unauthenticated Routes */}
             <Route element={<PublicOnlyRoute />}>
