@@ -2,7 +2,14 @@
  * API Service Client for Luna Engine Backend
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const configuredApiBase = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+
+const API_BASE =
+  configuredApiBase === ''
+    ? '/api'
+    : configuredApiBase.endsWith('/api')
+      ? configuredApiBase
+      : `${configuredApiBase}/api`;
 
 function getAuthHeader() {
   const token = localStorage.getItem('luna_token');
