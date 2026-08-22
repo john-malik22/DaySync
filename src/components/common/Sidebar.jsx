@@ -110,22 +110,23 @@ export function Sidebar() {
                 to={item.path}
                 onClick={handleNavClick}
                 title={item.label}
+                className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
                   padding: sidebarCollapsed ? '10px 0' : '10px 14px',
                   justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                  borderRadius: 'var(--radius-sm)',
+                  borderRadius: 'var(--radius-md)',
                   textDecoration: 'none',
-                  color: isActive ? '#FFFFFF' : 'var(--sidebar-muted)',
-                  background: isActive ? 'var(--accent-primary)' : 'transparent',
+                  color: isActive ? 'var(--color-primary)' : 'var(--sidebar-muted)',
+                  background: isActive ? 'var(--sidebar-active-bg)' : 'transparent',
                   fontWeight: isActive ? '700' : '500',
                   fontSize: '0.9rem',
-                  transition: 'all 0.15s ease'
+                  transition: 'all 0.18s ease'
                 }}
               >
-                <Icon size={18} color={isActive ? '#FFFFFF' : 'var(--sidebar-muted)'} style={{ flexShrink: 0 }} />
+                <Icon size={18} color={isActive ? 'var(--color-primary)' : 'var(--sidebar-muted)'} style={{ flexShrink: 0 }} />
                 {!sidebarCollapsed && <span className="sidebar-text">{item.label}</span>}
               </NavLink>
             );
