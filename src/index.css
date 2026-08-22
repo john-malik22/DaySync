@@ -663,20 +663,29 @@ option {
   gap: 6px;
 }
 
+/* Mobile Search Button & Expanded Drawer Base Rules */
+.mobile-search-icon-btn {
+  display: none !important;
+}
+
+.mobile-expanded-search-bar {
+  display: none !important;
+}
+
 /* Mobile Responsiveness Improvements (< 767px) */
 @media (max-width: 767px) {
   html, body {
     overflow-x: hidden !important;
   }
 
-  /* Header Layout: [ Hamburger ] [ Search ] [ Notification ] */
+  /* Header Layout: [ Hamburger ] [ Search Icon ] [ Notification ] */
   .page-header-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
     padding-bottom: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     width: 100%;
   }
 
@@ -696,18 +705,22 @@ option {
     display: none !important;
   }
 
+  /* Hide full search bar on mobile header default state */
   .header-search-bar {
-    flex: 1 !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    height: 36px;
-    padding: 4px 10px;
-    border-radius: var(--radius-full);
+    display: none !important;
   }
 
-  .header-search-bar input {
-    font-size: 12px;
-    width: 100%;
+  /* Compact circular mobile search icon button */
+  .mobile-search-icon-btn {
+    display: inline-flex !important;
+    flex-shrink: 0 !important;
+    width: 36px;
+    height: 36px;
+    min-height: 36px !important;
+    padding: 0 !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50% !important;
   }
 
   .header-notification-container {
@@ -715,6 +728,35 @@ option {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* Smooth Expandable Liquid-Glass Mobile Search Bar */
+  .mobile-expanded-search-bar {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    padding: 8px 14px;
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-highlight);
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-sm);
+    transition: all 200ms ease;
+  }
+
+  .mobile-expanded-search-bar input {
+    flex: 1;
+    border: none !important;
+    background: transparent !important;
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none !important;
+    padding: 0 !important;
+    min-height: auto !important;
   }
 
   /* Habit Date Navigation Side-by-Side */
