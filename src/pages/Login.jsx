@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, ArrowRight, UserPlus, AlertCircle } from 'lucide-react';
+import { ArrowRight, UserPlus, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export function Login() {
@@ -42,17 +42,14 @@ export function Login() {
       alignItems: 'center', justifyContent: 'center', padding: '24px'
     }}>
       <div className="glass-card animate-fade-in" style={{ width: '420px', padding: '36px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
-          <div style={{
-            width: '38px', height: '38px', borderRadius: '10px', background: 'var(--accent-gradient)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
-            <Sparkles size={20} color="#fff" />
-          </div>
-          <div>
-            <h2 style={{ fontSize: '1.3rem' }}>Log In to DaySync</h2>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Welcome back!</p>
-          </div>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <img
+            src="/pwa-192.png"
+            alt="DaySync Logo"
+            className="daysync-login-logo"
+          />
+          <h2 style={{ fontSize: '1.35rem', fontWeight: '700' }}>Log In to DaySync</h2>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '4px' }}>Welcome back!</p>
         </div>
 
         {error && (

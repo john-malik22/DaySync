@@ -62,25 +62,16 @@ export function Sidebar() {
             width: '100%'
           }}
         >
-          {/* Logo & Brand (Hidden on mobile via .sidebar-logo-block, text hidden when collapsed) */}
-          <div className="sidebar-logo-block" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--accent-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FFFFFF',
-              fontWeight: '800',
-              flexShrink: 0
-            }}>
-              <Sparkles size={20} />
-            </div>
+          {/* Logo & Brand */}
+          <div className="sidebar-logo-block" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img
+              src="/pwa-192.png"
+              alt="DaySync Logo"
+              className="daysync-sidebar-logo"
+            />
             {!sidebarCollapsed && (
               <div className="sidebar-text">
-                <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--sidebar-text)' }}>DaySync</h2>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--sidebar-text)', margin: 0, padding: 0 }}>DaySync</h2>
               </div>
             )}
           </div>
