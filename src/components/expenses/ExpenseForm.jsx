@@ -49,6 +49,11 @@ export function ExpenseForm() {
     e.preventDefault();
     if (!amount || isSubmitting) return;
 
+    if (!navigator.onLine) {
+      if (showToast) showToast("You're offline. Connect to the internet to save this expense.", 'error');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await addExpense({

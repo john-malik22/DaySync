@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { clientCache } from '../services/clientCache';
 
 const AuthContext = createContext();
 
@@ -21,10 +22,16 @@ export function AuthProvider({ children }) {
     localStorage.setItem('daysync_theme', theme);
   }, [theme]);
 
-  // Restore authenticated user profile ONLY after successful token verification via api.getMe()
+  // Restore authenticated session safely
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('luna_token');
+      const storedProfileRaw = localStorage.getItem('daysync_user_profile');
+      let cachedUser = null;
+
+      try {
+        if (storedProfileRaw) cachedUser = JSON.parse(storedProfileRaw);
+      } catch (e) {}
 
       if (!storedToken) {
         setToken(null);
@@ -39,21 +46,28 @@ export function AuthProvider({ children }) {
           setUser(res.user);
           setToken(storedToken);
           localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
+        } else if (cachedUser) {
+          setUser(cachedUser);
+          setToken(storedToken);
         } else {
           throw new Error('Invalid user response');
         }
       } catch (err) {
-        console.error('Auth initialization response:', err);
+        console.warn('Auth initialization response:', err);
         if (err && err.status === 401) {
           console.warn('Token explicitly rejected with HTTP 401 Unauthorized. Clearing session.');
+          if (cachedUser?.id) clientCache.clearUserCache(cachedUser.id);
           localStorage.removeItem('luna_token');
           localStorage.removeItem('daysync_user_profile');
           setToken(null);
           setUser(null);
+        } else if (storedToken && cachedUser) {
+          // Network loss / backend outage / Render cold start
+          // Preserve session and user profile so user remains logged in offline!
+          console.warn('Network or server error during session verification. Restoring cached authenticated session.');
+          setToken(storedToken);
+          setUser(cachedUser);
         } else {
-          // Temporary network / 500 server error
-          // Do NOT set user from cached profile
-          console.warn('Temporary network/server error during getMe. User remains unauthenticated.');
           setToken(null);
           setUser(null);
         }
@@ -94,6 +108,7 @@ export function AuthProvider({ children }) {
   const deleteAccount = async () => {
     setLoading(true);
     try {
+      if (user?.id) clientCache.clearUserCache(user.id);
       await api.deleteAccount();
       localStorage.removeItem('luna_token');
       localStorage.removeItem('daysync_user_profile');
@@ -106,6 +121,7 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    if (user?.id) clientCache.clearUserCache(user.id);
     localStorage.removeItem('luna_token');
     localStorage.removeItem('daysync_user_profile');
     setToken(null);

@@ -3,7 +3,7 @@ import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { ExpenseForm } from '../../components/expenses/ExpenseForm';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
-import { ErrorState } from '../../components/common/ErrorState';
+import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
 import { ArrowUpRight, ArrowDownRight, Wallet, Edit2, Trash2, Check, X } from 'lucide-react';
 
 const EXPENSE_CATEGORIES = [
@@ -30,7 +30,7 @@ const INCOME_CATEGORIES = [
 ];
 
 export function ExpensesPage() {
-  const { expenses, updateExpense, deleteExpense, startingBalance, updateStartingBalance, errors, resourceLoading, fetchExpenses } = useLuna();
+  const { expenses, updateExpense, deleteExpense, startingBalance, updateStartingBalance, errors, resourceLoading, fetchExpenses, isFromCache, lastSyncedAt } = useLuna();
   const { showToast } = useToast();
   const [search, setSearch] = useState('');
 
@@ -195,9 +195,12 @@ export function ExpensesPage() {
 
       {/* Row 2: SINGLE RECENT ACTIVITY SECTION WITH COMPACT EDIT/DELETE ICON BUTTONS */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)' }}>RECENT ACTIVITY</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
+          <h3 style={{ margin: 0, color: 'var(--accent-primary)' }}>RECENT ACTIVITY</h3>
+          {isFromCache?.expenses && <StaleIndicator timestamp={lastSyncedAt?.expenses} />}
+        </div>
         
-        {errors?.expenses ? (
+        {errors?.expenses && !isFromCache?.expenses ? (
           <ErrorState
             title={errors.expenses.title}
             message={errors.expenses.message}

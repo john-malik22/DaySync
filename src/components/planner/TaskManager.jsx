@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Plus, Check, Trash2, CheckCircle2 } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
-import { ErrorState } from '../common/ErrorState';
+import { ErrorState, StaleIndicator } from '../common/ErrorState';
 
 export function TaskManager({ searchFilter }) {
-  const { tasks, addTask, toggleTask, deleteTask, errors, resourceLoading, fetchTasks } = useLuna();
+  const { tasks, addTask, toggleTask, deleteTask, errors, resourceLoading, fetchTasks, isFromCache, lastSyncedAt } = useLuna();
   const { showToast } = useToast();
   
   const [title, setTitle] = useState('');
@@ -17,6 +17,11 @@ export function TaskManager({ searchFilter }) {
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!title.trim() || isSubmitting) return;
+
+    if (!navigator.onLine) {
+      if (showToast) showToast("You're offline. Connect to the internet to save this task.", 'error');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -36,6 +41,11 @@ export function TaskManager({ searchFilter }) {
   };
 
   const handleDeleteTask = async (id) => {
+    if (!navigator.onLine) {
+      if (showToast) showToast("You're offline. Connect to internet to delete this task.", 'error');
+      return;
+    }
+
     if (confirm('Are you sure you want to delete this task?')) {
       try {
         await deleteTask(id);
@@ -47,6 +57,11 @@ export function TaskManager({ searchFilter }) {
   };
 
   const handleToggleTask = async (id, completed) => {
+    if (!navigator.onLine) {
+      if (showToast) showToast("You're offline. Connect to internet to update task status.", 'error');
+      return;
+    }
+
     try {
       await toggleTask(id, completed);
       if (showToast) showToast(completed ? 'Task reopened.' : 'Task completed!', 'success');
@@ -100,9 +115,12 @@ export function TaskManager({ searchFilter }) {
 
       {/* Bottom Row: RECENT TASK TO DO Card */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-secondary)' }}>RECENT TASK TO DO</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
+          <h3 style={{ margin: 0, color: 'var(--text-secondary)' }}>RECENT TASK TO DO</h3>
+          {isFromCache?.tasks && <StaleIndicator timestamp={lastSyncedAt?.tasks} />}
+        </div>
 
-        {errors?.tasks ? (
+        {errors?.tasks && !isFromCache?.tasks ? (
           <ErrorState
             title={errors.tasks.title}
             message={errors.tasks.message}

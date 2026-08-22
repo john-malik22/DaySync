@@ -356,7 +356,7 @@ export function SettingsPage() {
 
           {fetchError && !checking && (
             <span style={{ fontSize: '12px', color: 'var(--color-pink)', fontWeight: '500' }}>
-              Couldn't check for updates right now.
+              {!navigator.onLine ? "Couldn't check for updates while you're offline." : "Couldn't check for updates right now."}
             </span>
           )}
 

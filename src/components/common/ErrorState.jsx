@@ -1,5 +1,32 @@
 import React from 'react';
 import { WifiOff, AlertCircle, RefreshCw } from 'lucide-react';
+import { formatTimeAgo } from '../../services/clientCache';
+
+export function StaleIndicator({ timestamp }) {
+  if (!timestamp) return null;
+  const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+  const prefix = isOffline ? 'Offline' : 'Server unreachable';
+  return (
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        fontSize: '0.75rem',
+        fontWeight: '600',
+        color: 'var(--text-muted)',
+        background: 'var(--bg-secondary)',
+        padding: '3px 10px',
+        borderRadius: 'var(--radius-full)',
+        border: '1px solid var(--border-color)',
+        marginBottom: '8px'
+      }}
+    >
+      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-amber)' }} />
+      <span>{prefix} • Last synced {formatTimeAgo(timestamp)}</span>
+    </div>
+  );
+}
 
 export function ErrorState({ 
   title = 'Unable to load content right now.', 
@@ -8,7 +35,8 @@ export function ErrorState({
   isRetrying = false,
   compact = false 
 }) {
-  const isNetwork = !navigator.onLine || title.toLowerCase().includes('connect') || title.toLowerCase().includes('network');
+  const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+  const isNetwork = isOffline || title.toLowerCase().includes('offline') || title.toLowerCase().includes('connect') || title.toLowerCase().includes('network');
 
   return (
     <div

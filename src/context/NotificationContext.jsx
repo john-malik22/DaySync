@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api } from '../services/api';
 import { useAuth } from './AuthContext';
+import { clientCache } from '../services/clientCache';
 
 const NotificationContext = createContext();
 
@@ -18,9 +19,12 @@ const DEFAULT_PREFERENCES = {
 
 export function NotificationProvider({ children }) {
   const { user } = useAuth();
+  const userId = user?.id;
+
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFromCache, setIsFromCache] = useState(false);
   const [newArrival, setNewArrival] = useState(false);
 
   const [preferences, setPreferences] = useState(() => {
@@ -66,7 +70,7 @@ export function NotificationProvider({ children }) {
   };
 
   const fetchNotifications = useCallback(async (isSilent = false) => {
-    if (!user) {
+    if (!userId) {
       setNotifications([]);
       setLoading(false);
       return;
@@ -78,9 +82,11 @@ export function NotificationProvider({ children }) {
     try {
       const data = await api.getNotifications();
       const notifList = Array.isArray(data) ? data : [];
+      setIsFromCache(false);
+
+      if (userId) clientCache.save(userId, 'notifications', notifList);
 
       setNotifications(prev => {
-        // Trigger pulse & browser notification if new unread items arrived
         const prevIds = new Set(prev.map(n => n.id));
         const newItems = notifList.filter(n => !n.read && !prevIds.has(n.id));
 
@@ -103,25 +109,42 @@ export function NotificationProvider({ children }) {
         return notifList;
       });
     } catch (err) {
-      console.error('Error loading notifications:', err);
+      console.warn('Error loading notifications from server:', err);
       setError('Unable to load notifications right now.');
+
+      // Restore user-scoped cached notifications offline
+      if (userId) {
+        const cached = clientCache.load(userId, 'notifications');
+        if (cached && Array.isArray(cached.data)) {
+          setNotifications(cached.data);
+          setIsFromCache(true);
+        }
+      }
     } finally {
       if (!isSilent) setLoading(false);
     }
-  }, [user, preferences.browser]);
+  }, [userId, preferences.browser]);
 
   useEffect(() => {
     fetchNotifications();
 
-    // Sensitive 30-second interval poll when document is visible
     const interval = setInterval(() => {
-      if (document.visibilityState === 'visible' && user) {
+      if (document.visibilityState === 'visible' && userId && navigator.onLine) {
         fetchNotifications(true);
       }
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [fetchNotifications, user]);
+  }, [fetchNotifications, userId]);
+
+  // Reconnect Listener
+  useEffect(() => {
+    function handleOnline() {
+      if (userId) fetchNotifications(true);
+    }
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [fetchNotifications, userId]);
 
   const markAsRead = async (id) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
@@ -168,6 +191,7 @@ export function NotificationProvider({ children }) {
         unreadCount,
         loading,
         error,
+        isFromCache,
         newArrival,
         preferences,
         updatePreferences,

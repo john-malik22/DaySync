@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { Clock, CheckCircle2, CreditCard, Sparkles } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
-import { ErrorState } from '../../components/common/ErrorState';
+import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
 
 export function SummaryPage() {
-  const { tasks, expenses, errors, resourceLoading, fetchSummaries } = useLuna();
+  const { tasks, expenses, errors, resourceLoading, fetchSummaries, isFromCache, lastSyncedAt } = useLuna();
   const [tab, setTab] = useState('Daily');
   const [search, setSearch] = useState('');
+
+  const isCached = isFromCache?.summaries || isFromCache?.tasks || isFromCache?.expenses;
 
   const summaryError = errors?.summaries || errors?.tasks || errors?.expenses;
 
@@ -36,7 +38,7 @@ export function SummaryPage() {
         ))}
       </div>
 
-      {summaryError ? (
+      {summaryError && !isCached ? (
         <ErrorState
           title={summaryError.title}
           message={summaryError.message}
@@ -54,9 +56,12 @@ export function SummaryPage() {
               {tab === 'Daily' ? "Today's Overview" : tab === 'Weekly' ? "This Week's Overview" : 'Monthly Performance'}
             </h2>
           </div>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            Date: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+            {isCached && <StaleIndicator timestamp={lastSyncedAt?.summaries || lastSyncedAt?.tasks} />}
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              Date: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
         </div>
 
         {/* Summary Metrics Grid */}

@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Send, RefreshCw, AlertCircle } from 'lucide-react';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
+import { useToast } from '../../context/ToastContext';
 import { ChatBubble } from '../../components/chat/ChatBubble';
 
 export function ChatPage() {
   const { conversations, sendMessage, loading, errors } = useLuna();
+  const { showToast } = useToast();
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
   const [lastFailedMsg, setLastFailedMsg] = useState(null);
@@ -28,6 +30,12 @@ export function ChatPage() {
   const handleSend = async (e) => {
     e?.preventDefault();
     if (!input.trim() || loading) return;
+
+    if (!navigator.onLine) {
+      if (showToast) showToast("You're offline. Connect to the internet to chat with Luna.", 'error');
+      return;
+    }
+
     const text = input;
     setInput('');
     setLastFailedMsg(null);
@@ -40,12 +48,18 @@ export function ChatPage() {
         }, 400);
       }
     } catch (err) {
+      setInput(text);
       setLastFailedMsg(text);
     }
   };
 
   const handleRetryLast = async () => {
     if (!lastFailedMsg || loading) return;
+    if (!navigator.onLine) {
+      if (showToast) showToast("You're offline right now.", 'error');
+      return;
+    }
+
     const text = lastFailedMsg;
     setLastFailedMsg(null);
     try {
@@ -56,6 +70,7 @@ export function ChatPage() {
         }, 400);
       }
     } catch (err) {
+      setInput(text);
       setLastFailedMsg(text);
     }
   };
@@ -124,7 +139,7 @@ export function ChatPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <AlertCircle size={18} color="var(--color-pink)" />
-              <span>Sorry, I couldn't process that right now. Please try again.</span>
+              <span>I'm unable to reach Luna right now. Please check your connection and try again.</span>
             </div>
             <button
               type="button"

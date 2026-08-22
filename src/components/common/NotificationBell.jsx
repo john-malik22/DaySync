@@ -51,6 +51,7 @@ export function NotificationBell() {
     unreadCount, 
     loading, 
     error, 
+    isFromCache,
     newArrival, 
     markAsRead, 
     markAllAsRead, 
@@ -207,6 +208,12 @@ export function NotificationBell() {
               </button>
             </div>
           </div>
+
+          {isFromCache && (
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '4px', textAlign: 'center' }}>
+              Offline • Notifications may not be up to date.
+            </div>
+          )}
 
           {/* Panel Scroll Content */}
           <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '14px', paddingRight: '2px' }}>

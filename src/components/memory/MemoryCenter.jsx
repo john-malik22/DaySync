@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Trash2, Edit2, Plus, ShieldCheck, Check, X } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
-import { ErrorState } from '../common/ErrorState';
+import { ErrorState, StaleIndicator } from '../common/ErrorState';
 
 export function MemoryCenter({ searchFilter }) {
-  const { memories, addMemory, updateMemory, deleteMemory, errors, resourceLoading, fetchMemories } = useLuna();
+  const { memories, addMemory, updateMemory, deleteMemory, errors, resourceLoading, fetchMemories, isFromCache, lastSyncedAt } = useLuna();
   const { showToast } = useToast();
 
   const [filter, setFilter] = useState('All');
@@ -27,6 +27,11 @@ export function MemoryCenter({ searchFilter }) {
   const handleManualAdd = async (e) => {
     e.preventDefault();
     if (!newContent.trim() || isSubmitting) return;
+
+    if (!navigator.onLine) {
+      if (showToast) showToast("You're offline. Connect to the internet to save this memory.", 'error');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -53,6 +58,11 @@ export function MemoryCenter({ searchFilter }) {
 
   const handleSaveEdit = async (id) => {
     if (!editContent.trim()) return;
+    if (!navigator.onLine) {
+      if (showToast) showToast("You're offline. Connect to internet to update memories.", 'error');
+      return;
+    }
+
     try {
       await updateMemory(id, {
         type: editType,
@@ -67,6 +77,11 @@ export function MemoryCenter({ searchFilter }) {
   };
 
   const handleDelete = async (id) => {
+    if (!navigator.onLine) {
+      if (showToast) showToast("You're offline. Connect to internet to delete memory items.", 'error');
+      return;
+    }
+
     if (confirm('Are you sure you want to delete this memory item?')) {
       try {
         await deleteMemory(id);
@@ -136,9 +151,12 @@ export function MemoryCenter({ searchFilter }) {
 
       {/* 3. Memory Items List */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-secondary)', fontSize: '14px' }}>SAVED MEMORIES</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
+          <h3 style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>SAVED MEMORIES</h3>
+          {isFromCache?.memories && <StaleIndicator timestamp={lastSyncedAt?.memories} />}
+        </div>
 
-        {errors?.memories ? (
+        {errors?.memories && !isFromCache?.memories ? (
           <ErrorState
             title={errors.memories.title}
             message={errors.memories.message}

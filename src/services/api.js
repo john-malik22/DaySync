@@ -30,15 +30,37 @@ export class ApiError extends Error {
 export function classifyApiError(err) {
   const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
 
-  if (isOffline || err?.type === 'NETWORK' || (err?.status === 0 && !err?.type) || err?.message?.includes('Failed to fetch')) {
+  // 1. Device is completely offline
+  if (isOffline || err?.type === 'OFFLINE') {
     return {
-      type: 'NETWORK',
-      title: 'Unable to connect right now.',
-      message: 'Please check your internet connection and try again.',
+      type: 'OFFLINE',
+      title: "You're offline right now.",
+      message: 'This action needs an internet connection.',
       canRetry: true
     };
   }
 
+  // 2. Render Cold Start / Timeout
+  if (err?.status === 408 || err?.type === 'TIMEOUT' || err?.name === 'AbortError') {
+    return {
+      type: 'TIMEOUT',
+      title: 'DaySync is taking a little longer to connect.',
+      message: 'The server may be starting up. Please try again.',
+      canRetry: true
+    };
+  }
+
+  // 3. Server Unreachable / Backend Outage (Internet ✅, Backend ❌)
+  if (err?.type === 'SERVER_UNAVAILABLE' || err?.type === 'NETWORK' || (err?.status === 0 && !err?.type) || err?.message?.includes('Failed to fetch') || err?.status >= 500 || err?.type === 'SERVER') {
+    return {
+      type: 'SERVER_UNAVAILABLE',
+      title: "DaySync couldn't reach the server right now.",
+      message: 'Please check your connection or try again in a moment.',
+      canRetry: true
+    };
+  }
+
+  // 4. Session Expired
   if (err?.status === 401 || err?.type === 'UNAUTHORIZED') {
     return {
       type: 'UNAUTHORIZED',
@@ -48,6 +70,7 @@ export function classifyApiError(err) {
     };
   }
 
+  // 5. Not Found
   if (err?.status === 404 || err?.type === 'NOT_FOUND') {
     return {
       type: 'NOT_FOUND',
@@ -57,24 +80,7 @@ export function classifyApiError(err) {
     };
   }
 
-  if (err?.status >= 500 || err?.type === 'SERVER') {
-    return {
-      type: 'SERVER',
-      title: 'Something went wrong on our side.',
-      message: 'Please try again in a moment.',
-      canRetry: true
-    };
-  }
-
-  if (err?.status === 408 || err?.type === 'TIMEOUT' || err?.name === 'AbortError') {
-    return {
-      type: 'TIMEOUT',
-      title: 'This is taking longer than expected.',
-      message: 'Please try again.',
-      canRetry: true
-    };
-  }
-
+  // 6. Validation Error
   return {
     type: 'VALIDATION',
     title: err?.message || 'Something went wrong.',
@@ -108,14 +114,14 @@ async function request(url, options = {}) {
       let errorType = 'UNKNOWN';
       if (res.status === 401) errorType = 'UNAUTHORIZED';
       else if (res.status === 404) errorType = 'NOT_FOUND';
-      else if (res.status >= 500) errorType = 'SERVER';
+      else if (res.status >= 500) errorType = 'SERVER_UNAVAILABLE';
       else if (rawMsg) errorType = 'VALIDATION';
 
       let userMsg = rawMsg;
       if (!userMsg) {
         if (res.status === 401) userMsg = 'Your session has expired. Please log in again.';
         else if (res.status === 404) userMsg = "We couldn't find what you're looking for.";
-        else if (res.status >= 500) userMsg = 'Something went wrong on our side.';
+        else if (res.status >= 500) userMsg = "DaySync couldn't reach the server right now.";
         else userMsg = 'Unable to complete your request right now.';
       }
 
@@ -130,10 +136,15 @@ async function request(url, options = {}) {
     }
 
     if (err.name === 'AbortError') {
-      throw new ApiError('This is taking longer than expected.', 408, 'TIMEOUT');
+      throw new ApiError('DaySync is taking a little longer to connect.', 408, 'TIMEOUT');
     }
 
-    throw new ApiError('Unable to connect right now.', 0, 'NETWORK');
+    const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    if (isOffline) {
+      throw new ApiError("You're offline right now.", 0, 'OFFLINE');
+    }
+
+    throw new ApiError("DaySync couldn't reach the server right now.", 0, 'SERVER_UNAVAILABLE');
   }
 }
 
