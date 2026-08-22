@@ -329,11 +329,102 @@ app.post('/api/chat', authenticate, (req, res) => {
         userContext.lastTask = newTask;
         userContext.lastItem = { type: 'task', id: newTask.id, data: newTask };
         userContext.pendingClarification = null;
+        userContext.pendingAction = null;
 
         const dateStr = dueDate === new Date().toISOString().split('T')[0] ? 'today' : 'tomorrow';
         const timeStr = timeBlock ? ` at ${timeBlock.split(' - ')[0]}` : '';
         replyText = `Done — I added "${newTask.title}" for ${dateStr}${timeStr}.`;
         toolData = { type: 'TASK_CREATED', task: newTask };
+        break;
+      }
+
+      case 'CANCEL': {
+        userContext.pendingAction = null;
+        userContext.pendingClarification = null;
+        replyText = "Cancelled — no item was created.";
+        break;
+      }
+
+      case 'CONTINUE_PENDING_TASK': {
+        userContext.pendingAction = intentResult.pendingAction;
+        const missing = intentResult.pendingAction.missing || [];
+        if (missing.includes('title')) replyText = "What should I call it?";
+        else if (missing.includes('dueDate')) replyText = "When is it due?";
+        else if (missing.includes('time')) {
+          const title = intentResult.pendingAction.entities.title || 'it';
+          replyText = `What time should I set "${title}" for?`;
+        } else {
+          replyText = "What time?";
+        }
+        break;
+      }
+
+      case 'CONTINUE_PENDING_EXPENSE': {
+        userContext.pendingAction = intentResult.pendingAction;
+        const missing = intentResult.pendingAction.missing || [];
+        if (missing.includes('amount')) replyText = "How much did you spend?";
+        else if (missing.includes('description') || missing.includes('category')) replyText = "What was it for?";
+        break;
+      }
+
+      case 'CONTINUE_PENDING_HABIT': {
+        userContext.pendingAction = intentResult.pendingAction;
+        const missing = intentResult.pendingAction.missing || [];
+        if (missing.includes('title')) replyText = "What habit would you like to create?";
+        else if (missing.includes('frequency')) replyText = "How often would you like to do it?";
+        break;
+      }
+
+      case 'CONTINUE_PENDING_GOAL': {
+        userContext.pendingAction = intentResult.pendingAction;
+        const missing = intentResult.pendingAction.missing || [];
+        if (missing.includes('title')) replyText = "What goal would you like to set?";
+        else if (missing.includes('deadline')) replyText = "When should you complete it?";
+        break;
+      }
+
+      case 'CREATE_GOAL': {
+        const { title, deadline } = intentResult.entities;
+        store.goals = store.goals || [];
+        const newGoal = {
+          id: `gol_${Date.now()}`,
+          userId,
+          title: title || 'Goal',
+          targetDate: deadline || 'Soon',
+          completed: false,
+          createdAt: new Date().toISOString()
+        };
+        store.goals.push(newGoal);
+
+        userContext.lastGoal = newGoal;
+        userContext.lastItem = { type: 'goal', id: newGoal.id, data: newGoal };
+        userContext.pendingAction = null;
+        replyText = `Done — I created the goal "${newGoal.title}" with target date ${newGoal.targetDate}.`;
+        toolData = { type: 'GOAL_CREATED', goal: newGoal };
+        break;
+      }
+
+      case 'UPDATE_MEMORY': {
+        const { memoryId, content } = intentResult.entities;
+        const mem = store.memories.find(m => m.id === memoryId && m.userId === userId) || userContext.lastMemory;
+        if (mem && content) {
+          mem.content = content;
+          userContext.pendingAction = null;
+          replyText = `Done — I updated your saved memory: "${content}".`;
+          toolData = { type: 'MEMORY_UPDATED', memory: mem };
+        } else {
+          replyText = "I couldn't find the memory to update.";
+        }
+        break;
+      }
+
+      case 'ORPHAN_NUMBER': {
+        replyText = `I'm not sure what ${message} refers to. What would you like me to set to ${message}?`;
+        break;
+      }
+
+      case 'ORPHAN_UPDATE': {
+        replyText = "I'm not sure what you'd like changed. What should I update?";
         break;
       }
 
