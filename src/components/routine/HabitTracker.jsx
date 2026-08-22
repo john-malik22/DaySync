@@ -3,7 +3,6 @@ import { Calendar, CheckCircle2, Sparkles, Plus, Check, ChevronLeft, ChevronRigh
 import { useToast } from '../../context/ToastContext';
 
 export function HabitTracker({ searchFilter }) {
-  const { routines } = useLuna();
   const { showToast } = useToast();
 
   // Selected Date State (Defaults to current date)
