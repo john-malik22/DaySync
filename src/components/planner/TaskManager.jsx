@@ -1,30 +1,57 @@
 import React, { useState } from 'react';
 import { Plus, Check, Trash2, CheckCircle2 } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
+import { useToast } from '../../context/ToastContext';
+import { ErrorState } from '../common/ErrorState';
 
 export function TaskManager({ searchFilter }) {
-  const { tasks, addTask, toggleTask, deleteTask } = useLuna();
+  const { tasks, addTask, toggleTask, deleteTask, errors, resourceLoading, fetchTasks } = useLuna();
+  const { showToast } = useToast();
   
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState('Medium');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const completedCount = tasks.filter(t => t.completed).length;
 
-  const handleAddTask = (e) => {
+  const handleAddTask = async (e) => {
     e.preventDefault();
-    if (!title.trim()) return;
-    addTask({
-      title,
-      priority,
-      category: 'General',
-      completed: false
-    });
-    setTitle('');
+    if (!title.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await addTask({
+        title: title.trim(),
+        priority,
+        category: 'General',
+        completed: false
+      });
+      setTitle('');
+      if (showToast) showToast('Task added successfully.', 'success');
+    } catch (err) {
+      if (showToast) showToast(err.message || 'Couldn\'t save task. Please try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDeleteTask = async (id) => {
     if (confirm('Are you sure you want to delete this task?')) {
-      await deleteTask(id);
+      try {
+        await deleteTask(id);
+        if (showToast) showToast('Task deleted.', 'info');
+      } catch (err) {
+        if (showToast) showToast('Couldn\'t delete this task. Nothing was changed.', 'error');
+      }
+    }
+  };
+
+  const handleToggleTask = async (id, completed) => {
+    try {
+      await toggleTask(id, completed);
+      if (showToast) showToast(completed ? 'Task reopened.' : 'Task completed!', 'success');
+    } catch (err) {
+      if (showToast) showToast('Could not update task status.', 'error');
     }
   };
 
@@ -43,18 +70,20 @@ export function TaskManager({ searchFilter }) {
               placeholder="Add new task or reminder..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              disabled={isSubmitting}
               required
             />
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
+              disabled={isSubmitting}
             >
               <option value="High">High</option>
               <option value="Medium">Medium</option>
               <option value="Low">Low</option>
             </select>
-            <button type="submit" className="btn-primary">
-              <Plus size={16} /> Save
+            <button type="submit" className="btn-primary" disabled={isSubmitting}>
+              <Plus size={16} /> {isSubmitting ? 'Saving...' : 'Save'}
             </button>
           </form>
         </div>
@@ -73,9 +102,20 @@ export function TaskManager({ searchFilter }) {
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-secondary)' }}>RECENT TASK TO DO</h3>
 
-        {filteredTasks.length === 0 ? (
+        {errors?.tasks ? (
+          <ErrorState
+            title={errors.tasks.title}
+            message={errors.tasks.message}
+            onRetry={fetchTasks}
+            isRetrying={resourceLoading?.tasks}
+          />
+        ) : resourceLoading?.tasks && tasks.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '13px' }}>
+            Loading tasks...
+          </div>
+        ) : filteredTasks.length === 0 ? (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
-            No tasks found matching your query.
+            {searchFilter ? 'No tasks found matching your query.' : 'No tasks assigned yet.'}
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
@@ -86,10 +126,9 @@ export function TaskManager({ searchFilter }) {
                 border: '1px solid var(--border-color)'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  {/* True Toggle Button: Clicking toggles between completed and uncompleted */}
                   <button
                     type="button"
-                    onClick={() => toggleTask(task.id, task.completed)}
+                    onClick={() => handleToggleTask(task.id, task.completed)}
                     title={task.completed ? "Mark as uncompleted" : "Mark as completed"}
                     style={{
                       width: '22px', height: '22px', borderRadius: '4px',

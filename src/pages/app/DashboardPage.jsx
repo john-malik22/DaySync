@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
 import { useAuth } from '../../context/AuthContext';
+import { ErrorState } from '../../components/common/ErrorState';
 import { CheckSquare, CreditCard, Brain, CheckCircle2, Sparkles, Activity, ArrowRight, Wallet, Edit2, Check, X } from 'lucide-react';
 
 export function DashboardPage() {

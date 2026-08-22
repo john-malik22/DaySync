@@ -347,11 +347,17 @@ export function SettingsPage() {
               {checking
                 ? 'Checking for updates...'
                 : fetchError
-                ? 'Unable to check for updates'
-                : hasCheckedManually
+                ? 'Try Again'
+                : hasCheckedManually && !fetchError
                 ? "You're using the latest version"
                 : 'Check for Updates →'}
             </button>
+          )}
+
+          {fetchError && !checking && (
+            <span style={{ fontSize: '12px', color: 'var(--color-pink)', fontWeight: '500' }}>
+              Couldn't check for updates right now.
+            </span>
           )}
 
           <button

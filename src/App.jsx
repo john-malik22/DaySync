@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { LunaProvider } from './context/LunaContext';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { OfflineBanner } from './components/common/OfflineBanner';
+import { ToastProvider } from './context/ToastContext';
 
 import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
@@ -98,42 +101,47 @@ function RootRoute() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <NotificationProvider>
-        <LunaProvider>
-          <Router>
-            <Routes>
-              {/* Root Entrance */}
-              <Route path="/" element={<RootRoute />} />
-              
-              {/* Public Unauthenticated Routes */}
-              <Route element={<PublicOnlyRoute />}>
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-              </Route>
+    <ErrorBoundary>
+      <ToastProvider>
+        <OfflineBanner />
+        <AuthProvider>
+          <NotificationProvider>
+            <LunaProvider>
+              <Router>
+                <Routes>
+                  {/* Root Entrance */}
+                  <Route path="/" element={<RootRoute />} />
+                  
+                  {/* Public Unauthenticated Routes */}
+                  <Route element={<PublicOnlyRoute />}>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                  </Route>
 
-              <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
 
-              {/* Main Application Protected Shell Routes */}
-              <Route path="/app" element={<ProtectedRoute />}>
-                <Route index element={<AppIndexRedirect />} />
-                <Route path="dashboard" element={<DashboardPage />} />
-                <Route path="chat" element={<ChatPage />} />
-                <Route path="expenses" element={<ExpensesPage />} />
-                <Route path="task" element={<TaskPage />} />
-                <Route path="planner" element={<Navigate to="/app/task" replace />} />
-                <Route path="habits" element={<HabitsPage />} />
-                <Route path="memories" element={<MemoriesPage />} />
-                <Route path="summary" element={<SummaryPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-              </Route>
+                  {/* Main Application Protected Shell Routes */}
+                  <Route path="/app" element={<ProtectedRoute />}>
+                    <Route index element={<AppIndexRedirect />} />
+                    <Route path="dashboard" element={<DashboardPage />} />
+                    <Route path="chat" element={<ChatPage />} />
+                    <Route path="expenses" element={<ExpensesPage />} />
+                    <Route path="task" element={<TaskPage />} />
+                    <Route path="planner" element={<Navigate to="/app/task" replace />} />
+                    <Route path="habits" element={<HabitsPage />} />
+                    <Route path="memories" element={<MemoriesPage />} />
+                    <Route path="summary" element={<SummaryPage />} />
+                    <Route path="settings" element={<SettingsPage />} />
+                  </Route>
 
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
-            </Routes>
-          </Router>
-        </LunaProvider>
-      </NotificationProvider>
-    </AuthProvider>
+                  {/* Fallback */}
+                  <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+                </Routes>
+              </Router>
+            </LunaProvider>
+          </NotificationProvider>
+        </AuthProvider>
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }

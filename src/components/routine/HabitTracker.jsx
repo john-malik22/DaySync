@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Calendar, CheckCircle2, Sparkles, Plus, Check, ChevronLeft, ChevronRight, Activity, Trash2, Edit2, X } from 'lucide-react';
-import { useLuna } from '../../context/LunaContext';
+import { useToast } from '../../context/ToastContext';
 
 export function HabitTracker({ searchFilter }) {
   const { routines } = useLuna();
+  const { showToast } = useToast();
 
   // Selected Date State (Defaults to current date)
   const [currentDate, setCurrentDate] = useState(() => new Date());
@@ -89,10 +90,11 @@ export function HabitTracker({ searchFilter }) {
   // Toggle Check-in for Habit + Exact ISO Date
   const toggleCheckIn = (habitId, isoDate) => {
     const key = `${habitId}_${isoDate}`;
-    setCheckIns(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    setCheckIns(prev => {
+      const next = !prev[key];
+      if (showToast) showToast(next ? 'Habit check-in recorded!' : 'Check-in removed.', 'info');
+      return { ...prev, [key]: next };
+    });
   };
 
   const handleAddHabit = (e) => {
@@ -109,11 +111,13 @@ export function HabitTracker({ searchFilter }) {
     ]);
     setNewHabitTitle('');
     setNewHabitGoal('30');
+    if (showToast) showToast('Habit created successfully.', 'success');
   };
 
   const handleDeleteHabit = (habitId) => {
     if (confirm('Are you sure you want to delete this habit?')) {
       setHabits(prev => prev.filter(h => h.id !== habitId));
+      if (showToast) showToast('Habit deleted.', 'info');
     }
   };
 

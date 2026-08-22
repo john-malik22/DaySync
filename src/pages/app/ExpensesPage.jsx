@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { ExpenseForm } from '../../components/expenses/ExpenseForm';
 import { useLuna } from '../../context/LunaContext';
+import { useToast } from '../../context/ToastContext';
+import { ErrorState } from '../../components/common/ErrorState';
 import { ArrowUpRight, ArrowDownRight, Wallet, Edit2, Trash2, Check, X } from 'lucide-react';
 
 const EXPENSE_CATEGORIES = [
@@ -28,7 +30,8 @@ const INCOME_CATEGORIES = [
 ];
 
 export function ExpensesPage() {
-  const { expenses, updateExpense, deleteExpense, startingBalance, updateStartingBalance } = useLuna();
+  const { expenses, updateExpense, deleteExpense, startingBalance, updateStartingBalance, errors, resourceLoading, fetchExpenses } = useLuna();
+  const { showToast } = useToast();
   const [search, setSearch] = useState('');
 
   const [editingId, setEditingId] = useState(null);
@@ -55,6 +58,7 @@ export function ExpensesPage() {
     if (!balanceInput) return;
     updateStartingBalance(balanceInput);
     setIsEditingBalance(false);
+    if (showToast) showToast('Starting balance updated.', 'success');
   };
 
   const handleStartEditBalance = () => {
@@ -72,18 +76,28 @@ export function ExpensesPage() {
 
   const handleSaveEdit = async (id) => {
     if (!editAmount) return;
-    await updateExpense(id, {
-      type: editTxType,
-      amount: parseFloat(editAmount),
-      category: editCategory,
-      description: editDescription
-    });
-    setEditingId(null);
+    try {
+      await updateExpense(id, {
+        type: editTxType,
+        amount: parseFloat(editAmount),
+        category: editCategory,
+        description: editDescription
+      });
+      setEditingId(null);
+      if (showToast) showToast('Transaction updated successfully.', 'success');
+    } catch (err) {
+      if (showToast) showToast('Couldn\'t save changes. Please try again.', 'error');
+    }
   };
 
   const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this expense transaction?')) {
-      await deleteExpense(id);
+      try {
+        await deleteExpense(id);
+        if (showToast) showToast('Expense transaction deleted.', 'info');
+      } catch (err) {
+        if (showToast) showToast('Couldn\'t delete this item. Nothing was changed.', 'error');
+      }
     }
   };
 
@@ -183,9 +197,20 @@ export function ExpensesPage() {
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--accent-primary)' }}>RECENT ACTIVITY</h3>
         
-        {filteredExpenses.length === 0 ? (
+        {errors?.expenses ? (
+          <ErrorState
+            title={errors.expenses.title}
+            message={errors.expenses.message}
+            onRetry={fetchExpenses}
+            isRetrying={resourceLoading?.expenses}
+          />
+        ) : resourceLoading?.expenses && expenses.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '13px' }}>
+            Loading expenses...
+          </div>
+        ) : filteredExpenses.length === 0 ? (
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
-            No transactions logged yet.
+            {search ? 'No transactions found matching your query.' : 'No transactions logged yet.'}
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
