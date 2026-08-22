@@ -11,7 +11,16 @@ import { api } from '../../services/api';
 export function SettingsPage() {
   const { user, theme, toggleTheme, logout, deleteAccount } = useAuth();
   const { startingBalance, updateStartingBalance } = useLuna();
-  const { updateAvailable, checking, hasCheckedManually, checkForUpdates, applyUpdate } = usePWAUpdate();
+  const { 
+    updateAvailable, 
+    checking, 
+    hasCheckedManually, 
+    latestVersion, 
+    currentVersion, 
+    fetchError, 
+    checkForUpdates, 
+    applyUpdate 
+  } = usePWAUpdate();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
 
@@ -289,7 +298,7 @@ export function SettingsPage() {
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)' }}>About DaySync</h3>
         <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
-          Version {pkg.version || '1.0.0'}
+          Current version: {currentVersion || pkg.version || '1.1.1'}
         </div>
 
         {updateAvailable && (
@@ -308,14 +317,17 @@ export function SettingsPage() {
             flexWrap: 'wrap'
           }}>
             <div>
-              <strong>A new version of DaySync is available.</strong>
+              <strong>Update available</strong>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                Version {latestVersion} is available.
+              </div>
             </div>
             <button
               onClick={applyUpdate}
               className="btn-primary"
               style={{ padding: '6px 16px', fontSize: '13px', minHeight: '34px', flexShrink: 0 }}
             >
-              Update App
+              Update Now
             </button>
           </div>
         )}
@@ -331,8 +343,10 @@ export function SettingsPage() {
               <RefreshCw size={14} className={checking ? 'animate-spin' : ''} />
               {checking
                 ? 'Checking for updates...'
+                : fetchError
+                ? 'Unable to check for updates'
                 : hasCheckedManually
-                ? "You're using the latest version."
+                ? "You're using the latest version"
                 : 'Check for Updates →'}
             </button>
           )}
