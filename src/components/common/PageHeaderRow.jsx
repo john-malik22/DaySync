@@ -14,41 +14,34 @@ export function PageHeaderRow({ title, onSearch, titleStyle }) {
 
   return (
     <div className="page-header-row">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', flex: 1, minWidth: 0 }}>
-        {/* Mobile-Only Hamburger Control (LEFT SIDE) */}
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="mobile-hamburger-btn btn-secondary"
-          title="Open Navigation"
-          style={{
-            padding: '6px 10px',
-            borderRadius: 'var(--radius-sm)',
-            minHeight: '36px',
-            flexShrink: 0
-          }}
-        >
-          <Menu size={18} />
-        </button>
+      {/* Mobile-Only Hamburger Control (LEFT SIDE) */}
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        className="mobile-hamburger-btn btn-secondary"
+        title="Open Navigation"
+      >
+        <Menu size={18} />
+      </button>
 
-        <h1 style={{ margin: 0, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', ...titleStyle }}>
-          {title}
-        </h1>
+      {/* Page Title */}
+      <h1 className="page-header-title" style={titleStyle}>
+        {title}
+      </h1>
+
+      {/* Header Search Bar */}
+      <div className="header-search-bar">
+        <Search size={14} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+        />
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Header Search Bar */}
-        <div className="header-search-bar">
-          <Search size={15} color="var(--accent-primary)" />
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
-        </div>
-
-        {/* Notification Bell Dropdown */}
+      {/* Notification Bell Dropdown */}
+      <div className="header-notification-container">
         <NotificationBell />
       </div>
     </div>
