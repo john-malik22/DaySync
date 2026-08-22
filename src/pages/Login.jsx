@@ -3,33 +3,78 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, UserPlus, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+const validateEmail = (email) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(String(email).toLowerCase());
+};
+
 export function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [userNotFound, setUserNotFound] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    if (error) setError('');
+    if (userNotFound) setUserNotFound(false);
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    if (error) setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setError('Please enter both Email Address and Password.');
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+
+    if (!cleanEmail && !cleanPassword) {
+      setError('Please enter your email and password.');
       return;
     }
+
+    if (!cleanEmail) {
+      setError('Please enter your email address.');
+      return;
+    }
+
+    if (!validateEmail(cleanEmail)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    if (!cleanPassword) {
+      setError('Please enter your password.');
+      return;
+    }
+
     setError('');
     setUserNotFound(false);
     setLoading(true);
 
     try {
-      await login(email.trim(), password);
+      await login(cleanEmail, password);
       navigate('/app/dashboard', { replace: true });
     } catch (err) {
-      const errMsg = err.message || 'Login failed.';
-      setError(errMsg);
-      if (errMsg.includes('Account does not exist') || errMsg.includes('No user found')) {
+      if (!navigator.onLine || err.name === 'TypeError' || (err.message && err.message.toLowerCase().includes('fetch'))) {
+        setError('Unable to connect right now. Please check your internet connection and try again.');
+      } else if (err.status === 404 || (err.message && (err.message.includes('Account does not exist') || err.message.includes('No user found')))) {
+        setError('No account found with this email. Please sign up first.');
         setUserNotFound(true);
+      } else if (err.status === 401 || (err.message && (err.message.includes('Incorrect password') || err.message.includes('Invalid password')))) {
+        setError('Incorrect password. Please check your password and try again.');
+      } else if (err.status === 429) {
+        setError('Too many failed login attempts. Please try again later.');
+      } else if (err.status >= 500) {
+        setError('Something went wrong on our side. Please try again.');
+      } else {
+        setError(err.message || 'Login failed. Please check your credentials and try again.');
       }
     } finally {
       setLoading(false);
@@ -59,7 +104,7 @@ export function Login() {
             fontSize: '0.86rem', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600' }}>
-              <AlertCircle size={16} /> {error}
+              <AlertCircle size={16} style={{ flexShrink: 0 }} /> <span>{error}</span>
             </div>
 
             {userNotFound && (
@@ -81,9 +126,9 @@ export function Login() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               placeholder="john@gmail.com"
-              required
+              noValidate
               style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px' }}
             />
           </div>
@@ -94,9 +139,8 @@ export function Login() {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               placeholder="••••••••"
-              required
               style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px' }}
             />
           </div>
@@ -105,9 +149,9 @@ export function Login() {
             type="submit"
             disabled={loading}
             className="btn-primary"
-            style={{ marginTop: '8px', justifyContent: 'center', padding: '13px', fontSize: '1rem' }}
+            style={{ marginTop: '8px', justifyContent: 'center', padding: '13px', fontSize: '1rem', opacity: loading ? 0.7 : 1 }}
           >
-            {loading ? 'Authenticating...' : 'Log In'} <ArrowRight size={16} />
+            {loading ? 'Logging in...' : 'Log In'} {!loading && <ArrowRight size={16} />}
           </button>
         </form>
 

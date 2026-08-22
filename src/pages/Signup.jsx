@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowRight, LogIn, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+const validateEmail = (email) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(String(email).toLowerCase());
+};
+
 export function Signup() {
   const navigate = useNavigate();
   const { signup } = useAuth();
@@ -10,28 +15,89 @@ export function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [userExists, setUserExists] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const handleNameChange = (e) => {
+    setName(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    if (error) setError('');
+    if (userExists) setUserExists(false);
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleConfirmPasswordChange = (e) => {
+    setConfirmPassword(e.target.value);
+    if (error) setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      setError('Please complete Full Name, Email Address, and Password.');
+    const cleanName = name.trim();
+    const cleanEmail = email.trim();
+
+    if (!cleanName && !cleanEmail && !password) {
+      setError('Please fill in all required fields.');
       return;
     }
+
+    if (!cleanName) {
+      setError('Please enter your full name.');
+      return;
+    }
+
+    if (!cleanEmail) {
+      setError('Please enter your email address.');
+      return;
+    }
+
+    if (!validateEmail(cleanEmail)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    if (!password) {
+      setError('Please enter a password.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Please use a stronger password (at least 6 characters).');
+      return;
+    }
+
+    if (confirmPassword && password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
     setError('');
     setUserExists(false);
     setLoading(true);
 
     try {
-      await signup(name.trim(), email.trim(), password.trim());
+      await signup(cleanName, cleanEmail, password);
       navigate('/onboarding', { replace: true });
     } catch (err) {
-      const errMsg = err.message || 'Registration failed.';
-      setError(errMsg);
-      if (errMsg.includes('already exists')) {
+      if (!navigator.onLine || err.name === 'TypeError' || (err.message && err.message.toLowerCase().includes('fetch'))) {
+        setError('Unable to connect right now. Please check your internet connection and try again.');
+      } else if (err.status === 400 || (err.message && (err.message.includes('already exists') || err.message.includes('USER_EXISTS')))) {
+        setError('An account with this email already exists. Please log in.');
         setUserExists(true);
+      } else if (err.status >= 500) {
+        setError('Something went wrong on our side. Please try again.');
+      } else {
+        setError(err.message || 'Registration failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -46,7 +112,7 @@ export function Signup() {
       <div className="glass-card animate-fade-in" style={{ width: '420px', padding: '36px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
           <div style={{
-            width: '38px', height: '38px', borderRadius: '10px', background: 'var(--accent-gradient)',
+            width: '38px', height: '38px', borderRadius: '10px', background: 'var(--accent-primary)',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
             <Sparkles size={20} color="#fff" />
@@ -64,7 +130,7 @@ export function Signup() {
             fontSize: '0.86rem', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600' }}>
-              <AlertCircle size={16} /> {error}
+              <AlertCircle size={16} style={{ flexShrink: 0 }} /> <span>{error}</span>
             </div>
 
             {userExists && (
@@ -86,9 +152,8 @@ export function Signup() {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={handleNameChange}
               placeholder="John Doe"
-              required
               style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px' }}
             />
           </div>
@@ -99,9 +164,9 @@ export function Signup() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               placeholder="john@gmail.com"
-              required
+              noValidate
               style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px' }}
             />
           </div>
@@ -112,9 +177,20 @@ export function Signup() {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               placeholder="••••••••"
-              required
+              style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px' }}
+            />
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Confirm Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={handleConfirmPasswordChange}
+              placeholder="••••••••"
               style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px' }}
             />
           </div>
@@ -123,9 +199,9 @@ export function Signup() {
             type="submit"
             disabled={loading}
             className="btn-primary"
-            style={{ marginTop: '8px', justifyContent: 'center', padding: '13px', fontSize: '1rem' }}
+            style={{ marginTop: '8px', justifyContent: 'center', padding: '13px', fontSize: '1rem', opacity: loading ? 0.7 : 1 }}
           >
-            {loading ? 'Registering...' : 'Create Account'} <ArrowRight size={16} />
+            {loading ? 'Creating account...' : 'Create Account'} {!loading && <ArrowRight size={16} />}
           </button>
         </form>
 
