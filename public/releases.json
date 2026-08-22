@@ -1,0 +1,23 @@
+{
+  "1.1.2": {
+    "title": "DaySync 1.1.2",
+    "highlights": [
+      "Smarter Luna understands natural language better",
+      "Luna now asks before taking uncertain actions",
+      "Improved follow-up conversations with Luna",
+      "Added notifications and unread notification count",
+      "Improved login and signup error messages",
+      "Added better error and retry handling",
+      "Improved offline and PWA reliability",
+      "Improved app update experience",
+      "Redesigned the interface with liquid glass styling",
+      "Improved light and dark themes",
+      "Smoother hover effects and animations",
+      "Improved Settings and account controls",
+      "Updated Contact Developer information",
+      "Fixed Habits page crash",
+      "Fixed login redirect and authentication issues",
+      "Improved overall app stability"
+    ]
+  }
+}

@@ -329,11 +329,102 @@ app.post('/api/chat', authenticate, (req, res) => {
         userContext.lastTask = newTask;
         userContext.lastItem = { type: 'task', id: newTask.id, data: newTask };
         userContext.pendingClarification = null;
+        userContext.pendingAction = null;
 
         const dateStr = dueDate === new Date().toISOString().split('T')[0] ? 'today' : 'tomorrow';
         const timeStr = timeBlock ? ` at ${timeBlock.split(' - ')[0]}` : '';
         replyText = `Done — I added "${newTask.title}" for ${dateStr}${timeStr}.`;
         toolData = { type: 'TASK_CREATED', task: newTask };
+        break;
+      }
+
+      case 'CANCEL': {
+        userContext.pendingAction = null;
+        userContext.pendingClarification = null;
+        replyText = "Cancelled — no item was created.";
+        break;
+      }
+
+      case 'CONTINUE_PENDING_TASK': {
+        userContext.pendingAction = intentResult.pendingAction;
+        const missing = intentResult.pendingAction.missing || [];
+        if (missing.includes('title')) replyText = "What should I call it?";
+        else if (missing.includes('dueDate')) replyText = "When is it due?";
+        else if (missing.includes('time')) {
+          const title = intentResult.pendingAction.entities.title || 'it';
+          replyText = `What time should I set "${title}" for?`;
+        } else {
+          replyText = "What time?";
+        }
+        break;
+      }
+
+      case 'CONTINUE_PENDING_EXPENSE': {
+        userContext.pendingAction = intentResult.pendingAction;
+        const missing = intentResult.pendingAction.missing || [];
+        if (missing.includes('amount')) replyText = "How much did you spend?";
+        else if (missing.includes('description') || missing.includes('category')) replyText = "What was it for?";
+        break;
+      }
+
+      case 'CONTINUE_PENDING_HABIT': {
+        userContext.pendingAction = intentResult.pendingAction;
+        const missing = intentResult.pendingAction.missing || [];
+        if (missing.includes('title')) replyText = "What habit would you like to create?";
+        else if (missing.includes('frequency')) replyText = "How often would you like to do it?";
+        break;
+      }
+
+      case 'CONTINUE_PENDING_GOAL': {
+        userContext.pendingAction = intentResult.pendingAction;
+        const missing = intentResult.pendingAction.missing || [];
+        if (missing.includes('title')) replyText = "What goal would you like to set?";
+        else if (missing.includes('deadline')) replyText = "When should you complete it?";
+        break;
+      }
+
+      case 'CREATE_GOAL': {
+        const { title, deadline } = intentResult.entities;
+        store.goals = store.goals || [];
+        const newGoal = {
+          id: `gol_${Date.now()}`,
+          userId,
+          title: title || 'Goal',
+          targetDate: deadline || 'Soon',
+          completed: false,
+          createdAt: new Date().toISOString()
+        };
+        store.goals.push(newGoal);
+
+        userContext.lastGoal = newGoal;
+        userContext.lastItem = { type: 'goal', id: newGoal.id, data: newGoal };
+        userContext.pendingAction = null;
+        replyText = `Done — I created the goal "${newGoal.title}" with target date ${newGoal.targetDate}.`;
+        toolData = { type: 'GOAL_CREATED', goal: newGoal };
+        break;
+      }
+
+      case 'UPDATE_MEMORY': {
+        const { memoryId, content } = intentResult.entities;
+        const mem = store.memories.find(m => m.id === memoryId && m.userId === userId) || userContext.lastMemory;
+        if (mem && content) {
+          mem.content = content;
+          userContext.pendingAction = null;
+          replyText = `Done — I updated your saved memory: "${content}".`;
+          toolData = { type: 'MEMORY_UPDATED', memory: mem };
+        } else {
+          replyText = "I couldn't find the memory to update.";
+        }
+        break;
+      }
+
+      case 'ORPHAN_NUMBER': {
+        replyText = `I'm not sure what ${message} refers to. What would you like me to set to ${message}?`;
+        break;
+      }
+
+      case 'ORPHAN_UPDATE': {
+        replyText = "I'm not sure what you'd like changed. What should I update?";
         break;
       }
 
@@ -707,6 +798,191 @@ app.put('/api/expenses/:id', authenticate, (req, res) => {
 app.delete('/api/expenses/:id', authenticate, (req, res) => {
   const store = db.read();
   store.expenses = store.expenses.filter(e => !(e.id === req.params.id && e.userId === req.user.id));
+  db.write(store);
+  res.json({ success: true });
+});
+
+// --- NOTIFICATION SYSTEM BACKEND ---
+function generateUserNotifications(userId, store) {
+  store.notifications = store.notifications || [];
+  const todayStr = new Date().toISOString().split('T')[0];
+  const userTasks = (store.tasks || []).filter(t => t.userId === userId);
+  const userExpenses = (store.expenses || []).filter(e => e.userId === userId);
+
+  const addIfNew = (notif) => {
+    const exists = store.notifications.some(n => n.userId === userId && n.eventKey === notif.eventKey);
+    if (!exists) {
+      store.notifications.push({
+        id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        userId,
+        read: false,
+        createdAt: new Date().toISOString(),
+        ...notif
+      });
+    }
+  };
+
+  // 1. Task Due & Overdue Notifications
+  userTasks.forEach(task => {
+    if (!task.completed) {
+      if (task.dueDate === todayStr) {
+        addIfNew({
+          type: 'TASK',
+          title: 'Task due today',
+          message: `"${task.title}" is scheduled for today.`,
+          priority: task.priority === 'High' ? 'HIGH' : 'NORMAL',
+          relatedType: 'task',
+          relatedId: task.id,
+          actionUrl: '/app/task',
+          eventKey: `task-due:${task.id}:${todayStr}`
+        });
+      } else if (task.dueDate < todayStr) {
+        addIfNew({
+          type: 'TASK',
+          title: 'Task overdue',
+          message: `"${task.title}" was due on ${task.dueDate}.`,
+          priority: 'HIGH',
+          relatedType: 'task',
+          relatedId: task.id,
+          actionUrl: '/app/task',
+          eventKey: `task-overdue:${task.id}:${todayStr}`
+        });
+      }
+    }
+  });
+
+  // 2. Budget Alert Notifications
+  const currentMonth = todayStr.substring(0, 7);
+  const monthlyExpenses = userExpenses.filter(e => e.type !== 'income' && e.date && e.date.startsWith(currentMonth));
+  const totalSpent = monthlyExpenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const budgetTarget = 10000;
+
+  if (totalSpent >= budgetTarget) {
+    addIfNew({
+      type: 'BUDGET',
+      title: 'Budget exceeded',
+      message: `You've spent ₹${totalSpent.toLocaleString()} this month.`,
+      priority: 'HIGH',
+      relatedType: 'expense',
+      actionUrl: '/app/expenses',
+      eventKey: `budget-exceeded:${userId}:${currentMonth}`
+    });
+  } else if (totalSpent >= budgetTarget * 0.8) {
+    addIfNew({
+      type: 'BUDGET',
+      title: 'Approaching budget limit',
+      message: `You've spent ₹${totalSpent.toLocaleString()} (over 80% of monthly budget).`,
+      priority: 'NORMAL',
+      relatedType: 'expense',
+      actionUrl: '/app/expenses',
+      eventKey: `budget-warning:${userId}:${currentMonth}`
+    });
+  }
+
+  // 3. Luna Daily Focus Notification
+  const pendingCount = userTasks.filter(t => !t.completed).length;
+  if (pendingCount >= 3) {
+    addIfNew({
+      type: 'LUNA',
+      title: 'Luna Daily Plan',
+      message: `You have ${pendingCount} pending tasks. Ask Luna to organize your day!`,
+      priority: 'NORMAL',
+      relatedType: 'luna',
+      actionUrl: '/app/chat',
+      eventKey: `luna-tasks-notice:${userId}:${todayStr}`
+    });
+  }
+}
+
+app.get('/api/notifications', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+
+  generateUserNotifications(userId, store);
+  db.write(store);
+
+  const userNotifications = (store.notifications || [])
+    .filter(n => n.userId === userId)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  res.json(userNotifications);
+});
+
+app.post('/api/notifications', authenticate, (req, res) => {
+  const store = db.read();
+  store.notifications = store.notifications || [];
+  const userId = req.user.id;
+
+  const { type, title, message, priority, relatedType, relatedId, actionUrl, eventKey } = req.body;
+
+  if (eventKey) {
+    const exists = store.notifications.some(n => n.userId === userId && n.eventKey === eventKey);
+    if (exists) {
+      return res.json(store.notifications.find(n => n.userId === userId && n.eventKey === eventKey));
+    }
+  }
+
+  const newNotif = {
+    id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    userId,
+    type: type || 'SYSTEM',
+    title: title || 'Notification',
+    message: message || '',
+    read: false,
+    createdAt: new Date().toISOString(),
+    priority: priority || 'NORMAL',
+    relatedType: relatedType || 'system',
+    relatedId: relatedId || null,
+    actionUrl: actionUrl || '/app/dashboard',
+    eventKey: eventKey || null
+  };
+
+  store.notifications.push(newNotif);
+  db.write(store);
+  res.json(newNotif);
+});
+
+app.put('/api/notifications/:id/read', authenticate, (req, res) => {
+  const store = db.read();
+  store.notifications = store.notifications || [];
+  const notif = store.notifications.find(n => n.id === req.params.id && n.userId === req.user.id);
+
+  if (notif) {
+    notif.read = true;
+    db.write(store);
+    return res.json(notif);
+  }
+  res.status(404).json({ error: 'Notification not found' });
+});
+
+app.post('/api/notifications/mark-all-read', authenticate, (req, res) => {
+  const store = db.read();
+  store.notifications = store.notifications || [];
+
+  store.notifications.forEach(n => {
+    if (n.userId === req.user.id) {
+      n.read = true;
+    }
+  });
+
+  db.write(store);
+  res.json({ success: true });
+});
+
+app.delete('/api/notifications/clear-all', authenticate, (req, res) => {
+  const store = db.read();
+  store.notifications = store.notifications || [];
+  store.notifications = store.notifications.filter(n => n.userId !== req.user.id);
+
+  db.write(store);
+  res.json({ success: true });
+});
+
+app.delete('/api/notifications/:id', authenticate, (req, res) => {
+  const store = db.read();
+  store.notifications = store.notifications || [];
+  store.notifications = store.notifications.filter(n => !(n.id === req.params.id && n.userId === req.user.id));
+
   db.write(store);
   res.json({ success: true });
 });

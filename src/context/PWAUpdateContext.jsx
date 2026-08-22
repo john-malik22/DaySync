@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import pkg from '../../package.json';
 
@@ -19,15 +19,75 @@ export function compareSemVer(v1, v2) {
   return 0;
 }
 
+const DEFAULT_HIGHLIGHTS = [
+  "Bug fixes and performance improvements."
+];
+
 export function PWAUpdateProvider({ children }) {
-  const currentVersion = pkg.version || '1.1.1';
+  const currentVersion = pkg.version || '1.1.2';
+
   const [checking, setChecking] = useState(false);
   const [hasCheckedManually, setHasCheckedManually] = useState(false);
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [latestVersion, setLatestVersion] = useState(null);
   const [fetchError, setFetchError] = useState(false);
+  const [dismissedVersion, setDismissedVersion] = useState(null);
+
+  // Release notes dictionary
+  const [releases, setReleases] = useState({});
+  const [showWhatsNewModal, setShowWhatsNewModal] = useState(false);
 
   const registrationRef = useRef(null);
+
+  // Fetch release notes metadata
+  const fetchReleases = useCallback(async () => {
+    try {
+      const res = await fetch(`/releases.json?t=${Date.now()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && typeof data === 'object') {
+          setReleases(data);
+        }
+      }
+    } catch (e) {
+      console.warn('Unable to load releases.json:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchReleases();
+  }, [fetchReleases]);
+
+  // Check post-update "What's New" modal trigger
+  useEffect(() => {
+    const lastSeen = localStorage.getItem('daysync_last_seen_release');
+    
+    if (!lastSeen) {
+      // First install: store current version so historical notes aren't popped up
+      localStorage.setItem('daysync_last_seen_release', currentVersion);
+    } else if (compareSemVer(currentVersion, lastSeen) > 0) {
+      // User upgraded to a newer version! Show "What's New" modal once
+      setShowWhatsNewModal(true);
+    }
+  }, [currentVersion]);
+
+  const closeWhatsNewModal = () => {
+    localStorage.setItem('daysync_last_seen_release', currentVersion);
+    setShowWhatsNewModal(false);
+  };
+
+  const getReleaseHighlights = useCallback((versionStr) => {
+    if (!versionStr) return DEFAULT_HIGHLIGHTS;
+    const targetKey = String(versionStr).replace(/^v/i, '');
+    if (releases[targetKey] && Array.isArray(releases[targetKey].highlights)) {
+      return releases[targetKey].highlights;
+    }
+    return DEFAULT_HIGHLIGHTS;
+  }, [releases]);
+
+  const dismissUpdate = (versionToDismiss) => {
+    setDismissedVersion(versionToDismiss || latestVersion || 'dismissed');
+  };
 
   const {
     needRefresh: [needRefresh],
@@ -68,8 +128,9 @@ export function PWAUpdateProvider({ children }) {
     let foundWaiting = false;
     let remoteVersion = null;
 
-    // 1. Fetch latest version from /version.json
+    // 1. Fetch latest version from /version.json & releases.json
     try {
+      await fetchReleases();
       const res = await fetch(`/version.json?t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
@@ -150,15 +211,28 @@ export function PWAUpdateProvider({ children }) {
     }, 1000);
   };
 
+  // Determine if update modal prompt should be displayed
+  const effectiveLatest = latestVersion || currentVersion;
+  const isPromptDismissed = dismissedVersion && compareSemVer(dismissedVersion, effectiveLatest) >= 0;
+  const showUpdatePrompt = isUpdateAvailable && !isPromptDismissed;
+
   return (
     <PWAUpdateContext.Provider
       value={{
         currentVersion,
-        latestVersion: latestVersion || currentVersion,
+        latestVersion: effectiveLatest,
         updateAvailable: isUpdateAvailable,
+        showUpdatePrompt,
+        dismissedVersion,
         checking,
         hasCheckedManually,
         fetchError,
+        releases,
+        getReleaseHighlights,
+        dismissUpdate,
+        showWhatsNewModal,
+        closeWhatsNewModal,
+        openWhatsNewModal: () => setShowWhatsNewModal(true),
         checkForUpdates,
         checkForUpdate: checkForUpdates,
         updateApp,
@@ -174,12 +248,20 @@ export function usePWAUpdate() {
   const context = useContext(PWAUpdateContext);
   if (!context) {
     return {
-      currentVersion: pkg.version || '1.1.1',
-      latestVersion: pkg.version || '1.1.1',
+      currentVersion: pkg.version || '1.1.2',
+      latestVersion: pkg.version || '1.1.2',
       updateAvailable: false,
+      showUpdatePrompt: false,
+      dismissedVersion: null,
       checking: false,
       hasCheckedManually: false,
       fetchError: false,
+      releases: {},
+      getReleaseHighlights: () => DEFAULT_HIGHLIGHTS,
+      dismissUpdate: () => {},
+      showWhatsNewModal: false,
+      closeWhatsNewModal: () => {},
+      openWhatsNewModal: () => {},
       checkForUpdates: () => {},
       checkForUpdate: () => {},
       updateApp: () => {},

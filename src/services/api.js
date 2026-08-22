@@ -1,8 +1,10 @@
 /**
  * API Service Client for Luna Engine Backend
+ * Global Error Classification & Timeout Control
  */
 
-const configuredApiBase = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const envApiBase = typeof import.meta !== 'undefined' && import.meta.env ? (import.meta.env.VITE_API_URL || '') : '';
+const configuredApiBase = envApiBase.replace(/\/+$/, '');
 
 const API_BASE =
   configuredApiBase === ''
@@ -17,16 +19,83 @@ function getAuthHeader() {
 }
 
 export class ApiError extends Error {
-  constructor(message, status) {
+  constructor(message, status, type = 'UNKNOWN') {
     super(message);
     this.name = 'ApiError';
     this.status = status;
+    this.type = type;
   }
 }
 
+export function classifyApiError(err) {
+  const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+
+  // 1. Device is completely offline
+  if (isOffline || err?.type === 'OFFLINE') {
+    return {
+      type: 'OFFLINE',
+      title: "You're offline right now.",
+      message: 'This action needs an internet connection.',
+      canRetry: true
+    };
+  }
+
+  // 2. Render Cold Start / Timeout
+  if (err?.status === 408 || err?.type === 'TIMEOUT' || err?.name === 'AbortError') {
+    return {
+      type: 'TIMEOUT',
+      title: 'DaySync is taking a little longer to connect.',
+      message: 'The server may be starting up. Please try again.',
+      canRetry: true
+    };
+  }
+
+  // 3. Server Unreachable / Backend Outage (Internet ✅, Backend ❌)
+  if (err?.type === 'SERVER_UNAVAILABLE' || err?.type === 'NETWORK' || (err?.status === 0 && !err?.type) || err?.message?.includes('Failed to fetch') || err?.status >= 500 || err?.type === 'SERVER') {
+    return {
+      type: 'SERVER_UNAVAILABLE',
+      title: "DaySync couldn't reach the server right now.",
+      message: 'Please check your connection or try again in a moment.',
+      canRetry: true
+    };
+  }
+
+  // 4. Session Expired
+  if (err?.status === 401 || err?.type === 'UNAUTHORIZED') {
+    return {
+      type: 'UNAUTHORIZED',
+      title: 'Your session has expired.',
+      message: 'Please log in again to continue.',
+      canRetry: false
+    };
+  }
+
+  // 5. Not Found
+  if (err?.status === 404 || err?.type === 'NOT_FOUND') {
+    return {
+      type: 'NOT_FOUND',
+      title: "We couldn't find what you're looking for.",
+      message: 'The requested item or page could not be located.',
+      canRetry: false
+    };
+  }
+
+  // 6. Validation Error
+  return {
+    type: 'VALIDATION',
+    title: err?.message || 'Something went wrong.',
+    message: err?.message || 'Please verify your information and try again.',
+    canRetry: true
+  };
+}
+
 async function request(url, options = {}) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
   const config = {
     ...options,
+    signal: controller.signal,
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader(),
@@ -36,17 +105,46 @@ async function request(url, options = {}) {
 
   try {
     const res = await fetch(`${API_BASE}${url}`, config);
+    clearTimeout(timeoutId);
+
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
-      throw new ApiError(
-        errorData.error || `HTTP ${res.status}`,
-        res.status
-      );
+      const rawMsg = errorData.error || errorData.message;
+
+      let errorType = 'UNKNOWN';
+      if (res.status === 401) errorType = 'UNAUTHORIZED';
+      else if (res.status === 404) errorType = 'NOT_FOUND';
+      else if (res.status >= 500) errorType = 'SERVER_UNAVAILABLE';
+      else if (rawMsg) errorType = 'VALIDATION';
+
+      let userMsg = rawMsg;
+      if (!userMsg) {
+        if (res.status === 401) userMsg = 'Your session has expired. Please log in again.';
+        else if (res.status === 404) userMsg = "We couldn't find what you're looking for.";
+        else if (res.status >= 500) userMsg = "DaySync couldn't reach the server right now.";
+        else userMsg = 'Unable to complete your request right now.';
+      }
+
+      throw new ApiError(userMsg, res.status, errorType);
     }
     return await res.json();
   } catch (err) {
-    console.error(`API Error [${url}]:`, err);
-    throw err;
+    clearTimeout(timeoutId);
+
+    if (err instanceof ApiError) {
+      throw err;
+    }
+
+    if (err.name === 'AbortError') {
+      throw new ApiError('DaySync is taking a little longer to connect.', 408, 'TIMEOUT');
+    }
+
+    const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    if (isOffline) {
+      throw new ApiError("You're offline right now.", 0, 'OFFLINE');
+    }
+
+    throw new ApiError("DaySync couldn't reach the server right now.", 0, 'SERVER_UNAVAILABLE');
   }
 }
 
@@ -78,6 +176,14 @@ export const api = {
   createExpense: (data) => request('/expenses', { method: 'POST', body: JSON.stringify(data) }),
   updateExpense: (id, data) => request(`/expenses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteExpense: (id) => request(`/expenses/${id}`, { method: 'DELETE' }),
+
+  // Notifications System
+  getNotifications: () => request('/notifications'),
+  createNotification: (data) => request('/notifications', { method: 'POST', body: JSON.stringify(data) }),
+  markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PUT' }),
+  markAllNotificationsRead: () => request('/notifications/mark-all-read', { method: 'POST' }),
+  deleteNotification: (id) => request(`/notifications/${id}`, { method: 'DELETE' }),
+  clearNotifications: () => request('/notifications/clear-all', { method: 'DELETE' }),
 
   // Intelligence
   getNotices: () => request('/notices'),

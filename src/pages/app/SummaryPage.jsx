@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { Clock, CheckCircle2, CreditCard, Sparkles } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
+import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
 
 export function SummaryPage() {
-  const { tasks, expenses } = useLuna();
+  const { tasks, expenses, errors, resourceLoading, fetchSummaries, isFromCache, lastSyncedAt } = useLuna();
   const [tab, setTab] = useState('Daily');
   const [search, setSearch] = useState('');
+
+  const isCached = isFromCache?.summaries || isFromCache?.tasks || isFromCache?.expenses;
+
+  const summaryError = errors?.summaries || errors?.tasks || errors?.expenses;
 
   const completedTasks = tasks.filter(t => t.completed).length;
   const pendingTasks = tasks.filter(t => !t.completed).length;
@@ -33,8 +38,15 @@ export function SummaryPage() {
         ))}
       </div>
 
-      {/* Single Report Container */}
-      <div className="glass-card animate-fade-in">
+      {summaryError && !isCached ? (
+        <ErrorState
+          title={summaryError.title}
+          message={summaryError.message}
+          onRetry={fetchSummaries}
+          isRetrying={resourceLoading?.summaries}
+        />
+      ) : (
+        <div className="glass-card animate-fade-in">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-lg)', borderBottom: '1px solid var(--border-color)', paddingBottom: 'var(--space-sm)', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
           <div>
             <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -44,9 +56,12 @@ export function SummaryPage() {
               {tab === 'Daily' ? "Today's Overview" : tab === 'Weekly' ? "This Week's Overview" : 'Monthly Performance'}
             </h2>
           </div>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            Date: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+            {isCached && <StaleIndicator timestamp={lastSyncedAt?.summaries || lastSyncedAt?.tasks} />}
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              Date: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
         </div>
 
         {/* Summary Metrics Grid */}
@@ -100,6 +115,7 @@ export function SummaryPage() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

@@ -13,7 +13,9 @@ export default defineConfig({
       workbox: {
         skipWaiting: false,
         clientsClaim: false,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/, /\/version\.json$/]
       },
 
       manifest: {
