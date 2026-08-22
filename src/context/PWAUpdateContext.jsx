@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 const PWAUpdateContext = createContext();
@@ -16,12 +16,31 @@ export function PWAUpdateProvider({ children }) {
     onRegisteredSW(swUrl, r) {
       if (r) {
         registrationRef.current = r;
+        if (r.waiting) {
+          setIsUpdateAvailable(true);
+        }
+        r.addEventListener('updatefound', () => {
+          const newWorker = r.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                setIsUpdateAvailable(true);
+              }
+            });
+          }
+        });
       }
     },
     onRegisterError(error) {
       console.error('SW registration error:', error);
     }
   });
+
+  useEffect(() => {
+    if (needRefresh) {
+      setIsUpdateAvailable(true);
+    }
+  }, [needRefresh]);
 
   const checkForUpdates = async () => {
     setChecking(true);
@@ -58,7 +77,7 @@ export function PWAUpdateProvider({ children }) {
     }
   };
 
-  const applyUpdate = () => {
+  const updateApp = () => {
     let reloading = false;
 
     if ('serviceWorker' in navigator) {
@@ -92,11 +111,13 @@ export function PWAUpdateProvider({ children }) {
   return (
     <PWAUpdateContext.Provider
       value={{
-        updateAvailable: hasCheckedManually && isUpdateAvailable,
+        updateAvailable: isUpdateAvailable,
         checking,
         hasCheckedManually,
         checkForUpdates,
-        applyUpdate
+        checkForUpdate: checkForUpdates,
+        updateApp,
+        applyUpdate: updateApp
       }}
     >
       {children}
@@ -112,6 +133,8 @@ export function usePWAUpdate() {
       checking: false,
       hasCheckedManually: false,
       checkForUpdates: () => {},
+      checkForUpdate: () => {},
+      updateApp: () => {},
       applyUpdate: () => {}
     };
   }

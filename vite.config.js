@@ -9,6 +9,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: 'auto',
+      workbox: {
+        skipWaiting: false,
+        clientsClaim: false,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}']
+      },
 
       manifest: {
         id: '/',
