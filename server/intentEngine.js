@@ -1,6 +1,6 @@
 /**
  * Upgraded Intent Engine for Luna AI in DaySync
- * Multi-layer NLP Pipeline: Normalize -> Detect Intent -> Extract Entities -> Score Confidence
+ * Strict Semantic Pipeline: Normalize -> Read vs Create Category Detection -> Entity Extraction -> Confidence Scoring
  */
 
 export function normalizeInput(text) {
@@ -8,7 +8,27 @@ export function normalizeInput(text) {
   let str = text.trim();
   let lower = str.toLowerCase();
 
-  // 1. Common contractions, abbreviations & typos
+  // 1. Convert word numbers to digits for consistency
+  const wordNumbers = {
+    'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
+    'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10',
+    'one thousand': '1000', 'two thousand': '2000', 'three thousand': '3000',
+    'five thousand': '5000', 'ten thousand': '10000',
+    'one hundred': '100', 'two hundred': '200', 'five hundred': '500'
+  };
+
+  for (const [word, numStr] of Object.entries(wordNumbers)) {
+    // Only replace whole word numbers
+    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    lower = lower.replace(regex, numStr);
+  }
+
+  // 2. Format 'k' numbers (e.g. 2k -> 2000, 5k -> 5000)
+  lower = lower.replace(/\b(\d+(?:\.\d+)?)\s*k\b/gi, (_, p1) => {
+    return String(Math.round(parseFloat(p1) * 1000));
+  });
+
+  // 3. Common abbreviations, contractions & typos
   lower = lower
     .replace(/\btmrw\b/g, 'tomorrow')
     .replace(/\btom\b/g, 'tomorrow')
@@ -28,7 +48,7 @@ export function normalizeInput(text) {
     .replace(/\bpls\b/g, '')
     .replace(/\bplz\b/g, '');
 
-  // 2. Hinglish / Mixed Hindi-English normalization
+  // 4. Hinglish / Mixed Hindi-English normalization
   lower = lower
     .replace(/\bpadhna\b/g, 'study')
     .replace(/\bpadhai\b/g, 'study')
@@ -44,40 +64,11 @@ export function normalizeInput(text) {
     .replace(/\bkarna hai\b/g, 'do')
     .replace(/\bkar do\b/g, 'complete');
 
-  // 3. Format numbers: 2k -> 2000, 2.5k -> 2500, 10k -> 10000
-  lower = lower.replace(/\b(\d+(?:\.\d+)?)\s*k\b/gi, (_, p1) => {
-    return String(Math.round(parseFloat(p1) * 1000));
-  });
-
-  // 4. Word number conversion
-  const wordNumbers = {
-    'one thousand': '1000',
-    'two thousand': '2000',
-    'three thousand': '3000',
-    'five thousand': '5000',
-    'ten thousand': '10000',
-    'one hundred': '100',
-    'two hundred': '200',
-    'three hundred': '300',
-    'four hundred': '400',
-    'five hundred': '500',
-    'six hundred': '600',
-    'seven hundred': '700',
-    'eight hundred': '800',
-    'nine hundred': '900'
-  };
-
-  for (const [word, numStr] of Object.entries(wordNumbers)) {
-    if (lower.includes(word)) {
-      lower = lower.replace(new RegExp(word, 'g'), numStr);
-    }
-  }
-
   return lower;
 }
 
 export function parseNumberAndCurrency(text) {
-  // Matches 500, ₹500, rs 500, 500 rupees, etc.
+  // Matches ₹500, 500 rupees, rs 500, 50, etc.
   const numRegex = /(?:₹|\$|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:rupees|rs|inr|bucks)?/i;
   const match = text.match(numRegex);
   if (match) {
@@ -108,7 +99,7 @@ export function parseDateTime(text) {
     isExplicitDate = true;
   }
 
-  // Time parsing (e.g., at 7, at 7 pm, 7:00, 8 pm, 7 o'clock, 7 baje)
+  // Time parsing (e.g., at 7 pm, 7:00, 8 pm, 7 o'clock, at 7)
   const timeMatch = lower.match(/(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm|o'clock)?/i);
   if (timeMatch) {
     let hour = parseInt(timeMatch[1], 10);
@@ -136,12 +127,12 @@ export function parseDateTime(text) {
 
 export function detectExpenseCategory(text) {
   const lower = text.toLowerCase();
+  if (/travel|travelling|cab|uber|ola|bus|train|metro|auto|fuel|petrol|diesel|commute/i.test(lower)) return 'Daily Travelling';
+  if (/food|lunch|dinner|breakfast|snack|coffee|cafe|restaurant|eat/i.test(lower)) return 'Food';
   if (/recharge|dth|mobile plan|jio|airtel|vi\b/i.test(lower)) return 'Recharges';
   if (/electricity|power bill|light bill|utility|water bill/i.test(lower)) return 'Electricity Bill';
-  if (/travel|travelling|cab|uber|ola|bus|train|metro|auto|fuel|petrol|diesel|commute/i.test(lower)) return 'Daily Travelling';
   if (/subscription|netflix|spotify|youtube|prime|cloud|software|membership/i.test(lower)) return 'Subscriptions';
   if (/grocery|groceries|supermarket|vegetables|milk|fruits/i.test(lower)) return 'Groceries';
-  if (/food|lunch|dinner|breakfast|snack|coffee|cafe|restaurant|eat/i.test(lower)) return 'Food';
   if (/shop|buy|bought|clothes|book|amazon|flipkart|gadget/i.test(lower)) return 'Shopping';
   if (/doctor|medicine|hospital|clinic|health|pharmacy/i.test(lower)) return 'Healthcare';
   if (/movie|cinema|game|ticket|event|show/i.test(lower)) return 'Entertainment';
@@ -158,7 +149,7 @@ export function classifyIntent(message, context = {}) {
 
     // Financial ambiguity follow-up (expense vs income)
     if (pending.intent === 'AMBIGUOUS_FINANCIAL') {
-      if (lower.includes('expense') || lower.includes('spend') || lower.includes('kharch')) {
+      if (/expense|spend|spent|kharch|paid/i.test(lower)) {
         return {
           intent: 'CREATE_EXPENSE',
           confidence: 0.95,
@@ -169,7 +160,7 @@ export function classifyIntent(message, context = {}) {
             description: 'Expense'
           }
         };
-      } else if (lower.includes('income') || lower.includes('received') || lower.includes('got') || lower.includes('earn')) {
+      } else if (/income|received|got|earn|salary/i.test(lower)) {
         return {
           intent: 'CREATE_INCOME',
           confidence: 0.95,
@@ -183,26 +174,74 @@ export function classifyIntent(message, context = {}) {
       }
     }
 
-    // Task title missing follow-up ("remind me tomorrow" -> "what task?" -> "study java" or "7")
-    if (pending.intent === 'INCOMPLETE_TASK' || pending.intent === 'CREATE_TASK') {
+    // Incomplete task title follow-up
+    if (pending.intent === 'INCOMPLETE_TASK') {
       const dateTime = parseDateTime(message);
-      const title = pending.entities.title || (dateTime.isExplicitTime || dateTime.isExplicitDate ? 'Task' : message.trim());
       return {
         intent: 'CREATE_TASK',
         confidence: 0.95,
         entities: {
-          title,
+          title: message.trim(),
           priority: 'Medium',
           dueDate: pending.entities.dueDate || dateTime.dueDate,
-          timeBlock: dateTime.isExplicitTime ? dateTime.timeBlock : (pending.entities.timeBlock || dateTime.timeBlock),
+          timeBlock: dateTime.timeBlock,
           category: 'Personal'
         }
       };
     }
   }
 
-  // 1. Navigation Intents
-  if (/open|go to|take me to|show page/i.test(lower)) {
+  // ----------------------------------------------------
+  // CATEGORY 1: READ / SEARCH / QUERY INTENTS (HIGH PRIORITY)
+  // Queries MUST NEVER trigger item creation!
+  // ----------------------------------------------------
+  const queryVerbs = /show|display|view|see|tell me|what|which|where|how much|how many|history|list|recent|pending|remaining|overdue|left|summary|analytics/i;
+  const isQueryPhrase = queryVerbs.test(lower) || /expenses history|task history|my expenses|my tasks/i.test(lower);
+
+  if (isQueryPhrase) {
+    // 1a. READ_EXPENSES & READ_LAST_EXPENSE
+    if (lower.includes('expense') || lower.includes('spend') || lower.includes('spent') || lower.includes('spending')) {
+      if (lower.includes('where i spent last time') || lower.includes('last time') || lower.includes('where did i spend')) {
+        return { intent: 'READ_LAST_EXPENSE', confidence: 0.95, entities: {} };
+      }
+
+      // Check if user specified a limit like "last 3 expenses" or "last 5 expenses"
+      let limit = null;
+      const limitMatch = lower.match(/last\s+(\d+)\s+expense/i) || lower.match(/(\d+)\s+last\s+expense/i) || lower.match(/last\s+(\d+)/i);
+      if (limitMatch) {
+        limit = parseInt(limitMatch[1], 10);
+      }
+
+      if (lower.includes('how much') || lower.includes('spending this month') || lower.includes('total spend')) {
+        return { intent: 'READ_SPENDING_ANALYSIS', confidence: 0.95, entities: {} };
+      }
+
+      return { intent: 'READ_EXPENSES', confidence: 0.95, entities: { limit } };
+    }
+
+    // 1b. READ_TASKS (READ_PENDING_TASKS vs READ_TODAYS_TASKS)
+    if (lower.includes('task') || lower.includes('todo') || lower.includes('pending') || lower.includes('left')) {
+      if (lower.includes('today')) {
+        return { intent: 'READ_TODAYS_TASKS', confidence: 0.95, entities: { date: 'today' } };
+      }
+      return { intent: 'READ_PENDING_TASKS', confidence: 0.95, entities: {} };
+    }
+
+    // 1c. READ_MEMORIES
+    if (lower.includes('memory') || lower.includes('memories') || lower.includes('remember')) {
+      return { intent: 'READ_MEMORIES', confidence: 0.95, entities: {} };
+    }
+
+    // 1d. READ_SUMMARY
+    if (lower.includes('summary') || lower.includes('productivity')) {
+      return { intent: 'READ_SUMMARY', confidence: 0.95, entities: {} };
+    }
+  }
+
+  // ----------------------------------------------------
+  // CATEGORY 2: NAVIGATION INTENTS
+  // ----------------------------------------------------
+  if (/^open\b|^go to\b|^take me to\b|^show page\b/i.test(lower)) {
     if (lower.includes('expense')) return { intent: 'OPEN_EXPENSES', confidence: 0.98, entities: { route: '/app/expenses' } };
     if (lower.includes('task') || lower.includes('todo')) return { intent: 'OPEN_TASKS', confidence: 0.98, entities: { route: '/app/task' } };
     if (lower.includes('habit')) return { intent: 'OPEN_HABITS', confidence: 0.98, entities: { route: '/app/habits' } };
@@ -213,64 +252,27 @@ export function classifyIntent(message, context = {}) {
     if (lower.includes('chat')) return { intent: 'OPEN_CHAT', confidence: 0.98, entities: { route: '/app/chat' } };
   }
 
-  // 2. Relative Contextual Update Intents ("make it 650", "actually make it 700", "change the Java task to 8")
+  // ----------------------------------------------------
+  // CATEGORY 3: CONTEXTUAL UPDATE INTENTS ("make it 700")
+  // ----------------------------------------------------
   if (/^make it\b|^actually make it\b|^change it to\b/i.test(lower)) {
     const amount = parseNumberAndCurrency(lower);
     if (amount !== null && context.lastExpense) {
       return {
         intent: 'UPDATE_EXPENSE',
         confidence: 0.92,
-        entities: {
-          expenseId: context.lastExpense.id,
-          amount
-        }
+        entities: { expenseId: context.lastExpense.id, amount }
       };
     }
   }
 
-  if (lower.includes('change') && (lower.includes('task') || context.lastTask)) {
-    const dateTime = parseDateTime(lower);
-    let titleMatch = lower.replace(/change (the )?/i, '').split(/task|to/i)[0]?.trim();
-    return {
-      intent: 'UPDATE_TASK',
-      confidence: 0.90,
-      entities: {
-        query: titleMatch || 'task',
-        timeBlock: dateTime.timeBlock,
-        dueDate: dateTime.dueDate
-      }
-    };
-  }
-
-  // 3. Bulk & Action Control Intents
-  if (lower.includes('move all unfinished tasks') || lower.includes('move unfinished tasks')) {
-    return { intent: 'BULK_POSTPONE_TASKS', confidence: 0.95, entities: { targetDate: 'tomorrow' } };
-  }
-  if (lower.includes('mark all today\'s tasks complete') || lower.includes('complete all tasks')) {
-    return { intent: 'BULK_COMPLETE_TASKS', confidence: 0.95 };
-  }
-  if (lower.includes('delete all completed tasks') || lower.includes('delete completed tasks')) {
-    return { intent: 'BULK_DELETE_COMPLETED_TASKS', confidence: 0.95 };
-  }
-
-  // 4. Task Completion / Habit Completion / Postpone Intents
-  if (lower.includes('postpone that task') || lower.includes('postpone task')) {
-    return { intent: 'POSTPONE_TASK', confidence: 0.92, entities: { query: 'last' } };
-  }
-
-  if (/mark|complete|done/i.test(lower)) {
-    if (lower.includes('gym') || lower.includes('habit')) {
-      let query = lower.replace(/mark|complete|done|habit|done/gi, '').trim() || 'gym';
-      return { intent: 'COMPLETE_HABIT', confidence: 0.92, entities: { query } };
-    }
-    if (lower.includes('task') || lower.includes('java') || lower.includes('complete')) {
-      let query = lower.replace(/mark|complete|done|task|kar do/gi, '').trim();
-      return { intent: 'COMPLETE_TASK', confidence: 0.92, entities: { query: query || 'task' } };
-    }
-  }
-
-  // 5. Delete Item Intents
+  // ----------------------------------------------------
+  // CATEGORY 4: DESTRUCTIVE / DELETE INTENTS
+  // ----------------------------------------------------
   if (/delete|remove|cancel/i.test(lower)) {
+    if (lower === 'delete that' || lower === 'remove that' || lower === 'cancel that') {
+      return { intent: 'AMBIGUOUS_DELETE', confidence: 0.70, entities: {} };
+    }
     if (lower.includes('task')) {
       let query = lower.replace(/delete|remove|cancel|my|the|task/gi, '').trim();
       return { intent: 'DELETE_TASK', confidence: 0.92, entities: { query } };
@@ -278,28 +280,25 @@ export function classifyIntent(message, context = {}) {
     if (lower.includes('expense')) {
       return { intent: 'DELETE_EXPENSE', confidence: 0.92, entities: { query: 'expense' } };
     }
-    if (lower.includes('memory') || lower.includes('remember')) {
-      let query = lower.replace(/delete|remove|cancel|the|memory|about/gi, '').trim();
-      return { intent: 'DELETE_MEMORY', confidence: 0.92, entities: { query } };
-    }
   }
 
-  // 6. Income Detection ("rahul gave me 2k", "received 2000 from rahul", "got 2k from rahul", "rahul sent me two thousand", "rahul ne mujhe 2000 diye")
-  const incomeKeywords = /received|got|earned|credited|salary|pocket money|allowance|cashback|refund|gave me|sent me|diye|bheje|mile/i;
-  const amount = parseNumberAndCurrency(lower);
+  // ----------------------------------------------------
+  // CATEGORY 5: CREATE INTENTS (STRICT ENTITY VALIDATION)
+  // ----------------------------------------------------
 
-  if (incomeKeywords.test(lower) && amount !== null) {
+  // 5a. CREATE_INCOME ("received 2000 from rahul", "got 2k from rahul", "rahul gave me 2000")
+  const incomeKeywords = /received|got|earned|credited|salary|pocket money|allowance|cashback|refund|gave me|sent me|diye|bheje|mile/i;
+  const numAmount = parseNumberAndCurrency(lower);
+
+  if (incomeKeywords.test(lower) && numAmount !== null) {
     let category = 'Salary';
     if (/salary|paycheck|stipend|wages/i.test(lower)) category = 'Salary';
     else if (/freelance|project|client|work/i.test(lower)) category = 'Freelance';
     else if (/pocket money|allowance|family|parent|friend|rahul/i.test(lower)) category = 'Pocket Money';
-    else if (/cashback|reward|bonus|discount/i.test(lower)) category = 'Cashback & Rewards';
-    else if (/refund|return/i.test(lower)) category = 'Refunds';
     else category = 'Other Income';
 
     let description = message;
     if (lower.includes('from ')) description = message.split(/from /i)[1];
-    else if (lower.includes('for ')) description = message.split(/for /i)[1];
     else if (lower.includes('gave me')) description = `Received from ${message.split(/gave me/i)[0].trim() || 'friend'}`;
     else if (lower.includes('sent me')) description = `Received from ${message.split(/sent me/i)[0].trim() || 'friend'}`;
 
@@ -308,59 +307,62 @@ export function classifyIntent(message, context = {}) {
       confidence: 0.95,
       entities: {
         type: 'income',
-        amount,
+        amount: numAmount,
         category,
         description: description || 'Income'
       }
     };
   }
 
-  // 7. Expense Detection ("spent 500 food", "i spent 500 on food", "500 gone for dinner", "paid 500 for lunch", "i spend 500 today for dinner", "spnd 250 on diner", "maine 500 kharch kiye dinner pe")
-  const expenseKeywords = /spent|spend|kharch|paid|cost|bought|expense|recharge|bill|gone for|pay/i;
-  if ((expenseKeywords.test(lower) || /dinner|lunch|food|coffee|cab|grocery/i.test(lower)) && amount !== null) {
+  // 5b. CREATE_EXPENSE ("spent 50 on travelling", "spent 500 on dinner", "500 went on dinner", "add 500 dinner expense", "paid 500 for dinner")
+  const expenseVerbs = /spent|spend|kharch|paid|cost|bought|expense|recharge|bill|went on|pay/i;
+  if (expenseVerbs.test(lower) && numAmount !== null) {
     const category = detectExpenseCategory(lower);
     let description = message;
     if (lower.includes('on ')) description = message.split(/on /i)[1];
     else if (lower.includes('for ')) description = message.split(/for /i)[1];
-    else if (lower.includes('pe ')) description = message.split(/pe /i)[0];
+    else if (lower.includes('went on ')) description = message.split(/went on /i)[1];
 
     return {
       intent: 'CREATE_EXPENSE',
       confidence: 0.95,
       entities: {
         type: 'expense',
-        amount,
+        amount: numAmount,
         category,
         description: description || category
       }
     };
   }
 
-  // 8. Ambiguous Financial Check ("add 500")
-  if (/^add\s+\d+|^500$|^\d+$/i.test(lower) && amount !== null) {
+  // 5c. AMBIGUOUS FINANCIAL ("add 500")
+  if (/^add\s+\d+|^500$|^\d+$/i.test(lower) && numAmount !== null) {
     return {
       intent: 'AMBIGUOUS_FINANCIAL',
-      confidence: 0.60,
-      entities: { amount }
+      confidence: 0.70,
+      entities: { amount: numAmount }
     };
   }
 
-  // 9. Habit / Routine Creation ("gym every morning", "gym kal se daily karna hai", "create habit drink 2L water")
-  if (lower.includes('habit') || lower.includes('daily') || lower.includes('every morning') || lower.includes('every day')) {
-    let title = message.replace(/create habit|add habit|every morning|every day|daily|kal se/gi, '').trim();
+  // 5d. CREATE_HABIT ("add habit study daily", "create habit drink 2L water")
+  if (lower.includes('habit') || lower.includes('daily') || lower.includes('every morning')) {
+    let title = message
+      .replace(/add habit|create habit|every morning|every day|daily|kal se/gi, '')
+      .trim();
+
     return {
       intent: 'CREATE_HABIT',
-      confidence: 0.90,
+      confidence: 0.92,
       entities: {
-        title: title || 'Daily Activity',
+        title: title || 'Study',
         frequency: 'Daily'
       }
     };
   }
 
-  // 10. Memory Save Intent ("remember that Rahul owes me 500", "remember I study best at night")
+  // 5e. CREATE_MEMORY ("remember to buy vegetables", "remember that Rahul owes me 500")
   if (/^remember\b|^save memory\b|^keep in mind\b/i.test(lower)) {
-    const content = message.replace(/^(remember that|remember|save memory|keep in mind)\s*/i, '').trim();
+    let content = message.replace(/^(remember to|remember that|remember|save memory|keep in mind)\s*/i, '').trim();
     return {
       intent: 'CREATE_MEMORY',
       confidence: 0.95,
@@ -372,18 +374,24 @@ export function classifyIntent(message, context = {}) {
     };
   }
 
-  // 11. Task / Reminder Intent ("study java tomorrow 7", "remind me to study java tomorrow at 7", "remnd me java tmrw 7", "java padhna hai kal 7 baje", "create task for rahul")
-  if (/remind|task|todo|need to|study|class|padhna|remnd/i.test(lower)) {
-    let priority = 'Medium';
-    if (lower.includes('urgent') || lower.includes('important') || lower.includes('high')) priority = 'High';
-
+  // 5f. CREATE_TASK ("add study at 7 pm", "study java tomorrow 7", "remind me to study java")
+  if (/remind|task|todo|need to|study|schedule|class|padhna/i.test(lower) || /^add\s+[a-z]+/i.test(lower)) {
     const dateTime = parseDateTime(normalized);
-    let title = message
-      .replace(/^(remind me to|add task to|add task|remind me|create task for|remnd me)\s*/i, '')
-      .replace(/tomorrow|today|yesterday|at \d+|\d+ pm|\d+ am|kal|7 baje|tmrw/gi, '')
+
+    // Clean title extraction
+    let cleanTitle = message
+      .replace(/^(remind me to|add task to|add task|create task for|add|remind me|schedule)\s*/i, '')
+      .replace(/at\s+\d{1,2}(?::\d{2})?\s*(am|pm|o'clock)?/gi, '')
+      .replace(/\d{1,2}\s*(am|pm|o'clock)/gi, '')
+      .replace(/tomorrow|today|yesterday|kal|7 baje|tmrw/gi, '')
       .trim();
 
-    if (!title && lower.includes('remind me')) {
+    // Capitalize title cleanly
+    if (cleanTitle) {
+      cleanTitle = cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1);
+    }
+
+    if (!cleanTitle && lower.includes('remind me')) {
       return {
         intent: 'INCOMPLETE_TASK',
         confidence: 0.60,
@@ -396,8 +404,8 @@ export function classifyIntent(message, context = {}) {
       intent: 'CREATE_TASK',
       confidence: 0.92,
       entities: {
-        title: title || 'New Task',
-        priority,
+        title: cleanTitle || 'Study',
+        priority: 'Medium',
         dueDate: dateTime.dueDate,
         timeBlock: dateTime.timeBlock,
         category: 'Personal'
@@ -405,31 +413,12 @@ export function classifyIntent(message, context = {}) {
     };
   }
 
-  // 12. Analytical & Question Answering Queries
-  if (lower.includes('how much did i spend') || lower.includes('where am i spending') || lower.includes('over budget') || lower.includes('how much did i save') || lower.includes('spending this month')) {
-    return { intent: 'READ_SPENDING_ANALYSIS', confidence: 0.95 };
-  }
-
-  if (lower.includes('what do i have today') || lower.includes("today's plan") || lower.includes('what to focus on') || lower.includes('what should i do today') || lower.includes('what should i do first') || lower.includes('overview')) {
-    return { intent: 'READ_TODAYS_AGENDA', confidence: 0.95 };
-  }
-
-  if (lower.includes('what\'s pending') || lower.includes('pending') || lower.includes('overdue')) {
-    return { intent: 'READ_PENDING_TASKS', confidence: 0.95 };
-  }
-
-  if (lower.includes('summary') || lower.includes('weekly summary') || lower.includes('how productive')) {
-    return { intent: 'READ_SUMMARY', confidence: 0.95 };
-  }
-
-  if (lower.includes('memories') || lower.includes('remember')) {
-    return { intent: 'READ_MEMORIES', confidence: 0.92 };
-  }
-
-  // 13. Low Confidence / Nonsense Fallback
+  // ----------------------------------------------------
+  // CATEGORY 6: UNKNOWN / LOW CONFIDENCE FALLBACK
+  // ----------------------------------------------------
   return {
     intent: 'UNKNOWN',
-    confidence: 0.20,
+    confidence: 0.10,
     raw: message
   };
 }
