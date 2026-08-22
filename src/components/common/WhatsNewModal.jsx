@@ -38,9 +38,9 @@ export function WhatsNewModal() {
       <div
         className="glass-card animate-fade-in"
         style={{
-          maxWidth: '450px',
+          maxWidth: '480px',
           width: '100%',
-          padding: '32px 28px',
+          padding: '28px 24px',
           borderRadius: 'var(--radius-lg)',
           background: 'var(--bg-card)',
           border: '1px solid var(--border-highlight)',
@@ -51,25 +51,25 @@ export function WhatsNewModal() {
       >
         <div
           style={{
-            width: '56px',
-            height: '56px',
+            width: '52px',
+            height: '52px',
             borderRadius: '50%',
             background: 'var(--color-primary-soft)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 16px auto',
+            margin: '0 auto 14px auto',
             color: 'var(--color-primary)'
           }}
         >
-          <Sparkles size={28} />
+          <Sparkles size={26} />
         </div>
 
-        <h2 id="whats-new-title" style={{ margin: '0 0 6px 0', fontSize: '1.35rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+        <h2 id="whats-new-title" style={{ margin: '0 0 6px 0', fontSize: '1.3rem', fontWeight: '800', color: 'var(--text-primary)' }}>
           Welcome to DaySync {currentVersion} 🎉
         </h2>
 
-        <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: '0 0 24px 0' }}>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 18px 0' }}>
           Here's what's new in this release:
         </p>
 
@@ -77,10 +77,12 @@ export function WhatsNewModal() {
           style={{
             background: 'var(--bg-secondary)',
             borderRadius: 'var(--radius-md)',
-            padding: '16px',
-            marginBottom: '24px',
+            padding: '14px 16px',
+            marginBottom: '20px',
             textAlign: 'left',
-            border: '1px solid var(--border-color)'
+            border: '1px solid var(--border-color)',
+            maxHeight: '300px',
+            overflowY: 'auto'
           }}
         >
           <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -88,7 +90,7 @@ export function WhatsNewModal() {
               <li
                 key={idx}
                 style={{
-                  fontSize: '0.88rem',
+                  fontSize: '0.86rem',
                   color: 'var(--text-primary)',
                   display: 'flex',
                   alignItems: 'flex-start',
@@ -106,7 +108,7 @@ export function WhatsNewModal() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '11px',
+                    fontSize: '10px',
                     flexShrink: 0,
                     marginTop: '2px'
                   }}

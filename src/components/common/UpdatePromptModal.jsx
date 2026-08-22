@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, RefreshCw, X, Check } from 'lucide-react';
+import { Sparkles, RefreshCw, X } from 'lucide-react';
 import { usePWAUpdate } from '../../context/PWAUpdateContext';
 
 export function UpdatePromptModal() {
@@ -39,9 +39,9 @@ export function UpdatePromptModal() {
       <div
         className="glass-card animate-fade-in"
         style={{
-          maxWidth: '440px',
+          maxWidth: '460px',
           width: '100%',
-          padding: '28px 24px',
+          padding: '24px 22px',
           borderRadius: 'var(--radius-lg)',
           background: 'var(--bg-card)',
           border: '1px solid var(--border-highlight)',
@@ -51,12 +51,12 @@ export function UpdatePromptModal() {
           transition: 'transform 220ms ease, opacity 220ms ease'
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div
               style={{
-                width: '42px',
-                height: '42px',
+                width: '40px',
+                height: '40px',
                 borderRadius: '50%',
                 background: 'var(--color-primary-soft)',
                 display: 'flex',
@@ -65,13 +65,13 @@ export function UpdatePromptModal() {
                 color: 'var(--color-primary)'
               }}
             >
-              <RefreshCw size={22} className="animate-spin" />
+              <RefreshCw size={20} className="animate-spin" />
             </div>
             <div>
               <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 UPDATE AVAILABLE
               </span>
-              <h3 id="update-prompt-title" style={{ margin: '2px 0 0 0', fontSize: '1.2rem', fontWeight: '700' }}>
+              <h3 id="update-prompt-title" style={{ margin: '2px 0 0 0', fontSize: '1.15rem', fontWeight: '700' }}>
                 DaySync {latestVersion} is ready
               </h3>
             </div>
@@ -87,28 +87,36 @@ export function UpdatePromptModal() {
           </button>
         </div>
 
-        <div style={{ marginBottom: '24px' }}>
-          <h4 style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <h4 style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-secondary)', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             What's new
           </h4>
-          <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {highlights.map((item, idx) => (
-              <li
-                key={idx}
-                style={{
-                  fontSize: '0.88rem',
-                  color: 'var(--text-primary)',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px',
-                  lineHeight: '1.4'
-                }}
-              >
-                <span style={{ color: 'var(--color-primary)', fontWeight: '700', flexShrink: 0 }}>•</span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+          <div
+            style={{
+              maxHeight: '260px',
+              overflowY: 'auto',
+              paddingRight: '6px'
+            }}
+          >
+            <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {highlights.map((item, idx) => (
+                <li
+                  key={idx}
+                  style={{
+                    fontSize: '0.85rem',
+                    color: 'var(--text-primary)',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '8px',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  <span style={{ color: 'var(--color-primary)', fontWeight: '700', flexShrink: 0 }}>•</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
