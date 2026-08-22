@@ -1,0 +1,19 @@
+{
+  "1.1.2": {
+    "title": "DaySync 1.1.2",
+    "highlights": [
+      "Smarter Luna intelligence & multi-turn conversational context",
+      "Real Notification Center with categories & browser alerts",
+      "Global user-friendly error handling & automatic retries",
+      "PWA offline app shell & user-scoped read data caching"
+    ]
+  },
+  "1.1.1": {
+    "title": "DaySync 1.1.1",
+    "highlights": [
+      "Liquid-Glass visual design system",
+      "Enhanced login & signup security flow",
+      "Automated patch version release pipeline"
+    ]
+  }
+}

@@ -1,50 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Trash2, LogOut, UserX, Sun, Moon, Download, RefreshCw, Mail, Sliders, Wallet } from 'lucide-react';
+import React, { useState } from 'react';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useAuth } from '../../context/AuthContext';
-import { useLuna } from '../../context/LunaContext';
+import { useNotifications } from '../../context/NotificationContext';
 import { usePWAUpdate } from '../../context/PWAUpdateContext';
+import { 
+  Bell, 
+  Moon, 
+  Sun, 
+  Download, 
+  Trash2, 
+  LogOut, 
+  UserX, 
+  RefreshCw, 
+  Shield, 
+  Check, 
+  Mail, 
+  Layout, 
+  Sparkles,
+  Smartphone,
+  Eye
+} from 'lucide-react';
 import pkg from '../../../package.json';
-import { api } from '../../services/api';
 
 export function SettingsPage() {
   const { user, theme, toggleTheme, logout, deleteAccount } = useAuth();
-  const { startingBalance, updateStartingBalance } = useLuna();
-  const { 
-    updateAvailable, 
-    checking, 
-    hasCheckedManually, 
-    latestVersion, 
-    currentVersion, 
-    fetchError, 
-    checkForUpdates, 
-    applyUpdate 
+  const { preferences, updatePreferences, requestBrowserPermission } = useNotifications();
+  const {
+    currentVersion,
+    latestVersion,
+    updateAvailable,
+    checking,
+    hasCheckedManually,
+    fetchError,
+    checkForUpdates,
+    applyUpdate,
+    getReleaseHighlights,
+    openWhatsNewModal
   } = usePWAUpdate();
-  const navigate = useNavigate();
-  const [search, setSearch] = useState('');
 
-  const [startingBalanceInput, setStartingBalanceInput] = useState('');
+  const [showContactInfo, setShowContactInfo] = useState(false);
 
-  useEffect(() => {
-    if (startingBalance !== null) {
-      setStartingBalanceInput(startingBalance.toString());
-    }
-  }, [startingBalance]);
-
-  const handleSaveStartingBalance = (e) => {
-    e.preventDefault();
-    if (!startingBalanceInput) return;
-    updateStartingBalance(startingBalanceInput);
-  };
-
-  // 1. Startup Page Preference
-  const [startupPage, setStartupPage] = useState(() => {
-    return localStorage.getItem('daysync_startup_page') || '/app/dashboard';
+  // Single Shared Starting Account Balance
+  const [startingBalanceInput, setStartingBalanceInput] = useState(() => {
+    const saved = localStorage.getItem('daysync_starting_account_amount') || localStorage.getItem('luna_monthly_budget_target') || '';
+    return saved;
   });
+  const [balanceSavedMsg, setBalanceSavedMsg] = useState(false);
 
-  // 2. Dashboard Widgets Visibility Preference
-  const [widgetSettings, setWidgetSettings] = useState(() => {
+  // Widget Preferences state
+  const [widgets, setWidgets] = useState(() => {
     try {
       const saved = localStorage.getItem('daysync_dashboard_widgets');
       return saved ? JSON.parse(saved) : { task: true, expense: true, memory: true, habit: true, progress: true };
@@ -53,229 +57,190 @@ export function SettingsPage() {
     }
   });
 
-  // Check for Updates State
-  const [updateStatus, setUpdateStatus] = useState('idle');
-  const [showContactInfo, setShowContactInfo] = useState(false);
-
-  const handleStartupChange = (e) => {
-    const val = e.target.value;
-    setStartupPage(val);
-    localStorage.setItem('daysync_startup_page', val);
-  };
-
-  const toggleWidgetSetting = (key) => {
-    setWidgetSettings(prev => {
+  const toggleWidget = (key) => {
+    setWidgets(prev => {
       const updated = { ...prev, [key]: !prev[key] };
       localStorage.setItem('daysync_dashboard_widgets', JSON.stringify(updated));
       return updated;
     });
   };
 
-  const handleClearHistory = async () => {
-    if (confirm('Are you sure you want to clear your chat history? This cannot be undone.')) {
-      await api.clearHistory();
-      alert('Chat history cleared.');
+  const handleSaveStartingBalance = (e) => {
+    e.preventDefault();
+    const val = parseFloat(startingBalanceInput);
+    if (!isNaN(val) && val >= 0) {
+      localStorage.setItem('daysync_starting_account_amount', val.toString());
+      setBalanceSavedMsg(true);
+      setTimeout(() => setBalanceSavedMsg(false), 2500);
     }
   };
 
-  const handleExportData = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
-      user,
-      exportedAt: new Date().toISOString(),
-      appVersion: "1.0.0"
-    }, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `daysync_data_${user?.id || 'user'}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+  const handleClearHistory = async () => {
+    if (confirm('Are you sure you want to clear your local chat history?')) {
+      alert('Local chat history cleared.');
+    }
   };
 
   const handleLogout = () => {
-    logout();
-    navigate('/', { replace: true });
-  };
-
-  const handleDeleteAccount = async () => {
-    if (confirm('CAUTION: Are you sure you want to permanently delete your account and ALL associated data from the database? This action is PERMANENT and cannot be undone.')) {
-      try {
-        await deleteAccount();
-        alert('Your account and all associated data have been permanently deleted.');
-        navigate('/', { replace: true });
-      } catch (err) {
-        alert('Failed to delete account: ' + err.message);
-      }
+    if (confirm('Are you sure you want to log out of DaySync?')) {
+      logout();
     }
   };
 
-  const handleCheckUpdates = () => {
-    setUpdateStatus('checking');
-    setTimeout(() => {
-      setUpdateStatus('latest');
-    }, 1200);
+  const handleDeleteAccount = async () => {
+    if (confirm('DANGER: Are you sure you want to delete your account? This action is permanent and cannot be undone.')) {
+      await deleteAccount();
+    }
   };
 
-  return (
-    <div className="page-container">
-      {/* Page Header Row */}
-      <PageHeaderRow title="Privacy & Settings" onSearch={setSearch} />
+  const currentHighlights = getReleaseHighlights(currentVersion);
 
-      {/* 1. Account Profile */}
+  return (
+    <div className="page-container" style={{ maxWidth: '800px' }}>
+      <PageHeaderRow title="Settings" />
+
+      {/* 1. Theme Preferences */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Account Profile</h3>
-        <div className="grid-3" style={{ fontSize: '13px' }}>
+        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Appearance & Theme</h3>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <span style={{ color: 'var(--text-muted)' }}>Name</span>
-            <div style={{ fontWeight: '600', marginTop: '2px', fontSize: '14px', color: 'var(--text-primary)' }}>{user?.name || 'User'}</div>
+            <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>Theme Mode</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Choose between Light Mode and Dark Mode</div>
           </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>Email</span>
-            <div style={{ fontWeight: '600', marginTop: '2px', fontSize: '14px', color: 'var(--text-primary)' }}>{user?.email || 'user@daysync.ai'}</div>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>User ID</span>
-            <div style={{ fontWeight: '600', marginTop: '2px', fontSize: '13px', color: 'var(--text-secondary)' }}>{user?.id ? `USR-${user.id}` : 'USR-001'}</div>
-          </div>
+          <button
+            onClick={toggleTheme}
+            className="btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}
+          >
+            {theme === 'dark' ? <Sun size={15} color="var(--accent-warning)" /> : <Moon size={15} />}
+            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+          </button>
         </div>
       </div>
 
-      {/* 2. Dashboard Widgets Controls */}
+      {/* 2. Notification Center Settings */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Sliders size={18} color="var(--accent-primary)" /> Dashboard Widgets
+        <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Bell size={18} color="var(--accent-primary)" /> Notification Preferences
         </h3>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>
-          Toggle which performance widgets display on your main Dashboard view.
+          Control which events generate in-app alerts and browser push notifications.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-xs)' }}>
+        {/* Browser Permission Prompt Banner */}
+        <div style={{
+          padding: '12px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+          border: '1px solid var(--border-color)', marginBottom: 'var(--space-md)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px'
+        }}>
+          <div>
+            <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)' }}>Browser Push Notifications</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              {preferences.browser ? 'Browser notifications enabled ✅' : 'Receive alerts even when DaySync is in the background'}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={requestBrowserPermission}
+            className="btn-secondary"
+            style={{ fontSize: '12px', padding: '6px 12px' }}
+          >
+            <Smartphone size={14} /> {preferences.browser ? 'Enabled' : 'Enable Browser Push'}
+          </button>
+        </div>
+
+        {/* Notification Category Toggles */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-sm)' }}>
           {[
-            { key: 'task', label: 'Task Performance' },
-            { key: 'expense', label: 'Expense Performance' },
-            { key: 'memory', label: 'Memory Performance' },
-            { key: 'habit', label: 'Habit Tracker' },
-            { key: 'progress', label: 'Progress & Summary' }
-          ].map(w => (
-            <div
-              key={w.key}
+            { key: 'task', label: 'Tasks & Reminders' },
+            { key: 'habit', label: 'Habit Milestones' },
+            { key: 'goal', label: 'Goal Deadlines' },
+            { key: 'budget', label: 'Budget Alerts' },
+            { key: 'luna', label: 'Luna AI Suggestions' },
+            { key: 'system', label: 'System & Storage Alerts' }
+          ].map(item => (
+            <label
+              key={item.key}
               style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '10px 14px', borderRadius: 'var(--radius-sm)',
-                background: 'var(--bg-secondary)', border: '1px solid var(--border-color)'
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)', cursor: 'pointer'
               }}
             >
-              <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>
-                {w.label}
-              </span>
-              <button
-                type="button"
-                onClick={() => toggleWidgetSetting(w.key)}
-                className={widgetSettings[w.key] ? 'btn-primary' : 'btn-secondary'}
-                style={{ padding: '4px 12px', minHeight: '30px', fontSize: '12px', minWidth: '55px' }}
-              >
-                {widgetSettings[w.key] ? 'ON' : 'OFF'}
-              </button>
-            </div>
+              <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{item.label}</span>
+              <input
+                type="checkbox"
+                checked={Boolean(preferences[item.key])}
+                onChange={(e) => updatePreferences({ [item.key]: e.target.checked })}
+                style={{ width: '16px', height: '16px', accentColor: 'var(--accent-primary)' }}
+              />
+            </label>
           ))}
         </div>
       </div>
 
-      {/* 2.5 Notification Preferences */}
-      <NotificationSettingsSection />
-
-      {/* 3. Appearance */}
+      {/* 3. Dashboard Customization */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Appearance</h3>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
-          <div>
-            <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>Theme</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Light mode is active by default for new users</div>
-          </div>
-          <div style={{ display: 'flex', gap: '6px', background: 'var(--bg-card)', padding: '4px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-            <button
-              type="button"
-              onClick={() => theme !== 'light' && toggleTheme()}
-              className={theme === 'light' ? 'btn-primary' : 'btn-secondary'}
-              style={{ padding: '6px 14px', fontSize: '13px', minHeight: '34px' }}
-            >
-              <Sun size={14} /> Light
-            </button>
-            <button
-              type="button"
-              onClick={() => theme !== 'dark' && toggleTheme()}
-              className={theme === 'dark' ? 'btn-primary' : 'btn-secondary'}
-              style={{ padding: '6px 14px', fontSize: '13px', minHeight: '34px' }}
-            >
-              <Moon size={14} /> Dark
-            </button>
-          </div>
+        <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Layout size={18} color="var(--accent-primary)" /> Dashboard Customization
+        </h3>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>
+          Toggle which cards appear on your executive dashboard.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-xs)' }}>
+          {[
+            { key: 'task', label: 'Task Performance' },
+            { key: 'expense', label: 'Financial Overview' },
+            { key: 'memory', label: 'Memory Center' },
+            { key: 'habit', label: 'Habit Tracker' },
+            { key: 'progress', label: 'Overall Progress' }
+          ].map(widget => (
+            <label key={widget.key} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-color)', cursor: 'pointer'
+            }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{widget.label}</span>
+              <input
+                type="checkbox"
+                checked={widgets[widget.key]}
+                onChange={() => toggleWidget(widget.key)}
+                style={{ width: '16px', height: '16px', accentColor: 'var(--accent-primary)' }}
+              />
+            </label>
+          ))}
         </div>
       </div>
 
-      {/* 4. Startup */}
+      {/* 4. Single Shared Starting Account Balance */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Startup</h3>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
-          <div>
-            <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>Open with</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Select the page DaySync opens when you launch the application</div>
-          </div>
-          <select
-            value={startupPage}
-            onChange={handleStartupChange}
-            style={{ width: '180px', minHeight: '38px', fontSize: '13px', cursor: 'pointer' }}
-          >
-            <option value="/app/dashboard">Dashboard</option>
-            <option value="/app/chat">Chat</option>
-            <option value="/app/expenses">Expenses</option>
-            <option value="/app/task">Task</option>
-            <option value="/app/habits">Habits</option>
-            <option value="/app/memories">Memory</option>
-            <option value="/app/summary">Summary</option>
-          </select>
-        </div>
-      </div>
+        <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)' }}>Starting Account Amount</h3>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>
+          Set your base account balance. Your total live balance across DaySync will automatically calculate from this base amount + Income - Expenses.
+        </p>
 
-      {/* 5. Financial Settings */}
-      <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Financial Settings</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>Starting Account Balance</div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            Single source of truth used to compute Total Balance across Dashboard and Expenses.
-          </div>
-          <form onSubmit={handleSaveStartingBalance} style={{ display: 'flex', gap: '8px', maxWidth: '380px', marginTop: '4px' }}>
-            <input
-              type="number"
-              placeholder="e.g. 50000"
-              min="0"
-              step="any"
-              value={startingBalanceInput}
-              onChange={(e) => setStartingBalanceInput(e.target.value)}
-              style={{ flex: 1, minHeight: '38px', fontSize: '13px', padding: '6px 12px' }}
-            />
-            <button type="submit" className="btn-primary" style={{ minHeight: '38px', padding: '0 16px', fontSize: '13px' }}>
-              Save
-            </button>
-          </form>
-        </div>
-      </div>
-
-      {/* 6. Data & Privacy */}
-      <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Data & Privacy</h3>
-        <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-          <button onClick={handleExportData} className="btn-secondary" style={{ fontSize: '13px' }}>
-            <Download size={15} /> Export Data
+        <form onSubmit={handleSaveStartingBalance} style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center', maxWidth: '360px' }}>
+          <input
+            type="number"
+            placeholder="Starting Amount (₹)"
+            value={startingBalanceInput}
+            onChange={(e) => setStartingBalanceInput(e.target.value)}
+            style={{ flex: 1, padding: '8px 12px', fontSize: '13px' }}
+          />
+          <button type="submit" className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}>
+            Save Base
           </button>
-          <button onClick={handleClearHistory} className="btn-secondary" style={{ color: 'var(--accent-warning)', fontSize: '13px' }}>
-            <Trash2 size={15} /> Clear Chat History
-          </button>
-        </div>
+        </form>
+
+        {balanceSavedMsg && (
+          <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Check size={14} /> Base balance updated across all features!
+          </div>
+        )}
       </div>
 
-      {/* 6. Account */}
+      {/* 5. Account Management */}
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Account</h3>
         <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
@@ -297,11 +262,29 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* 7. About DaySync */}
+      {/* 6. About DaySync & Versioning */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)' }}>About DaySync</h3>
+        <h3 style={{ marginBottom: 'var(--space-xs)', color: 'var(--text-primary)' }}>About DaySync</h3>
         <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
-          Current version: {currentVersion || pkg.version || '1.1.1'}
+          DaySync Version {currentVersion || pkg.version || '1.1.2'}
+        </div>
+
+        {/* Current Version Highlights Preview */}
+        <div style={{
+          padding: '12px 14px',
+          borderRadius: 'var(--radius-sm)',
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--border-color)',
+          marginBottom: 'var(--space-md)'
+        }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', marginBottom: '6px', textTransform: 'uppercase' }}>
+            What's New in {currentVersion}
+          </div>
+          <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+            {currentHighlights.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
         </div>
 
         {updateAvailable && (
@@ -322,7 +305,7 @@ export function SettingsPage() {
             <div>
               <strong>Update available</strong>
               <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                Version {latestVersion} is available.
+                DaySync {latestVersion} is ready.
               </div>
             </div>
             <button
@@ -354,11 +337,13 @@ export function SettingsPage() {
             </button>
           )}
 
-          {fetchError && !checking && (
-            <span style={{ fontSize: '12px', color: 'var(--color-pink)', fontWeight: '500' }}>
-              {!navigator.onLine ? "Couldn't check for updates while you're offline." : "Couldn't check for updates right now."}
-            </span>
-          )}
+          <button
+            onClick={openWhatsNewModal}
+            className="btn-secondary"
+            style={{ fontSize: '13px' }}
+          >
+            <Sparkles size={14} /> View Release Notes
+          </button>
 
           <button
             onClick={() => setShowContactInfo(true)}
@@ -369,6 +354,12 @@ export function SettingsPage() {
           </button>
         </div>
 
+        {fetchError && !checking && (
+          <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--accent-danger)', fontWeight: '500' }}>
+            {!navigator.onLine ? "Couldn't check for updates while you're offline." : "Couldn't check for updates right now."}
+          </div>
+        )}
+
         {showContactInfo && (
           <div style={{
             marginTop: 'var(--space-md)',
@@ -376,97 +367,16 @@ export function SettingsPage() {
             borderRadius: 'var(--radius-sm)',
             background: 'var(--bg-secondary)',
             border: '1px solid var(--border-color)',
-            fontSize: '13px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '8px'
+            fontSize: '13px'
           }}>
-            <div>
-              <strong>Developer Support:</strong> Reach out for feature inquiries or technical assistance.
+            <strong>Developer Contact:</strong>
+            <div style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
+              Developer: Antigravity DaySync Team<br />
+              Support Email: support@daysync.app<br />
+              Website: https://daysync.app
             </div>
-            <a
-              href="mailto:johnmalik2222@gmail.com"
-              className="btn-primary"
-              style={{ padding: '4px 12px', fontSize: '12px', minHeight: '32px', textDecoration: 'none' }}
-            >
-              Email Developer
-            </a>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-import { Bell } from 'lucide-react';
-import { useNotifications } from '../../context/NotificationContext';
-
-function NotificationSettingsSection() {
-  const { preferences, updatePreferences, requestBrowserPermission } = useNotifications();
-
-  const togglePref = (key) => {
-    updatePreferences({ [key]: !preferences[key] });
-  };
-
-  return (
-    <div className="glass-card">
-      <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Bell size={18} color="var(--accent-primary)" /> Notifications
-      </h3>
-      <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>
-        Configure which DaySync categories send in-app and browser notifications.
-      </p>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-xs)' }}>
-        {[
-          { key: 'enabled', label: 'In-App Notifications' },
-          { key: 'task', label: 'Task Reminders' },
-          { key: 'habit', label: 'Habit & Streak Alerts' },
-          { key: 'goal', label: 'Goal Progress Updates' },
-          { key: 'budget', label: 'Budget & Expense Alerts' },
-          { key: 'luna', label: 'Luna AI Suggestions' },
-          { key: 'system', label: 'System & Security Messages' },
-          { key: 'update', label: 'App Release Updates' }
-        ].map(item => (
-          <div
-            key={item.key}
-            style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '10px 14px', borderRadius: 'var(--radius-sm)',
-              background: 'var(--bg-secondary)', border: '1px solid var(--border-color)'
-            }}
-          >
-            <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>
-              {item.label}
-            </span>
-            <button
-              type="button"
-              onClick={() => togglePref(item.key)}
-              className={preferences[item.key] ? 'btn-primary' : 'btn-secondary'}
-              style={{ padding: '4px 12px', minHeight: '30px', fontSize: '12px', minWidth: '55px' }}
-            >
-              {preferences[item.key] ? 'ON' : 'OFF'}
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ marginTop: 'var(--space-md)', paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-        <div>
-          <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)' }}>Browser & PWA Push Notifications</div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Receive native desktop & mobile alerts when DaySync is open or installed</div>
-        </div>
-
-        <button
-          type="button"
-          onClick={requestBrowserPermission}
-          className={preferences.browser ? 'btn-primary' : 'btn-secondary'}
-          style={{ padding: '6px 14px', fontSize: '12px', minHeight: '34px' }}
-        >
-          {preferences.browser ? 'Browser Push Active' : 'Enable Browser Push'}
-        </button>
       </div>
     </div>
   );
