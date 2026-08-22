@@ -600,7 +600,7 @@ export function SettingsPage() {
             </div>
 
             <a
-              href="mailto:support@daysync.app"
+              href="mailto:johnmalik2222@gmail.com"
               className="btn-primary"
               style={{ padding: '8px 18px', fontSize: '13px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
