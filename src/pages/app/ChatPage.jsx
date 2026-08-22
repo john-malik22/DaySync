@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Send } from 'lucide-react';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
@@ -21,12 +22,19 @@ export function ChatPage() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversations]);
 
+  const navigate = useNavigate();
+
   const handleSend = async (e) => {
     e?.preventDefault();
     if (!input.trim() || loading) return;
     const text = input;
     setInput('');
-    await sendMessage(text);
+    const res = await sendMessage(text);
+    if (res?.assistantMessage?.data?.type === 'NAVIGATE' && res.assistantMessage.data.route) {
+      setTimeout(() => {
+        navigate(res.assistantMessage.data.route);
+      }, 400);
+    }
   };
 
   const filteredConversations = conversations.filter(msg => !search || msg.message.toLowerCase().includes(search.toLowerCase()));

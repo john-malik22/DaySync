@@ -143,7 +143,23 @@ app.delete('/api/auth/delete-account', authenticate, (req, res) => {
   res.json({ success: true, message: 'Account and all associated data permanently deleted from database.' });
 });
 
-// --- AI CHAT & INTENT ROUTE ---
+
+// --- AI CHAT & INTENT ROUTE & CONVERSATION CONTEXT ---
+const userContexts = new Map();
+
+function getUserContext(userId) {
+  if (!userContexts.has(userId)) {
+    userContexts.set(userId, {
+      lastExpense: null,
+      lastTask: null,
+      lastMemory: null,
+      lastItem: null,
+      pendingClarification: null
+    });
+  }
+  return userContexts.get(userId);
+}
+
 app.post('/api/chat', authenticate, (req, res) => {
   const { message } = req.body;
   const store = db.read();
@@ -158,113 +174,389 @@ app.post('/api/chat', authenticate, (req, res) => {
   };
   store.conversations.push(userMsg);
 
-  const intentResult = classifyIntent(message);
+  const userContext = getUserContext(userId);
+  const intentResult = classifyIntent(message, userContext);
   let replyText = '';
   let toolData = null;
   let memoryPrompt = null;
 
-  switch (intentResult.intent) {
-    case 'ADD_EXPENSE': {
-      const { type, amount, category, description } = intentResult.entities;
-      const txType = type || 'expense';
-      const newExp = {
-        id: `exp_${Date.now()}`,
-        userId,
-        type: txType,
-        amount,
-        category,
-        description,
-        date: new Date().toISOString().split('T')[0],
-        createdAt: new Date().toISOString()
-      };
-      store.expenses.push(newExp);
-      replyText = txType === 'income'
-        ? `I've recorded an income entry of ₹${amount} under ${category} (${description}).`
-        : `I've recorded an expense of ₹${amount} under ${category} (${description}).`;
-      toolData = { type: 'EXPENSE_ADDED', expense: newExp };
-      break;
-    }
+  // Safety Threshold: Confidence < 0.60 or UNKNOWN intent MUST NOT execute any action
+  if (intentResult.confidence < 0.60 || intentResult.intent === 'UNKNOWN') {
+    const fallbacks = [
+      "I'm not quite sure what you mean. Could you say that another way?",
+      "I didn't quite catch that. What would you like me to do?",
+      "I'm having trouble understanding that one. Give it another try.",
+      "I didn't quite understand that. Try telling me what you'd like me to do."
+    ];
+    replyText = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+  } else {
+    switch (intentResult.intent) {
+      case 'READ_EXPENSES': {
+        const userExps = store.expenses.filter(e => e.userId === userId && e.type !== 'income');
+        const limit = intentResult.entities.limit;
+        const displayExps = limit ? userExps.slice(-limit) : userExps;
 
-    case 'GET_EXPENSE': {
-      const userExpenses = store.expenses.filter(e => e.userId === userId);
-      const totalIncome = userExpenses.filter(e => e.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
-      const totalSpend = userExpenses.filter(e => e.type !== 'income').reduce((acc, curr) => acc + curr.amount, 0);
-      const netSavings = totalIncome - totalSpend;
-      replyText = `Financial Summary: Income Received ₹${totalIncome.toLocaleString()} | Expenses Spent ₹${totalSpend.toLocaleString()} | Net Balance ₹${netSavings.toLocaleString()}.`;
-      toolData = { type: 'EXPENSE_ANALYTICS', totalIncome, totalSpend, netSavings, count: userExpenses.length };
-      break;
-    }
-
-    case 'CREATE_TASK': {
-      const { title, priority, dueDate, category } = intentResult.entities;
-      const newTask = {
-        id: `tsk_${Date.now()}`,
-        userId,
-        title,
-        priority,
-        dueDate,
-        category: category || 'Personal',
-        completed: false,
-        createdAt: new Date().toISOString()
-      };
-      store.tasks.push(newTask);
-      replyText = `Added "${title}" to your tasks (Priority: ${priority}, Due: ${dueDate}).`;
-      toolData = { type: 'TASK_CREATED', task: newTask };
-      break;
-    }
-
-    case 'SAVE_MEMORY': {
-      const { type, content, confidence } = intentResult.entities;
-      const newMem = {
-        id: `mem_${Date.now()}`,
-        userId,
-        type,
-        content,
-        confidence,
-        approved: true,
-        createdAt: new Date().toISOString()
-      };
-      store.memories.push(newMem);
-      replyText = `Saved to your Memory Center: "${content}".`;
-      toolData = { type: 'MEMORY_SAVED', memory: newMem };
-      break;
-    }
-
-    case 'GET_MEMORY': {
-      const userMems = store.memories.filter(m => m.userId === userId);
-      replyText = `I currently remember ${userMems.length} key facts about you.`;
-      toolData = { type: 'MEMORY_LIST', memories: userMems };
-      break;
-    }
-
-    case 'CREATE_PLAN': {
-      const userTasks = store.tasks.filter(t => t.userId === userId && !t.completed);
-      replyText = `Here is your customized agenda for today: Complete your high-priority tasks and focus sessions.`;
-      toolData = { type: 'PLAN_GENERATED', tasks: userTasks };
-      break;
-    }
-
-    case 'GET_SUMMARY': {
-      const userTasks = store.tasks.filter(t => t.userId === userId);
-      const userExp = store.expenses.filter(e => e.userId === userId);
-      const totalSpent = userExp.filter(e => e.type !== 'income').reduce((a, b) => a + b.amount, 0);
-      const totalIncome = userExp.filter(e => e.type === 'income').reduce((a, b) => a + b.amount, 0);
-      const completedTasks = userTasks.filter(t => t.completed).length;
-      replyText = `Daily Summary: Completed ${completedTasks} task(s), received ₹${totalIncome}, and spent ₹${totalSpent}.`;
-      toolData = { type: 'SUMMARY_REPORT', completedTasks, pendingTasks: userTasks.length - completedTasks, totalSpent, totalIncome };
-      break;
-    }
-
-    default: {
-      const memCheck = detectPotentialMemory(message);
-      if (memCheck.shouldPrompt) {
-        memoryPrompt = memCheck;
-        replyText = `I hear you! ${memCheck.promptText}`;
-      } else {
-        replyText = `I understand. I'm keeping track of your daily agenda and expenses so you can focus on what matters most. What would you like to log or plan right now?`;
+        if (displayExps.length === 0) {
+          replyText = "You have no recorded expenses yet.";
+        } else {
+          const countText = limit ? `last ${displayExps.length}` : 'recent';
+          const listText = displayExps.map((e, i) => `${i + 1}. ${e.description || e.category} — ₹${e.amount}`).join('\n');
+          replyText = `Here are your ${countText} expenses:\n${listText}`;
+        }
+        toolData = { type: 'EXPENSES_LIST', expenses: displayExps };
+        break;
       }
-      break;
+
+      case 'READ_LAST_EXPENSE': {
+        const userExps = store.expenses.filter(e => e.userId === userId && e.type !== 'income');
+        const lastExp = userExps[userExps.length - 1];
+
+        if (lastExp) {
+          replyText = `Your last expense was ₹${lastExp.amount} for ${lastExp.description || lastExp.category} (Category: ${lastExp.category}).`;
+          toolData = { type: 'LAST_EXPENSE', expense: lastExp };
+        } else {
+          replyText = "You have no recorded expenses yet.";
+        }
+        break;
+      }
+
+      case 'READ_PENDING_TASKS': {
+        const pending = store.tasks.filter(t => t.userId === userId && !t.completed);
+
+        if (pending.length === 0) {
+          replyText = "You have no pending tasks right now. Great job!";
+        } else {
+          const listText = pending.map((t, i) => `${i + 1}. ${t.title} (Due: ${t.dueDate === new Date().toISOString().split('T')[0] ? 'today' : t.dueDate}${t.timeBlock ? ' at ' + t.timeBlock.split(' - ')[0] : ''})`).join('\n');
+          replyText = `Here are your pending tasks:\n${listText}`;
+        }
+        toolData = { type: 'PENDING_TASKS', tasks: pending };
+        break;
+      }
+
+      case 'READ_TODAYS_TASKS': {
+        const today = new Date().toISOString().split('T')[0];
+        const todayTasks = store.tasks.filter(t => t.userId === userId && !t.completed && t.dueDate === today);
+
+        if (todayTasks.length === 0) {
+          replyText = "You have no tasks scheduled for today. Enjoy your day!";
+        } else {
+          const listText = todayTasks.map((t, i) => `${i + 1}. ${t.title}${t.timeBlock ? ' at ' + t.timeBlock.split(' - ')[0] : ''}`).join('\n');
+          replyText = `Here are your tasks for today:\n${listText}`;
+        }
+        toolData = { type: 'TODAYS_TASKS', tasks: todayTasks };
+        break;
+      }
+
+      case 'CREATE_EXPENSE':
+      case 'ADD_EXPENSE': {
+        const { type, amount, category, description } = intentResult.entities;
+        const txType = type || 'expense';
+        const newExp = {
+          id: `exp_${Date.now()}`,
+          userId,
+          type: txType,
+          amount: amount || 0,
+          category: category || 'Other',
+          description: description || category || 'Expense',
+          date: new Date().toISOString().split('T')[0],
+          createdAt: new Date().toISOString()
+        };
+        store.expenses.push(newExp);
+
+        userContext.lastExpense = newExp;
+        userContext.lastItem = { type: 'expense', id: newExp.id, data: newExp };
+        userContext.pendingClarification = null;
+
+        replyText = `Done — I added ₹${amount} for ${description || category || 'expense'}.`;
+        toolData = { type: 'EXPENSE_ADDED', expense: newExp };
+        break;
+      }
+
+      case 'CREATE_INCOME': {
+        const { amount, category, description } = intentResult.entities;
+        const newExp = {
+          id: `exp_${Date.now()}`,
+          userId,
+          type: 'income',
+          amount: amount || 0,
+          category: category || 'Other Income',
+          description: description || category || 'Income',
+          date: new Date().toISOString().split('T')[0],
+          createdAt: new Date().toISOString()
+        };
+        store.expenses.push(newExp);
+
+        userContext.lastExpense = newExp;
+        userContext.lastItem = { type: 'expense', id: newExp.id, data: newExp };
+        userContext.pendingClarification = null;
+
+        replyText = `Done — I recorded an income entry of ₹${amount} (${description || category}).`;
+        toolData = { type: 'EXPENSE_ADDED', expense: newExp };
+        break;
+      }
+
+      case 'UPDATE_EXPENSE': {
+        const { amount } = intentResult.entities;
+        const userExps = store.expenses.filter(e => e.userId === userId);
+        const targetExp = userContext.lastExpense || userExps[userExps.length - 1];
+
+        if (targetExp && amount !== null && amount !== undefined) {
+          targetExp.amount = amount;
+          userContext.pendingClarification = null;
+          replyText = `Done — I updated your ${targetExp.description || 'expense'} to ₹${amount}.`;
+          toolData = { type: 'EXPENSE_UPDATED', expense: targetExp };
+        } else {
+          replyText = "Which expense would you like to update?";
+        }
+        break;
+      }
+
+      case 'CREATE_TASK': {
+        const { title, priority, dueDate, timeBlock, category } = intentResult.entities;
+        const newTask = {
+          id: `tsk_${Date.now()}`,
+          userId,
+          title: title || 'Task',
+          priority: priority || 'Medium',
+          dueDate: dueDate || new Date().toISOString().split('T')[0],
+          timeBlock: timeBlock || '19:00 - 20:00',
+          category: category || 'Personal',
+          completed: false,
+          createdAt: new Date().toISOString()
+        };
+        store.tasks.push(newTask);
+
+        userContext.lastTask = newTask;
+        userContext.lastItem = { type: 'task', id: newTask.id, data: newTask };
+        userContext.pendingClarification = null;
+
+        const dateStr = dueDate === new Date().toISOString().split('T')[0] ? 'today' : 'tomorrow';
+        const timeStr = timeBlock ? ` at ${timeBlock.split(' - ')[0]}` : '';
+        replyText = `Done — I added "${newTask.title}" for ${dateStr}${timeStr}.`;
+        toolData = { type: 'TASK_CREATED', task: newTask };
+        break;
+      }
+
+      case 'INCOMPLETE_TASK': {
+        userContext.pendingClarification = { intent: 'INCOMPLETE_TASK', entities: intentResult.entities };
+        replyText = "What task should I add?";
+        break;
+      }
+
+      case 'AMBIGUOUS_FINANCIAL': {
+        userContext.pendingClarification = { intent: 'AMBIGUOUS_FINANCIAL', entities: intentResult.entities };
+        replyText = `Should I record ₹${intentResult.entities.amount} as an expense or income?`;
+        break;
+      }
+
+      case 'AMBIGUOUS_DELETE': {
+        replyText = "Which item would you like to delete?";
+        break;
+      }
+
+      case 'UPDATE_TASK': {
+        const { query, timeBlock, dueDate } = intentResult.entities;
+        const targetTask = userContext.lastTask || store.tasks.find(t => t.userId === userId && t.title.toLowerCase().includes((query || '').toLowerCase()));
+
+        if (targetTask) {
+          if (timeBlock) targetTask.timeBlock = timeBlock;
+          if (dueDate) targetTask.dueDate = dueDate;
+          userContext.pendingClarification = null;
+          replyText = `Done — I updated "${targetTask.title}" time to ${targetTask.timeBlock.split(' - ')[0]}.`;
+          toolData = { type: 'TASK_UPDATED', task: targetTask };
+        } else {
+          replyText = "I couldn't find that task. Which task would you like to change?";
+        }
+        break;
+      }
+
+      case 'COMPLETE_TASK': {
+        const { query } = intentResult.entities;
+        const userTasks = store.tasks.filter(t => t.userId === userId && !t.completed);
+        const targetTask = userTasks.find(t => t.title.toLowerCase().includes((query || '').toLowerCase())) || userContext.lastTask || userTasks[0];
+
+        if (targetTask) {
+          targetTask.completed = true;
+          replyText = `Done — I marked "${targetTask.title}" as completed.`;
+          toolData = { type: 'TASK_COMPLETED', task: targetTask };
+        } else {
+          replyText = "I couldn't find an incomplete task matching that description.";
+        }
+        break;
+      }
+
+      case 'POSTPONE_TASK': {
+        const userTasks = store.tasks.filter(t => t.userId === userId && !t.completed);
+        const targetTask = userContext.lastTask || userTasks[0];
+
+        if (targetTask) {
+          const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+          targetTask.dueDate = tomorrow;
+          replyText = `Done — I moved "${targetTask.title}" to tomorrow.`;
+          toolData = { type: 'TASK_POSTPONED', task: targetTask };
+        } else {
+          replyText = "You have no pending tasks to postpone.";
+        }
+        break;
+      }
+
+      case 'DELETE_TASK': {
+        const { query } = intentResult.entities;
+        const index = store.tasks.findIndex(t => t.userId === userId && t.title.toLowerCase().includes((query || '').toLowerCase()));
+        if (index !== -1) {
+          const deleted = store.tasks.splice(index, 1)[0];
+          replyText = `Done — I deleted the task "${deleted.title}".`;
+          toolData = { type: 'TASK_DELETED', taskId: deleted.id };
+        } else {
+          replyText = "I couldn't find that task to delete.";
+        }
+        break;
+      }
+
+      case 'CREATE_HABIT': {
+        const { title, frequency } = intentResult.entities;
+        store.habits = store.habits || [];
+        const newHabit = {
+          id: `hbt_${Date.now()}`,
+          userId,
+          title: title || 'Habit',
+          frequency: frequency || 'Daily',
+          streak: 0,
+          completedToday: false,
+          createdAt: new Date().toISOString()
+        };
+        store.habits.push(newHabit);
+
+        userContext.lastHabit = newHabit;
+        userContext.lastItem = { type: 'habit', id: newHabit.id, data: newHabit };
+        replyText = `Done — I created the habit "${title || 'Habit'}".`;
+        toolData = { type: 'HABIT_CREATED', habit: newHabit };
+        break;
+      }
+
+      case 'COMPLETE_HABIT': {
+        const { query } = intentResult.entities;
+        store.habits = store.habits || [];
+        const userHabits = store.habits.filter(h => h.userId === userId);
+        const targetHabit = userHabits.find(h => h.title.toLowerCase().includes((query || '').toLowerCase())) || userHabits[0];
+
+        if (targetHabit) {
+          targetHabit.completedToday = true;
+          targetHabit.streak = (targetHabit.streak || 0) + 1;
+          replyText = `Great job! I've marked "${targetHabit.title}" as completed. (Streak: ${targetHabit.streak} days)`;
+          toolData = { type: 'HABIT_COMPLETED', habit: targetHabit };
+        } else {
+          replyText = "I couldn't find that habit. What habit would you like to mark as done?";
+        }
+        break;
+      }
+
+      case 'CREATE_MEMORY':
+      case 'SAVE_MEMORY': {
+        const { type, content, confidence } = intentResult.entities;
+        const newMem = {
+          id: `mem_${Date.now()}`,
+          userId,
+          type: type || 'Preferences',
+          content,
+          confidence: confidence || 0.95,
+          approved: true,
+          createdAt: new Date().toISOString()
+        };
+        store.memories.push(newMem);
+        userContext.lastMemory = newMem;
+
+        replyText = `Saved to your Memory Center: "${content}".`;
+        toolData = { type: 'MEMORY_SAVED', memory: newMem };
+        break;
+      }
+
+      case 'READ_MEMORIES':
+      case 'GET_MEMORY': {
+        const userMems = store.memories.filter(m => m.userId === userId);
+        if (userMems.length === 0) {
+          replyText = "Your Memory Center is currently empty.";
+        } else {
+          const listText = userMems.map((m, i) => `${i + 1}. ${m.content}`).join('\n');
+          replyText = `Here are your saved memories:\n${listText}`;
+        }
+        toolData = { type: 'MEMORY_LIST', memories: userMems };
+        break;
+      }
+
+      case 'READ_SPENDING_ANALYSIS':
+      case 'GET_EXPENSE': {
+        const userExpenses = store.expenses.filter(e => e.userId === userId);
+        const totalIncome = userExpenses.filter(e => e.type === 'income').reduce((a, b) => a + b.amount, 0);
+        const totalSpend = userExpenses.filter(e => e.type !== 'income').reduce((a, b) => a + b.amount, 0);
+        const netSavings = totalIncome - totalSpend;
+
+        const categories = {};
+        userExpenses.filter(e => e.type !== 'income').forEach(e => {
+          categories[e.category] = (categories[e.category] || 0) + e.amount;
+        });
+        let topCategory = 'None';
+        let topAmount = 0;
+        for (const [cat, amt] of Object.entries(categories)) {
+          if (amt > topAmount) {
+            topAmount = amt;
+            topCategory = cat;
+          }
+        }
+
+        replyText = `Financial Analysis: You've spent ₹${totalSpend.toLocaleString()} this month (Top: ${topCategory} at ₹${topAmount.toLocaleString()}). Total Income: ₹${totalIncome.toLocaleString()} | Net Balance: ₹${netSavings.toLocaleString()}.`;
+        toolData = { type: 'EXPENSE_ANALYTICS', totalIncome, totalSpend, netSavings, topCategory, topAmount };
+        break;
+      }
+
+      case 'READ_SUMMARY':
+      case 'GET_SUMMARY': {
+        const userTasks = store.tasks.filter(t => t.userId === userId);
+        const userExp = store.expenses.filter(e => e.userId === userId);
+        const totalSpent = userExp.filter(e => e.type !== 'income').reduce((a, b) => a + b.amount, 0);
+        const totalIncome = userExp.filter(e => e.type === 'income').reduce((a, b) => a + b.amount, 0);
+        const completedTasks = userTasks.filter(t => t.completed).length;
+
+        replyText = `Summary Report: Completed ${completedTasks} task(s), received ₹${totalIncome.toLocaleString()}, and spent ₹${totalSpent.toLocaleString()}.`;
+        toolData = { type: 'SUMMARY_REPORT', completedTasks, pendingTasks: userTasks.length - completedTasks, totalSpent, totalIncome };
+        break;
+      }
+
+      case 'OPEN_EXPENSES':
+      case 'OPEN_TASKS':
+      case 'OPEN_HABITS':
+      case 'OPEN_MEMORIES':
+      case 'OPEN_SUMMARY':
+      case 'OPEN_SETTINGS':
+      case 'OPEN_DASHBOARD':
+      case 'OPEN_CHAT': {
+        replyText = `Navigating to ${intentResult.entities.route.replace('/app/', '')}...`;
+        toolData = { type: 'NAVIGATE', route: intentResult.entities.route };
+        break;
+      }
+
+      default: {
+        const fallbacks = [
+          "I'm not quite sure what you mean. Could you say that another way?",
+          "I didn't quite catch that. What would you like me to do?",
+          "I'm having trouble understanding that one. Give it another try.",
+          "I didn't quite understand that. Try telling me what you'd like me to do."
+        ];
+        replyText = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+        break;
+      }
     }
+  }
+
+  // Development Debug Logging
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('\n[LUNA DEBUG] -------------------------------------');
+    console.log('[LUNA DEBUG] USER MESSAGE:   ', message);
+    console.log('[LUNA DEBUG] DETECTED INTENT:', intentResult.intent);
+    console.log('[LUNA DEBUG] CONFIDENCE:     ', intentResult.confidence);
+    console.log('[LUNA DEBUG] ENTITIES:       ', intentResult.entities);
+    console.log('[LUNA DEBUG] REPLY TEXT:     ', replyText);
+    console.log('[LUNA DEBUG] -------------------------------------\n');
   }
 
   const assistantMsg = {
