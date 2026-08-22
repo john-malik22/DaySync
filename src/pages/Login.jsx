@@ -44,7 +44,7 @@ export function Login() {
       <div className="glass-card animate-fade-in" style={{ width: '420px', padding: '36px' }}>
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <img
-            src="/pwa-192.png"
+            src="/icons/icon-192.png"
             alt="DaySync Logo"
             className="daysync-login-logo"
           />

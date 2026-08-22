@@ -65,7 +65,7 @@ export function Sidebar() {
           {/* Logo & Brand */}
           <div className="sidebar-logo-block" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <img
-              src="/pwa-192.png"
+              src="/icons/icon-192.png"
               alt="DaySync Logo"
               className="daysync-sidebar-logo"
             />
