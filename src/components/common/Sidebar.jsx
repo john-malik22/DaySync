@@ -136,7 +136,7 @@ export function Sidebar() {
         <div style={{
           marginTop: 'auto',
           paddingTop: '16px',
-          borderTop: '1px solid var(--border-color)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: sidebarCollapsed ? 'center' : 'space-between',
