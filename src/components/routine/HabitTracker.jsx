@@ -174,62 +174,48 @@ export function HabitTracker({ searchFilter }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', width: '100%' }}>
       {/* Real Month & Week Navigation Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '8px',
-        background: 'var(--bg-card)',
-        padding: '10px 14px',
-        borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--border-color)'
-      }}>
+      <div className="habit-date-nav-container">
         {/* Month Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div className="habit-month-selector">
           <button
             type="button"
             onClick={() => changeMonth(-1)}
-            className="btn-secondary"
+            className="btn-secondary habit-nav-btn"
             title="Previous Month"
-            style={{ padding: '4px 8px', minHeight: '30px' }}
           >
             <ChevronLeft size={16} />
           </button>
-          <div style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-            {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          <div className="habit-month-text">
+            {currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
           </div>
           <button
             type="button"
             onClick={() => changeMonth(1)}
-            className="btn-secondary"
+            className="btn-secondary habit-nav-btn"
             title="Next Month"
-            style={{ padding: '4px 8px', minHeight: '30px' }}
           >
             <ChevronRight size={16} />
           </button>
         </div>
 
         {/* Week Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div className="habit-week-selector">
           <button
             type="button"
             onClick={() => changeWeek(-1)}
-            className="btn-secondary"
+            className="btn-secondary habit-nav-btn"
             title="Previous Week"
-            style={{ padding: '4px 6px', minHeight: '28px' }}
           >
             <ChevronLeft size={14} />
           </button>
-          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', whiteSpace: 'nowrap' }}>
+          <span className="habit-week-text">
             {weekRangeText}
           </span>
           <button
             type="button"
             onClick={() => changeWeek(1)}
-            className="btn-secondary"
+            className="btn-secondary habit-nav-btn"
             title="Next Week"
-            style={{ padding: '4px 6px', minHeight: '28px' }}
           >
             <ChevronRight size={14} />
           </button>

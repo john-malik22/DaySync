@@ -649,6 +649,178 @@ option {
   }
 }
 
+/* Settings Buttons 2-Column Responsive Grid */
+.settings-btn-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-xs);
+  width: 100%;
+}
+
+.habit-month-selector, .habit-week-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Mobile Responsiveness Improvements (< 767px) */
+@media (max-width: 767px) {
+  html, body {
+    overflow-x: hidden !important;
+  }
+
+  /* Header Layout: [ Hamburger ] [ Search ] [ Notification ] */
+  .page-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    width: 100%;
+  }
+
+  .mobile-hamburger-btn {
+    display: inline-flex !important;
+    flex-shrink: 0 !important;
+    width: 36px;
+    height: 36px;
+    min-height: 36px !important;
+    padding: 0 !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+  }
+
+  .page-header-title {
+    display: none !important;
+  }
+
+  .header-search-bar {
+    flex: 1 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 36px;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+  }
+
+  .header-search-bar input {
+    font-size: 12px;
+    width: 100%;
+  }
+
+  .header-notification-container {
+    flex-shrink: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Habit Date Navigation Side-by-Side */
+  .habit-date-nav-container {
+    display: flex;
+    flex-direction: row !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    gap: 4px;
+    width: 100%;
+    flex-wrap: nowrap !important;
+  }
+
+  .habit-month-selector {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+
+  .habit-month-text {
+    font-size: clamp(11px, 3.2vw, 13px);
+    font-weight: 800;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+
+  .habit-week-selector {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+
+  .habit-week-text {
+    font-size: clamp(10px, 3vw, 12px);
+    font-weight: 700;
+    color: var(--accent-primary);
+    white-space: nowrap;
+  }
+
+  .habit-nav-btn {
+    padding: 2px 4px !important;
+    min-height: 28px !important;
+    min-width: 26px !important;
+  }
+
+  /* Settings 2-Column Buttons on Mobile */
+  .settings-btn-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+  }
+
+  .settings-btn-grid-2 .btn-secondary,
+  .settings-btn-grid-2 .btn-primary {
+    width: 100%;
+    padding: 6px 4px;
+    min-height: 38px;
+    font-size: clamp(10.5px, 2.7vw, 12px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  /* Compact Appearance, Dashboard Cards & Notifications Sections */
+  .settings-compact-card {
+    padding: 12px 14px !important;
+  }
+
+  .settings-compact-title {
+    font-size: 14px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .settings-compact-subtitle {
+    font-size: 11px !important;
+    margin-bottom: 10px !important;
+  }
+}
+
+/* Extra Narrow Phone Breakpoint (320px - 390px) */
+@media (max-width: 390px) {
+  .page-container {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+
+  .glass-card {
+    padding: 12px;
+  }
+
+  .settings-btn-grid-2 .btn-secondary,
+  .settings-btn-grid-2 .btn-primary {
+    font-size: 10.5px;
+    padding: 4px;
+    min-height: 36px;
+  }
+}
+
 /* Horizontal Scroll Container */
 .scroll-row {
   display: flex;

@@ -470,49 +470,48 @@ export function SettingsPage() {
         </div>
 
         {/* 5. PRIVACY & DATA SECTION */}
-        <div ref={privacyRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div ref={privacyRef} className="glass-card settings-compact-card">
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Shield size={18} color="var(--accent-primary)" /> Privacy & Data
           </h3>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>
+          <p className="settings-compact-subtitle" style={{ color: 'var(--text-muted)' }}>
             Export your data payload or clear your conversation history.
           </p>
 
-          <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
+          <div className="settings-btn-grid-2">
             <button
               type="button"
               onClick={handleExportData}
               disabled={isExportingData}
               className="btn-secondary"
-              style={{ fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              <Download size={15} /> {isExportingData ? 'Preparing...' : 'Export My Data'}
+              <Download size={14} /> {isExportingData ? 'Preparing...' : 'Export My Data'}
             </button>
 
             <button
               type="button"
               onClick={() => setShowClearHistoryModal(true)}
               className="btn-secondary"
-              style={{ fontSize: '13px', color: 'var(--accent-warning)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              style={{ color: 'var(--accent-warning)' }}
             >
-              <Trash2 size={15} /> Clear Chat History
+              <Trash2 size={14} /> Clear Chat History
             </button>
           </div>
         </div>
 
         {/* 6. APP UPDATES SECTION */}
-        <div ref={updatesRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-xs)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div ref={updatesRef} className="glass-card settings-compact-card">
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <RefreshCw size={18} color="var(--accent-primary)" /> App Updates
           </h3>
-          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
+          <div className="settings-compact-subtitle" style={{ color: 'var(--text-secondary)' }}>
             DaySync Version {currentVersion || pkg.version || '1.1.2'}
           </div>
 
           {updateAvailable && (
             <div style={{
               marginBottom: 'var(--space-md)',
-              padding: '12px 16px',
+              padding: '10px 14px',
               borderRadius: 'var(--radius-sm)',
               background: 'var(--bg-secondary)',
               border: '1px solid var(--accent-primary)',
@@ -541,23 +540,22 @@ export function SettingsPage() {
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="settings-btn-grid-2">
             {!updateAvailable && (
               <button
                 type="button"
                 onClick={checkForUpdates}
                 disabled={checking}
                 className="btn-secondary"
-                style={{ fontSize: '13px' }}
               >
                 <RefreshCw size={14} className={checking ? 'animate-spin' : ''} />
                 {checking
-                  ? 'Checking for updates...'
+                  ? 'Checking...'
                   : fetchError
                   ? 'Try Again'
                   : hasCheckedManually && !fetchError
-                  ? "You're using the latest version."
-                  : 'Check for Updates →'}
+                  ? "Up to Date"
+                  : 'Check for Updates'}
               </button>
             )}
 
@@ -565,7 +563,6 @@ export function SettingsPage() {
               type="button"
               onClick={openWhatsNewModal}
               className="btn-secondary"
-              style={{ fontSize: '13px' }}
             >
               <Sparkles size={14} /> View Release Notes
             </button>
