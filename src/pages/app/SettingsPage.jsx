@@ -595,7 +595,7 @@ export function SettingsPage() {
             <div>
               <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)' }}>Contact Developer</div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                Support Email: <a href="mailto:support@daysync.app" style={{ color: 'var(--accent-primary)', fontWeight: '600', textDecoration: 'none' }}>support@daysync.app</a>
+                Support Email: <a href="mailto:johnmalik2222@gmail.com" style={{ color: 'var(--accent-primary)', fontWeight: '600', textDecoration: 'none' }}>support@daysync.app</a>
               </div>
             </div>
 
