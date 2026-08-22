@@ -81,7 +81,7 @@ export function DashboardPage() {
   return (
     <div className="page-container">
       {/* Top Header Row — larger dashboard greeting */}
-      <PageHeaderRow title={`Hii, ${firstName}`} onSearch={setSearch} titleStyle={{ fontSize: 'clamp(28px, 5vw, 40px)' }} />
+      <PageHeaderRow title={`Hello, ${firstName}`} onSearch={setSearch} titleStyle={{ fontSize: 'clamp(28px, 5vw, 40px)' }} />
 
       {/* Dashboard Widgets Grid */}
       <div className="dashboard-grid">

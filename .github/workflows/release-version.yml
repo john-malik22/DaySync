@@ -1,0 +1,58 @@
+name: Release Version Bump
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bump-version:
+    if: >
+      github.actor != 'github-actions[bot]' &&
+      !contains(github.event.head_commit.message, 'chore: bump version')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure Git Author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump patch version
+        id: version_bump
+        run: |
+          # Bump patch version in package.json & package-lock.json without creating git tag
+          npm version patch --no-git-tag-version
+          
+          # Extract newly generated version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "Bumped version to $NEW_VERSION"
+
+      - name: Update public/version.json
+        run: |
+          node -e "
+            const fs = require('fs');
+            const versionData = { version: process.env.NEW_VERSION };
+            fs.writeFileSync('./public/version.json', JSON.stringify(versionData, null, 2) + '\n');
+          "
+
+      - name: Commit and push version bump
+        run: |
+          git add package.json package-lock.json public/version.json
+          git commit -m "chore: bump version to ${{ env.NEW_VERSION }}"
+          git push origin main
