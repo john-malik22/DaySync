@@ -181,6 +181,9 @@ export function SettingsPage() {
         </div>
       </div>
 
+      {/* 2.5 Notification Preferences */}
+      <NotificationSettingsSection />
+
       {/* 3. Appearance */}
       <div className="glass-card">
         <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>Appearance</h3>
@@ -386,6 +389,78 @@ export function SettingsPage() {
             </a>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+import { Bell } from 'lucide-react';
+import { useNotifications } from '../../context/NotificationContext';
+
+function NotificationSettingsSection() {
+  const { preferences, updatePreferences, requestBrowserPermission } = useNotifications();
+
+  const togglePref = (key) => {
+    updatePreferences({ [key]: !preferences[key] });
+  };
+
+  return (
+    <div className="glass-card">
+      <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Bell size={18} color="var(--accent-primary)" /> Notifications
+      </h3>
+      <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>
+        Configure which DaySync categories send in-app and browser notifications.
+      </p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-xs)' }}>
+        {[
+          { key: 'enabled', label: 'In-App Notifications' },
+          { key: 'task', label: 'Task Reminders' },
+          { key: 'habit', label: 'Habit & Streak Alerts' },
+          { key: 'goal', label: 'Goal Progress Updates' },
+          { key: 'budget', label: 'Budget & Expense Alerts' },
+          { key: 'luna', label: 'Luna AI Suggestions' },
+          { key: 'system', label: 'System & Security Messages' },
+          { key: 'update', label: 'App Release Updates' }
+        ].map(item => (
+          <div
+            key={item.key}
+            style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '10px 14px', borderRadius: 'var(--radius-sm)',
+              background: 'var(--bg-secondary)', border: '1px solid var(--border-color)'
+            }}
+          >
+            <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>
+              {item.label}
+            </span>
+            <button
+              type="button"
+              onClick={() => togglePref(item.key)}
+              className={preferences[item.key] ? 'btn-primary' : 'btn-secondary'}
+              style={{ padding: '4px 12px', minHeight: '30px', fontSize: '12px', minWidth: '55px' }}
+            >
+              {preferences[item.key] ? 'ON' : 'OFF'}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: 'var(--space-md)', paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+        <div>
+          <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)' }}>Browser & PWA Push Notifications</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Receive native desktop & mobile alerts when DaySync is open or installed</div>
+        </div>
+
+        <button
+          type="button"
+          onClick={requestBrowserPermission}
+          className={preferences.browser ? 'btn-primary' : 'btn-secondary'}
+          style={{ padding: '6px 14px', fontSize: '12px', minHeight: '34px' }}
+        >
+          {preferences.browser ? 'Browser Push Active' : 'Enable Browser Push'}
+        </button>
       </div>
     </div>
   );

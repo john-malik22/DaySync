@@ -19,6 +19,7 @@ const freshInitialData = {
   goals: [],
   expenses: [],
   notices: [],
+  notifications: [],
   summaries: []
 };
 

@@ -711,6 +711,191 @@ app.delete('/api/expenses/:id', authenticate, (req, res) => {
   res.json({ success: true });
 });
 
+// --- NOTIFICATION SYSTEM BACKEND ---
+function generateUserNotifications(userId, store) {
+  store.notifications = store.notifications || [];
+  const todayStr = new Date().toISOString().split('T')[0];
+  const userTasks = (store.tasks || []).filter(t => t.userId === userId);
+  const userExpenses = (store.expenses || []).filter(e => e.userId === userId);
+
+  const addIfNew = (notif) => {
+    const exists = store.notifications.some(n => n.userId === userId && n.eventKey === notif.eventKey);
+    if (!exists) {
+      store.notifications.push({
+        id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        userId,
+        read: false,
+        createdAt: new Date().toISOString(),
+        ...notif
+      });
+    }
+  };
+
+  // 1. Task Due & Overdue Notifications
+  userTasks.forEach(task => {
+    if (!task.completed) {
+      if (task.dueDate === todayStr) {
+        addIfNew({
+          type: 'TASK',
+          title: 'Task due today',
+          message: `"${task.title}" is scheduled for today.`,
+          priority: task.priority === 'High' ? 'HIGH' : 'NORMAL',
+          relatedType: 'task',
+          relatedId: task.id,
+          actionUrl: '/app/task',
+          eventKey: `task-due:${task.id}:${todayStr}`
+        });
+      } else if (task.dueDate < todayStr) {
+        addIfNew({
+          type: 'TASK',
+          title: 'Task overdue',
+          message: `"${task.title}" was due on ${task.dueDate}.`,
+          priority: 'HIGH',
+          relatedType: 'task',
+          relatedId: task.id,
+          actionUrl: '/app/task',
+          eventKey: `task-overdue:${task.id}:${todayStr}`
+        });
+      }
+    }
+  });
+
+  // 2. Budget Alert Notifications
+  const currentMonth = todayStr.substring(0, 7);
+  const monthlyExpenses = userExpenses.filter(e => e.type !== 'income' && e.date && e.date.startsWith(currentMonth));
+  const totalSpent = monthlyExpenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const budgetTarget = 10000;
+
+  if (totalSpent >= budgetTarget) {
+    addIfNew({
+      type: 'BUDGET',
+      title: 'Budget exceeded',
+      message: `You've spent ₹${totalSpent.toLocaleString()} this month.`,
+      priority: 'HIGH',
+      relatedType: 'expense',
+      actionUrl: '/app/expenses',
+      eventKey: `budget-exceeded:${userId}:${currentMonth}`
+    });
+  } else if (totalSpent >= budgetTarget * 0.8) {
+    addIfNew({
+      type: 'BUDGET',
+      title: 'Approaching budget limit',
+      message: `You've spent ₹${totalSpent.toLocaleString()} (over 80% of monthly budget).`,
+      priority: 'NORMAL',
+      relatedType: 'expense',
+      actionUrl: '/app/expenses',
+      eventKey: `budget-warning:${userId}:${currentMonth}`
+    });
+  }
+
+  // 3. Luna Daily Focus Notification
+  const pendingCount = userTasks.filter(t => !t.completed).length;
+  if (pendingCount >= 3) {
+    addIfNew({
+      type: 'LUNA',
+      title: 'Luna Daily Plan',
+      message: `You have ${pendingCount} pending tasks. Ask Luna to organize your day!`,
+      priority: 'NORMAL',
+      relatedType: 'luna',
+      actionUrl: '/app/chat',
+      eventKey: `luna-tasks-notice:${userId}:${todayStr}`
+    });
+  }
+}
+
+app.get('/api/notifications', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+
+  generateUserNotifications(userId, store);
+  db.write(store);
+
+  const userNotifications = (store.notifications || [])
+    .filter(n => n.userId === userId)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  res.json(userNotifications);
+});
+
+app.post('/api/notifications', authenticate, (req, res) => {
+  const store = db.read();
+  store.notifications = store.notifications || [];
+  const userId = req.user.id;
+
+  const { type, title, message, priority, relatedType, relatedId, actionUrl, eventKey } = req.body;
+
+  if (eventKey) {
+    const exists = store.notifications.some(n => n.userId === userId && n.eventKey === eventKey);
+    if (exists) {
+      return res.json(store.notifications.find(n => n.userId === userId && n.eventKey === eventKey));
+    }
+  }
+
+  const newNotif = {
+    id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    userId,
+    type: type || 'SYSTEM',
+    title: title || 'Notification',
+    message: message || '',
+    read: false,
+    createdAt: new Date().toISOString(),
+    priority: priority || 'NORMAL',
+    relatedType: relatedType || 'system',
+    relatedId: relatedId || null,
+    actionUrl: actionUrl || '/app/dashboard',
+    eventKey: eventKey || null
+  };
+
+  store.notifications.push(newNotif);
+  db.write(store);
+  res.json(newNotif);
+});
+
+app.put('/api/notifications/:id/read', authenticate, (req, res) => {
+  const store = db.read();
+  store.notifications = store.notifications || [];
+  const notif = store.notifications.find(n => n.id === req.params.id && n.userId === req.user.id);
+
+  if (notif) {
+    notif.read = true;
+    db.write(store);
+    return res.json(notif);
+  }
+  res.status(404).json({ error: 'Notification not found' });
+});
+
+app.post('/api/notifications/mark-all-read', authenticate, (req, res) => {
+  const store = db.read();
+  store.notifications = store.notifications || [];
+
+  store.notifications.forEach(n => {
+    if (n.userId === req.user.id) {
+      n.read = true;
+    }
+  });
+
+  db.write(store);
+  res.json({ success: true });
+});
+
+app.delete('/api/notifications/clear-all', authenticate, (req, res) => {
+  const store = db.read();
+  store.notifications = store.notifications || [];
+  store.notifications = store.notifications.filter(n => n.userId !== req.user.id);
+
+  db.write(store);
+  res.json({ success: true });
+});
+
+app.delete('/api/notifications/:id', authenticate, (req, res) => {
+  const store = db.read();
+  store.notifications = store.notifications || [];
+  store.notifications = store.notifications.filter(n => !(n.id === req.params.id && n.userId === req.user.id));
+
+  db.write(store);
+  res.json({ success: true });
+});
+
 // --- NOTICES & SUGGESTIONS ---
 app.get('/api/notices', authenticate, (req, res) => {
   const store = db.read();

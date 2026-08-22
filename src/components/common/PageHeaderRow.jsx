@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Menu } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
+import { NotificationBell } from './NotificationBell';
 
 export function PageHeaderRow({ title, onSearch, titleStyle }) {
   const { toggleSidebar } = useLuna();
@@ -35,15 +36,20 @@ export function PageHeaderRow({ title, onSearch, titleStyle }) {
         </h1>
       </div>
 
-      {/* Header Search Bar */}
-      <div className="header-search-bar">
-        <Search size={15} color="var(--accent-primary)" />
-        <input
-          type="text"
-          placeholder="Search..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-        />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Header Search Bar */}
+        <div className="header-search-bar">
+          <Search size={15} color="var(--accent-primary)" />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+        </div>
+
+        {/* Notification Bell Dropdown */}
+        <NotificationBell />
       </div>
     </div>
   );

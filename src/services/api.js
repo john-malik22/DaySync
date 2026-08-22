@@ -79,6 +79,14 @@ export const api = {
   updateExpense: (id, data) => request(`/expenses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteExpense: (id) => request(`/expenses/${id}`, { method: 'DELETE' }),
 
+  // Notifications System
+  getNotifications: () => request('/notifications'),
+  createNotification: (data) => request('/notifications', { method: 'POST', body: JSON.stringify(data) }),
+  markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PUT' }),
+  markAllNotificationsRead: () => request('/notifications/mark-all-read', { method: 'POST' }),
+  deleteNotification: (id) => request(`/notifications/${id}`, { method: 'DELETE' }),
+  clearNotifications: () => request('/notifications/clear-all', { method: 'DELETE' }),
+
   // Intelligence
   getNotices: () => request('/notices'),
   getCurrentSuggestion: () => request('/suggestions/current'),
