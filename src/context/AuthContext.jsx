@@ -70,35 +70,25 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (email, password) => {
-    setLoading(true);
-    try {
-      const res = await api.login({ email, password });
-      localStorage.setItem('luna_token', res.token);
-      if (res.user) {
-        localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
-      }
-      setToken(res.token);
-      setUser(res.user);
-      return res;
-    } finally {
-      setLoading(false);
+    const res = await api.login({ email, password });
+    localStorage.setItem('luna_token', res.token);
+    if (res.user) {
+      localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
     }
+    setToken(res.token);
+    setUser(res.user);
+    return res;
   };
 
   const signup = async (name, email, password) => {
-    setLoading(true);
-    try {
-      const res = await api.signup({ name, email, password });
-      localStorage.setItem('luna_token', res.token);
-      if (res.user) {
-        localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
-      }
-      setToken(res.token);
-      setUser(res.user);
-      return res;
-    } finally {
-      setLoading(false);
+    const res = await api.signup({ name, email, password });
+    localStorage.setItem('luna_token', res.token);
+    if (res.user) {
+      localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
     }
+    setToken(res.token);
+    setUser(res.user);
+    return res;
   };
 
   const deleteAccount = async () => {
