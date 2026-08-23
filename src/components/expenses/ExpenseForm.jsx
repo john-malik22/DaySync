@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, ArrowUpRight, ArrowDownRight, Calendar, Repeat, X, CheckCircle2, Edit3, Trash2 } from 'lucide-react';
+import { Plus, ArrowUpRight, ArrowDownRight, Repeat, CheckCircle2, Edit3, X } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
 import { calculateEndDate, parseDuration, formatHumanDate } from '../../services/dateUtils';
@@ -43,7 +43,7 @@ export function ExpenseForm() {
   const [customValue, setCustomValue] = useState('45');
   const [customUnit, setCustomUnit] = useState('days');
 
-  // Modal / Bottom Sheet Transient Panel Draft State
+  // Centered Modal Transient Panel Draft State
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [draftStartDate, setDraftStartDate] = useState(startDate);
   const [draftDurationSelect, setDraftDurationSelect] = useState(planDurationSelect);
@@ -93,7 +93,7 @@ export function ExpenseForm() {
       durationUnit: draftDurationInfo.durationUnit
     });
     const human = formatHumanDate(iso);
-    return { draftEndDateIso: iso, draftHumanDate: human };
+    return { calculatedEndDateIso: iso, calculatedHumanDate: human };
   }, [draftStartDate, draftDurationInfo]);
 
   const handleOpenPanel = () => {
@@ -301,68 +301,78 @@ export function ExpenseForm() {
         )}
       </form>
 
-      {/* PLAN DETAILS MODAL / BOTTOM SHEET PANEL */}
+      {/* PLAN DETAILS COMPACT CENTERED MODAL */}
       {isPanelOpen && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 1100,
-          background: 'rgba(0, 0, 0, 0.55)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center'
-        }}>
+        <div
+          onClick={handleCancelPanel}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1100,
+            background: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(2px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '16px', animation: 'fadeIn 0.18s ease-out'
+          }}
+        >
           <style>{`
+            .plan-details-modal {
+              width: calc(100% - 32px);
+              max-width: 360px;
+            }
             @media (min-width: 640px) {
-              .plan-details-panel {
-                margin: auto !important;
-                border-radius: var(--radius-lg) !important;
-                max-width: 440px !important;
+              .plan-details-modal {
+                max-width: 400px !important;
               }
             }
           `}</style>
 
           <div
-            className="plan-details-panel"
+            className="plan-details-modal"
+            onClick={(e) => e.stopPropagation()}
             style={{
-              width: '100%', maxWidth: '500px', background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
-              padding: '20px', boxShadow: 'var(--shadow-lg)', display: 'flex', flexDirection: 'column', gap: '16px',
-              animation: 'slideUpPanel 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)',
+              padding: '16px', boxShadow: 'var(--shadow-lg)', display: 'flex', flexDirection: 'column', gap: '14px',
+              animation: 'fadeInScale 0.18s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           >
-            {/* Panel Header */}
+            {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '16px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Repeat size={18} color="var(--accent-primary)" /> Plan Details
-              </h3>
+              <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Repeat size={16} color="var(--accent-primary)" /> Plan Details
+              </h4>
               <button
                 type="button"
                 onClick={handleCancelPanel}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+                style={{
+                  background: 'transparent', border: 'none', color: 'var(--text-muted)',
+                  cursor: 'pointer', padding: '2px 4px', fontSize: '18px', lineHeight: 1
+                }}
               >
-                <X size={18} />
+                ×
               </button>
             </div>
 
-            {/* Panel Body Form Fields */}
+            {/* Modal Body Form Fields */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: '700', textTransform: 'uppercase' }}>
-                  START DATE
+                <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: '500' }}>
+                  Start date
                 </label>
                 <input
                   type="date"
                   value={draftStartDate}
                   onChange={(e) => setDraftStartDate(e.target.value)}
-                  style={{ width: '100%', fontSize: '13px', padding: '8px 10px', minHeight: '40px', borderRadius: 'var(--radius-sm)' }}
+                  style={{ width: '100%', fontSize: '13px', padding: '6px 10px', minHeight: '36px', borderRadius: 'var(--radius-sm)' }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: '700', textTransform: 'uppercase' }}>
-                  CURRENT PLAN DURATION
+                <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: '500' }}>
+                  Plan duration
                 </label>
                 <select
                   value={draftDurationSelect}
                   onChange={(e) => setDraftDurationSelect(e.target.value)}
-                  style={{ width: '100%', fontSize: '13px', padding: '8px 10px', minHeight: '40px', borderRadius: 'var(--radius-sm)' }}
+                  style={{ width: '100%', fontSize: '13px', padding: '6px 10px', minHeight: '36px', borderRadius: 'var(--radius-sm)' }}
                 >
                   <option value="28 days">28 days</option>
                   <option value="56 days">56 days</option>
@@ -378,19 +388,19 @@ export function ExpenseForm() {
 
                 {/* Custom Duration Fields */}
                 {draftDurationSelect === 'custom' && (
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
                     <input
                       type="number"
                       min="1"
                       placeholder="Length"
                       value={draftCustomValue}
                       onChange={(e) => setDraftCustomValue(e.target.value)}
-                      style={{ width: '85px', fontSize: '13px', padding: '6px 10px', minHeight: '36px' }}
+                      style={{ width: '80px', fontSize: '13px', padding: '6px 8px', minHeight: '34px' }}
                     />
                     <select
                       value={draftCustomUnit}
                       onChange={(e) => setDraftCustomUnit(e.target.value)}
-                      style={{ flex: 1, fontSize: '13px', padding: '6px 10px', minHeight: '36px' }}
+                      style={{ flex: 1, fontSize: '13px', padding: '6px 8px', minHeight: '34px' }}
                     >
                       <option value="days">Days</option>
                       <option value="months">Months</option>
@@ -401,25 +411,25 @@ export function ExpenseForm() {
               </div>
 
               <div>
-                <label style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: '700', textTransform: 'uppercase' }}>
-                  ENDS
+                <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: '500' }}>
+                  Ends
                 </label>
                 <div style={{
-                  padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)', fontSize: '14px', fontWeight: '800', color: 'var(--accent-primary)'
+                  padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)', fontSize: '13px', fontWeight: '700', color: 'var(--accent-primary)'
                 }}>
                   {draftHumanDate || 'Auto Calculated'}
                 </div>
               </div>
             </div>
 
-            {/* Panel Footer Actions */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
+            {/* Modal Footer Actions */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', paddingTop: '12px', marginTop: '4px', borderTop: '1px solid var(--border-color)' }}>
               <button
                 type="button"
                 onClick={handleCancelPanel}
                 className="btn-secondary"
-                style={{ padding: '10px', fontSize: '13px', fontWeight: '600' }}
+                style={{ padding: '8px', fontSize: '13px', fontWeight: '600' }}
               >
                 Cancel
               </button>
@@ -427,7 +437,7 @@ export function ExpenseForm() {
                 type="button"
                 onClick={handleDonePanel}
                 className="btn-primary"
-                style={{ padding: '10px', fontSize: '13px', fontWeight: '700' }}
+                style={{ padding: '8px', fontSize: '13px', fontWeight: '700' }}
               >
                 Done
               </button>
