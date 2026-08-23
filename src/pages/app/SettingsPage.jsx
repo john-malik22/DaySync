@@ -139,7 +139,7 @@ export function SettingsPage() {
     try {
       localStorage.setItem('daysync_startup_page', value);
     } catch (e) {}
-    if (showToast) showToast('Startup page preference saved.', 'success');
+    if (showToast) showToast('Startup page updated.', 'success');
   };
 
   const handleSaveStartingBalance = (e) => {
@@ -667,17 +667,38 @@ export function SettingsPage() {
           </h3>
 
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: '0 0 14px 0' }}>
-            Your personal productivity companion for tasks, habits, expenses, goals, memories, and more.
+            Your personal productivity companion.
           </p>
 
           <div style={{
             padding: '12px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-            border: '1px solid var(--border-color)', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.6'
+            border: '1px solid var(--border-color)', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.7',
+            marginBottom: '14px'
           }}>
             <div><strong>Application:</strong> DaySync</div>
-            <div><strong>Version:</strong> {currentVersion || pkg.version || '1.1.2'}</div>
+            <div><strong>Version:</strong> Version {currentVersion || pkg.version || '1.1.2'}</div>
+            <div><strong>Support Email:</strong> <a href="mailto:support@daysync.app" style={{ color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: '600' }}>support@daysync.app</a></div>
             <div><strong>Architecture:</strong> Vite PWA + Luna Intelligence Engine</div>
             <div><strong>Copyright:</strong> © 2026 DaySync. All rights reserved.</div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <a
+              href="mailto:support@daysync.app"
+              className="btn-primary"
+              style={{ padding: '6px 14px', fontSize: '12px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '34px' }}
+            >
+              <Mail size={14} /> Contact Developer
+            </a>
+
+            <button
+              type="button"
+              onClick={openWhatsNewModal}
+              className="btn-secondary"
+              style={{ fontSize: '12px', padding: '6px 14px', minHeight: '34px' }}
+            >
+              <Sparkles size={14} /> View What's New
+            </button>
           </div>
         </div>
       </div>
@@ -725,8 +746,8 @@ export function SettingsPage() {
       {/* 4. Export PDF Confirmation Modal */}
       <ConfirmationModal
         isOpen={showExportModal}
-        title="Export your DaySync data as a PDF?"
-        message="Your PDF may contain personal information from your account (tasks, expenses, habits, memories, and chat history)."
+        title="Export your DaySync data?"
+        message="Your export may contain personal information from your account."
         confirmText={isExportingData ? "Exporting..." : "Export PDF"}
         cancelText="Cancel"
         isDanger={false}

@@ -325,8 +325,14 @@ export function HabitTracker({ searchFilter }) {
         </div>
 
         {filteredHabits.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '13px' }}>
-            No habits tracked yet. Add your first habit above to start tracking!
+          <div style={{ textAlign: 'center', padding: '24px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+            <Activity size={28} color="var(--accent-primary)" style={{ opacity: 0.8 }} />
+            <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>
+              {searchFilter ? 'No matching habits.' : 'No habits yet.'}
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              {searchFilter ? 'Try searching with another term.' : 'Start tracking a habit to build your routine.'}
+            </div>
           </div>
         ) : (
           /* Scrollable Table Wrapper */

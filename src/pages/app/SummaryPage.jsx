@@ -103,9 +103,10 @@ export function SummaryPage() {
           </strong>
           
           {!hasActivity ? (
-            <span style={{ color: 'var(--text-secondary)' }}>
-              No activity logged yet. Add your tasks or record an expense, and Luna will automatically synthesize your performance reports!
-            </span>
+            <div style={{ textAlign: 'center', padding: '16px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>No summary available yet.</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Use DaySync for a while and your summary will appear here.</div>
+            </div>
           ) : (
             <span>
               {tab === 'Daily' && `Daily Overview: You have completed ${completedTasks} task(s) with ${pendingTasks} pending, and recorded ₹${totalSpent.toLocaleString()} in expenses today.`}

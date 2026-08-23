@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trash2, Edit2, Plus, ShieldCheck, Check, X } from 'lucide-react';
+import { Trash2, Edit2, Plus, ShieldCheck, Check, X, Brain } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
 import { ErrorState, StaleIndicator } from '../common/ErrorState';
@@ -168,9 +168,15 @@ export function MemoryCenter({ searchFilter }) {
             Loading memories...
           </div>
         ) : filteredMemories.length === 0 ? (
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
-            {searchFilter || filter !== 'All' ? 'No memories found matching your filters.' : 'Your Memory Center is currently empty.'}
-          </p>
+          <div style={{ textAlign: 'center', padding: '24px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+            <Brain size={28} color="var(--accent-primary)" style={{ opacity: 0.8 }} />
+            <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>
+              {searchFilter || filter !== 'All' ? 'No matching memories.' : 'No memories saved yet.'}
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              {searchFilter || filter !== 'All' ? 'Try adjusting your search query or filters.' : 'Luna can remember useful information for you.'}
+            </div>
+          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
             {filteredMemories.map(mem => {
