@@ -1087,6 +1087,41 @@ app.post('/api/privacy/clear-history', authenticate, (req, res) => {
   res.json({ success: true, message: 'Chat history cleared successfully.' });
 });
 
+// --- PRIVATE ADMIN ENDPOINT ---
+app.get('/api/admin/users', (req, res) => {
+  const adminSecret = process.env.ADMIN_SECRET;
+
+  if (!adminSecret) {
+    return res.status(500).json({ error: 'Admin access is not configured.' });
+  }
+
+  const clientHeader = req.headers['x-admin-secret'];
+  if (!clientHeader || clientHeader !== adminSecret) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  const store = db.read();
+  const rawUsers = store.users || [];
+
+  // Map users into explicitly safe objects (NEVER exposing password, passwordHash, tokens, or credentials)
+  const safeUserList = rawUsers
+    .map(u => ({
+      name: u.name || '',
+      email: u.email || '',
+      createdAt: u.createdAt || null
+    }))
+    .sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeB - timeA; // Newest first
+    });
+
+  res.json({
+    totalUsers: rawUsers.length,
+    users: safeUserList
+  });
+});
+
 db.ready
   .then(() => {
     app.listen(PORT, () => {
