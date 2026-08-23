@@ -431,6 +431,7 @@ export function SettingsPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-sm)' }}>
             {[
+              { key: 'daily', label: 'Daily DayStart Notification' },
               { key: 'task', label: 'Task notifications' },
               { key: 'habit', label: 'Habit notifications' },
               { key: 'goal', label: 'Goal notifications' },

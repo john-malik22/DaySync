@@ -315,7 +315,7 @@ export function exportDataToPdf(data) {
   renderSectionHeading('Notifications', notifications.length);
 
   if (notifications.length === 0) {
-    renderEmptyMessage('No stored notifications recorded.');
+    renderEmptyMessage('No notifications recorded.');
   } else {
     const notifRows = notifications.map(n => [
       n.title || 'Notification',
@@ -346,7 +346,7 @@ export function exportDataToPdf(data) {
     renderEmptyMessage('No conversation history recorded.');
   } else {
     const chatRows = conversations.slice(-50).map(c => [
-      c.role === 'user' || c.sender === 'user' ? 'User' : 'Luna AI',
+      c.role === 'user' || c.sender === 'user' ? 'You' : 'Luna',
       c.message || '',
       formatDateTime(c.createdAt || c.timestamp)
     ]);
