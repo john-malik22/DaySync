@@ -1019,14 +1019,29 @@ app.get('/api/summaries', authenticate, (req, res) => {
 app.post('/api/privacy/export', authenticate, (req, res) => {
   const store = db.read();
   const userId = req.user.id;
+  const dbUser = (store.users || []).find(u => u.id === userId);
+
+  // Construct explicitly safe user object (removing passwordHash, tokens, secrets)
+  const safeUser = {
+    name: dbUser?.name || 'DaySync User',
+    email: dbUser?.email || '',
+    preferences: dbUser?.preferences || {},
+    createdAt: dbUser?.createdAt || null
+  };
+
   const exportData = {
-    user: store.users.find(u => u.id === userId),
-    memories: store.memories.filter(m => m.userId === userId),
-    tasks: store.tasks.filter(t => t.userId === userId),
-    expenses: store.expenses.filter(e => e.userId === userId),
-    conversations: store.conversations.filter(c => c.userId === userId),
+    user: safeUser,
+    tasks: (store.tasks || []).filter(t => t.userId === userId),
+    expenses: (store.expenses || []).filter(e => e.userId === userId),
+    habits: (store.habits || []).filter(h => h.userId === userId),
+    goals: (store.goals || []).filter(g => g.userId === userId),
+    memories: (store.memories || []).filter(m => m.userId === userId),
+    notifications: (store.notifications || []).filter(n => n.userId === userId),
+    conversations: (store.conversations || []).filter(c => c.userId === userId),
+    summaries: (store.summaries || []).filter(s => s.userId === userId),
     exportDate: new Date().toISOString()
   };
+
   res.json(exportData);
 });
 

@@ -1,19 +1,19 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import pkg from '../../package.json';
 
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
   try {
     const d = new Date(dateString);
-    if (isNaN(d.getTime())) return dateString;
+    if (isNaN(d.getTime())) return String(dateString);
     return d.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
   } catch (e) {
-    return dateString;
+    return String(dateString);
   }
 }
 
@@ -21,7 +21,7 @@ function formatDateTime(dateString) {
   if (!dateString) return 'N/A';
   try {
     const d = new Date(dateString);
-    if (isNaN(d.getTime())) return dateString;
+    if (isNaN(d.getTime())) return String(dateString);
     return d.toLocaleString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -31,11 +31,15 @@ function formatDateTime(dateString) {
       hour12: true
     });
   } catch (e) {
-    return dateString;
+    return String(dateString);
   }
 }
 
 export function exportDataToPdf(data) {
+  if (!data) {
+    throw new Error('PDF Export Error: No payload data provided.');
+  }
+
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -43,7 +47,6 @@ export function exportDataToPdf(data) {
   });
 
   const primaryColor = [47, 111, 115]; // DaySync cyan/violet brand teal #2F6F73
-  const secondaryColor = [108, 99, 255];
   const textColor = [40, 44, 52];
   const mutedColor = [120, 125, 135];
 
@@ -62,7 +65,7 @@ export function exportDataToPdf(data) {
   doc.setFontSize(10);
   doc.text('Personal Data Export', 14, 22);
 
-  const formattedExportDate = formatDateTime(new Date());
+  const formattedExportDate = formatDateTime(data.exportDate || new Date());
   doc.setFontSize(8.5);
   doc.text(`Exported: ${formattedExportDate}`, 196, 15, { align: 'right' });
   doc.text(`DaySync Version: v${pkg.version || '1.1.9'}`, 196, 21, { align: 'right' });
@@ -141,7 +144,7 @@ export function exportDataToPdf(data) {
   };
 
   // --- SECTION 2: TASKS ---
-  const tasks = data.tasks || [];
+  const tasks = Array.isArray(data.tasks) ? data.tasks : [];
   renderSectionHeading('Tasks', tasks.length);
 
   if (tasks.length === 0) {
@@ -149,13 +152,13 @@ export function exportDataToPdf(data) {
   } else {
     const taskRows = tasks.map(t => [
       t.title || 'Untitled Task',
-      formatDate(t.date || t.createdAt),
-      t.time || 'All Day',
+      formatDate(t.dueDate || t.date || t.createdAt),
+      t.timeBlock || t.time || 'All Day',
       t.priority || 'Medium',
       t.completed ? 'Completed' : 'Pending'
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: currentY,
       head: [['Task Title', 'Date', 'Time', 'Priority', 'Status']],
       body: taskRows,
@@ -165,11 +168,11 @@ export function exportDataToPdf(data) {
       margin: { left: 14, right: 14 }
     });
 
-    currentY = doc.lastAutoTable.finalY + 10;
+    currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY + 20) + 10;
   }
 
   // --- SECTION 3: EXPENSES ---
-  const expenses = data.expenses || [];
+  const expenses = Array.isArray(data.expenses) ? data.expenses : [];
   renderSectionHeading('Expenses', expenses.length);
 
   if (expenses.length === 0) {
@@ -191,11 +194,11 @@ export function exportDataToPdf(data) {
         `Rs. ${amt.toLocaleString('en-IN')}`,
         e.type === 'income' ? 'Income' : 'Expense',
         e.category || 'General',
-        formatDate(e.date)
+        formatDate(e.date || e.createdAt)
       ];
     });
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: currentY,
       head: [['Description', 'Amount', 'Type', 'Category', 'Date']],
       body: expenseRows,
@@ -205,7 +208,7 @@ export function exportDataToPdf(data) {
       margin: { left: 14, right: 14 }
     });
 
-    currentY = doc.lastAutoTable.finalY + 6;
+    currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY + 20) + 6;
 
     // Financial Totals Summary Box
     checkPageBreak(18);
@@ -226,7 +229,7 @@ export function exportDataToPdf(data) {
   }
 
   // --- SECTION 4: HABITS ---
-  const habits = data.habits || [];
+  const habits = Array.isArray(data.habits) ? data.habits : [];
   renderSectionHeading('Habits', habits.length);
 
   if (habits.length === 0) {
@@ -239,7 +242,7 @@ export function exportDataToPdf(data) {
       h.completedToday ? 'Completed Today' : 'Pending'
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: currentY,
       head: [['Habit Name', 'Frequency', 'Streak', 'Today Status']],
       body: habitRows,
@@ -249,11 +252,11 @@ export function exportDataToPdf(data) {
       margin: { left: 14, right: 14 }
     });
 
-    currentY = doc.lastAutoTable.finalY + 10;
+    currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY + 20) + 10;
   }
 
   // --- SECTION 5: GOALS ---
-  const goals = data.goals || [];
+  const goals = Array.isArray(data.goals) ? data.goals : [];
   renderSectionHeading('Goals', goals.length);
 
   if (goals.length === 0) {
@@ -262,12 +265,12 @@ export function exportDataToPdf(data) {
     const goalRows = goals.map(g => [
       g.title || 'Goal',
       g.category || 'General',
-      formatDate(g.deadline),
-      `${g.progress || 0}%`,
-      g.progress >= 100 ? 'Achieved' : 'In Progress'
+      formatDate(g.targetDate || g.deadline),
+      `${g.progress || (g.completed ? 100 : 0)}%`,
+      g.completed || (g.progress && g.progress >= 100) ? 'Achieved' : 'In Progress'
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: currentY,
       head: [['Goal Name', 'Category', 'Deadline', 'Progress', 'Status']],
       body: goalRows,
@@ -277,11 +280,11 @@ export function exportDataToPdf(data) {
       margin: { left: 14, right: 14 }
     });
 
-    currentY = doc.lastAutoTable.finalY + 10;
+    currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY + 20) + 10;
   }
 
   // --- SECTION 6: MEMORIES ---
-  const memories = data.memories || [];
+  const memories = Array.isArray(data.memories) ? data.memories : [];
   renderSectionHeading('Memories', memories.length);
 
   if (memories.length === 0) {
@@ -293,7 +296,7 @@ export function exportDataToPdf(data) {
       formatDate(m.createdAt)
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: currentY,
       head: [['Memory Content', 'Category', 'Date Saved']],
       body: memoryRows,
@@ -304,11 +307,11 @@ export function exportDataToPdf(data) {
       margin: { left: 14, right: 14 }
     });
 
-    currentY = doc.lastAutoTable.finalY + 10;
+    currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY + 20) + 10;
   }
 
   // --- SECTION 7: NOTIFICATIONS ---
-  const notifications = data.notifications || [];
+  const notifications = Array.isArray(data.notifications) ? data.notifications : [];
   renderSectionHeading('Notifications', notifications.length);
 
   if (notifications.length === 0) {
@@ -321,7 +324,7 @@ export function exportDataToPdf(data) {
       formatDateTime(n.createdAt)
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: currentY,
       head: [['Title', 'Message', 'Category', 'Timestamp']],
       body: notifRows,
@@ -332,23 +335,23 @@ export function exportDataToPdf(data) {
       margin: { left: 14, right: 14 }
     });
 
-    currentY = doc.lastAutoTable.finalY + 10;
+    currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY + 20) + 10;
   }
 
   // --- SECTION 8: LUNA CONVERSATIONS ---
-  const conversations = data.conversations || [];
+  const conversations = Array.isArray(data.conversations) ? data.conversations : [];
   renderSectionHeading('Luna Conversations', conversations.length);
 
   if (conversations.length === 0) {
     renderEmptyMessage('No conversation history recorded.');
   } else {
     const chatRows = conversations.slice(-50).map(c => [
-      c.sender === 'user' ? 'User' : 'Luna AI',
+      c.role === 'user' || c.sender === 'user' ? 'User' : 'Luna AI',
       c.message || '',
-      formatDateTime(c.timestamp || c.createdAt)
+      formatDateTime(c.createdAt || c.timestamp)
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: currentY,
       head: [['Sender', 'Message Content', 'Timestamp']],
       body: chatRows,
@@ -359,11 +362,11 @@ export function exportDataToPdf(data) {
       margin: { left: 14, right: 14 }
     });
 
-    currentY = doc.lastAutoTable.finalY + 10;
+    currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY + 20) + 10;
   }
 
   // --- SECTION 9: SUMMARIES ---
-  const summaries = data.summaries || [];
+  const summaries = Array.isArray(data.summaries) ? data.summaries : [];
   renderSectionHeading('Summaries', summaries.length);
 
   if (summaries.length === 0) {
@@ -371,11 +374,11 @@ export function exportDataToPdf(data) {
   } else {
     const summaryRows = summaries.map(s => [
       s.title || 'Executive Summary',
-      s.content || '',
+      s.content || s.summary || '',
       formatDate(s.createdAt)
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: currentY,
       head: [['Title', 'Summary Content', 'Date']],
       body: summaryRows,
@@ -386,7 +389,7 @@ export function exportDataToPdf(data) {
       margin: { left: 14, right: 14 }
     });
 
-    currentY = doc.lastAutoTable.finalY + 10;
+    currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY + 20) + 10;
   }
 
   // --- SECTION 10: EXPORT INFORMATION ---

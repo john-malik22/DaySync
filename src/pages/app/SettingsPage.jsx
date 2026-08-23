@@ -171,9 +171,11 @@ export function SettingsPage() {
 
     try {
       const data = await api.exportData();
+      if (!data) throw new Error('API returned empty export payload');
       exportDataToPdf(data);
-      if (showToast) showToast('Your data export is ready.', 'success');
+      if (showToast) showToast('Your DaySync PDF export is ready.', 'success');
     } catch (err) {
+      console.error('PDF export failed:', err);
       if (showToast) showToast('Unable to export your data right now. Please try again.', 'error');
     } finally {
       setIsExportingData(false);
