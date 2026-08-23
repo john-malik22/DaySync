@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Plus, ArrowUpRight, ArrowDownRight, Calendar, Repeat } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
+import { calculateEndDate, parseDuration, formatHumanDate } from '../../services/dateUtils';
 
 const EXPENSE_CATEGORIES = [
   { value: 'Recharges', label: '📱 Recharges (Mobile/DTH)' },
@@ -43,34 +44,12 @@ export function ExpenseForm() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Automatic End Date Calculation
-  const calculatedEndDate = useMemo(() => {
-    if (!startDate) return '';
-    try {
-      const d = new Date(startDate);
-      if (isNaN(d.getTime())) return '';
-
-      const freqLower = (frequency || '').toLowerCase();
-      const durLower = (duration || '').toLowerCase();
-
-      if (freqLower.includes('28') || durLower.includes('28')) {
-        d.setDate(d.getDate() + 28);
-      } else if (freqLower.includes('56') || durLower.includes('56')) {
-        d.setDate(d.getDate() + 56);
-      } else if (freqLower.includes('84') || durLower.includes('84')) {
-        d.setDate(d.getDate() + 84);
-      } else if (durLower.includes('year') || freqLower.includes('yearly') || durLower.includes('12 month')) {
-        const yrs = parseInt(duration, 10) || 1;
-        d.setFullYear(d.getFullYear() + yrs);
-      } else {
-        const mths = parseInt(duration, 10) || 1;
-        d.setMonth(d.getMonth() + mths);
-      }
-
-      return d.toISOString().split('T')[0];
-    } catch (e) {
-      return '';
-    }
+  // Automatic End Date Calculation via Central Utility
+  const { calculatedEndDateIso, calculatedHumanDate } = useMemo(() => {
+    if (!startDate) return { calculatedEndDateIso: '', calculatedHumanDate: '' };
+    const iso = calculateEndDate(startDate, duration, frequency);
+    const human = formatHumanDate(iso);
+    return { calculatedEndDateIso: iso, calculatedHumanDate: human };
   }, [startDate, frequency, duration]);
 
   const handleTypeSwitch = (type) => {
@@ -94,6 +73,8 @@ export function ExpenseForm() {
 
     setIsSubmitting(true);
     try {
+      const parsedDur = parseDuration(duration, frequency);
+
       await addExpense({
         type: txType,
         amount: parseFloat(amount),
@@ -104,9 +85,11 @@ export function ExpenseForm() {
         isRecurring: isPlan,
         frequency: isPlan ? frequency : null,
         duration: isPlan ? duration : null,
+        durationValue: isPlan ? parsedDur.durationValue : null,
+        durationUnit: isPlan ? parsedDur.durationUnit : null,
         startDate: isPlan ? startDate : null,
-        endDate: isPlan ? calculatedEndDate : null,
-        nextDueDate: isPlan ? calculatedEndDate : null
+        endDate: isPlan ? calculatedEndDateIso : null,
+        nextDueDate: isPlan ? calculatedEndDateIso : null
       });
 
       setAmount('');
@@ -264,7 +247,7 @@ export function ExpenseForm() {
                     padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-tertiary)',
                     border: '1px solid var(--border-color)', fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)'
                   }}>
-                    {calculatedEndDate || 'Auto Calculated'}
+                    Ends {calculatedHumanDate || 'Auto Calculated'}
                   </div>
                 </div>
               </div>

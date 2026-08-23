@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
 import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
+import { calculateEndDate, formatHumanDate, parseDateComponents } from '../../services/dateUtils';
 import { Repeat, Calendar, ShieldCheck, ArrowRight, CheckCircle2, Clock, Zap, Tv, Smartphone, RefreshCw, AlertCircle } from 'lucide-react';
 
 export function PlansPage() {
@@ -43,23 +44,22 @@ export function PlansPage() {
     return acc + amt;
   }, 0);
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'N/A';
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
-      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    } catch (e) {
-      return dateStr;
-    }
+  const getEffectiveEndDate = (plan) => {
+    if (plan.endDate) return plan.endDate;
+    if (plan.nextDueDate) return plan.nextDueDate;
+    return calculateEndDate(plan.startDate || plan.date, plan.durationValue || plan.duration, plan.frequency);
   };
 
   const getDaysRemaining = (endDateStr) => {
     if (!endDateStr) return null;
     try {
-      const target = new Date(endDateStr).getTime();
-      const today = new Date().setHours(0, 0, 0, 0);
-      const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+      const targetComp = parseDateComponents(endDateStr);
+      const todayComp = parseDateComponents(new Date().toISOString().split('T')[0]);
+
+      const targetDate = new Date(Date.UTC(targetComp.year, targetComp.month - 1, targetComp.day)).getTime();
+      const todayDate = new Date(Date.UTC(todayComp.year, todayComp.month - 1, todayComp.day)).getTime();
+
+      const diff = Math.ceil((targetDate - todayDate) / (1000 * 60 * 60 * 24));
       return diff;
     } catch (e) {
       return null;
@@ -104,7 +104,8 @@ export function PlansPage() {
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600', marginBottom: '4px' }}>Upcoming Renewals</div>
           <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-warning)' }}>
             {plans.filter(p => {
-              const rem = getDaysRemaining(p.endDate || p.nextDueDate);
+              const endDate = getEffectiveEndDate(p);
+              const rem = getDaysRemaining(endDate);
               return rem !== null && rem >= 0 && rem <= 7;
             }).length}
           </div>
@@ -168,7 +169,9 @@ export function PlansPage() {
         ) : (
           <div className="grid-2" style={{ gap: 'var(--space-sm)' }}>
             {filteredPlans.map(plan => {
-              const daysRem = getDaysRemaining(plan.endDate || plan.nextDueDate);
+              const startDateIso = plan.startDate || plan.date;
+              const endDateIso = getEffectiveEndDate(plan);
+              const daysRem = getDaysRemaining(endDateIso);
               const isExpiringSoon = daysRem !== null && daysRem >= 0 && daysRem <= 5;
               const isExpired = daysRem !== null && daysRem < 0;
 
@@ -204,7 +207,7 @@ export function PlansPage() {
                   <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
                     ₹{parseFloat(plan.amount || 0).toLocaleString('en-IN')}
                     <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginLeft: '4px' }}>
-                      / {plan.frequency || plan.pack || 'month'}
+                      / {plan.frequency || 'month'}
                     </span>
                   </div>
 
@@ -215,13 +218,13 @@ export function PlansPage() {
                   }}>
                     <div>
                       <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px' }}>START DATE</span>
-                      <strong style={{ color: 'var(--text-primary)' }}>{formatDate(plan.startDate || plan.date)}</strong>
+                      <strong style={{ color: 'var(--text-primary)' }}>{formatHumanDate(startDateIso)}</strong>
                     </div>
 
                     <div>
                       <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px' }}>END / EXPIRY DATE</span>
                       <strong style={{ color: isExpiringSoon ? 'var(--accent-warning)' : 'var(--text-primary)' }}>
-                        {formatDate(plan.endDate || plan.nextDueDate)}
+                        {formatHumanDate(endDateIso)}
                       </strong>
                     </div>
                   </div>

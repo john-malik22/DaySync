@@ -7,6 +7,7 @@ import { db } from './db.js';
 import { classifyIntent } from './intentEngine.js';
 import { detectPotentialMemory } from './memoryEngine.js';
 import { generatePersonalizedSuggestion } from './suggestionEngine.js';
+import { calculateEndDate, parseDuration, formatHumanDate } from '../src/services/dateUtils.js';
 
 dotenv.config();
 
@@ -263,31 +264,22 @@ app.post('/api/chat', authenticate, (req, res) => {
         const { title, amount, frequency, duration, startDate } = intentResult.entities;
         const start = startDate || new Date().toISOString().split('T')[0];
         const freq = frequency || 'Monthly';
-        const dur = duration || '12 months';
-
-        let endDate = start;
-        try {
-          const d = new Date(start);
-          if (freq === '28 Days' || dur.includes('28')) {
-            d.setDate(d.getDate() + 28);
-          } else if (dur.includes('year') || freq === 'Yearly') {
-            d.setFullYear(d.getFullYear() + 1);
-          } else {
-            d.setMonth(d.getMonth() + 12);
-          }
-          endDate = d.toISOString().split('T')[0];
-        } catch(e) {}
+        const parsedDur = parseDuration(duration, freq);
+        const endDate = calculateEndDate(start, parsedDur, freq);
 
         const newPlanExp = {
           id: `exp_${Date.now()}`,
           userId,
           type: 'expense',
           isPlan: true,
+          isRecurring: true,
           amount: amount || 199,
           category: 'Subscriptions',
           description: title || 'Recurring Plan',
           frequency: freq,
-          duration: dur,
+          duration: `${parsedDur.durationValue} ${parsedDur.durationUnit}`,
+          durationValue: parsedDur.durationValue,
+          durationUnit: parsedDur.durationUnit,
           startDate: start,
           endDate: endDate,
           nextDueDate: endDate,
@@ -836,12 +828,46 @@ app.delete('/api/tasks/:id', authenticate, (req, res) => {
 // --- EXPENSES & INCOME ENDPOINTS ---
 app.get('/api/expenses', authenticate, (req, res) => {
   const store = db.read();
-  res.json(store.expenses.filter(e => e.userId === req.user.id));
+  let modified = false;
+  const userExps = (store.expenses || []).filter(e => e.userId === req.user.id);
+
+  // Auto-migration & fallback for existing plan records lacking endDate
+  userExps.forEach(e => {
+    if ((e.isPlan || e.isRecurring || e.frequency) && !e.endDate) {
+      const startDate = e.startDate || e.date || new Date().toISOString().split('T')[0];
+      const parsedDur = parseDuration(e.durationValue ? { value: e.durationValue, unit: e.durationUnit } : e.duration, e.frequency);
+      e.durationValue = parsedDur.durationValue;
+      e.durationUnit = parsedDur.durationUnit;
+      e.endDate = calculateEndDate(startDate, parsedDur, e.frequency);
+      e.nextDueDate = e.endDate;
+      modified = true;
+    }
+  });
+
+  if (modified) db.write(store);
+  res.json(userExps);
 });
 
 app.post('/api/expenses', authenticate, (req, res) => {
   const store = db.read();
   const txType = req.body.type === 'income' ? 'income' : 'expense';
+  const isPlan = Boolean(req.body.isPlan || req.body.isRecurring || req.body.frequency);
+  const startDate = req.body.startDate || req.body.date || new Date().toISOString().split('T')[0];
+
+  let durationVal = req.body.durationValue;
+  let durationUnit = req.body.durationUnit;
+  let endDate = req.body.endDate;
+
+  if (isPlan) {
+    const parsedDur = parseDuration(
+      req.body.durationValue ? { value: req.body.durationValue, unit: req.body.durationUnit } : req.body.duration,
+      req.body.frequency
+    );
+    durationVal = parsedDur.durationValue;
+    durationUnit = parsedDur.durationUnit;
+    endDate = calculateEndDate(startDate, parsedDur, req.body.frequency);
+  }
+
   const newExp = {
     id: `exp_${Date.now()}`,
     userId: req.user.id,
@@ -849,7 +875,16 @@ app.post('/api/expenses', authenticate, (req, res) => {
     amount: parseFloat(req.body.amount),
     category: req.body.category || (txType === 'income' ? 'Other Income' : 'Other'),
     description: req.body.description || (txType === 'income' ? 'Income Received' : 'Expense'),
-    date: req.body.date || new Date().toISOString().split('T')[0],
+    date: startDate,
+    startDate: isPlan ? startDate : null,
+    isPlan,
+    isRecurring: isPlan,
+    frequency: isPlan ? (req.body.frequency || 'Monthly') : null,
+    duration: isPlan ? (req.body.duration || `${durationVal} ${durationUnit}`) : null,
+    durationValue: isPlan ? durationVal : null,
+    durationUnit: isPlan ? durationUnit : null,
+    endDate: isPlan ? endDate : null,
+    nextDueDate: isPlan ? endDate : null,
     createdAt: new Date().toISOString()
   };
   store.expenses.push(newExp);
@@ -861,11 +896,38 @@ app.put('/api/expenses/:id', authenticate, (req, res) => {
   const store = db.read();
   const index = store.expenses.findIndex(e => e.id === req.params.id && e.userId === req.user.id);
   if (index !== -1) {
+    const existing = store.expenses[index];
+    const isPlan = Boolean(req.body.isPlan ?? existing.isPlan ?? existing.isRecurring ?? existing.frequency);
+    const startDate = req.body.startDate || req.body.date || existing.startDate || existing.date || new Date().toISOString().split('T')[0];
+    const freq = req.body.frequency || existing.frequency || 'Monthly';
+
+    let durationVal = req.body.durationValue || existing.durationValue;
+    let durationUnit = req.body.durationUnit || existing.durationUnit;
+    let endDate = req.body.endDate;
+
+    if (isPlan) {
+      const parsedDur = parseDuration(
+        req.body.durationValue ? { value: req.body.durationValue, unit: req.body.durationUnit } : (req.body.duration || existing.duration),
+        freq
+      );
+      durationVal = parsedDur.durationValue;
+      durationUnit = parsedDur.durationUnit;
+      endDate = calculateEndDate(startDate, parsedDur, freq);
+    }
+
     store.expenses[index] = {
-      ...store.expenses[index],
+      ...existing,
       ...req.body,
-      type: req.body.type || store.expenses[index].type || 'expense',
-      amount: req.body.amount !== undefined ? parseFloat(req.body.amount) : store.expenses[index].amount
+      type: req.body.type || existing.type || 'expense',
+      amount: req.body.amount !== undefined ? parseFloat(req.body.amount) : existing.amount,
+      startDate: isPlan ? startDate : null,
+      isPlan,
+      isRecurring: isPlan,
+      frequency: isPlan ? freq : null,
+      durationValue: isPlan ? durationVal : null,
+      durationUnit: isPlan ? durationUnit : null,
+      endDate: isPlan ? endDate : null,
+      nextDueDate: isPlan ? endDate : null
     };
     db.write(store);
     return res.json(store.expenses[index]);
@@ -974,7 +1036,7 @@ function generateUserNotifications(userId, store) {
   // 4. PLAN NOTIFICATIONS (Category PLAN — 5 days prior notification)
   const userPlans = userExpenses.filter(e => e.isPlan || e.isRecurring || e.frequency || ['Recharges', 'Subscriptions', 'Electricity Bill'].includes(e.category));
   userPlans.forEach(plan => {
-    const targetDateStr = plan.endDate || plan.nextDueDate || plan.date;
+    const targetDateStr = plan.endDate || plan.nextDueDate || calculateEndDate(plan.startDate || plan.date, plan.durationValue || plan.duration, plan.frequency);
     if (targetDateStr) {
       try {
         const targetTime = new Date(targetDateStr).getTime();
