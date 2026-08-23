@@ -7,6 +7,7 @@ import {
   Brain, 
   CheckSquare,
   Activity,
+  Repeat,
   Settings, 
   Sparkles,
   Menu,
@@ -21,13 +22,13 @@ export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Navigation Items per exact wireframe specification
+  // Navigation Items for 2.0.0
   const navItems = [
     { label: 'Chat (AI)', icon: MessageSquare, path: '/app/chat' },
     { label: 'Dashboard', icon: LayoutDashboard, path: '/app/dashboard' },
+    { label: 'Tasks', icon: CheckSquare, path: '/app/task' },
     { label: 'Expenses', icon: CreditCard, path: '/app/expenses' },
-    { label: 'Memory', icon: Brain, path: '/app/memories' },
-    { label: 'Task', icon: CheckSquare, path: '/app/task' },
+    { label: 'Plans', icon: Repeat, path: '/app/plans' },
     { label: 'Habits', icon: Activity, path: '/app/habits' }
   ];
 

@@ -38,6 +38,7 @@ function getCategoryIcon(type) {
     case 'GOAL': return <Target size={16} color="var(--color-purple)" />;
     case 'EXPENSE':
     case 'BUDGET': return <CreditCard size={16} color="var(--color-pink)" />;
+    case 'PLAN': return <RefreshCw size={16} color="var(--color-amber)" />;
     case 'LUNA': return <Sparkles size={16} color="var(--color-secondary)" />;
     case 'UPDATE': return <RefreshCw size={16} color="var(--color-amber)" />;
     default: return <Info size={16} color="var(--text-secondary)" />;

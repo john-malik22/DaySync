@@ -3,11 +3,10 @@ import { Link } from 'react-router-dom';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
 import { useAuth } from '../../context/AuthContext';
-import { ErrorState } from '../../components/common/ErrorState';
-import { CheckSquare, CreditCard, Brain, CheckCircle2, Sparkles, Activity, ArrowRight, Wallet, Edit2, Check, X } from 'lucide-react';
+import { CheckSquare, CreditCard, CheckCircle2, Sparkles, Activity, ArrowRight, Wallet, Edit2, Check, X, Repeat, Cake, Users, Clock, Calendar } from 'lucide-react';
 
 export function DashboardPage() {
-  const { tasks, expenses, memories, routines, startingBalance, updateStartingBalance } = useLuna();
+  const { tasks, expenses, routines, startingBalance, updateStartingBalance, toggleTask } = useLuna();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
 
@@ -15,6 +14,7 @@ export function DashboardPage() {
   const [inputAmount, setInputAmount] = useState('');
 
   const firstName = user?.name ? user.name.split(' ')[0] : 'User';
+  const todayStr = new Date().toISOString().split('T')[0];
 
   const handleSaveAmount = (e) => {
     e.preventDefault();
@@ -28,258 +28,235 @@ export function DashboardPage() {
     setIsEditingAmount(true);
   };
 
-  const handleCancelEdit = () => {
-    setIsEditingAmount(false);
-  };
+  // Today's Tasks
+  const todayTasks = tasks.filter(t => !t.completed && (t.dueDate === todayStr || !t.dueDate));
+  const upcomingReminders = tasks.filter(t => !t.completed && t.dueDate && t.dueDate > todayStr).slice(0, 5);
 
-  // Widget visibility preferences from localStorage
-  const widgetSettings = (() => {
-    try {
-      const saved = localStorage.getItem('daysync_dashboard_widgets');
-      return saved ? JSON.parse(saved) : { task: true, expense: true, memory: true, habit: true, progress: true };
-    } catch (e) {
-      return { task: true, expense: true, memory: true, habit: true, progress: true };
-    }
-  })();
+  // Plans Preview
+  const activePlans = (expenses || []).filter(e => e.isPlan || e.isRecurring || e.frequency || ['Recharges', 'Subscriptions', 'Electricity Bill'].includes(e.category)).slice(0, 4);
 
-  // Task Performance Metrics
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.completed).length;
-  const pendingTasks = totalTasks - completedTasks;
-  const taskPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
+  // Birthdays & Meetings
+  const birthdaysAndMeetings = tasks.filter(t => t.taskType === 'birthday' || t.taskType === 'meeting' || t.isBirthday || t.isMeeting || (t.title && (t.title.toLowerCase().includes('birthday') || t.title.toLowerCase().includes('meeting')))).slice(0, 4);
 
-  // Financial Balance Metrics (Starting Amount + Total Received - Total Spent)
+  // Financial Metrics
   const totalReceived = expenses.filter(e => e.type === 'income').reduce((a, b) => a + b.amount, 0);
   const totalSpent = expenses.filter(e => e.type !== 'income').reduce((a, b) => a + b.amount, 0);
   const currentBalance = (startingBalance !== null ? startingBalance : 0) + totalReceived - totalSpent;
 
   const formattedBalance = currentBalance >= 0 
-    ? `+₹${currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-    : `-₹${Math.abs(currentBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    ? `+₹${currentBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+    : `-₹${Math.abs(currentBalance).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  const formattedSpent = `-₹${totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  const formattedReceived = `+₹${totalReceived.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formattedSpent = `-₹${totalSpent.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formattedReceived = `+₹${totalReceived.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  // Memory Performance Metrics
-  const totalMemories = memories.length;
-  const approvedMemories = memories.filter(m => m.approved).length;
-
-  // Habit Tracker Performance Metrics (Derived from saved habits or routines)
-  const userHabits = (() => {
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Today';
     try {
-      const saved = localStorage.getItem('daysync_habits');
-      return saved ? JSON.parse(saved) : (routines || []);
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     } catch (e) {
-      return routines || [];
+      return dateStr;
     }
-  })();
-  const totalHabitCount = userHabits.length;
-  const habitChecksDone = 0;
-  const habitChecksTotal = totalHabitCount * 7;
-  const habitPct = habitChecksTotal > 0 ? Math.round((habitChecksDone / habitChecksTotal) * 100) : 0;
-  const topHabitTitle = totalHabitCount > 0 ? userHabits[0].title : 'None';
+  };
 
   return (
     <div className="page-container">
-      {/* Top Header Row — larger dashboard greeting */}
-      <PageHeaderRow title={`Hello, ${firstName}`} onSearch={setSearch} titleStyle={{ fontSize: 'clamp(28px, 5vw, 40px)' }} />
+      {/* Top Header Row — greeting */}
+      <PageHeaderRow title={`Hello, ${firstName}`} onSearch={setSearch} titleStyle={{ fontSize: 'clamp(26px, 4.5vw, 36px)' }} />
 
-      {/* Dashboard Widgets Grid */}
-      <div className="dashboard-grid">
-        {/* TASK PERFORMANCE Card */}
-        {widgetSettings.task && (
-          <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h3 style={{ color: 'var(--accent-primary)', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CheckSquare size={20} color="var(--accent-primary)" /> TASK PERFORMANCE
-              </h3>
-              <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent-primary)', background: 'var(--bg-secondary)', padding: '4px 12px', borderRadius: 'var(--radius-full)' }}>
-                {taskPct}% Done
-              </span>
+      {/* Dashboard 2.0 Actionable Grid (2-Column Desktop, 1-Column Mobile) */}
+      <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-md)' }}>
+        
+        {/* ROW 1 LEFT: TODAY'S TASKS */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ color: 'var(--accent-primary)', fontSize: '16px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CheckSquare size={18} color="var(--accent-primary)" /> TODAY'S TASKS ({todayTasks.length})
+            </h3>
+            <Link to="/app/task" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              View All <ArrowRight size={13} />
+            </Link>
+          </div>
+
+          {todayTasks.length === 0 ? (
+            <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+              No pending tasks for today. Great job! 🎉
             </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {todayTasks.slice(0, 5).map(task => (
+                <div key={task.id} style={{
+                  padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleTask(task.id, false)}
+                      style={{
+                        width: '18px', height: '18px', borderRadius: '4px',
+                        border: '2px solid var(--accent-primary)', background: 'transparent',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}
+                    />
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{task.title}</span>
+                  </div>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{task.dueTime || 'Today'}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-sm)', textAlign: 'center' }}>
-              <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-                <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px' }}>Total</div>
-                <div style={{ fontSize: 'clamp(1.5rem, 3vw, 1.8rem)', fontWeight: '800', color: 'var(--text-primary)' }}>{totalTasks}</div>
-              </div>
-              <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-                <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px' }}>Completed</div>
-                <div style={{ fontSize: 'clamp(1.5rem, 3vw, 1.8rem)', fontWeight: '800', color: 'var(--accent-primary)' }}>{completedTasks}</div>
-              </div>
-              <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-                <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px' }}>Pending</div>
-                <div style={{ fontSize: 'clamp(1.5rem, 3vw, 1.8rem)', fontWeight: '800', color: 'var(--text-primary)' }}>{pendingTasks}</div>
+        {/* ROW 1 RIGHT: UPCOMING REMINDERS */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ color: 'var(--accent-primary)', fontSize: '16px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Clock size={18} color="var(--accent-primary)" /> UPCOMING REMINDERS ({upcomingReminders.length})
+            </h3>
+            <Link to="/app/task" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Tasks <ArrowRight size={13} />
+            </Link>
+          </div>
+
+          {upcomingReminders.length === 0 ? (
+            <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+              No upcoming reminders scheduled.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {upcomingReminders.map(task => (
+                <div key={task.id} style={{
+                  padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                }}>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{task.title}</span>
+                  <span style={{ fontSize: '11px', color: 'var(--accent-primary)', fontWeight: '700' }}>{formatDate(task.dueDate)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ROW 2 LEFT: PLANS PREVIEW */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ color: 'var(--accent-primary)', fontSize: '16px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Repeat size={18} color="var(--accent-primary)" /> UPCOMING PLANS ({activePlans.length})
+            </h3>
+            <Link to="/app/plans" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              View Plans <ArrowRight size={13} />
+            </Link>
+          </div>
+
+          {activePlans.length === 0 ? (
+            <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+              No active plans or subscriptions recorded.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {activePlans.map(plan => (
+                <div key={plan.id} style={{
+                  padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{plan.description || plan.category}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>₹{plan.amount} / {plan.frequency || 'month'}</div>
+                  </div>
+                  <span style={{ fontSize: '11px', color: 'var(--accent-warning)', fontWeight: '700' }}>{formatDate(plan.endDate || plan.nextDueDate)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ROW 2 RIGHT: BIRTHDAYS & MEETINGS */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ color: 'var(--accent-primary)', fontSize: '16px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Cake size={18} color="var(--accent-primary)" /> BIRTHDAYS & MEETINGS ({birthdaysAndMeetings.length})
+            </h3>
+            <Link to="/app/task" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Add <ArrowRight size={13} />
+            </Link>
+          </div>
+
+          {birthdaysAndMeetings.length === 0 ? (
+            <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+              No birthdays or meetings recorded yet.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {birthdaysAndMeetings.map(item => (
+                <div key={item.id} style={{
+                  padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {item.taskType === 'birthday' || item.isBirthday ? <Cake size={15} color="var(--accent-warning)" /> : <Users size={15} color="var(--accent-primary)" />}
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{item.title}</span>
+                  </div>
+                  <span style={{ fontSize: '11px', color: 'var(--accent-primary)', fontWeight: '700' }}>{formatDate(item.dueDate || item.date)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ROW 3 LEFT: SPENDING SNAPSHOT */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ color: 'var(--accent-primary)', fontSize: '16px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Wallet size={18} color="var(--accent-primary)" /> SPENDING SNAPSHOT
+            </h3>
+            <Link to="/app/expenses" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Expenses <ArrowRight size={13} />
+            </Link>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Current Balance</span>
+              <div style={{ fontSize: '1.4rem', fontWeight: '800', color: currentBalance >= 0 ? 'var(--text-primary)' : 'var(--accent-danger)' }}>
+                {formattedBalance}
               </div>
             </div>
-
-            <div style={{ marginTop: 'auto', paddingTop: '14px' }}>
-              <div style={{ width: '100%', height: '6px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                <div style={{ width: `${taskPct}%`, height: '100%', background: 'var(--accent-primary)', transition: 'width 0.3s ease' }} />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>SPENT</span>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-danger)' }}>{formattedSpent}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>RECEIVED</span>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-success)' }}>{formattedReceived}</div>
               </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* FINANCIAL SUMMARY / TOTAL BALANCE Card */}
-        {widgetSettings.expense && (
-          <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-            <h3 style={{ color: 'var(--accent-primary)', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <Wallet size={20} color="var(--accent-primary)" /> TOTAL BALANCE
+        {/* ROW 3 RIGHT: LUNA SUGGESTION */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ color: 'var(--accent-primary)', fontSize: '16px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Sparkles size={18} color="var(--accent-primary)" /> LUNA ASSISTANT
             </h3>
-
-            {/* Account Amount Form or Balance Display */}
-            {startingBalance === null || isEditingAmount ? (
-              <div style={{ marginBottom: '14px' }}>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '6px' }}>
-                  {startingBalance === null ? 'Starting Account Balance not set' : 'Starting Account Balance'}
-                </div>
-                <form onSubmit={handleSaveAmount} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <input
-                    type="number"
-                    placeholder="Enter amount (e.g. 50000)"
-                    min="0"
-                    step="any"
-                    value={inputAmount}
-                    onChange={(e) => setInputAmount(e.target.value)}
-                    required
-                    style={{ flex: 1, minHeight: '36px', fontSize: '13px', padding: '4px 10px', minWidth: 0 }}
-                  />
-                  <button type="submit" className="btn-primary" title="Save" style={{ minHeight: '36px', padding: '0 12px', fontSize: '13px', flexShrink: 0 }}>
-                    <Check size={14} /> Save
-                  </button>
-                  {isEditingAmount && startingBalance !== null && (
-                    <button type="button" onClick={handleCancelEdit} className="btn-secondary" title="Cancel" style={{ minHeight: '36px', padding: '0 8px', fontSize: '13px', flexShrink: 0 }}>
-                      <X size={14} />
-                    </button>
-                  )}
-                </form>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-                  <div style={{
-                    width: '42px', height: '42px', borderRadius: 'var(--radius-sm)',
-                    background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0
-                  }}>
-                    <Wallet size={22} color="var(--accent-primary)" />
-                  </div>
-                  <div style={{ fontSize: 'clamp(1.5rem, 3vw, 1.8rem)', fontWeight: '800', color: currentBalance >= 0 ? 'var(--text-primary)' : 'var(--accent-danger)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                    {formattedBalance}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleStartEdit}
-                  title="Edit Total Account Amount"
-                  style={{
-                    padding: '6px', width: '32px', height: '32px',
-                    borderRadius: 'var(--radius-sm)', background: 'transparent',
-                    border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                  }}
-                >
-                  <Edit2 size={16} />
-                </button>
-              </div>
-            )}
-
-            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: 'auto' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-xs)', textAlign: 'center' }}>
-                <div style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '2px', textTransform: 'uppercase' }}>SPENT</div>
-                  <div style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)', fontWeight: '800', color: 'var(--accent-danger)' }}>{formattedSpent}</div>
-                </div>
-                <div style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '2px', textTransform: 'uppercase' }}>RECEIVED</div>
-                  <div style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)', fontWeight: '800', color: 'var(--accent-success)' }}>{formattedReceived}</div>
-                </div>
-              </div>
-            </div>
+            <Link to="/app/chat" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Chat <ArrowRight size={13} />
+            </Link>
           </div>
-        )}
 
-        {/* MEMORY PERFORMANCE Card */}
-        {widgetSettings.memory && (
-          <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-            <h3 style={{ marginBottom: '14px', fontSize: '18px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Brain size={20} color="var(--accent-primary)" /> MEMORY PERFORMANCE
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-sm)' }}>
-              <div style={{ padding: '12px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-                <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px' }}>Total Memories</div>
-                <div style={{ fontSize: 'clamp(1.5rem, 3vw, 1.8rem)', fontWeight: '800', color: 'var(--text-primary)' }}>{totalMemories}</div>
-              </div>
-              <div style={{ padding: '12px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-                <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px' }}>Approved Facts</div>
-                <div style={{ fontSize: 'clamp(1.5rem, 3vw, 1.8rem)', fontWeight: '800', color: 'var(--accent-primary)' }}>{approvedMemories}</div>
-              </div>
-            </div>
-            <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0, marginTop: 'auto', paddingTop: '14px' }}>
-              Explicit consent protection active.
+          <div style={{
+            padding: '12px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-color)', fontSize: '13px', lineHeight: '1.5'
+          }}>
+            <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
+              🧠 <strong>Luna Focus:</strong> You have {todayTasks.length} task(s) for today and {activePlans.length} active plan(s). Ask Luna to organize your schedule or add recurring items anytime!
             </p>
           </div>
-        )}
+        </div>
 
-        {/* HABIT TRACKER PERFORMANCE WIDGET */}
-        {widgetSettings.habit && (
-          <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h3 style={{ color: 'var(--accent-primary)', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Activity size={20} color="var(--accent-primary)" /> HABIT TRACKER
-              </h3>
-              <Link to="/app/habits" style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
-                View <ArrowRight size={14} />
-              </Link>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '15px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>This Week</span>
-              <span style={{ fontWeight: '700', color: 'var(--accent-primary)' }}>Completed: {habitChecksDone} / {habitChecksTotal} ({habitPct}%)</span>
-            </div>
-
-            <div style={{ width: '100%', height: '6px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-full)', overflow: 'hidden', marginBottom: '14px' }}>
-              <div style={{ width: `${habitPct}%`, height: '100%', background: 'var(--accent-primary)', transition: 'width 0.3s ease' }} />
-            </div>
-
-            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', background: 'var(--bg-secondary)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', display: 'flex', justifyContent: 'space-between', marginTop: 'auto' }}>
-              <span>Top Habit:</span>
-              <strong style={{ color: 'var(--accent-primary)' }}>{topHabitTitle}</strong>
-            </div>
-          </div>
-        )}
-
-        {/* PROGRESS Card */}
-        {widgetSettings.progress && (
-          <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-            <h3 style={{ marginBottom: '14px', fontSize: '18px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle2 size={20} color="var(--accent-primary)" /> PROGRESS
-            </h3>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '15px' }}>
-              <span>Completion Index</span>
-              <span style={{ fontWeight: '700', color: 'var(--accent-primary)', fontSize: 'clamp(1.2rem, 2.5vw, 1.5rem)' }}>{taskPct}%</span>
-            </div>
-            <div style={{ marginTop: 'auto' }}>
-              <div style={{ width: '100%', height: '6px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                <div style={{ width: `${taskPct}%`, height: '100%', background: 'var(--accent-primary)', transition: 'width 0.3s ease' }} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SUMMARY Card */}
-        {widgetSettings.progress && (
-          <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-            <h3 style={{ marginBottom: '14px', fontSize: '18px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={20} color="var(--accent-primary)" /> SUMMARY
-            </h3>
-            <p style={{ fontSize: '15px', lineHeight: '1.7', color: 'var(--text-secondary)', margin: 0, marginTop: 'auto' }}>
-              Executive Performance: <strong>{completedTasks}</strong> tasks completed, <strong>₹{totalSpent.toLocaleString()}</strong> spent, and <strong>{totalMemories}</strong> AI memory facts saved.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

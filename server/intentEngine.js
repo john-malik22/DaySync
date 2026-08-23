@@ -193,9 +193,53 @@ export function classifyIntent(message, context = {}) {
       return { intent: 'READ_MEMORIES', confidence: 0.95, entities: {} };
     }
 
+    if (lower.includes('plan') || lower.includes('plans') || lower.includes('subscription') || lower.includes('recharge') || lower.includes('warranty') || lower.includes('recurring payment')) {
+      return { intent: 'READ_PLANS', confidence: 0.95, entities: {} };
+    }
+
+    if (lower.includes('birthday') || lower.includes('birthdays')) {
+      return { intent: 'READ_BIRTHDAYS', confidence: 0.95, entities: {} };
+    }
+
+    if (lower.includes('meeting') || lower.includes('meetings')) {
+      return { intent: 'READ_MEETINGS', confidence: 0.95, entities: {} };
+    }
+
     if (lower.includes('summary') || lower.includes('report') || lower.includes('productivity')) {
       return { intent: 'READ_SUMMARY', confidence: 0.95, entities: {} };
     }
+  }
+
+  // 2b. CREATE PLAN / RECURRING EXPENSE DIRECT INTENTS
+  if (/netflix|spotify|recharge|jio|airtel|vi\b|wifi|internet|gym|warranty|subscription/i.test(lower) && (/add|create|log|pay|monthly|every month|per month|yearly|28 days/i.test(lower))) {
+    const num = parseNumberAndCurrency(lower);
+    let title = 'Plan';
+    if (lower.includes('netflix')) title = 'Netflix';
+    else if (lower.includes('spotify')) title = 'Spotify';
+    else if (lower.includes('jio')) title = 'Jio Recharge';
+    else if (lower.includes('airtel')) title = 'Airtel Recharge';
+    else if (lower.includes('wifi') || lower.includes('internet')) title = 'Wi-Fi Internet';
+    else if (lower.includes('warranty')) title = 'Appliance Warranty';
+
+    let freq = 'Monthly';
+    if (lower.includes('28 days') || lower.includes('28 day')) freq = '28 Days';
+    else if (lower.includes('yearly') || lower.includes('per year') || lower.includes('every year')) freq = 'Yearly';
+
+    let dur = '12 months';
+    if (freq === '28 Days') dur = '28 days';
+    else if (lower.includes('1 year') || lower.includes('one year')) dur = '1 year';
+
+    return {
+      intent: 'CREATE_PLAN',
+      confidence: 0.95,
+      entities: {
+        title,
+        amount: num || 199,
+        frequency: freq,
+        duration: dur,
+        startDate: new Date().toISOString().split('T')[0]
+      }
+    };
   }
 
   // 3. MULTI-TURN PENDING ACTION FOLLOW-UP (context.pendingAction)

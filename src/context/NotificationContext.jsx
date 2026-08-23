@@ -12,6 +12,7 @@ const DEFAULT_PREFERENCES = {
   habit: true,
   goal: true,
   budget: true,
+  plan: true,
   luna: true,
   system: true,
   update: true,

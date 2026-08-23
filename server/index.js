@@ -247,6 +247,84 @@ app.post('/api/chat', authenticate, (req, res) => {
         break;
       }
 
+      case 'READ_PLANS': {
+        const userPlans = store.expenses.filter(e => e.userId === userId && (e.isPlan || e.isRecurring || e.frequency || ['Recharges', 'Subscriptions', 'Electricity Bill'].includes(e.category)));
+        if (userPlans.length === 0) {
+          replyText = "You have no active plans or recurring payments recorded.";
+        } else {
+          const listText = userPlans.map((p, i) => `${i + 1}. ${p.description || p.category} — ₹${p.amount}/${p.frequency || 'month'} (Ends: ${p.endDate || 'N/A'})`).join('\n');
+          replyText = `Here are your active plans & recurring commitments:\n${listText}`;
+        }
+        toolData = { type: 'PLANS_LIST', plans: userPlans };
+        break;
+      }
+
+      case 'CREATE_PLAN': {
+        const { title, amount, frequency, duration, startDate } = intentResult.entities;
+        const start = startDate || new Date().toISOString().split('T')[0];
+        const freq = frequency || 'Monthly';
+        const dur = duration || '12 months';
+
+        let endDate = start;
+        try {
+          const d = new Date(start);
+          if (freq === '28 Days' || dur.includes('28')) {
+            d.setDate(d.getDate() + 28);
+          } else if (dur.includes('year') || freq === 'Yearly') {
+            d.setFullYear(d.getFullYear() + 1);
+          } else {
+            d.setMonth(d.getMonth() + 12);
+          }
+          endDate = d.toISOString().split('T')[0];
+        } catch(e) {}
+
+        const newPlanExp = {
+          id: `exp_${Date.now()}`,
+          userId,
+          type: 'expense',
+          isPlan: true,
+          amount: amount || 199,
+          category: 'Subscriptions',
+          description: title || 'Recurring Plan',
+          frequency: freq,
+          duration: dur,
+          startDate: start,
+          endDate: endDate,
+          nextDueDate: endDate,
+          date: start,
+          createdAt: new Date().toISOString()
+        };
+
+        store.expenses.push(newPlanExp);
+        replyText = `Done — I added "${newPlanExp.description}" (₹${newPlanExp.amount}/${freq}) starting ${start} through ${endDate}.`;
+        toolData = { type: 'PLAN_CREATED', plan: newPlanExp };
+        break;
+      }
+
+      case 'READ_BIRTHDAYS': {
+        const birthdays = store.tasks.filter(t => t.userId === userId && (t.taskType === 'birthday' || t.isBirthday || (t.title && t.title.toLowerCase().includes('birthday'))));
+        if (birthdays.length === 0) {
+          replyText = "You have no upcoming birthday reminders saved.";
+        } else {
+          const listText = birthdays.map((b, i) => `${i + 1}. 🎂 ${b.personName || b.title} (Date: ${b.dueDate || b.date || 'Upcoming'})`).join('\n');
+          replyText = `Here are your upcoming birthdays:\n${listText}`;
+        }
+        toolData = { type: 'BIRTHDAYS_LIST', birthdays };
+        break;
+      }
+
+      case 'READ_MEETINGS': {
+        const meetings = store.tasks.filter(t => t.userId === userId && (t.taskType === 'meeting' || t.isMeeting || (t.title && t.title.toLowerCase().includes('meeting'))));
+        if (meetings.length === 0) {
+          replyText = "You have no upcoming meetings scheduled.";
+        } else {
+          const listText = meetings.map((m, i) => `${i + 1}. 📅 ${m.title} (Date: ${m.dueDate || m.date || 'Upcoming'})`).join('\n');
+          replyText = `Here are your upcoming meetings:\n${listText}`;
+        }
+        toolData = { type: 'MEETINGS_LIST', meetings };
+        break;
+      }
+
       case 'CREATE_EXPENSE':
       case 'ADD_EXPENSE': {
         const { type, amount, category, description } = intentResult.entities;
@@ -893,7 +971,57 @@ function generateUserNotifications(userId, store) {
     });
   }
 
-  // 4. DAILY BASELINE FALLBACK NOTIFICATION (Category 9: DAILY)
+  // 4. PLAN NOTIFICATIONS (Category PLAN — 5 days prior notification)
+  const userPlans = userExpenses.filter(e => e.isPlan || e.isRecurring || e.frequency || ['Recharges', 'Subscriptions', 'Electricity Bill'].includes(e.category));
+  userPlans.forEach(plan => {
+    const targetDateStr = plan.endDate || plan.nextDueDate || plan.date;
+    if (targetDateStr) {
+      try {
+        const targetTime = new Date(targetDateStr).getTime();
+        const todayTime = new Date(todayStr).getTime();
+        const diffDays = Math.ceil((targetTime - todayTime) / (1000 * 60 * 60 * 24));
+        if (diffDays <= 5 && diffDays >= 0) {
+          addIfNew({
+            type: 'PLAN',
+            title: `${plan.category || 'Plan'} Expiry / Due Soon`,
+            message: `"${plan.description || plan.category}" (₹${plan.amount}) is due/expiring on ${targetDateStr}.`,
+            priority: 'NORMAL',
+            relatedType: 'expense',
+            relatedId: plan.id,
+            actionUrl: '/app/plans',
+            eventKey: `plan:${plan.id}:${targetDateStr}:5day`
+          });
+        }
+      } catch(e) {}
+    }
+  });
+
+  // 5. BIRTHDAY NOTIFICATIONS (5 days prior notification)
+  const userBirthdays = userTasks.filter(t => t.taskType === 'birthday' || t.isBirthday || (t.title && t.title.toLowerCase().includes('birthday')));
+  userBirthdays.forEach(bday => {
+    const targetDateStr = bday.dueDate || bday.date;
+    if (targetDateStr) {
+      try {
+        const targetTime = new Date(targetDateStr).getTime();
+        const todayTime = new Date(todayStr).getTime();
+        const diffDays = Math.ceil((targetTime - todayTime) / (1000 * 60 * 60 * 24));
+        if (diffDays <= 5 && diffDays >= 0) {
+          addIfNew({
+            type: 'TASK',
+            title: '🎂 Upcoming Birthday',
+            message: `🎂 ${bday.personName || bday.title}'s birthday is in ${diffDays} day${diffDays === 1 ? '' : 's'}.`,
+            priority: 'NORMAL',
+            relatedType: 'task',
+            relatedId: bday.id,
+            actionUrl: '/app/task',
+            eventKey: `birthday:${bday.id}:${targetDateStr}:5day`
+          });
+        }
+      } catch(e) {}
+    }
+  });
+
+  // 6. DAILY BASELINE FALLBACK NOTIFICATION (Category 9: DAILY)
   const dbUser = (store.users || []).find(u => u.id === userId);
   const isDailyEnabled = dbUser?.preferences?.daily !== false && dbUser?.preferences?.dailyNotification !== false;
 

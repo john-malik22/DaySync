@@ -116,7 +116,7 @@ export function SettingsPage() {
     });
   };
 
-  const VALID_STARTUP_PAGES = ['dashboard', 'tasks', 'expenses', 'habits', 'goals', 'memories', 'notifications', 'chat', 'summary'];
+  const VALID_STARTUP_PAGES = ['dashboard', 'tasks', 'expenses', 'plans', 'habits', 'goals', 'memories', 'notifications', 'chat', 'summary'];
 
   // Startup Page preference state
   const [startupPage, setStartupPage] = useState(() => {
@@ -389,9 +389,8 @@ export function SettingsPage() {
               <option value="dashboard">Dashboard</option>
               <option value="tasks">Tasks</option>
               <option value="expenses">Expenses</option>
+              <option value="plans">Plans</option>
               <option value="habits">Habits</option>
-              <option value="goals">Goals</option>
-              <option value="memories">Memories</option>
               <option value="notifications">Notifications</option>
               <option value="chat">Chat</option>
               <option value="summary">Summary</option>

@@ -19,6 +19,7 @@ import { Sidebar } from './components/common/Sidebar';
 import { DashboardPage } from './pages/app/DashboardPage';
 import { ChatPage } from './pages/app/ChatPage';
 import { ExpensesPage } from './pages/app/ExpensesPage';
+import { PlansPage } from './pages/app/PlansPage';
 import { TaskPage } from './pages/app/TaskPage';
 import { HabitsPage } from './pages/app/HabitsPage';
 import { MemoriesPage } from './pages/app/MemoriesPage';
@@ -41,6 +42,7 @@ const STARTUP_ROUTE_MAP = {
   tasks: '/app/task',
   task: '/app/task',
   expenses: '/app/expenses',
+  plans: '/app/plans',
   habits: '/app/habits',
   goals: '/app/habits',
   memories: '/app/memories',
@@ -157,6 +159,7 @@ export default function App() {
                       <Route path="dashboard" element={<DashboardPage />} />
                       <Route path="chat" element={<ChatPage />} />
                       <Route path="expenses" element={<ExpensesPage />} />
+                      <Route path="plans" element={<PlansPage />} />
                       <Route path="task" element={<TaskPage />} />
                       <Route path="planner" element={<Navigate to="/app/task" replace />} />
                       <Route path="habits" element={<HabitsPage />} />
