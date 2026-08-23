@@ -64,6 +64,7 @@ export function SettingsPage() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // Loading States
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -158,15 +159,20 @@ export function SettingsPage() {
   };
 
   // Privacy & Data Actions
-  const handleExportData = async () => {
+  const handleExportDataClick = () => {
+    setShowExportModal(true);
+  };
+
+  const handleConfirmExportData = async () => {
+    setShowExportModal(false);
     if (isExportingData) return;
     setIsExportingData(true);
-    if (showToast) showToast('Your data is being prepared...', 'info');
+    if (showToast) showToast('Preparing your DaySync PDF export...', 'info');
 
     try {
       const data = await api.exportData();
       exportDataToPdf(data);
-      if (showToast) showToast('PDF data export completed successfully.', 'success');
+      if (showToast) showToast('Your data export is ready.', 'success');
     } catch (err) {
       if (showToast) showToast('Unable to export your data right now. Please try again.', 'error');
     } finally {
@@ -527,11 +533,11 @@ export function SettingsPage() {
           <div className="settings-btn-grid-2">
             <button
               type="button"
-              onClick={handleExportData}
+              onClick={handleExportDataClick}
               disabled={isExportingData}
               className="btn-secondary"
             >
-              <Download size={14} /> {isExportingData ? 'Preparing...' : 'Export My Data'}
+              <Download size={14} /> {isExportingData ? 'Exporting...' : 'Export My Data'}
             </button>
 
             <button
@@ -712,6 +718,19 @@ export function SettingsPage() {
         isLoading={isClearingHistory}
         onConfirm={handleConfirmClearHistory}
         onCancel={() => setShowClearHistoryModal(false)}
+      />
+
+      {/* 4. Export PDF Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showExportModal}
+        title="Export your DaySync data as a PDF?"
+        message="Your PDF may contain personal information from your account (tasks, expenses, habits, memories, and chat history)."
+        confirmText={isExportingData ? "Exporting..." : "Export PDF"}
+        cancelText="Cancel"
+        isDanger={false}
+        isLoading={isExportingData}
+        onConfirm={handleConfirmExportData}
+        onCancel={() => setShowExportModal(false)}
       />
     </div>
   );
