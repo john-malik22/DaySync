@@ -236,7 +236,7 @@ p {
   box-sizing: border-box;
 }
 
-/* Page Header Row */
+/* Page Header Row System */
 .page-header-row {
   display: flex;
   justify-content: space-between;
@@ -244,7 +244,38 @@ p {
   padding-bottom: var(--space-sm);
   border-bottom: 1px solid var(--border-color);
   margin-bottom: var(--space-xs);
+  gap: var(--space-md);
+  width: 100%;
+}
+
+.page-header-left {
+  display: flex;
+  align-items: center;
   gap: var(--space-sm);
+  flex: 1;
+  min-width: 0;
+}
+
+.page-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Habit Date Navigation Container (Web & Mobile Side-by-Side) */
+.habit-date-nav-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 12px;
+  background: var(--bg-card);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  width: 100%;
 }
 
 .header-search-bar {
@@ -257,7 +288,7 @@ p {
   border: 1px solid var(--border-color);
   padding: 8px 16px;
   border-radius: var(--radius-full);
-  min-width: 260px;
+  min-width: 240px;
   color: var(--text-secondary);
   font-size: 13px;
   transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;

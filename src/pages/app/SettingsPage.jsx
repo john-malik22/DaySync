@@ -139,14 +139,8 @@ export function SettingsPage() {
 
     try {
       const data = await api.exportData();
-      const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(data, null, 2))}`;
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute('href', jsonString);
-      downloadAnchor.setAttribute('download', `daysync-data-export-${new Date().toISOString().split('T')[0]}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-      if (showToast) showToast('Data export completed successfully.', 'success');
+      exportDataToPdf(data);
+      if (showToast) showToast('PDF data export completed successfully.', 'success');
     } catch (err) {
       if (showToast) showToast('Unable to export your data right now. Please try again.', 'error');
     } finally {
@@ -342,6 +336,32 @@ export function SettingsPage() {
                 </label>
               ))}
             </div>
+          </div>
+
+          {/* Open Page on Startup Setting */}
+          <div style={{ paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--border-color)', marginTop: 'var(--space-sm)' }}>
+            <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>
+              Open Page on Startup
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+              Choose which DaySync page opens when you launch the app.
+            </div>
+            <select
+              value={startupPage}
+              onChange={handleStartupPageChange}
+              style={{ width: '100%', maxWidth: '280px', padding: '6px 10px', fontSize: '13px' }}
+              aria-label="Open Page on Startup"
+            >
+              <option value="/app/dashboard">Dashboard</option>
+              <option value="/app/task">Tasks</option>
+              <option value="/app/expenses">Expenses</option>
+              <option value="/app/habits">Habits</option>
+              <option value="/app/habits">Goals</option>
+              <option value="/app/memories">Memories</option>
+              <option value="/app/notifications">Notifications</option>
+              <option value="/app/chat">Chat</option>
+              <option value="/app/summary">Summary</option>
+            </select>
           </div>
         </div>
 

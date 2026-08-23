@@ -25,46 +25,52 @@ export function PageHeaderRow({ title, onSearch, titleStyle }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
       <div className="page-header-row">
-        {/* Mobile-Only Hamburger Control (LEFT SIDE) */}
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="mobile-hamburger-btn btn-secondary"
-          title="Open Navigation"
-        >
-          <Menu size={18} />
-        </button>
+        {/* Left Side: Mobile Hamburger & Page Title */}
+        <div className="page-header-left">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="mobile-hamburger-btn btn-secondary"
+            title="Open Navigation"
+            aria-label="Open Navigation"
+          >
+            <Menu size={18} />
+          </button>
 
-        {/* Page Title (Desktop/Tablet visible, Mobile hidden for icon-only header) */}
-        <h1 className="page-header-title" style={titleStyle}>
-          {title}
-        </h1>
-
-        {/* Mobile-Only Search Icon Button */}
-        <button
-          type="button"
-          onClick={toggleMobileSearch}
-          className="mobile-search-icon-btn btn-secondary"
-          title="Search"
-          aria-label="Search"
-        >
-          <Search size={16} color="var(--accent-primary)" />
-        </button>
-
-        {/* Header Search Bar (Desktop/Tablet visible) */}
-        <div className="header-search-bar">
-          <Search size={14} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
+          <h1 className="page-header-title" style={titleStyle}>
+            {title}
+          </h1>
         </div>
 
-        {/* Notification Bell Dropdown */}
-        <div className="header-notification-container">
-          <NotificationBell />
+        {/* Right Side: Search Input + Notification Control */}
+        <div className="page-header-right">
+          {/* Mobile-Only Search Icon Button */}
+          <button
+            type="button"
+            onClick={toggleMobileSearch}
+            className="mobile-search-icon-btn btn-secondary"
+            title="Search"
+            aria-label="Search"
+          >
+            <Search size={16} color="var(--accent-primary)" />
+          </button>
+
+          {/* Desktop Search Bar (Positioned beside notification bell) */}
+          <div className="header-search-bar">
+            <Search size={14} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              aria-label="Search input"
+            />
+          </div>
+
+          {/* Notification Bell Dropdown */}
+          <div className="header-notification-container">
+            <NotificationBell />
+          </div>
         </div>
       </div>
 
@@ -77,6 +83,7 @@ export function PageHeaderRow({ title, onSearch, titleStyle }) {
             placeholder={`Search ${title || ''}...`}
             value={searchTerm}
             onChange={handleSearchChange}
+            aria-label="Mobile search input"
             autoFocus
           />
           {searchTerm && (
@@ -84,6 +91,7 @@ export function PageHeaderRow({ title, onSearch, titleStyle }) {
               type="button"
               onClick={handleClearSearch}
               title="Clear search"
+              aria-label="Clear search"
               style={{
                 background: 'transparent',
                 border: 'none',
