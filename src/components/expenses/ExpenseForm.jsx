@@ -36,21 +36,44 @@ export function ExpenseForm() {
   const [category, setCategory] = useState('Recharges');
   const [description, setDescription] = useState('');
 
-  // Plan / Recurring fields
+  // Simplified Plan / Recurring fields (NO Frequency field)
   const [isPlan, setIsPlan] = useState(false);
-  const [frequency, setFrequency] = useState('Monthly');
-  const [duration, setDuration] = useState('12 months');
   const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [planDurationSelect, setPlanDurationSelect] = useState('1 month');
+  const [customValue, setCustomValue] = useState('45');
+  const [customUnit, setCustomUnit] = useState('days');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Compute active durationValue, durationUnit, and display string
+  const activeDurationInfo = useMemo(() => {
+    if (planDurationSelect === 'custom') {
+      const val = Math.max(1, parseInt(customValue, 10) || 1);
+      const unit = customUnit || 'days';
+      return {
+        durationValue: val,
+        durationUnit: unit,
+        durationStr: `${val} ${unit}`
+      };
+    }
+    const parsed = parseDuration(planDurationSelect);
+    return {
+      durationValue: parsed.durationValue,
+      durationUnit: parsed.durationUnit,
+      durationStr: planDurationSelect
+    };
+  }, [planDurationSelect, customValue, customUnit]);
 
   // Automatic End Date Calculation via Central Utility
   const { calculatedEndDateIso, calculatedHumanDate } = useMemo(() => {
     if (!startDate) return { calculatedEndDateIso: '', calculatedHumanDate: '' };
-    const iso = calculateEndDate(startDate, duration, frequency);
+    const iso = calculateEndDate(startDate, {
+      durationValue: activeDurationInfo.durationValue,
+      durationUnit: activeDurationInfo.durationUnit
+    });
     const human = formatHumanDate(iso);
     return { calculatedEndDateIso: iso, calculatedHumanDate: human };
-  }, [startDate, frequency, duration]);
+  }, [startDate, activeDurationInfo]);
 
   const handleTypeSwitch = (type) => {
     setTxType(type);
@@ -73,8 +96,6 @@ export function ExpenseForm() {
 
     setIsSubmitting(true);
     try {
-      const parsedDur = parseDuration(duration, frequency);
-
       await addExpense({
         type: txType,
         amount: parseFloat(amount),
@@ -83,10 +104,9 @@ export function ExpenseForm() {
         date: startDate || new Date().toISOString().split('T')[0],
         isPlan,
         isRecurring: isPlan,
-        frequency: isPlan ? frequency : null,
-        duration: isPlan ? duration : null,
-        durationValue: isPlan ? parsedDur.durationValue : null,
-        durationUnit: isPlan ? parsedDur.durationUnit : null,
+        durationValue: isPlan ? activeDurationInfo.durationValue : null,
+        durationUnit: isPlan ? activeDurationInfo.durationUnit : null,
+        duration: isPlan ? activeDurationInfo.durationStr : null,
         startDate: isPlan ? startDate : null,
         endDate: isPlan ? calculatedEndDateIso : null,
         nextDueDate: isPlan ? calculatedEndDateIso : null
@@ -95,7 +115,7 @@ export function ExpenseForm() {
       setAmount('');
       setDescription('');
       setIsPlan(false);
-      if (showToast) showToast(isPlan ? 'Plan transaction saved successfully.' : 'Transaction saved successfully.', 'success');
+      if (showToast) showToast(isPlan ? 'Plan saved successfully.' : 'Transaction saved successfully.', 'success');
     } catch (err) {
       if (showToast) showToast(err.message || 'Couldn\'t save transaction. Please try again.', 'error');
     } finally {
@@ -177,7 +197,7 @@ export function ExpenseForm() {
           </button>
         </div>
 
-        {/* Recurring Plan Checkbox (for Expense transactions) */}
+        {/* Plan Toggle Checkbox */}
         {txType === 'expense' && (
           <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border-color)', marginTop: '4px' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer', color: 'var(--text-primary)', fontWeight: '600' }}>
@@ -187,65 +207,74 @@ export function ExpenseForm() {
                 onChange={(e) => setIsPlan(e.target.checked)}
                 style={{ width: '16px', height: '16px', accentColor: 'var(--accent-primary)' }}
               />
-              <Repeat size={14} color="var(--accent-primary)" /> Make this a Recurring Plan / Subscription / Recharge / Warranty
+              <Repeat size={14} color="var(--accent-primary)" /> Add as a Plan / Subscription / Recharge
             </label>
 
-            {/* Recurring Plan Options Expansion Block */}
+            {/* Plan Details Expansion Block */}
             {isPlan && (
               <div style={{
                 marginTop: '10px', padding: '12px 14px', borderRadius: 'var(--radius-sm)',
                 background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
-                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px', alignItems: 'center'
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', alignItems: 'flex-start'
               }}>
                 <div>
-                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>START DATE</label>
+                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: '600' }}>START DATE</label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    style={{ width: '100%', fontSize: '12px', padding: '4px 8px', minHeight: '34px' }}
+                    style={{ width: '100%', fontSize: '12px', padding: '6px 8px', minHeight: '36px' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>FREQUENCY / PACK</label>
+                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: '600' }}>CURRENT PLAN DURATION</label>
                   <select
-                    value={frequency}
-                    onChange={(e) => setFrequency(e.target.value)}
-                    style={{ width: '100%', fontSize: '12px', padding: '4px 8px', minHeight: '34px' }}
+                    value={planDurationSelect}
+                    onChange={(e) => setPlanDurationSelect(e.target.value)}
+                    style={{ width: '100%', fontSize: '12px', padding: '6px 8px', minHeight: '36px' }}
                   >
-                    <option value="Monthly">Monthly</option>
-                    <option value="28 Days">28 Days Pack</option>
-                    <option value="56 Days">56 Days Pack</option>
-                    <option value="84 Days">84 Days Pack</option>
-                    <option value="Yearly">Yearly</option>
-                    <option value="Weekly">Weekly</option>
-                    <option value="Every 2 Weeks">Every 2 Weeks</option>
-                    <option value="Custom">Custom</option>
+                    <option value="28 days">28 days</option>
+                    <option value="56 days">56 days</option>
+                    <option value="84 days">84 days</option>
+                    <option value="1 month">1 month</option>
+                    <option value="2 months">2 months</option>
+                    <option value="3 months">3 months</option>
+                    <option value="6 months">6 months</option>
+                    <option value="1 year">1 year</option>
+                    <option value="2 years">2 years</option>
+                    <option value="custom">Custom...</option>
                   </select>
+
+                  {/* Custom Duration Fields */}
+                  {planDurationSelect === 'custom' && (
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="Length"
+                        value={customValue}
+                        onChange={(e) => setCustomValue(e.target.value)}
+                        style={{ width: '70px', fontSize: '12px', padding: '4px 6px', minHeight: '32px' }}
+                      />
+                      <select
+                        value={customUnit}
+                        onChange={(e) => setCustomUnit(e.target.value)}
+                        style={{ flex: 1, fontSize: '12px', padding: '4px 6px', minHeight: '32px' }}
+                      >
+                        <option value="days">Days</option>
+                        <option value="months">Months</option>
+                        <option value="years">Years</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>DURATION</label>
-                  <select
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                    style={{ width: '100%', fontSize: '12px', padding: '4px 8px', minHeight: '34px' }}
-                  >
-                    <option value="12 months">12 Months (1 Year)</option>
-                    <option value="1 month">1 Month</option>
-                    <option value="3 months">3 Months</option>
-                    <option value="6 months">6 Months</option>
-                    <option value="28 days">28 Days</option>
-                    <option value="2 years">2 Years</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>CALCULATED END DATE</label>
+                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: '600' }}>END DATE</label>
                   <div style={{
-                    padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-tertiary)',
-                    border: '1px solid var(--border-color)', fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)'
+                    padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-tertiary)',
+                    border: '1px solid var(--border-color)', fontSize: '13px', fontWeight: '700', color: 'var(--accent-primary)'
                   }}>
                     Ends {calculatedHumanDate || 'Auto Calculated'}
                   </div>

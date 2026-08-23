@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
 import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
-import { calculateEndDate, formatHumanDate, parseDateComponents } from '../../services/dateUtils';
-import { Repeat, Calendar, ShieldCheck, ArrowRight, CheckCircle2, Clock, Zap, Tv, Smartphone, RefreshCw, AlertCircle } from 'lucide-react';
+import { calculateEndDate, formatHumanDate, parseDateComponents, parseDuration } from '../../services/dateUtils';
+import { Repeat, ShieldCheck, ArrowRight, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 
 export function PlansPage() {
   const { expenses, errors, resourceLoading, fetchExpenses, isFromCache, lastSyncedAt } = useLuna();
@@ -16,6 +16,8 @@ export function PlansPage() {
     return (
       e.isPlan ||
       e.isRecurring ||
+      Boolean(e.duration) ||
+      Boolean(e.durationValue) ||
       Boolean(e.frequency) ||
       ['Recharges', 'Subscriptions', 'Electricity Bill'].includes(e.category)
     );
@@ -38,16 +40,16 @@ export function PlansPage() {
   // Financial summary of plans
   const totalMonthlyPlanCost = plans.reduce((acc, curr) => {
     const amt = parseFloat(curr.amount || 0);
-    const freq = (curr.frequency || '').toLowerCase();
-    if (freq.includes('year')) return acc + (amt / 12);
-    if (freq.includes('28')) return acc + (amt * (30 / 28));
-    return acc + amt;
+    const durInfo = parseDuration(curr.durationValue ? { value: curr.durationValue, unit: curr.durationUnit } : curr.duration, curr.frequency);
+    if (durInfo.durationUnit === 'years') return acc + (amt / (durInfo.durationValue * 12));
+    if (durInfo.durationUnit === 'days') return acc + (amt * (30 / durInfo.durationValue));
+    return acc + (amt / durInfo.durationValue);
   }, 0);
 
   const getEffectiveEndDate = (plan) => {
     if (plan.endDate) return plan.endDate;
     if (plan.nextDueDate) return plan.nextDueDate;
-    return calculateEndDate(plan.startDate || plan.date, plan.durationValue || plan.duration, plan.frequency);
+    return calculateEndDate(plan.startDate || plan.date, plan.durationValue ? { value: plan.durationValue, unit: plan.durationUnit } : plan.duration, plan.frequency);
   };
 
   const getDaysRemaining = (endDateStr) => {
@@ -64,6 +66,12 @@ export function PlansPage() {
     } catch (e) {
       return null;
     }
+  };
+
+  const getPlanDurationLabel = (plan) => {
+    if (plan.duration) return plan.duration;
+    if (plan.durationValue && plan.durationUnit) return `${plan.durationValue} ${plan.durationUnit}`;
+    return '1 month';
   };
 
   return (
@@ -199,16 +207,18 @@ export function PlansPage() {
                       display: 'inline-flex', alignItems: 'center', gap: '4px'
                     }}>
                       {isExpired ? <AlertCircle size={12} /> : isExpiringSoon ? <Clock size={12} /> : <CheckCircle2 size={12} />}
-                      {isExpired ? 'Expired' : isExpiringSoon ? `Due in ${daysRem} days` : 'Active'}
+                      {isExpired ? 'Expired' : isExpiringSoon ? `Ends in ${daysRem} days` : 'Active'}
                     </span>
                   </div>
 
                   {/* Pricing / Pack Details */}
-                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
-                    ₹{parseFloat(plan.amount || 0).toLocaleString('en-IN')}
-                    <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginLeft: '4px' }}>
-                      / {plan.frequency || 'month'}
-                    </span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
+                      ₹{parseFloat(plan.amount || 0).toLocaleString('en-IN')}
+                    </div>
+                    <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', background: 'var(--bg-tertiary)', padding: '2px 8px', borderRadius: '4px' }}>
+                      Current plan: {getPlanDurationLabel(plan)}
+                    </div>
                   </div>
 
                   {/* Dates Row */}
@@ -222,7 +232,7 @@ export function PlansPage() {
                     </div>
 
                     <div>
-                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px' }}>END / EXPIRY DATE</span>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px' }}>END DATE</span>
                       <strong style={{ color: isExpiringSoon ? 'var(--accent-warning)' : 'var(--text-primary)' }}>
                         {formatHumanDate(endDateIso)}
                       </strong>

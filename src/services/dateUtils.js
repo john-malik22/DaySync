@@ -45,6 +45,7 @@ export function formatDateComponents(year, month, day) {
 
 /**
  * Parses structured durationValue and durationUnit from string or numeric inputs.
+ * E.g., "1 month" -> { durationValue: 1, durationUnit: "months" }
  * E.g., "12 months" -> { durationValue: 12, durationUnit: "months" }
  * E.g., "1 year" -> { durationValue: 1, durationUnit: "years" }
  * E.g., "28 days" -> { durationValue: 28, durationUnit: "days" }
@@ -73,7 +74,7 @@ export function parseDuration(durationInput, frequencyStr = 'Monthly') {
     return { durationValue: val, durationUnit: unit };
   }
 
-  // Pure number case (e.g. 12 or 28)
+  // Pure number case (e.g. 1, 3, 6, 12, 28)
   const numMatch = str.match(/^(\d+)$/);
   if (numMatch) {
     const val = parseInt(numMatch[1], 10);
@@ -90,7 +91,7 @@ export function parseDuration(durationInput, frequencyStr = 'Monthly') {
   if (freqStr.includes('28')) return { durationValue: 28, durationUnit: 'days' };
   if (freqStr.includes('year')) return { durationValue: 1, durationUnit: 'years' };
 
-  return { durationValue: 12, durationUnit: 'months' };
+  return { durationValue: 1, durationUnit: 'months' };
 }
 
 /**

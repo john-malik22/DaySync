@@ -225,9 +225,23 @@ export function classifyIntent(message, context = {}) {
     if (lower.includes('28 days') || lower.includes('28 day')) freq = '28 Days';
     else if (lower.includes('yearly') || lower.includes('per year') || lower.includes('every year')) freq = 'Yearly';
 
-    let dur = '12 months';
-    if (freq === '28 Days') dur = '28 days';
-    else if (lower.includes('1 year') || lower.includes('one year')) dur = '1 year';
+    let dur = '1 month';
+    const durMatch = lower.match(/(\d+|one|two|three|four|five|six|seven|eight|nine|ten|twelve)\s*(months?|years?|days?|weeks?)/i);
+    if (durMatch) {
+      dur = durMatch[0];
+    } else if (freq === '28 Days' || lower.includes('28 days')) {
+      dur = '28 days';
+    } else if (lower.includes('1 year') || lower.includes('one year') || lower.includes('a year')) {
+      dur = '1 year';
+    } else if (lower.includes('2 years') || lower.includes('two years')) {
+      dur = '2 years';
+    } else if (lower.includes('6 months') || lower.includes('six months')) {
+      dur = '6 months';
+    } else if (lower.includes('3 months') || lower.includes('three months')) {
+      dur = '3 months';
+    } else if (lower.includes('1 month') || lower.includes('one month') || lower.includes('a month')) {
+      dur = '1 month';
+    }
 
     return {
       intent: 'CREATE_PLAN',

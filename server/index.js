@@ -831,16 +831,23 @@ app.get('/api/expenses', authenticate, (req, res) => {
   let modified = false;
   const userExps = (store.expenses || []).filter(e => e.userId === req.user.id);
 
-  // Auto-migration & fallback for existing plan records lacking endDate
+  // Auto-migration & fallback for existing plan records lacking or having incorrect endDate
   userExps.forEach(e => {
-    if ((e.isPlan || e.isRecurring || e.frequency) && !e.endDate) {
+    if (e.isPlan || e.isRecurring || e.frequency) {
       const startDate = e.startDate || e.date || new Date().toISOString().split('T')[0];
-      const parsedDur = parseDuration(e.durationValue ? { value: e.durationValue, unit: e.durationUnit } : e.duration, e.frequency);
-      e.durationValue = parsedDur.durationValue;
-      e.durationUnit = parsedDur.durationUnit;
-      e.endDate = calculateEndDate(startDate, parsedDur, e.frequency);
-      e.nextDueDate = e.endDate;
-      modified = true;
+      const parsedDur = parseDuration(
+        (e.durationValue && e.durationUnit) ? { durationValue: e.durationValue, durationUnit: e.durationUnit } : e.duration,
+        e.frequency
+      );
+      const expectedEnd = calculateEndDate(startDate, parsedDur, e.frequency);
+
+      if (!e.endDate || (e.durationValue && e.durationUnit && e.endDate !== expectedEnd)) {
+        e.durationValue = parsedDur.durationValue;
+        e.durationUnit = parsedDur.durationUnit;
+        e.endDate = expectedEnd;
+        e.nextDueDate = expectedEnd;
+        modified = true;
+      }
     }
   });
 
@@ -1045,8 +1052,8 @@ function generateUserNotifications(userId, store) {
         if (diffDays <= 5 && diffDays >= 0) {
           addIfNew({
             type: 'PLAN',
-            title: `${plan.category || 'Plan'} Expiry / Due Soon`,
-            message: `"${plan.description || plan.category}" (₹${plan.amount}) is due/expiring on ${targetDateStr}.`,
+            title: `Plan Ending Soon`,
+            message: `Your ${plan.description || plan.category || 'Plan'} plan ends in ${diffDays} day${diffDays === 1 ? '' : 's'}.`,
             priority: 'NORMAL',
             relatedType: 'expense',
             relatedId: plan.id,
