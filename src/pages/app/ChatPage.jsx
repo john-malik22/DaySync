@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, RefreshCw, AlertCircle } from 'lucide-react';
+import { Send, RefreshCw, AlertCircle, Sparkles, HelpCircle, Zap } from 'lucide-react';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
@@ -13,12 +13,33 @@ export function ChatPage() {
   const [search, setSearch] = useState('');
   const [lastFailedMsg, setLastFailedMsg] = useState(null);
   const chatEndRef = useRef(null);
+  const inputRef = useRef(null);
 
-  const promptSuggestions = [
+  const quickQuestions = [
     "What tasks do I have pending?",
-    "I spent ₹400 on food.",
-    "Received ₹5000 salary today.",
-    "Remember I prefer dark theme."
+    "What do I have to do today?",
+    "Show my recent expenses",
+    "How much did I spend this month?",
+    "Show my habits",
+    "What goals am I working on?",
+    "Show my reminders",
+    "What should I focus on today?",
+    "Give me a summary",
+    "Show my recent memories",
+    "Plan my day",
+    "Review my spending"
+  ];
+
+  const quickActionTemplates = [
+    "Spend ₹___ on ___",
+    "Received ₹___ from ___",
+    "Add task: ___ at ___",
+    "Add habit: ___",
+    "Create goal: ___",
+    "Remind me to ___ at ___",
+    "Remember: ___",
+    "Postpone ___ to ___",
+    "Change ___ to ___"
   ];
 
   useEffect(() => {
@@ -26,6 +47,13 @@ export function ChatPage() {
   }, [conversations, loading]);
 
   const navigate = useNavigate();
+
+  const handleShortcutClick = (text) => {
+    setInput(text);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   const handleSend = async (e) => {
     e?.preventDefault();
@@ -82,29 +110,64 @@ export function ChatPage() {
       {/* Top Header Row */}
       <PageHeaderRow title="Chat with Luna AI" onSearch={setSearch} />
 
-      {/* Prompt Chips Row */}
-      <div className="scroll-row" style={{ flexShrink: 0, paddingBottom: '4px' }}>
-        {promptSuggestions.map((prompt, i) => (
-          <button
-            key={i}
-            onClick={() => {
-              setInput(prompt);
-            }}
-            style={{
-              padding: '6px 14px',
-              borderRadius: 'var(--radius-full)',
-              border: '1px solid var(--border-color)',
-              background: 'var(--bg-card)',
-              color: 'var(--text-secondary)',
-              fontSize: '13px',
-              whiteSpace: 'nowrap',
-              cursor: 'pointer',
-              flexShrink: 0
-            }}
-          >
-            💬 {prompt}
-          </button>
-        ))}
+      {/* Categorized Horizontally Scrollable Prompt Chips Container */}
+      <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '6px', paddingBottom: '4px' }}>
+        {/* Row 1: Quick Questions */}
+        <div className="scroll-row" style={{ alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', flexShrink: 0, marginRight: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <HelpCircle size={12} color="var(--accent-primary)" /> Questions:
+          </span>
+          {quickQuestions.map((q, i) => (
+            <button
+              key={`q_${i}`}
+              type="button"
+              onClick={() => handleShortcutClick(q)}
+              style={{
+                padding: '5px 12px',
+                borderRadius: 'var(--radius-full)',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-card)',
+                color: 'var(--text-secondary)',
+                fontSize: '12px',
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: 'all 0.15s ease'
+              }}
+            >
+              💬 {q}
+            </button>
+          ))}
+        </div>
+
+        {/* Row 2: Quick Action Templates */}
+        <div className="scroll-row" style={{ alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', flexShrink: 0, marginRight: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Zap size={12} color="var(--accent-warning)" /> Actions:
+          </span>
+          {quickActionTemplates.map((act, i) => (
+            <button
+              key={`act_${i}`}
+              type="button"
+              onClick={() => handleShortcutClick(act)}
+              style={{
+                padding: '5px 12px',
+                borderRadius: 'var(--radius-full)',
+                border: '1px solid var(--accent-primary)',
+                background: 'var(--color-primary-soft)',
+                color: 'var(--accent-primary)',
+                fontSize: '12px',
+                fontWeight: '600',
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: 'all 0.15s ease'
+              }}
+            >
+              ⚡ {act}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Independent Scrollable Conversation Feed */}
@@ -158,8 +221,9 @@ export function ChatPage() {
       {/* Sticky Bottom Message Composer Bar */}
       <form onSubmit={handleSend} className="chat-composer-bar">
         <input
+          ref={inputRef}
           type="text"
-          placeholder="Message Luna AI..."
+          placeholder="Message Luna AI or select a quick shortcut..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           style={{
