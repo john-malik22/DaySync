@@ -115,6 +115,32 @@ export function SettingsPage() {
     });
   };
 
+  const VALID_STARTUP_PAGES = ['dashboard', 'tasks', 'expenses', 'habits', 'goals', 'memories', 'notifications', 'chat', 'summary'];
+
+  // Startup Page preference state
+  const [startupPage, setStartupPage] = useState(() => {
+    try {
+      const saved = localStorage.getItem('daysync_startup_page');
+      if (saved && VALID_STARTUP_PAGES.includes(saved.toLowerCase())) {
+        return saved.toLowerCase();
+      }
+      if (saved && saved.startsWith('/app/')) {
+        const key = saved.replace('/app/', '').replace('task', 'tasks');
+        if (VALID_STARTUP_PAGES.includes(key)) return key;
+      }
+    } catch (e) {}
+    return 'dashboard';
+  });
+
+  const handleStartupPageChange = (e) => {
+    const value = e.target.value;
+    setStartupPage(value);
+    try {
+      localStorage.setItem('daysync_startup_page', value);
+    } catch (e) {}
+    if (showToast) showToast('Startup page preference saved.', 'success');
+  };
+
   const handleSaveStartingBalance = (e) => {
     e.preventDefault();
     const val = parseFloat(startingBalanceInput);
@@ -352,15 +378,15 @@ export function SettingsPage() {
               style={{ width: '100%', maxWidth: '280px', padding: '6px 10px', fontSize: '13px' }}
               aria-label="Open Page on Startup"
             >
-              <option value="/app/dashboard">Dashboard</option>
-              <option value="/app/task">Tasks</option>
-              <option value="/app/expenses">Expenses</option>
-              <option value="/app/habits">Habits</option>
-              <option value="/app/habits">Goals</option>
-              <option value="/app/memories">Memories</option>
-              <option value="/app/notifications">Notifications</option>
-              <option value="/app/chat">Chat</option>
-              <option value="/app/summary">Summary</option>
+              <option value="dashboard">Dashboard</option>
+              <option value="tasks">Tasks</option>
+              <option value="expenses">Expenses</option>
+              <option value="habits">Habits</option>
+              <option value="goals">Goals</option>
+              <option value="memories">Memories</option>
+              <option value="notifications">Notifications</option>
+              <option value="chat">Chat</option>
+              <option value="summary">Summary</option>
             </select>
           </div>
         </div>
