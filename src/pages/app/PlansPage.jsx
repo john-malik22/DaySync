@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
@@ -12,39 +12,20 @@ export function PlansPage() {
   const [filter, setFilter] = useState('All');
 
   // Filter expenses that represent plans/recurring entries
-  const plans = (expenses || []).filter(e => {
-    return (
-      e.isPlan ||
-      e.isRecurring ||
-      Boolean(e.duration) ||
-      Boolean(e.durationValue) ||
-      Boolean(e.frequency) ||
-      ['Recharges', 'Subscriptions', 'Electricity Bill'].includes(e.category)
-    );
-  });
+  const plans = useMemo(() => {
+    return (expenses || []).filter(e => {
+      return (
+        e.isPlan ||
+        e.isRecurring ||
+        Boolean(e.duration) ||
+        Boolean(e.durationValue) ||
+        Boolean(e.frequency) ||
+        ['Recharges', 'Subscriptions', 'Electricity Bill'].includes(e.category)
+      );
+    });
+  }, [expenses]);
 
   const categories = ['All', 'Subscriptions', 'Recharges', 'Utilities', 'Warranties', 'Services'];
-
-  const filteredPlans = plans.filter(p => {
-    const titleMatch = (p.description || p.category || '').toLowerCase().includes(search.toLowerCase());
-
-    if (filter === 'All') return titleMatch;
-    if (filter === 'Subscriptions') return titleMatch && (p.category === 'Subscriptions' || p.planType === 'Subscription');
-    if (filter === 'Recharges') return titleMatch && (p.category === 'Recharges' || p.planType === 'Recharge');
-    if (filter === 'Utilities') return titleMatch && (p.category === 'Electricity Bill' || p.planType === 'Utility');
-    if (filter === 'Warranties') return titleMatch && p.planType === 'Warranty';
-    if (filter === 'Services') return titleMatch && p.planType === 'Service';
-    return titleMatch;
-  });
-
-  // Financial summary of plans
-  const totalMonthlyPlanCost = plans.reduce((acc, curr) => {
-    const amt = parseFloat(curr.amount || 0);
-    const durInfo = parseDuration(curr.durationValue ? { value: curr.durationValue, unit: curr.durationUnit } : curr.duration, curr.frequency);
-    if (durInfo.durationUnit === 'years') return acc + (amt / (durInfo.durationValue * 12));
-    if (durInfo.durationUnit === 'days') return acc + (amt * (30 / durInfo.durationValue));
-    return acc + (amt / durInfo.durationValue);
-  }, 0);
 
   const getEffectiveEndDate = (plan) => {
     if (plan.endDate) return plan.endDate;
@@ -53,7 +34,7 @@ export function PlansPage() {
   };
 
   const getDaysRemaining = (endDateStr) => {
-    if (!endDateStr) return null;
+    if (!endDateStr) return 999;
     try {
       const targetComp = parseDateComponents(endDateStr);
       const todayComp = parseDateComponents(new Date().toISOString().split('T')[0]);
@@ -64,14 +45,75 @@ export function PlansPage() {
       const diff = Math.ceil((targetDate - todayDate) / (1000 * 60 * 60 * 24));
       return diff;
     } catch (e) {
-      return null;
+      return 999;
     }
   };
+
+  const sortedAndFilteredPlans = useMemo(() => {
+    const matched = plans.filter(p => {
+      const titleMatch = (p.description || p.category || '').toLowerCase().includes(search.toLowerCase());
+
+      if (filter === 'All') return titleMatch;
+      if (filter === 'Subscriptions') return titleMatch && (p.category === 'Subscriptions' || p.planType === 'Subscription');
+      if (filter === 'Recharges') return titleMatch && (p.category === 'Recharges' || p.planType === 'Recharge');
+      if (filter === 'Utilities') return titleMatch && (p.category === 'Electricity Bill' || p.planType === 'Utility');
+      if (filter === 'Warranties') return titleMatch && p.planType === 'Warranty';
+      if (filter === 'Services') return titleMatch && p.planType === 'Service';
+      return titleMatch;
+    });
+
+    // Grouping priority: Ending Soon (1) -> Active (2) -> Expired (3)
+    return matched.sort((a, b) => {
+      const endA = getEffectiveEndDate(a);
+      const endB = getEffectiveEndDate(b);
+      const daysA = getDaysRemaining(endA);
+      const daysB = getDaysRemaining(endB);
+
+      const getGroup = (d) => {
+        if (d >= 0 && d <= 5) return 1; // Ending Soon
+        if (d > 5) return 2;             // Active
+        return 3;                        // Expired
+      };
+
+      const groupA = getGroup(daysA);
+      const groupB = getGroup(daysB);
+
+      if (groupA !== groupB) return groupA - groupB;
+      return daysA - daysB;
+    });
+  }, [plans, search, filter]);
+
+  // Financial summary of plans
+  const totalMonthlyPlanCost = useMemo(() => {
+    return plans.reduce((acc, curr) => {
+      const amt = parseFloat(curr.amount || 0);
+      const durInfo = parseDuration(curr.durationValue ? { value: curr.durationValue, unit: curr.durationUnit } : curr.duration, curr.frequency);
+      if (durInfo.durationUnit === 'years') return acc + (amt / (durInfo.durationValue * 12));
+      if (durInfo.durationUnit === 'days') return acc + (amt * (30 / durInfo.durationValue));
+      return acc + (amt / durInfo.durationValue);
+    }, 0);
+  }, [plans]);
 
   const getPlanDurationLabel = (plan) => {
     if (plan.duration) return plan.duration;
     if (plan.durationValue && plan.durationUnit) return `${plan.durationValue} ${plan.durationUnit}`;
     return '1 month';
+  };
+
+  const getStatusDisplay = (daysRem) => {
+    if (daysRem < 0) {
+      return { status: 'EXPIRED', text: 'Expired', badgeStyle: { bg: 'rgba(255, 75, 75, 0.15)', color: 'var(--accent-danger)' } };
+    }
+    if (daysRem === 0) {
+      return { status: 'ENDING SOON', text: 'Ends today', badgeStyle: { bg: 'rgba(255, 171, 0, 0.15)', color: 'var(--accent-warning)' } };
+    }
+    if (daysRem === 1) {
+      return { status: 'ENDING SOON', text: 'Ends tomorrow', badgeStyle: { bg: 'rgba(255, 171, 0, 0.15)', color: 'var(--accent-warning)' } };
+    }
+    if (daysRem <= 5) {
+      return { status: 'ENDING SOON', text: `Ends in ${daysRem} days`, badgeStyle: { bg: 'rgba(255, 171, 0, 0.15)', color: 'var(--accent-warning)' } };
+    }
+    return { status: 'ACTIVE', text: 'Active', badgeStyle: { bg: 'var(--bg-tertiary)', color: 'var(--accent-primary)' } };
   };
 
   return (
@@ -114,7 +156,7 @@ export function PlansPage() {
             {plans.filter(p => {
               const endDate = getEffectiveEndDate(p);
               const rem = getDaysRemaining(endDate);
-              return rem !== null && rem >= 0 && rem <= 7;
+              return rem !== null && rem >= 0 && rem <= 5;
             }).length}
           </div>
         </div>
@@ -143,7 +185,7 @@ export function PlansPage() {
       <div className="glass-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
           <h3 style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Repeat size={16} color="var(--accent-primary)" /> RECURRING PLANS ({filteredPlans.length})
+            <Repeat size={16} color="var(--accent-primary)" /> RECURRING PLANS ({sortedAndFilteredPlans.length})
           </h3>
           {isFromCache?.expenses && <StaleIndicator timestamp={lastSyncedAt?.expenses} />}
         </div>
@@ -159,7 +201,7 @@ export function PlansPage() {
           <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)', fontSize: '13px' }}>
             Loading plans...
           </div>
-        ) : filteredPlans.length === 0 ? (
+        ) : sortedAndFilteredPlans.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '36px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
             <Repeat size={32} color="var(--accent-primary)" style={{ opacity: 0.8 }} />
             <div style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-primary)' }}>
@@ -176,17 +218,18 @@ export function PlansPage() {
           </div>
         ) : (
           <div className="grid-2" style={{ gap: 'var(--space-sm)' }}>
-            {filteredPlans.map(plan => {
+            {sortedAndFilteredPlans.map(plan => {
               const startDateIso = plan.startDate || plan.date;
               const endDateIso = getEffectiveEndDate(plan);
               const daysRem = getDaysRemaining(endDateIso);
-              const isExpiringSoon = daysRem !== null && daysRem >= 0 && daysRem <= 5;
-              const isExpired = daysRem !== null && daysRem < 0;
+              const { status, text, badgeStyle } = getStatusDisplay(daysRem);
+              const isExpiringSoon = status === 'ENDING SOON';
+              const isExpired = status === 'EXPIRED';
 
               return (
                 <div key={plan.id} style={{
                   padding: '14px 16px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-                  border: `1px solid ${isExpiringSoon ? 'var(--accent-warning)' : 'var(--border-color)'}`,
+                  border: `1px solid ${isExpiringSoon ? 'var(--accent-warning)' : isExpired ? 'rgba(255, 75, 75, 0.4)' : 'var(--border-color)'}`,
                   display: 'flex', flexDirection: 'column', gap: '10px'
                 }}>
                   {/* Top Line: Name & Category Badge */}
@@ -202,16 +245,15 @@ export function PlansPage() {
 
                     <span style={{
                       fontSize: '11px', fontWeight: '700', padding: '3px 8px', borderRadius: '4px',
-                      background: isExpired ? 'rgba(255, 75, 75, 0.15)' : isExpiringSoon ? 'rgba(255, 171, 0, 0.15)' : 'var(--bg-tertiary)',
-                      color: isExpired ? 'var(--accent-danger)' : isExpiringSoon ? 'var(--accent-warning)' : 'var(--accent-primary)',
+                      background: badgeStyle.bg, color: badgeStyle.color,
                       display: 'inline-flex', alignItems: 'center', gap: '4px'
                     }}>
                       {isExpired ? <AlertCircle size={12} /> : isExpiringSoon ? <Clock size={12} /> : <CheckCircle2 size={12} />}
-                      {isExpired ? 'Expired' : isExpiringSoon ? `Ends in ${daysRem} days` : 'Active'}
+                      {status === 'ACTIVE' ? 'Active' : text}
                     </span>
                   </div>
 
-                  {/* Pricing / Pack Details */}
+                  {/* Pricing & Duration */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
                       ₹{parseFloat(plan.amount || 0).toLocaleString('en-IN')}
@@ -233,7 +275,7 @@ export function PlansPage() {
 
                     <div>
                       <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px' }}>END DATE</span>
-                      <strong style={{ color: isExpiringSoon ? 'var(--accent-warning)' : 'var(--text-primary)' }}>
+                      <strong style={{ color: isExpiringSoon ? 'var(--accent-warning)' : isExpired ? 'var(--accent-danger)' : 'var(--text-primary)' }}>
                         {formatHumanDate(endDateIso)}
                       </strong>
                     </div>

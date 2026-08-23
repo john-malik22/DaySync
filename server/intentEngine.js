@@ -65,10 +65,11 @@ export function normalizeInput(text) {
 }
 
 export function parseNumberAndCurrency(text) {
-  const numRegex = /(?:₹|\$|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:rupees|rs|inr|bucks)?/i;
+  const numRegex = /(?:₹|\$|rs\.?|inr)?\s*([\d,]+(?:\.\d+)?)\s*(?:rupees|rs|inr|bucks)?/i;
   const match = text.match(numRegex);
   if (match) {
-    const val = parseFloat(match[1]);
+    const raw = match[1].replace(/,/g, '');
+    const val = parseFloat(raw);
     if (!isNaN(val)) return val;
   }
   return null;
@@ -207,6 +208,31 @@ export function classifyIntent(message, context = {}) {
 
     if (lower.includes('summary') || lower.includes('report') || lower.includes('productivity')) {
       return { intent: 'READ_SUMMARY', confidence: 0.95, entities: {} };
+    }
+  }
+
+  // 2b-1. UPDATE PLAN / EXTEND PLAN INTENT
+  if (lower.includes('extend') || lower.includes('change') || lower.includes('is now ₹') || lower.includes('is now ') || lower.includes('update plan')) {
+    if (lower.includes('netflix') || lower.includes('spotify') || lower.includes('wifi') || lower.includes('wi-fi') || lower.includes('jio') || lower.includes('airtel') || lower.includes('plan')) {
+      const num = parseNumberAndCurrency(lower);
+      const durMatch = lower.match(/(\d+|one|two|three|four|five|six|seven|eight|nine|ten|twelve)\s*(months?|years?|days?|weeks?)/i);
+
+      let targetTitle = 'Plan';
+      if (lower.includes('netflix')) targetTitle = 'Netflix';
+      else if (lower.includes('spotify')) targetTitle = 'Spotify';
+      else if (lower.includes('jio')) targetTitle = 'Jio';
+      else if (lower.includes('airtel')) targetTitle = 'Airtel';
+      else if (lower.includes('wifi') || lower.includes('wi-fi')) targetTitle = 'Wi-Fi';
+
+      return {
+        intent: 'UPDATE_PLAN',
+        confidence: 0.90,
+        entities: {
+          targetTitle,
+          newAmount: num,
+          extendDuration: durMatch ? durMatch[0] : null
+        }
+      };
     }
   }
 
