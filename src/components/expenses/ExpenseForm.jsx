@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, ArrowUpRight, ArrowDownRight, Repeat, CheckCircle2, Edit3, X } from 'lucide-react';
+import { Plus, ArrowUpRight, ArrowDownRight, Calendar, Repeat } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
 import { calculateEndDate, parseDuration, formatHumanDate } from '../../services/dateUtils';
@@ -36,34 +36,35 @@ export function ExpenseForm() {
   const [category, setCategory] = useState('Recharges');
   const [description, setDescription] = useState('');
 
-  // Plan State (Attached when Done is clicked)
+  // Simplified Plan / Recurring fields (NO Frequency field)
   const [isPlan, setIsPlan] = useState(false);
   const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [planDurationSelect, setPlanDurationSelect] = useState('1 month');
   const [customValue, setCustomValue] = useState('45');
   const [customUnit, setCustomUnit] = useState('days');
 
-  // Centered Modal Transient Panel Draft State
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [draftStartDate, setDraftStartDate] = useState(startDate);
-  const [draftDurationSelect, setDraftDurationSelect] = useState(planDurationSelect);
-  const [draftCustomValue, setDraftCustomValue] = useState(customValue);
-  const [draftCustomUnit, setDraftCustomUnit] = useState(customUnit);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Compute active duration info for saved plan state
+  // Compute active durationValue, durationUnit, and display string
   const activeDurationInfo = useMemo(() => {
     if (planDurationSelect === 'custom') {
       const val = Math.max(1, parseInt(customValue, 10) || 1);
       const unit = customUnit || 'days';
-      return { durationValue: val, durationUnit: unit, durationStr: `${val} ${unit}` };
+      return {
+        durationValue: val,
+        durationUnit: unit,
+        durationStr: `${val} ${unit}`
+      };
     }
     const parsed = parseDuration(planDurationSelect);
-    return { durationValue: parsed.durationValue, durationUnit: parsed.durationUnit, durationStr: planDurationSelect };
+    return {
+      durationValue: parsed.durationValue,
+      durationUnit: parsed.durationUnit,
+      durationStr: planDurationSelect
+    };
   }, [planDurationSelect, customValue, customUnit]);
 
-  // Compute calculated end date for saved plan state
+  // Automatic End Date Calculation via Central Utility
   const { calculatedEndDateIso, calculatedHumanDate } = useMemo(() => {
     if (!startDate) return { calculatedEndDateIso: '', calculatedHumanDate: '' };
     const iso = calculateEndDate(startDate, {
@@ -73,53 +74,6 @@ export function ExpenseForm() {
     const human = formatHumanDate(iso);
     return { calculatedEndDateIso: iso, calculatedHumanDate: human };
   }, [startDate, activeDurationInfo]);
-
-  // Compute active duration info for DRAFT modal state
-  const draftDurationInfo = useMemo(() => {
-    if (draftDurationSelect === 'custom') {
-      const val = Math.max(1, parseInt(draftCustomValue, 10) || 1);
-      const unit = draftCustomUnit || 'days';
-      return { durationValue: val, durationUnit: unit, durationStr: `${val} ${unit}` };
-    }
-    const parsed = parseDuration(draftDurationSelect);
-    return { durationValue: parsed.durationValue, durationUnit: parsed.durationUnit, durationStr: draftDurationSelect };
-  }, [draftDurationSelect, draftCustomValue, draftCustomUnit]);
-
-  // Compute calculated end date for DRAFT modal state
-  const { draftEndDateIso, draftHumanDate } = useMemo(() => {
-    if (!draftStartDate) return { draftEndDateIso: '', draftHumanDate: '' };
-    const iso = calculateEndDate(draftStartDate, {
-      durationValue: draftDurationInfo.durationValue,
-      durationUnit: draftDurationInfo.durationUnit
-    });
-    const human = formatHumanDate(iso);
-    return { calculatedEndDateIso: iso, calculatedHumanDate: human };
-  }, [draftStartDate, draftDurationInfo]);
-
-  const handleOpenPanel = () => {
-    setDraftStartDate(startDate);
-    setDraftDurationSelect(planDurationSelect);
-    setDraftCustomValue(customValue);
-    setDraftCustomUnit(customUnit);
-    setIsPanelOpen(true);
-  };
-
-  const handleCancelPanel = () => {
-    setIsPanelOpen(false);
-  };
-
-  const handleDonePanel = () => {
-    setStartDate(draftStartDate);
-    setPlanDurationSelect(draftDurationSelect);
-    setCustomValue(draftCustomValue);
-    setCustomUnit(draftCustomUnit);
-    setIsPlan(true);
-    setIsPanelOpen(false);
-  };
-
-  const handleRemovePlan = () => {
-    setIsPlan(false);
-  };
 
   const handleTypeSwitch = (type) => {
     setTxType(type);
@@ -173,7 +127,6 @@ export function ExpenseForm() {
 
   return (
     <div className="glass-card">
-      {/* Top Bar Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
         <h3 style={{ color: 'var(--accent-primary)', margin: 0 }}>LOG TRANSACTION</h3>
 
@@ -209,7 +162,6 @@ export function ExpenseForm() {
         </div>
       </div>
 
-      {/* Main Expense / Income Form */}
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
         <div className="mobile-stack-form" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1.5fr auto', gap: 'var(--space-sm)' }}>
           <input
@@ -245,206 +197,93 @@ export function ExpenseForm() {
           </button>
         </div>
 
-        {/* Compact Plan Trigger & Summary Area */}
+        {/* Plan Toggle Checkbox */}
         {txType === 'expense' && (
           <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border-color)', marginTop: '4px' }}>
-            {!isPlan ? (
-              <button
-                type="button"
-                onClick={handleOpenPanel}
-                style={{
-                  background: 'transparent', border: 'none', padding: '4px 0',
-                  color: 'var(--accent-primary)', fontSize: '13px', fontWeight: '600',
-                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px'
-                }}
-              >
-                <Repeat size={14} color="var(--accent-primary)" /> Add as a Plan
-              </button>
-            ) : (
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer', color: 'var(--text-primary)', fontWeight: '600' }}>
+              <input
+                type="checkbox"
+                checked={isPlan}
+                onChange={(e) => setIsPlan(e.target.checked)}
+                style={{ width: '16px', height: '16px', accentColor: 'var(--accent-primary)' }}
+              />
+              <Repeat size={14} color="var(--accent-primary)" /> Add as a Plan / Subscription / Recharge
+            </label>
+
+            {/* Plan Details Expansion Block */}
+            {isPlan && (
               <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px',
-                padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(124, 58, 237, 0.08)',
-                border: '1px solid rgba(124, 58, 237, 0.2)', fontSize: '13px'
+                marginTop: '10px', padding: '12px 14px', borderRadius: 'var(--radius-sm)',
+                background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', alignItems: 'flex-start'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)', fontWeight: '600' }}>
-                  <CheckCircle2 size={16} color="var(--accent-primary)" />
-                  <span>Plan details added &bull; <span style={{ color: 'var(--accent-primary)' }}>{activeDurationInfo.durationStr}</span> &bull; Ends {calculatedHumanDate}</span>
+                <div>
+                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: '600' }}>START DATE</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    style={{ width: '100%', fontSize: '12px', padding: '6px 8px', minHeight: '36px' }}
+                  />
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <button
-                    type="button"
-                    onClick={handleOpenPanel}
-                    style={{
-                      background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '4px',
-                      padding: '3px 8px', fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600'
-                    }}
+                <div>
+                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: '600' }}>CURRENT PLAN DURATION</label>
+                  <select
+                    value={planDurationSelect}
+                    onChange={(e) => setPlanDurationSelect(e.target.value)}
+                    style={{ width: '100%', fontSize: '12px', padding: '6px 8px', minHeight: '36px' }}
                   >
-                    <Edit3 size={12} /> Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleRemovePlan}
-                    title="Remove Plan"
-                    style={{
-                      background: 'transparent', border: 'none', color: 'var(--text-muted)',
-                      cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center'
-                    }}
-                  >
-                    <X size={14} />
-                  </button>
+                    <option value="28 days">28 days</option>
+                    <option value="56 days">56 days</option>
+                    <option value="84 days">84 days</option>
+                    <option value="1 month">1 month</option>
+                    <option value="2 months">2 months</option>
+                    <option value="3 months">3 months</option>
+                    <option value="6 months">6 months</option>
+                    <option value="1 year">1 year</option>
+                    <option value="2 years">2 years</option>
+                    <option value="custom">Custom...</option>
+                  </select>
+
+                  {/* Custom Duration Fields */}
+                  {planDurationSelect === 'custom' && (
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="Length"
+                        value={customValue}
+                        onChange={(e) => setCustomValue(e.target.value)}
+                        style={{ width: '70px', fontSize: '12px', padding: '4px 6px', minHeight: '32px' }}
+                      />
+                      <select
+                        value={customUnit}
+                        onChange={(e) => setCustomUnit(e.target.value)}
+                        style={{ flex: 1, fontSize: '12px', padding: '4px 6px', minHeight: '32px' }}
+                      >
+                        <option value="days">Days</option>
+                        <option value="months">Months</option>
+                        <option value="years">Years</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: '600' }}>END DATE</label>
+                  <div style={{
+                    padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-tertiary)',
+                    border: '1px solid var(--border-color)', fontSize: '13px', fontWeight: '700', color: 'var(--accent-primary)'
+                  }}>
+                    Ends {calculatedHumanDate || 'Auto Calculated'}
+                  </div>
                 </div>
               </div>
             )}
           </div>
         )}
       </form>
-
-      {/* PLAN DETAILS COMPACT CENTERED MODAL */}
-      {isPanelOpen && (
-        <div
-          onClick={handleCancelPanel}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 1100,
-            background: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(2px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '16px', animation: 'fadeIn 0.18s ease-out'
-          }}
-        >
-          <style>{`
-            .plan-details-modal {
-              width: calc(100% - 32px);
-              max-width: 360px;
-            }
-            @media (min-width: 640px) {
-              .plan-details-modal {
-                max-width: 400px !important;
-              }
-            }
-          `}</style>
-
-          <div
-            className="plan-details-modal"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)',
-              padding: '16px', boxShadow: 'var(--shadow-lg)', display: 'flex', flexDirection: 'column', gap: '14px',
-              animation: 'fadeInScale 0.18s cubic-bezier(0.16, 1, 0.3, 1)'
-            }}
-          >
-            {/* Modal Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Repeat size={16} color="var(--accent-primary)" /> Plan Details
-              </h4>
-              <button
-                type="button"
-                onClick={handleCancelPanel}
-                style={{
-                  background: 'transparent', border: 'none', color: 'var(--text-muted)',
-                  cursor: 'pointer', padding: '2px 4px', fontSize: '18px', lineHeight: 1
-                }}
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Modal Body Form Fields */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: '500' }}>
-                  Start date
-                </label>
-                <input
-                  type="date"
-                  value={draftStartDate}
-                  onChange={(e) => setDraftStartDate(e.target.value)}
-                  style={{ width: '100%', fontSize: '13px', padding: '6px 10px', minHeight: '36px', borderRadius: 'var(--radius-sm)' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: '500' }}>
-                  Plan duration
-                </label>
-                <select
-                  value={draftDurationSelect}
-                  onChange={(e) => setDraftDurationSelect(e.target.value)}
-                  style={{ width: '100%', fontSize: '13px', padding: '6px 10px', minHeight: '36px', borderRadius: 'var(--radius-sm)' }}
-                >
-                  <option value="28 days">28 days</option>
-                  <option value="56 days">56 days</option>
-                  <option value="84 days">84 days</option>
-                  <option value="1 month">1 month</option>
-                  <option value="2 months">2 months</option>
-                  <option value="3 months">3 months</option>
-                  <option value="6 months">6 months</option>
-                  <option value="1 year">1 year</option>
-                  <option value="2 years">2 years</option>
-                  <option value="custom">Custom...</option>
-                </select>
-
-                {/* Custom Duration Fields */}
-                {draftDurationSelect === 'custom' && (
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="Length"
-                      value={draftCustomValue}
-                      onChange={(e) => setDraftCustomValue(e.target.value)}
-                      style={{ width: '80px', fontSize: '13px', padding: '6px 8px', minHeight: '34px' }}
-                    />
-                    <select
-                      value={draftCustomUnit}
-                      onChange={(e) => setDraftCustomUnit(e.target.value)}
-                      style={{ flex: 1, fontSize: '13px', padding: '6px 8px', minHeight: '34px' }}
-                    >
-                      <option value="days">Days</option>
-                      <option value="months">Months</option>
-                      <option value="years">Years</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: '500' }}>
-                  Ends
-                </label>
-                <div style={{
-                  padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)', fontSize: '13px', fontWeight: '700', color: 'var(--accent-primary)'
-                }}>
-                  {draftHumanDate || 'Auto Calculated'}
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Footer Actions */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', paddingTop: '12px', marginTop: '4px', borderTop: '1px solid var(--border-color)' }}>
-              <button
-                type="button"
-                onClick={handleCancelPanel}
-                className="btn-secondary"
-                style={{ padding: '8px', fontSize: '13px', fontWeight: '600' }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDonePanel}
-                className="btn-primary"
-                style={{ padding: '8px', fontSize: '13px', fontWeight: '700' }}
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
