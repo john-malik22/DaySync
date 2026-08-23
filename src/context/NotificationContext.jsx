@@ -7,6 +7,7 @@ const NotificationContext = createContext();
 
 const DEFAULT_PREFERENCES = {
   enabled: true,
+  daily: true,
   task: true,
   habit: true,
   goal: true,

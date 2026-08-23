@@ -172,6 +172,14 @@ export function ChatPage() {
 
       {/* Independent Scrollable Conversation Feed */}
       <div className="chat-conversation-feed">
+        {filteredConversations.length === 0 && !loading && (
+          <div style={{ textAlign: 'center', padding: '36px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', margin: 'auto 0' }}>
+            <Sparkles size={32} color="var(--accent-primary)" style={{ opacity: 0.8 }} />
+            <div style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-primary)' }}>Start a conversation with Luna.</div>
+            <div style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '340px' }}>Ask Luna to manage tasks, expenses, habits, goals, memories, and more.</div>
+          </div>
+        )}
+
         {filteredConversations.map((msg) => (
           <ChatBubble key={msg.id} msg={msg} />
         ))}

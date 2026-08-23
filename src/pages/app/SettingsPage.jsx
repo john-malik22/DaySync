@@ -64,6 +64,7 @@ export function SettingsPage() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // Loading States
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -115,6 +116,32 @@ export function SettingsPage() {
     });
   };
 
+  const VALID_STARTUP_PAGES = ['dashboard', 'tasks', 'expenses', 'habits', 'goals', 'memories', 'notifications', 'chat', 'summary'];
+
+  // Startup Page preference state
+  const [startupPage, setStartupPage] = useState(() => {
+    try {
+      const saved = localStorage.getItem('daysync_startup_page');
+      if (saved && VALID_STARTUP_PAGES.includes(saved.toLowerCase())) {
+        return saved.toLowerCase();
+      }
+      if (saved && saved.startsWith('/app/')) {
+        const key = saved.replace('/app/', '').replace('task', 'tasks');
+        if (VALID_STARTUP_PAGES.includes(key)) return key;
+      }
+    } catch (e) {}
+    return 'dashboard';
+  });
+
+  const handleStartupPageChange = (e) => {
+    const value = e.target.value;
+    setStartupPage(value);
+    try {
+      localStorage.setItem('daysync_startup_page', value);
+    } catch (e) {}
+    if (showToast) showToast('Startup page updated.', 'success');
+  };
+
   const handleSaveStartingBalance = (e) => {
     e.preventDefault();
     const val = parseFloat(startingBalanceInput);
@@ -132,16 +159,23 @@ export function SettingsPage() {
   };
 
   // Privacy & Data Actions
-  const handleExportData = async () => {
+  const handleExportDataClick = () => {
+    setShowExportModal(true);
+  };
+
+  const handleConfirmExportData = async () => {
+    setShowExportModal(false);
     if (isExportingData) return;
     setIsExportingData(true);
-    if (showToast) showToast('Your data is being prepared...', 'info');
+    if (showToast) showToast('Preparing your DaySync PDF export...', 'info');
 
     try {
       const data = await api.exportData();
+      if (!data) throw new Error('API returned empty export payload');
       exportDataToPdf(data);
-      if (showToast) showToast('PDF data export completed successfully.', 'success');
+      if (showToast) showToast('Your DaySync PDF export is ready.', 'success');
     } catch (err) {
+      console.error('PDF export failed:', err);
       if (showToast) showToast('Unable to export your data right now. Please try again.', 'error');
     } finally {
       setIsExportingData(false);
@@ -352,15 +386,15 @@ export function SettingsPage() {
               style={{ width: '100%', maxWidth: '280px', padding: '6px 10px', fontSize: '13px' }}
               aria-label="Open Page on Startup"
             >
-              <option value="/app/dashboard">Dashboard</option>
-              <option value="/app/task">Tasks</option>
-              <option value="/app/expenses">Expenses</option>
-              <option value="/app/habits">Habits</option>
-              <option value="/app/habits">Goals</option>
-              <option value="/app/memories">Memories</option>
-              <option value="/app/notifications">Notifications</option>
-              <option value="/app/chat">Chat</option>
-              <option value="/app/summary">Summary</option>
+              <option value="dashboard">Dashboard</option>
+              <option value="tasks">Tasks</option>
+              <option value="expenses">Expenses</option>
+              <option value="habits">Habits</option>
+              <option value="goals">Goals</option>
+              <option value="memories">Memories</option>
+              <option value="notifications">Notifications</option>
+              <option value="chat">Chat</option>
+              <option value="summary">Summary</option>
             </select>
           </div>
         </div>
@@ -397,6 +431,7 @@ export function SettingsPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-sm)' }}>
             {[
+              { key: 'daily', label: 'Daily DayStart Notification' },
               { key: 'task', label: 'Task notifications' },
               { key: 'habit', label: 'Habit notifications' },
               { key: 'goal', label: 'Goal notifications' },
@@ -501,11 +536,11 @@ export function SettingsPage() {
           <div className="settings-btn-grid-2">
             <button
               type="button"
-              onClick={handleExportData}
+              onClick={handleExportDataClick}
               disabled={isExportingData}
               className="btn-secondary"
             >
-              <Download size={14} /> {isExportingData ? 'Preparing...' : 'Export My Data'}
+              <Download size={14} /> {isExportingData ? 'Exporting...' : 'Export My Data'}
             </button>
 
             <button
@@ -633,17 +668,38 @@ export function SettingsPage() {
           </h3>
 
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: '0 0 14px 0' }}>
-            Your personal productivity companion for tasks, habits, expenses, goals, memories, and more.
+            Your personal productivity companion.
           </p>
 
           <div style={{
             padding: '12px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-            border: '1px solid var(--border-color)', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.6'
+            border: '1px solid var(--border-color)', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.7',
+            marginBottom: '14px'
           }}>
             <div><strong>Application:</strong> DaySync</div>
-            <div><strong>Version:</strong> {currentVersion || pkg.version || '1.1.2'}</div>
+            <div><strong>Version:</strong> Version {currentVersion || pkg.version || '1.1.2'}</div>
+            <div><strong>Support Email:</strong> <a href="mailto:support@daysync.app" style={{ color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: '600' }}>support@daysync.app</a></div>
             <div><strong>Architecture:</strong> Vite PWA + Luna Intelligence Engine</div>
             <div><strong>Copyright:</strong> © 2026 DaySync. All rights reserved.</div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <a
+              href="mailto:support@daysync.app"
+              className="btn-primary"
+              style={{ padding: '6px 14px', fontSize: '12px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '34px' }}
+            >
+              <Mail size={14} /> Contact Developer
+            </a>
+
+            <button
+              type="button"
+              onClick={openWhatsNewModal}
+              className="btn-secondary"
+              style={{ fontSize: '12px', padding: '6px 14px', minHeight: '34px' }}
+            >
+              <Sparkles size={14} /> View What's New
+            </button>
           </div>
         </div>
       </div>
@@ -686,6 +742,19 @@ export function SettingsPage() {
         isLoading={isClearingHistory}
         onConfirm={handleConfirmClearHistory}
         onCancel={() => setShowClearHistoryModal(false)}
+      />
+
+      {/* 4. Export PDF Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showExportModal}
+        title="Export your DaySync data?"
+        message="Your export may contain personal information from your account."
+        confirmText={isExportingData ? "Exporting..." : "Export PDF"}
+        cancelText="Cancel"
+        isDanger={false}
+        isLoading={isExportingData}
+        onConfirm={handleConfirmExportData}
+        onCancel={() => setShowExportModal(false)}
       />
     </div>
   );

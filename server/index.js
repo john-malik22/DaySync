@@ -892,6 +892,41 @@ function generateUserNotifications(userId, store) {
       eventKey: `luna-tasks-notice:${userId}:${todayStr}`
     });
   }
+
+  // 4. DAILY BASELINE FALLBACK NOTIFICATION (Category 9: DAILY)
+  const dbUser = (store.users || []).find(u => u.id === userId);
+  const isDailyEnabled = dbUser?.preferences?.daily !== false && dbUser?.preferences?.dailyNotification !== false;
+
+  if (isDailyEnabled) {
+    // Check if user has ALREADY received any notification created today
+    const hasNotificationToday = (store.notifications || []).some(n => {
+      return n.userId === userId && n.createdAt && n.createdAt.startsWith(todayStr);
+    });
+
+    // If NO notification exists today, create exactly ONE DAILY fallback notification
+    if (!hasNotificationToday) {
+      const dailyMessages = [
+        "☀️ Good morning! Ready to make today productive?",
+        "✨ New day, fresh start. What would you like to accomplish today?",
+        "🧠 Luna is ready whenever you need help planning your day.",
+        "🌱 Small progress every day adds up. What will you work on today?",
+        "💡 No plans yet? Start with one small task."
+      ];
+
+      const dayOfMonth = new Date().getDate();
+      const selectedMessage = dailyMessages[dayOfMonth % dailyMessages.length];
+
+      addIfNew({
+        type: 'DAILY',
+        title: '☀️ DayStart Greeting',
+        message: selectedMessage,
+        priority: 'NORMAL',
+        relatedType: 'system',
+        actionUrl: '/app/dashboard',
+        eventKey: `daily:${userId}:${todayStr}`
+      });
+    }
+  }
 }
 
 app.get('/api/notifications', authenticate, (req, res) => {
@@ -1019,14 +1054,29 @@ app.get('/api/summaries', authenticate, (req, res) => {
 app.post('/api/privacy/export', authenticate, (req, res) => {
   const store = db.read();
   const userId = req.user.id;
+  const dbUser = (store.users || []).find(u => u.id === userId);
+
+  // Construct explicitly safe user object (removing passwordHash, tokens, secrets)
+  const safeUser = {
+    name: dbUser?.name || 'DaySync User',
+    email: dbUser?.email || '',
+    preferences: dbUser?.preferences || {},
+    createdAt: dbUser?.createdAt || null
+  };
+
   const exportData = {
-    user: store.users.find(u => u.id === userId),
-    memories: store.memories.filter(m => m.userId === userId),
-    tasks: store.tasks.filter(t => t.userId === userId),
-    expenses: store.expenses.filter(e => e.userId === userId),
-    conversations: store.conversations.filter(c => c.userId === userId),
+    user: safeUser,
+    tasks: (store.tasks || []).filter(t => t.userId === userId),
+    expenses: (store.expenses || []).filter(e => e.userId === userId),
+    habits: (store.habits || []).filter(h => h.userId === userId),
+    goals: (store.goals || []).filter(g => g.userId === userId),
+    memories: (store.memories || []).filter(m => m.userId === userId),
+    notifications: (store.notifications || []).filter(n => n.userId === userId),
+    conversations: (store.conversations || []).filter(c => c.userId === userId),
+    summaries: (store.summaries || []).filter(s => s.userId === userId),
     exportDate: new Date().toISOString()
   };
+
   res.json(exportData);
 });
 

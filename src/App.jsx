@@ -36,9 +36,35 @@ function AppLayout() {
   );
 }
 
+const STARTUP_ROUTE_MAP = {
+  dashboard: '/app/dashboard',
+  tasks: '/app/task',
+  task: '/app/task',
+  expenses: '/app/expenses',
+  habits: '/app/habits',
+  goals: '/app/habits',
+  memories: '/app/memories',
+  notifications: '/app/notifications',
+  chat: '/app/chat',
+  summary: '/app/summary'
+};
+
 function AppIndexRedirect() {
-  const startupPath = localStorage.getItem('daysync_startup_page') || '/app/dashboard';
-  return <Navigate to={startupPath} replace />;
+  let targetPath = '/app/dashboard';
+  try {
+    const saved = localStorage.getItem('daysync_startup_page');
+    if (saved) {
+      const cleanKey = String(saved).toLowerCase().replace('/app/', '').trim();
+      if (STARTUP_ROUTE_MAP[cleanKey]) {
+        targetPath = STARTUP_ROUTE_MAP[cleanKey];
+      } else if (saved.startsWith('/app/')) {
+        targetPath = saved;
+      }
+    }
+  } catch (e) {
+    targetPath = '/app/dashboard';
+  }
+  return <Navigate to={targetPath} replace />;
 }
 
 function PublicOnlyRoute() {
