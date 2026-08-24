@@ -20,6 +20,7 @@ import { DashboardPage } from './pages/app/DashboardPage';
 import { ChatPage } from './pages/app/ChatPage';
 import { ExpensesPage } from './pages/app/ExpensesPage';
 import { PlansPage } from './pages/app/PlansPage';
+import { SplitsPage } from './pages/app/SplitsPage';
 import { TaskPage } from './pages/app/TaskPage';
 import { HabitsPage } from './pages/app/HabitsPage';
 import { MemoriesPage } from './pages/app/MemoriesPage';
@@ -37,12 +38,13 @@ function AppLayout() {
   );
 }
 
-const STARTUP_ROUTE_MAP = {
+export const STARTUP_ROUTE_MAP = {
   dashboard: '/app/dashboard',
   tasks: '/app/task',
   task: '/app/task',
   expenses: '/app/expenses',
   plans: '/app/plans',
+  splits: '/app/splits',
   habits: '/app/habits',
   goals: '/app/habits',
   memories: '/app/memories',
@@ -160,6 +162,7 @@ export default function App() {
                       <Route path="chat" element={<ChatPage />} />
                       <Route path="expenses" element={<ExpensesPage />} />
                       <Route path="plans" element={<PlansPage />} />
+                      <Route path="splits" element={<SplitsPage />} />
                       <Route path="task" element={<TaskPage />} />
                       <Route path="planner" element={<Navigate to="/app/task" replace />} />
                       <Route path="habits" element={<HabitsPage />} />

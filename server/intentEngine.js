@@ -209,6 +209,14 @@ export function classifyIntent(message, context = {}) {
     if (lower.includes('summary') || lower.includes('report') || lower.includes('productivity')) {
       return { intent: 'READ_SUMMARY', confidence: 0.95, entities: {} };
     }
+
+    if (lower.includes('split') || lower.includes('splits') || lower.includes('who owes me') || lower.includes('what do i owe')) {
+      if (lower.includes('create a split') || lower.includes('new split') || lower.includes('make a split')) {
+        const nameMatch = lower.match(/(?:called|named|for)\s+([a-zA-Z0-9\s]+)/i);
+        return { intent: 'CREATE_SPLIT', confidence: 0.95, entities: { splitName: nameMatch ? nameMatch[1].trim() : 'New Split' } };
+      }
+      return { intent: 'READ_SPLITS', confidence: 0.95, entities: {} };
+    }
   }
 
   // 2b-1. UPDATE PLAN / EXTEND PLAN INTENT

@@ -1284,6 +1284,345 @@ app.post('/api/privacy/clear-history', authenticate, (req, res) => {
   res.json({ success: true, message: 'Chat history cleared successfully.' });
 });
 
+// ==================================================
+// --- SPLITS SHARED EXPENSES ENDPOINTS ---
+// ==================================================
+
+// 1. GET /api/splits - Get all splits user belongs to
+app.get('/api/splits', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+
+  const userSplits = (store.splits || []).filter(s =>
+    (s.members || []).some(m => m.userId === userId)
+  );
+
+  res.json(userSplits);
+});
+
+// 2. POST /api/splits - Create a new split
+app.post('/api/splits', authenticate, (req, res) => {
+  const store = db.read();
+  store.splits = store.splits || [];
+  const userId = req.user.id;
+  const userObj = (store.users || []).find(u => u.id === userId);
+
+  const { name, description, currency } = req.body;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Split name is required.' });
+  }
+
+  const newSplit = {
+    id: `split_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    name: name.trim(),
+    description: description ? description.trim() : '',
+    currency: currency || '₹',
+    ownerId: userId,
+    members: [
+      {
+        userId,
+        role: 'owner',
+        userName: userObj?.name || 'Owner',
+        userEmail: userObj?.email || '',
+        joinedAt: new Date().toISOString()
+      }
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  store.splits.push(newSplit);
+  db.write(store);
+  res.json(newSplit);
+});
+
+// 3. GET /api/splits/:id - Get detailed split with expenses & settlements (SERVER-SIDE AUTHORIZATION CHECK)
+app.get('/api/splits/:id', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) {
+    return res.status(404).json({ error: 'Split not found.' });
+  }
+
+  // Verify server-side membership
+  const isMember = (split.members || []).some(m => m.userId === userId);
+  if (!isMember) {
+    return res.status(403).json({ error: 'Access denied. You are not a member of this Split.' });
+  }
+
+  const expenses = (store.splitExpenses || []).filter(e => e.splitId === split.id);
+  const settlements = (store.splitSettlements || []).filter(s => s.splitId === split.id);
+
+  res.json({
+    ...split,
+    expenses,
+    settlements
+  });
+});
+
+// 4. PUT /api/splits/:id - Update split info (Owner only)
+app.put('/api/splits/:id', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) return res.status(404).json({ error: 'Split not found.' });
+  if (split.ownerId !== userId) return res.status(403).json({ error: 'Only the split owner can update split details.' });
+
+  const { name, description, currency } = req.body;
+  if (name) split.name = name.trim();
+  if (description !== undefined) split.description = description.trim();
+  if (currency) split.currency = currency;
+  split.updatedAt = new Date().toISOString();
+
+  db.write(store);
+  res.json(split);
+});
+
+// 5. DELETE /api/splits/:id - Delete split (Owner only)
+app.delete('/api/splits/:id', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) return res.status(404).json({ error: 'Split not found.' });
+  if (split.ownerId !== userId) return res.status(403).json({ error: 'Only the split owner can delete a split.' });
+
+  store.splits = store.splits.filter(s => s.id !== req.params.id);
+  store.splitExpenses = (store.splitExpenses || []).filter(e => e.splitId !== req.params.id);
+  store.splitSettlements = (store.splitSettlements || []).filter(s => s.splitId !== req.params.id);
+
+  db.write(store);
+  res.json({ success: true, message: 'Split deleted successfully.' });
+});
+
+// 6. POST /api/splits/:id/invitations - Invite a member by email or name
+app.post('/api/splits/:id/invitations', authenticate, (req, res) => {
+  const store = db.read();
+  store.splitInvitations = store.splitInvitations || [];
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) return res.status(404).json({ error: 'Split not found.' });
+  const isMember = (split.members || []).some(m => m.userId === userId);
+  if (!isMember) return res.status(403).json({ error: 'Access denied.' });
+
+  const { targetUser } = req.body;
+  if (!targetUser || !targetUser.trim()) {
+    return res.status(400).json({ error: 'Target user email or name is required.' });
+  }
+
+  const query = targetUser.trim().toLowerCase();
+  const targetUserObj = (store.users || []).find(u =>
+    u.email.toLowerCase() === query || u.name.toLowerCase() === query
+  );
+
+  if (!targetUserObj) {
+    return res.status(404).json({ error: `No DaySync user found matching "${targetUser}".` });
+  }
+
+  if ((split.members || []).some(m => m.userId === targetUserObj.id)) {
+    return res.status(400).json({ error: `${targetUserObj.name} is already a member of this Split.` });
+  }
+
+  const token = `inv_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  const inviterObj = (store.users || []).find(u => u.id === userId);
+
+  const newInvitation = {
+    id: `invite_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    splitId: split.id,
+    splitName: split.name,
+    token,
+    invitedUserId: targetUserObj.id,
+    invitedBy: userId,
+    inviterName: inviterObj?.name || 'A DaySync user',
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  };
+
+  store.splitInvitations.push(newInvitation);
+
+  store.notifications = store.notifications || [];
+  store.notifications.push({
+    id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    userId: targetUserObj.id,
+    type: 'SYSTEM',
+    title: 'Shared Split Invitation',
+    message: `${inviterObj?.name || 'Someone'} invited you to join "${split.name}".`,
+    read: false,
+    createdAt: new Date().toISOString(),
+    priority: 'NORMAL',
+    actionUrl: '/app/splits'
+  });
+
+  db.write(store);
+  res.json({ success: true, message: `Invitation sent to ${targetUserObj.name}!`, token });
+});
+
+// 7. GET /api/split-invites/my-invites - Pending invites for current user
+app.get('/api/split-invites/my-invites', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const myInvites = (store.splitInvitations || []).filter(i =>
+    i.invitedUserId === userId && i.status === 'pending'
+  );
+  res.json(myInvites);
+});
+
+// 8. POST /api/split-invites/:token/accept - Accept invitation
+app.post('/api/split-invites/:token/accept', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const userObj = (store.users || []).find(u => u.id === userId);
+  const invite = (store.splitInvitations || []).find(i => i.token === req.params.token);
+
+  if (!invite) return res.status(404).json({ error: 'Invitation token invalid or expired.' });
+  if (invite.invitedUserId && invite.invitedUserId !== userId) {
+    return res.status(403).json({ error: 'This invitation was issued to another user.' });
+  }
+
+  const split = (store.splits || []).find(s => s.id === invite.splitId);
+  if (!split) return res.status(404).json({ error: 'Split no longer exists.' });
+
+  if (!split.members.some(m => m.userId === userId)) {
+    split.members.push({
+      userId,
+      role: 'member',
+      userName: userObj?.name || 'Member',
+      userEmail: userObj?.email || '',
+      joinedAt: new Date().toISOString()
+    });
+  }
+
+  invite.status = 'accepted';
+  split.updatedAt = new Date().toISOString();
+  db.write(store);
+
+  res.json({ success: true, message: `You are now a member of ${split.name}!`, split });
+});
+
+// 9. POST /api/split-invites/:token/decline - Decline invitation
+app.post('/api/split-invites/:token/decline', authenticate, (req, res) => {
+  const store = db.read();
+  const invite = (store.splitInvitations || []).find(i => i.token === req.params.token);
+  if (invite) {
+    invite.status = 'declined';
+    db.write(store);
+  }
+  res.json({ success: true, message: 'Invitation declined.' });
+});
+
+// 10. POST /api/splits/:id/expenses - Add shared expense to split
+app.post('/api/splits/:id/expenses', authenticate, (req, res) => {
+  const store = db.read();
+  store.splitExpenses = store.splitExpenses || [];
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) return res.status(404).json({ error: 'Split not found.' });
+  const isMember = (split.members || []).some(m => m.userId === userId);
+  if (!isMember) return res.status(403).json({ error: 'Access denied.' });
+
+  const { description, amount, paidByUserId, splitMethod, participants } = req.body;
+
+  if (!description || !amount || parseFloat(amount) <= 0) {
+    return res.status(400).json({ error: 'Description and a positive amount are required.' });
+  }
+
+  const numAmt = parseFloat(amount);
+  const payerId = paidByUserId || userId;
+
+  const newExpense = {
+    id: `se_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    splitId: split.id,
+    description: description.trim(),
+    amount: numAmt,
+    paidByUserId: payerId,
+    splitMethod: splitMethod || 'EQUAL',
+    participants: participants || [],
+    createdBy: userId,
+    date: new Date().toISOString().split('T')[0],
+    createdAt: new Date().toISOString()
+  };
+
+  store.splitExpenses.push(newExpense);
+  split.updatedAt = new Date().toISOString();
+
+  const payerObj = (store.users || []).find(u => u.id === payerId);
+  (split.members || []).forEach(m => {
+    if (m.userId !== userId) {
+      store.notifications = store.notifications || [];
+      store.notifications.push({
+        id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        userId: m.userId,
+        type: 'EXPENSE',
+        title: `Shared Expense Added`,
+        message: `${payerObj?.name || 'A member'} added "${description}" (₹${numAmt}) to "${split.name}".`,
+        read: false,
+        createdAt: new Date().toISOString(),
+        priority: 'NORMAL',
+        actionUrl: '/app/splits'
+      });
+    }
+  });
+
+  db.write(store);
+  res.json(newExpense);
+});
+
+// 11. POST /api/splits/:id/settlements - Record a settlement payment
+app.post('/api/splits/:id/settlements', authenticate, (req, res) => {
+  const store = db.read();
+  store.splitSettlements = store.splitSettlements || [];
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) return res.status(404).json({ error: 'Split not found.' });
+  const isMember = (split.members || []).some(m => m.userId === userId);
+  if (!isMember) return res.status(403).json({ error: 'Access denied.' });
+
+  const { toUserId, amount } = req.body;
+  if (!toUserId || !amount || parseFloat(amount) <= 0) {
+    return res.status(400).json({ error: 'Recipient user and valid amount required for settlement.' });
+  }
+
+  const numAmt = parseFloat(amount);
+
+  const newSettlement = {
+    id: `settle_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    splitId: split.id,
+    fromUserId: userId,
+    toUserId,
+    amount: numAmt,
+    date: new Date().toISOString().split('T')[0],
+    status: 'completed',
+    createdBy: userId,
+    createdAt: new Date().toISOString()
+  };
+
+  store.splitSettlements.push(newSettlement);
+  split.updatedAt = new Date().toISOString();
+
+  const senderObj = (store.users || []).find(u => u.id === userId);
+  store.notifications = store.notifications || [];
+  store.notifications.push({
+    id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    userId: toUserId,
+    type: 'EXPENSE',
+    title: 'Settlement Payment Recorded',
+    message: `${senderObj?.name || 'A member'} paid ₹${numAmt} towards "${split.name}".`,
+    read: false,
+    createdAt: new Date().toISOString(),
+    priority: 'NORMAL',
+    actionUrl: '/app/splits'
+  });
+
+  db.write(store);
+  res.json(newSettlement);
+});
+
 db.ready
   .then(() => {
     app.listen(PORT, () => {

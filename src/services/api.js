@@ -192,5 +192,23 @@ export const api = {
 
   // Privacy & Data
   exportData: () => request('/privacy/export', { method: 'POST' }),
-  clearHistory: () => request('/privacy/clear-history', { method: 'POST' })
+  clearHistory: () => request('/privacy/clear-history', { method: 'POST' }),
+
+  // Splits Shared Expenses
+  getSplits: () => request('/splits'),
+  createSplit: (data) => request('/splits', { method: 'POST', body: JSON.stringify(data) }),
+  getSplitById: (id) => request(`/splits/${id}`),
+  updateSplit: (id, data) => request(`/splits/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSplit: (id) => request(`/splits/${id}`, { method: 'DELETE' }),
+
+  inviteSplitMember: (id, targetUser) => request(`/splits/${id}/invitations`, { method: 'POST', body: JSON.stringify({ targetUser }) }),
+  getMySplitInvitations: () => request('/split-invites/my-invites'),
+  acceptSplitInvitation: (token) => request(`/split-invites/${token}/accept`, { method: 'POST' }),
+  declineSplitInvitation: (token) => request(`/split-invites/${token}/decline`, { method: 'POST' }),
+
+  addSplitExpense: (splitId, data) => request(`/splits/${splitId}/expenses`, { method: 'POST', body: JSON.stringify(data) }),
+  updateSplitExpense: (splitId, expenseId, data) => request(`/splits/${splitId}/expenses/${expenseId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSplitExpense: (splitId, expenseId) => request(`/splits/${splitId}/expenses/${expenseId}`, { method: 'DELETE' }),
+
+  createSplitSettlement: (splitId, data) => request(`/splits/${splitId}/settlements`, { method: 'POST', body: JSON.stringify(data) })
 };
