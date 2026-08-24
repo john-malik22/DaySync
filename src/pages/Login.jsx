@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, UserPlus, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { getStartupRoute } from '../App';
 
 const validateEmail = (email) => {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -60,7 +61,7 @@ export function Login() {
 
     try {
       await login(cleanEmail, password);
-      navigate('/app/dashboard', { replace: true });
+      navigate(getStartupRoute(), { replace: true });
     } catch (err) {
       if (!navigator.onLine || err.name === 'TypeError' || (err.message && err.message.toLowerCase().includes('fetch'))) {
         setError('Unable to connect right now. Please check your internet connection and try again.');

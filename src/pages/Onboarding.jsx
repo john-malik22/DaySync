@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { getStartupRoute } from '../App';
 
 export function Onboarding() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export function Onboarding() {
         console.log('Session fallback:', e);
       }
     }
-    navigate('/app/dashboard');
+    navigate(getStartupRoute());
   };
 
   return (
