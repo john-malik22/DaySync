@@ -32,7 +32,16 @@ import pkg from '../../../package.json';
 
 export function SettingsPage() {
   const { user, theme, toggleTheme, logout, deleteAccount } = useAuth();
-  const { preferences, updatePreferences, requestBrowserPermission } = useNotifications();
+  const {
+    preferences,
+    updatePreferences,
+    pushSupported,
+    pushPermission,
+    pushEnabled,
+    pushLoading,
+    enablePush,
+    disablePush
+  } = useNotifications();
   const {
     currentVersion,
     latestVersion,
@@ -132,6 +141,20 @@ export function SettingsPage() {
     } catch (e) {}
     return 'dashboard';
   });
+
+  const handleTogglePush = async () => {
+    if (pushEnabled) {
+      await disablePush();
+      if (showToast) showToast('Push notifications disabled on this device.', 'info');
+    } else {
+      const res = await enablePush();
+      if (res.success) {
+        if (showToast) showToast('Push notifications enabled for this device!', 'success');
+      } else {
+        if (showToast) showToast(res.error || 'Could not enable push notifications.', 'error');
+      }
+    }
+  };
 
   const handleStartupPageChange = (e) => {
     const value = e.target.value;
@@ -410,23 +433,40 @@ export function SettingsPage() {
 
           <div style={{
             padding: '12px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-            border: '1px solid var(--border-color)', marginBottom: 'var(--space-md)',
+            border: `1px solid ${pushEnabled ? 'var(--accent-primary)' : 'var(--border-color)'}`, marginBottom: 'var(--space-md)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px'
           }}>
             <div>
-              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)' }}>Browser Push Notifications</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                {preferences.browser ? 'Browser notifications enabled ✅' : 'Receive alerts even when DaySync is in the background'}
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Smartphone size={15} color="var(--accent-primary)" /> Push Notifications
+                {pushEnabled && (
+                  <span style={{ fontSize: '11px', background: 'rgba(47, 111, 115, 0.15)', color: 'var(--accent-primary)', padding: '2px 6px', borderRadius: '4px', fontWeight: '700' }}>
+                    Enabled ✓
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: '11px', color: pushPermission === 'denied' ? 'var(--accent-danger)' : 'var(--text-muted)', marginTop: '2px' }}>
+                {!pushSupported
+                  ? 'Push notifications are not supported on this device/browser.'
+                  : pushPermission === 'denied'
+                  ? 'Notifications are blocked in your browser/device settings.'
+                  : pushEnabled
+                  ? 'DaySync can send notifications to this device.'
+                  : 'Receive system/phone alerts for tasks, plans, and events.'}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={requestBrowserPermission}
-              className="btn-secondary"
-              style={{ fontSize: '12px', padding: '6px 12px' }}
-            >
-              <Smartphone size={14} /> {preferences.browser ? 'Enabled' : 'Enable Browser Push'}
-            </button>
+
+            {pushSupported && pushPermission !== 'denied' && (
+              <button
+                type="button"
+                onClick={handleTogglePush}
+                disabled={pushLoading}
+                className={pushEnabled ? 'btn-secondary' : 'btn-primary'}
+                style={{ fontSize: '12px', padding: '6px 14px' }}
+              >
+                {pushLoading ? 'Processing...' : pushEnabled ? 'Disable' : 'Enable'}
+              </button>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-sm)' }}>

@@ -185,6 +185,12 @@ export const api = {
   deleteNotification: (id) => request(`/notifications/${id}`, { method: 'DELETE' }),
   clearNotifications: () => request('/notifications/clear-all', { method: 'DELETE' }),
 
+  // Web Push Notifications
+  getVapidPublicKey: () => request('/notifications/push/vapid-public-key'),
+  getPushStatus: () => request('/notifications/push/status'),
+  subscribePush: (subscription) => request('/notifications/push/subscribe', { method: 'POST', body: JSON.stringify(subscription) }),
+  unsubscribePush: (endpoint) => request('/notifications/push/subscribe', { method: 'DELETE', body: JSON.stringify({ endpoint }) }),
+
   // Intelligence
   getNotices: () => request('/notices'),
   getCurrentSuggestion: () => request('/suggestions/current'),

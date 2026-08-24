@@ -3,6 +3,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import webpush from 'web-push';
 import { db } from './db.js';
 import { classifyIntent } from './intentEngine.js';
 import { detectPotentialMemory } from './memoryEngine.js';
@@ -13,6 +14,23 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'daysync_companion_super_secret_jwt_key_2026';
+
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@daysync.app';
+
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  try {
+    webpush.setVapidDetails(
+      VAPID_SUBJECT,
+      VAPID_PUBLIC_KEY,
+      VAPID_PRIVATE_KEY
+    );
+    console.log('[WebPush] VAPID credentials configured successfully.');
+  } catch (err) {
+    console.warn('[WebPush] VAPID setup error:', err.message);
+  }
+}
 
 app.use(cors());
 app.use(express.json());
@@ -803,6 +821,45 @@ app.delete('/api/expenses/:id', authenticate, (req, res) => {
 });
 
 // --- NOTIFICATION SYSTEM BACKEND ---
+async function sendWebPushToUser(userId, notifPayload, store) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  const userSubs = (store.pushSubscriptions || []).filter(s => s.userId === userId);
+  if (userSubs.length === 0) return;
+
+  const pushPayload = JSON.stringify({
+    title: notifPayload.title || 'DaySync',
+    message: notifPayload.message || '',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    actionUrl: notifPayload.actionUrl || '/app/notifications',
+    id: notifPayload.id,
+    eventKey: notifPayload.eventKey
+  });
+
+  const subsToRemove = [];
+
+  for (const sub of userSubs) {
+    try {
+      const pushSubscriptionFormat = {
+        endpoint: sub.endpoint,
+        keys: sub.keys
+      };
+      await webpush.sendNotification(pushSubscriptionFormat, pushPayload);
+      console.log(`[WebPush] Push notification delivered to user ${userId} (${sub.endpoint.slice(0, 30)}...).`);
+    } catch (err) {
+      console.warn(`[WebPush] Error sending push to user ${userId}:`, err.statusCode || err.message);
+      if (err.statusCode === 404 || err.statusCode === 410 || (err.message && (err.message.includes('expired') || err.message.includes('invalid')))) {
+        subsToRemove.push(sub.endpoint);
+      }
+    }
+  }
+
+  if (subsToRemove.length > 0) {
+    store.pushSubscriptions = (store.pushSubscriptions || []).filter(s => !subsToRemove.includes(s.endpoint));
+    console.log(`[WebPush] Cleaned up ${subsToRemove.length} expired push subscriptions for user ${userId}.`);
+  }
+}
+
 function generateUserNotifications(userId, store) {
   store.notifications = store.notifications || [];
   const todayStr = new Date().toISOString().split('T')[0];
@@ -812,13 +869,15 @@ function generateUserNotifications(userId, store) {
   const addIfNew = (notif) => {
     const exists = store.notifications.some(n => n.userId === userId && n.eventKey === notif.eventKey);
     if (!exists) {
-      store.notifications.push({
+      const newNotifRecord = {
         id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
         userId,
         read: false,
         createdAt: new Date().toISOString(),
         ...notif
-      });
+      };
+      store.notifications.push(newNotifRecord);
+      sendWebPushToUser(userId, newNotifRecord, store);
     }
   };
 
@@ -974,7 +1033,70 @@ app.post('/api/notifications', authenticate, (req, res) => {
 
   store.notifications.push(newNotif);
   db.write(store);
+  sendWebPushToUser(userId, newNotif, store);
   res.json(newNotif);
+});
+
+// --- WEB PUSH SUBSCRIPTION ENDPOINTS ---
+app.get('/api/notifications/push/vapid-public-key', (req, res) => {
+  res.json({ vapidPublicKey: VAPID_PUBLIC_KEY });
+});
+
+app.get('/api/notifications/push/status', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const userSubs = (store.pushSubscriptions || []).filter(s => s.userId === userId);
+  res.json({
+    enabled: userSubs.length > 0,
+    subscriptionsCount: userSubs.length,
+    vapidPublicKey: VAPID_PUBLIC_KEY
+  });
+});
+
+app.post('/api/notifications/push/subscribe', authenticate, (req, res) => {
+  const store = db.read();
+  store.pushSubscriptions = store.pushSubscriptions || [];
+  const userId = req.user.id;
+  const subscription = req.body;
+
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ error: 'Valid push subscription required.' });
+  }
+
+  const existingIdx = store.pushSubscriptions.findIndex(s => s.endpoint === subscription.endpoint);
+  const newSub = {
+    id: `push_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    userId,
+    endpoint: subscription.endpoint,
+    keys: subscription.keys || {},
+    createdAt: new Date().toISOString()
+  };
+
+  if (existingIdx !== -1) {
+    store.pushSubscriptions[existingIdx] = newSub;
+  } else {
+    store.pushSubscriptions.push(newSub);
+  }
+
+  db.write(store);
+  console.log(`[WebPush] Saved push subscription for user ${userId}. Total user devices: ${(store.pushSubscriptions || []).filter(s => s.userId === userId).length}`);
+  res.json({ success: true, message: 'Push subscription saved.' });
+});
+
+app.delete('/api/notifications/push/subscribe', authenticate, (req, res) => {
+  const store = db.read();
+  store.pushSubscriptions = store.pushSubscriptions || [];
+  const userId = req.user.id;
+  const { endpoint } = req.body || {};
+
+  if (endpoint) {
+    store.pushSubscriptions = store.pushSubscriptions.filter(s => !(s.userId === userId && s.endpoint === endpoint));
+  } else {
+    store.pushSubscriptions = store.pushSubscriptions.filter(s => s.userId !== userId);
+  }
+
+  db.write(store);
+  res.json({ success: true, message: 'Push subscription removed.' });
 });
 
 app.put('/api/notifications/:id/read', authenticate, (req, res) => {

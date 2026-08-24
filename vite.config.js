@@ -13,6 +13,7 @@ export default defineConfig({
       workbox: {
         skipWaiting: false,
         clientsClaim: false,
+        importScripts: ['/sw-push.js'],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/, /\/version\.json$/]
