@@ -92,6 +92,7 @@ export function LunaProvider({ children }) {
 
   // Dedicated Resource Fetchers with safe user-scoped client caching
   const fetchTasks = useCallback(async () => {
+    if (!userId) return;
     setResourceLoading(prev => ({ ...prev, tasks: true }));
     try {
       const data = await api.getTasks();
@@ -120,6 +121,7 @@ export function LunaProvider({ children }) {
   }, [userId]);
 
   const fetchExpenses = useCallback(async () => {
+    if (!userId) return;
     setResourceLoading(prev => ({ ...prev, expenses: true }));
     try {
       const data = await api.getExpenses();
@@ -147,6 +149,7 @@ export function LunaProvider({ children }) {
   }, [userId]);
 
   const fetchMemories = useCallback(async () => {
+    if (!userId) return;
     setResourceLoading(prev => ({ ...prev, memories: true }));
     try {
       const data = await api.getMemories();
@@ -174,6 +177,7 @@ export function LunaProvider({ children }) {
   }, [userId]);
 
   const fetchSummaries = useCallback(async () => {
+    if (!userId) return;
     setResourceLoading(prev => ({ ...prev, summaries: true }));
     try {
       const data = await api.getSummaries();
@@ -201,6 +205,7 @@ export function LunaProvider({ children }) {
   }, [userId]);
 
   const fetchSuggestion = useCallback(async () => {
+    if (!userId) return;
     setResourceLoading(prev => ({ ...prev, suggestion: true }));
     try {
       const data = await api.getCurrentSuggestion();
@@ -211,9 +216,10 @@ export function LunaProvider({ children }) {
     } finally {
       setResourceLoading(prev => ({ ...prev, suggestion: false }));
     }
-  }, []);
+  }, [userId]);
 
   const fetchAllData = useCallback(async () => {
+    if (!userId) return;
     setResourceLoading(prev => ({ ...prev, initial: true }));
     await Promise.allSettled([
       fetchTasks(),
@@ -225,11 +231,13 @@ export function LunaProvider({ children }) {
       api.getChatHistory().then(setConversations).catch(() => {})
     ]);
     setResourceLoading(prev => ({ ...prev, initial: false }));
-  }, [fetchTasks, fetchExpenses, fetchMemories, fetchSummaries, fetchSuggestion]);
+  }, [userId, fetchTasks, fetchExpenses, fetchMemories, fetchSummaries, fetchSuggestion]);
 
   useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+    if (userId) {
+      fetchAllData();
+    }
+  }, [userId, fetchAllData]);
 
   // Reconnect Listener: Auto-refetch safe GET queries when internet is restored
   useEffect(() => {

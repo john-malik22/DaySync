@@ -155,8 +155,10 @@ export function NotificationProvider({ children }) {
   }, [userId]);
 
   useEffect(() => {
-    fetchNotifications();
-    refreshPushStatus();
+    if (userId) {
+      fetchNotifications();
+      refreshPushStatus();
+    }
 
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible' && userId && navigator.onLine) {

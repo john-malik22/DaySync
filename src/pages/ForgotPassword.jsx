@@ -74,7 +74,7 @@ export function ForgotPassword() {
 
     try {
       const res = await api.forgotPassword(cleanEmail);
-      setInfoMessage(res.message || 'If an account exists for this email, a reset code has been sent.');
+      setInfoMessage(res.message || 'If an account exists with that email address, a password reset code has been sent.');
       setStep('OTP');
       setResendTimer(45);
       setCanResend(false);
@@ -82,7 +82,12 @@ export function ForgotPassword() {
       if (!navigator.onLine) {
         setError('Unable to connect right now. Please check your internet connection.');
       } else {
-        setError(err.message || 'Unable to process reset request. Please try again.');
+        const msg = err.message || '';
+        if (msg.includes("couldn't find") || msg.includes('404') || err?.status === 404) {
+          setError('Unable to send the reset code right now. Please try again.');
+        } else {
+          setError(msg || 'Unable to send the reset code right now. Please try again.');
+        }
       }
     } finally {
       setLoading(false);
@@ -115,7 +120,12 @@ export function ForgotPassword() {
         setInfoMessage('Code verified successfully! Enter your new password below.');
       }
     } catch (err) {
-      setError(err.message || 'Invalid or expired reset code.');
+      const msg = err.message || '';
+      if (msg.includes("couldn't find") || msg.includes('404') || err?.status === 404) {
+        setError('Invalid or expired reset code.');
+      } else {
+        setError(msg || 'Invalid or expired reset code.');
+      }
     } finally {
       setLoading(false);
     }
@@ -130,11 +140,16 @@ export function ForgotPassword() {
 
     try {
       const res = await api.forgotPassword(email.trim());
-      setInfoMessage(res.message || 'If an account exists for this email, a reset code has been sent.');
+      setInfoMessage(res.message || 'If an account exists with that email address, a password reset code has been sent.');
       setResendTimer(45);
       setCanResend(false);
     } catch (err) {
-      setError(err.message || 'Could not resend reset code.');
+      const msg = err.message || '';
+      if (msg.includes("couldn't find") || msg.includes('404') || err?.status === 404) {
+        setError('Unable to send the reset code right now. Please try again.');
+      } else {
+        setError(msg || 'Unable to send the reset code right now. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -158,16 +173,21 @@ export function ForgotPassword() {
     setLoading(true);
 
     try {
-      const res = await api.resetPassword({
+      await api.resetPassword({
         email: email.trim(),
         resetToken,
         newPassword
       });
 
-      setInfoMessage(res.message || 'Password reset successfully! You can now log in.');
+      setInfoMessage('Password reset successfully! You can now log in.');
       setStep('SUCCESS');
     } catch (err) {
-      setError(err.message || 'Could not reset password. Please try again.');
+      const msg = err.message || '';
+      if (msg.includes("couldn't find") || msg.includes('404') || err?.status === 404) {
+        setError('Unable to reset password right now. Please try again.');
+      } else {
+        setError(msg || 'Could not reset password. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

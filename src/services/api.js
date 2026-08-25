@@ -15,7 +15,10 @@ const API_BASE =
 
 function getAuthHeader() {
   const token = localStorage.getItem('luna_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  if (!token || token === 'undefined' || token === 'null' || !token.trim()) {
+    return {};
+  }
+  return { Authorization: `Bearer ${token.trim()}` };
 }
 
 export class ApiError extends Error {
@@ -120,7 +123,11 @@ async function request(url, options = {}) {
       let userMsg = rawMsg;
       if (!userMsg) {
         if (res.status === 401) userMsg = 'Your session has expired. Please log in again.';
-        else if (res.status === 404) userMsg = "We couldn't find what you're looking for.";
+        else if (res.status === 404) {
+          userMsg = url.includes('/auth/')
+            ? 'Unable to complete your request right now. Please try again.'
+            : "We couldn't find what you're looking for.";
+        }
         else if (res.status >= 500) userMsg = "DaySync couldn't reach the server right now.";
         else userMsg = 'Unable to complete your request right now.';
       }
