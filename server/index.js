@@ -447,15 +447,6 @@ app.post('/api/auth/reset-password', (req, res) => {
   });
 });
 
-  console.log(`[LOGIN SUCCESS] User authenticated: ${normalizedEmail}`);
-
-  const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-  res.json({
-    token,
-    user: { id: user.id, name: user.name, email: user.email, preferences: user.preferences }
-  });
-});
-
 app.get('/api/auth/me', authenticate, (req, res) => {
   const store = db.read();
   const user = store.users.find(u => u.id === req.user.id);
