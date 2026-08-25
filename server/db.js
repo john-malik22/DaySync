@@ -20,7 +20,9 @@ const freshInitialData = {
   expenses: [],
   notices: [],
   notifications: [],
-  summaries: []
+  summaries: [],
+  otps: [],
+  resetTokens: []
 };
 
 // Simple JSON File DB Provider for local dev

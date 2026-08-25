@@ -152,6 +152,11 @@ export const api = {
   // Auth & Account Management
   login: (data) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   signup: (data) => request('/auth/signup', { method: 'POST', body: JSON.stringify(data) }),
+  sendVerificationOtp: (email) => request('/auth/send-verification-otp', { method: 'POST', body: JSON.stringify({ email }) }),
+  verifyVerificationOtp: (data) => request('/auth/verify-verification-otp', { method: 'POST', body: JSON.stringify(data) }),
+  forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+  verifyResetOtp: (data) => request('/auth/verify-reset-otp', { method: 'POST', body: JSON.stringify(data) }),
+  resetPassword: (data) => request('/auth/reset-password', { method: 'POST', body: JSON.stringify(data) }),
   deleteAccount: () => request('/auth/delete-account', { method: 'DELETE' }),
   getMe: () => request('/auth/me'),
 

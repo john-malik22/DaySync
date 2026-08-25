@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
@@ -8,6 +9,7 @@ import { db } from './db.js';
 import { classifyIntent } from './intentEngine.js';
 import { detectPotentialMemory } from './memoryEngine.js';
 import { generatePersonalizedSuggestion } from './suggestionEngine.js';
+import { sendVerificationEmail, sendPasswordResetEmail } from './emailService.js';
 
 dotenv.config();
 
@@ -51,10 +53,79 @@ function authenticate(req, res, next) {
   }
 }
 
-// --- AUTHENTICATION ENDPOINTS (PASSWORD-BASED) ---
+// --- OTP & SECURITY HELPERS ---
+function generate6DigitOtp() {
+  return crypto.randomInt(100000, 999999).toString();
+}
 
-// 1. Strict Password Signup Route
-app.post('/api/auth/signup', (req, res) => {
+function hashOtp(otp) {
+  return crypto.createHash('sha256').update(otp).digest('hex');
+}
+
+function createAndStoreOtp(email, type = 'VERIFICATION') {
+  const store = db.read();
+  store.otps = store.otps || [];
+
+  const normalizedEmail = email.toLowerCase().trim();
+  const now = Date.now();
+
+  // Rate Limiting: Check 45s cooldown
+  const recentOtp = store.otps.find(o =>
+    o.email === normalizedEmail &&
+    o.type === type &&
+    !o.used &&
+    (new Date(o.createdAt).getTime() + 45000) > now
+  );
+
+  if (recentOtp) {
+    const remainingSeconds = Math.ceil(((new Date(recentOtp.createdAt).getTime() + 45000) - now) / 1000);
+    throw new Error(`Please wait ${remainingSeconds}s before requesting a new code.`);
+  }
+
+  // Rate Limiting: Max 5 sends per hour per email
+  const oneHourAgo = now - 3600000;
+  const hourlyCount = store.otps.filter(o =>
+    o.email === normalizedEmail &&
+    o.type === type &&
+    new Date(o.createdAt).getTime() > oneHourAgo
+  ).length;
+
+  if (hourlyCount >= 5) {
+    throw new Error('Too many verification requests. Please try again in an hour.');
+  }
+
+  // Invalidate old unused OTPs of the same type for this email
+  store.otps.forEach(o => {
+    if (o.email === normalizedEmail && o.type === type) {
+      o.used = true;
+    }
+  });
+
+  const rawOtp = generate6DigitOtp();
+  const otpHash = hashOtp(rawOtp);
+
+  const otpRecord = {
+    id: `otp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    email: normalizedEmail,
+    otpHash,
+    type,
+    expiresAt: new Date(now + 10 * 60 * 1000).toISOString(),
+    attempts: 0,
+    maxAttempts: 5,
+    used: false,
+    createdAt: new Date(now).toISOString()
+  };
+
+  store.otps.push(otpRecord);
+  db.write(store);
+
+  return { rawOtp, otpRecord };
+}
+
+// --- AUTHENTICATION & OTP ENDPOINTS ---
+
+// 1. Signup Route with Unverified Account Creation + OTP Email
+app.post('/api/auth/signup', async (req, res) => {
   const { name, email, password } = req.body;
   if (!email || !password || !name) {
     return res.status(400).json({ error: 'Name, Email, and Password are all required.' });
@@ -62,9 +133,11 @@ app.post('/api/auth/signup', (req, res) => {
 
   const normalizedEmail = email.toLowerCase().trim();
   const store = db.read();
-  
-  const existingUser = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
-  if (existingUser) {
+  store.users = store.users || [];
+
+  let existingUser = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
+
+  if (existingUser && existingUser.emailVerified !== false) {
     return res.status(400).json({
       error: 'An account with this email address already exists. Please Log In.',
       code: 'USER_EXISTS'
@@ -74,28 +147,132 @@ app.post('/api/auth/signup', (req, res) => {
   const salt = bcrypt.genSaltSync(10);
   const passwordHash = bcrypt.hashSync(password, salt);
 
-  const newUser = {
-    id: `usr_${Date.now()}`,
-    name: name.trim(),
-    email: normalizedEmail,
-    passwordHash: passwordHash,
-    preferences: { theme: 'dark', currency: '₹' },
-    createdAt: new Date().toISOString()
-  };
+  if (existingUser && existingUser.emailVerified === false) {
+    existingUser.name = name.trim();
+    existingUser.passwordHash = passwordHash;
+  } else {
+    existingUser = {
+      id: `usr_${Date.now()}`,
+      name: name.trim(),
+      email: normalizedEmail,
+      passwordHash: passwordHash,
+      emailVerified: false,
+      preferences: { theme: 'dark', currency: '₹' },
+      createdAt: new Date().toISOString()
+    };
+    store.users.push(existingUser);
+  }
 
-  store.users.push(newUser);
   db.write(store);
 
-  console.log(`[SIGNUP SUCCESS] Created new user: ${normalizedEmail}`);
+  try {
+    const { rawOtp } = createAndStoreOtp(normalizedEmail, 'VERIFICATION');
+    await sendVerificationEmail({ to: normalizedEmail, otp: rawOtp });
+  } catch (err) {
+    return res.status(400).json({ error: err.message || 'Could not send verification email.' });
+  }
 
-  const token = jwt.sign({ id: newUser.id, name: newUser.name, email: newUser.email }, JWT_SECRET, { expiresIn: '7d' });
+  console.log(`[SIGNUP OTP SENT] Verification code sent to: ${normalizedEmail}`);
+
   res.json({
-    token,
-    user: { id: newUser.id, name: newUser.name, email: newUser.email, preferences: newUser.preferences }
+    requiresVerification: true,
+    email: normalizedEmail,
+    message: 'Account created. We sent a 6-digit verification code to your email.'
   });
 });
 
-// 2. Strict Password Login Route
+// 2. Resend Verification OTP
+app.post('/api/auth/send-verification-otp', async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'Email address is required.' });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+  const store = db.read();
+  const user = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
+
+  if (!user) {
+    return res.status(404).json({ error: 'No account found with this email address.' });
+  }
+
+  if (user.emailVerified !== false) {
+    return res.status(400).json({ error: 'Your email address is already verified. Please Log In.' });
+  }
+
+  try {
+    const { rawOtp } = createAndStoreOtp(normalizedEmail, 'VERIFICATION');
+    await sendVerificationEmail({ to: normalizedEmail, otp: rawOtp });
+  } catch (err) {
+    return res.status(400).json({ error: err.message || 'Could not send verification code.' });
+  }
+
+  res.json({
+    success: true,
+    message: `Verification code sent to ${normalizedEmail}.`
+  });
+});
+
+// 3. Verify Verification OTP & Activate Account
+app.post('/api/auth/verify-verification-otp', (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) {
+    return res.status(400).json({ error: 'Email and verification code are required.' });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+  const store = db.read();
+  store.otps = store.otps || [];
+
+  const now = new Date().toISOString();
+  const otpRecord = store.otps.find(o =>
+    o.email === normalizedEmail &&
+    o.type === 'VERIFICATION' &&
+    !o.used &&
+    o.expiresAt > now
+  );
+
+  if (!otpRecord) {
+    return res.status(400).json({ error: 'Invalid or expired verification code. Please request a new code.' });
+  }
+
+  if (otpRecord.attempts >= otpRecord.maxAttempts) {
+    otpRecord.used = true;
+    db.write(store);
+    return res.status(400).json({ error: 'Too many invalid attempts. Please request a new verification code.' });
+  }
+
+  const inputHash = hashOtp(otp.trim());
+  if (inputHash !== otpRecord.otpHash) {
+    otpRecord.attempts += 1;
+    db.write(store);
+    const remaining = otpRecord.maxAttempts - otpRecord.attempts;
+    return res.status(400).json({
+      error: `Invalid verification code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`
+    });
+  }
+
+  otpRecord.used = true;
+
+  const user = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
+  if (!user) {
+    return res.status(404).json({ error: 'Account not found.' });
+  }
+
+  user.emailVerified = true;
+  db.write(store);
+
+  console.log(`[VERIFICATION SUCCESS] Email verified for user: ${normalizedEmail}`);
+
+  const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+  res.json({
+    success: true,
+    token,
+    user: { id: user.id, name: user.name, email: user.email, preferences: user.preferences }
+  });
+});
+
+// 4. Strict Password Login Route with Verification Enforcement
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -120,6 +297,155 @@ app.post('/api/auth/login', (req, res) => {
       code: 'INVALID_PASSWORD'
     });
   }
+
+  if (user.emailVerified === false) {
+    return res.status(403).json({
+      error: 'Please verify your email before continuing.',
+      code: 'EMAIL_NOT_VERIFIED',
+      requiresVerification: true,
+      email: normalizedEmail
+    });
+  }
+
+  console.log(`[LOGIN SUCCESS] User authenticated: ${normalizedEmail}`);
+
+  const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+  res.json({
+    token,
+    user: { id: user.id, name: user.name, email: user.email, preferences: user.preferences }
+  });
+});
+
+// 5. Forgot Password: Request OTP
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email || !email.trim()) {
+    return res.status(400).json({ error: 'Email address is required.' });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+  const store = db.read();
+  const user = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
+
+  const genericResponse = {
+    success: true,
+    message: 'If an account exists with that email address, a password reset code has been sent.'
+  };
+
+  if (!user) {
+    return res.json(genericResponse);
+  }
+
+  try {
+    const { rawOtp } = createAndStoreOtp(normalizedEmail, 'RESET');
+    await sendPasswordResetEmail({ to: normalizedEmail, otp: rawOtp });
+  } catch (err) {
+    console.warn('[FORGOT PASSWORD OTP ERROR]:', err.message);
+  }
+
+  res.json(genericResponse);
+});
+
+// 6. Verify Reset OTP
+app.post('/api/auth/verify-reset-otp', (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) {
+    return res.status(400).json({ error: 'Email and reset code are required.' });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+  const store = db.read();
+  store.otps = store.otps || [];
+  store.resetTokens = store.resetTokens || [];
+
+  const now = new Date().toISOString();
+  const otpRecord = store.otps.find(o =>
+    o.email === normalizedEmail &&
+    o.type === 'RESET' &&
+    !o.used &&
+    o.expiresAt > now
+  );
+
+  if (!otpRecord) {
+    return res.status(400).json({ error: 'Invalid or expired reset code. Please request a new code.' });
+  }
+
+  if (otpRecord.attempts >= otpRecord.maxAttempts) {
+    otpRecord.used = true;
+    db.write(store);
+    return res.status(400).json({ error: 'Too many invalid attempts. Please request a new reset code.' });
+  }
+
+  const inputHash = hashOtp(otp.trim());
+  if (inputHash !== otpRecord.otpHash) {
+    otpRecord.attempts += 1;
+    db.write(store);
+    const remaining = otpRecord.maxAttempts - otpRecord.attempts;
+    return res.status(400).json({
+      error: `Invalid reset code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`
+    });
+  }
+
+  otpRecord.used = true;
+  const resetToken = `rst_${Date.now()}_${crypto.randomBytes(16).toString('hex')}`;
+  const resetTokenRecord = {
+    token: resetToken,
+    email: normalizedEmail,
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+    used: false
+  };
+
+  store.resetTokens.push(resetTokenRecord);
+  db.write(store);
+
+  res.json({
+    success: true,
+    resetToken
+  });
+});
+
+// 7. Reset Password with Reset Token
+app.post('/api/auth/reset-password', (req, res) => {
+  const { email, resetToken, newPassword } = req.body;
+  if (!email || !resetToken || !newPassword) {
+    return res.status(400).json({ error: 'Email, reset token, and new password are required.' });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters long.' });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+  const store = db.read();
+  store.resetTokens = store.resetTokens || [];
+
+  const now = new Date().toISOString();
+  const tokenRecord = store.resetTokens.find(r =>
+    r.token === resetToken &&
+    r.email === normalizedEmail &&
+    !r.used &&
+    r.expiresAt > now
+  );
+
+  if (!tokenRecord) {
+    return res.status(400).json({ error: 'Invalid or expired password reset session. Please request a new reset code.' });
+  }
+
+  const user = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
+  if (!user) {
+    return res.status(404).json({ error: 'Account not found.' });
+  }
+
+  const salt = bcrypt.genSaltSync(10);
+  user.passwordHash = bcrypt.hashSync(newPassword, salt);
+  tokenRecord.used = true;
+
+  db.write(store);
+  res.json({
+    success: true,
+    message: 'Password reset successfully. You can now log in with your new password.'
+  });
+});
 
   console.log(`[LOGIN SUCCESS] User authenticated: ${normalizedEmail}`);
 

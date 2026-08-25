@@ -83,25 +83,25 @@ export function AuthProvider({ children }) {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
 
+  const setSession = (newToken, newUser) => {
+    localStorage.setItem('luna_token', newToken);
+    if (newUser) {
+      localStorage.setItem('daysync_user_profile', JSON.stringify(newUser));
+    }
+    setToken(newToken);
+    setUser(newUser);
+  };
+
   const login = async (email, password) => {
     const res = await api.login({ email, password });
-    localStorage.setItem('luna_token', res.token);
-    if (res.user) {
-      localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
+    if (res.token && res.user) {
+      setSession(res.token, res.user);
     }
-    setToken(res.token);
-    setUser(res.user);
     return res;
   };
 
   const signup = async (name, email, password) => {
     const res = await api.signup({ name, email, password });
-    localStorage.setItem('luna_token', res.token);
-    if (res.user) {
-      localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
-    }
-    setToken(res.token);
-    setUser(res.user);
     return res;
   };
 
@@ -129,7 +129,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, theme, toggleTheme, login, signup, deleteAccount, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, theme, toggleTheme, login, signup, setSession, deleteAccount, logout }}>
       {children}
     </AuthContext.Provider>
   );
