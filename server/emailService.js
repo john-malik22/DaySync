@@ -5,16 +5,42 @@ dotenv.config();
  * Brevo Transactional Email Service Utility
  * Safe, zero secret-logging email sender for DaySync
  */
+function extractCleanEmail(raw) {
+  if (!raw) return '';
+  const match = String(raw).match(/<([^>]+)>/);
+  const emailCandidate = match ? match[1] : String(raw);
+  return emailCandidate.replace(/["']/g, '').trim().toLowerCase();
+}
+
+function isValidEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(String(email).toLowerCase());
+}
+
 export async function sendBrevoEmail({ to, subject, textContent }) {
-  const brevoApiKey = process.env.BREVO_API_KEY;
-  const senderEmail = process.env.MAIL_FROM || 'johnmalik057@gmail.com';
+  const rawApiKey = process.env.BREVO_API_KEY;
+  const rawMailFrom = process.env.MAIL_FROM;
 
-  console.log('[BREVO DIAGNOSTICS] BREVO_API_KEY configured:', !!brevoApiKey);
-  console.log('[BREVO DIAGNOSTICS] MAIL_FROM configured:', !!process.env.MAIL_FROM);
+  console.log('[BREVO DIAGNOSTICS] BREVO_API_KEY configured:', !!rawApiKey);
+  console.log('[BREVO DIAGNOSTICS] MAIL_FROM configured:', !!rawMailFrom);
 
-  if (!brevoApiKey) {
+  if (!rawApiKey) {
     console.error('[BREVO EMAIL FAILURE] BREVO_API_KEY is missing in server environment variables.');
     return { success: false, error: 'BREVO_API_KEY is not configured in server environment.' };
+  }
+
+  const cleanApiKey = String(rawApiKey).trim();
+  const extractedSender = extractCleanEmail(rawMailFrom) || 'johnmalik057@gmail.com';
+
+  if (!isValidEmail(extractedSender)) {
+    console.error(`[BREVO EMAIL FAILURE] Invalid MAIL_FROM email format: "${extractedSender}"`);
+    return { success: false, error: `Invalid MAIL_FROM sender email: ${extractedSender}` };
+  }
+
+  const cleanRecipient = extractCleanEmail(to);
+  if (!isValidEmail(cleanRecipient)) {
+    console.error(`[BREVO EMAIL FAILURE] Invalid recipient email format: "${cleanRecipient}"`);
+    return { success: false, error: `Invalid recipient email: ${cleanRecipient}` };
   }
 
   try {
@@ -22,17 +48,17 @@ export async function sendBrevoEmail({ to, subject, textContent }) {
       method: 'POST',
       headers: {
         'accept': 'application/json',
-        'api-key': brevoApiKey.trim(),
+        'api-key': cleanApiKey,
         'content-type': 'application/json'
       },
       body: JSON.stringify({
         sender: {
           name: 'DaySync',
-          email: senderEmail.trim()
+          email: extractedSender
         },
         to: [
           {
-            email: to.trim()
+            email: cleanRecipient
           }
         ],
         subject: subject,
