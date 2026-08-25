@@ -1625,6 +1625,55 @@ app.post('/api/splits/:id/settlements', authenticate, (req, res) => {
   res.json(newSettlement);
 });
 
+// --- TEMPORARY BREVO EMAIL TEST ENDPOINT ---
+app.post('/api/test-email', authenticate, async (req, res) => {
+  const { to } = req.body;
+  if (!to || !to.trim()) {
+    return res.status(400).json({ error: 'Recipient email address ("to") is required.' });
+  }
+
+  const brevoApiKey = process.env.BREVO_API_KEY;
+  if (!brevoApiKey) {
+    return res.status(500).json({ error: 'BREVO_API_KEY is not configured in server environment.' });
+  }
+
+  const senderEmail = process.env.MAIL_FROM || 'johnmalik057@gmail.com';
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': brevoApiKey,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: {
+          name: 'DaySync',
+          email: senderEmail
+        },
+        to: [
+          {
+            email: to.trim()
+          }
+        ],
+        subject: 'DaySync Email Test',
+        textContent: 'This is a test email from DaySync.'
+      })
+    });
+
+    if (!response.ok) {
+      console.error('[BREVO EMAIL ERROR] Failed status:', response.status);
+      return res.status(500).json({ error: 'Failed to send test email. Please check configuration.' });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[BREVO EMAIL ERROR] Exception during email send request');
+    res.status(500).json({ error: 'Failed to send test email. Please check configuration.' });
+  }
+});
+
 db.ready
   .then(() => {
     app.listen(PORT, () => {
