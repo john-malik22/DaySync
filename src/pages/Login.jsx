@@ -336,11 +336,7 @@ export function Login() {
                 <label style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Password</label>
                 <button
                   type="button"
-                  onClick={() => {
-                    setMode('FORGOT_EMAIL');
-                    setError('');
-                    setInfoMessage('');
-                  }}
+                  onClick={() => navigate('/forgot-password')}
                   style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '500' }}
                 >
                   Forgot Password?

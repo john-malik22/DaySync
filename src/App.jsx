@@ -13,6 +13,7 @@ import { WhatsNewModal } from './components/common/WhatsNewModal';
 import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
+import { ForgotPassword } from './pages/ForgotPassword';
 import { Onboarding } from './pages/Onboarding';
 import { Sidebar } from './components/common/Sidebar';
 
@@ -150,6 +151,8 @@ export default function App() {
                     <Route element={<PublicOnlyRoute />}>
                       <Route path="/login" element={<Login />} />
                       <Route path="/signup" element={<Signup />} />
+                      <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/reset-password" element={<ForgotPassword />} />
                     </Route>
 
                     <Route path="/onboarding" element={<Onboarding />} />
