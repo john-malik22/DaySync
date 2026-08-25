@@ -15,7 +15,10 @@ const API_BASE =
 
 function getAuthHeader() {
   const token = localStorage.getItem('luna_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  if (!token || token === 'undefined' || token === 'null' || !token.trim()) {
+    return {};
+  }
+  return { Authorization: `Bearer ${token.trim()}` };
 }
 
 export class ApiError extends Error {
