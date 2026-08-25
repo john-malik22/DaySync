@@ -27,15 +27,14 @@ export function Sidebar() {
 
   // Navigation Items for 2.0.0
   const navItems = [
+    { label: 'Chat (AI)', icon: MessageSquare, path: '/app/chat' },
     { label: 'Dashboard', icon: LayoutDashboard, path: '/app/dashboard' },
     { label: 'Tasks', icon: CheckSquare, path: '/app/task' },
     { label: 'Expenses', icon: CreditCard, path: '/app/expenses' },
     { label: 'Plans', icon: Repeat, path: '/app/plans' },
     { label: 'Splits', icon: Users, path: '/app/splits' },
     { label: 'Habits', icon: Activity, path: '/app/habits' },
-    { label: 'Notifications', icon: Bell, path: '/app/notifications' },
-    { label: 'Chat', icon: MessageSquare, path: '/app/chat' },
-    { label: 'Summary', icon: BarChart2, path: '/app/summary' }
+    { label: 'Chat', icon: MessageSquare, path: '/app/chat' }
   ];
 
   const handleNavClick = () => {
