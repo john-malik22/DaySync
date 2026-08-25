@@ -324,23 +324,21 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   }
 
   const normalizedEmail = email.toLowerCase().trim();
-  const store = db.read();
-  const user = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
-
   const genericResponse = {
     success: true,
     message: 'If an account exists with that email address, a password reset code has been sent.'
   };
 
-  if (!user) {
-    return res.json(genericResponse);
-  }
-
   try {
     const { rawOtp } = createAndStoreOtp(normalizedEmail, 'RESET');
-    await sendPasswordResetEmail({ to: normalizedEmail, otp: rawOtp });
+    const result = await sendPasswordResetEmail({ to: normalizedEmail, otp: rawOtp });
+    if (!result.success) {
+      console.error(`[FORGOT PASSWORD BREVO ERROR] Delivery failed for ${normalizedEmail}:`, result.error);
+    } else {
+      console.log(`[FORGOT PASSWORD BREVO SUCCESS] Reset OTP delivered to ${normalizedEmail}`);
+    }
   } catch (err) {
-    console.warn('[FORGOT PASSWORD OTP ERROR]:', err.message);
+    console.error(`[FORGOT PASSWORD OTP ERROR] Request error for ${normalizedEmail}:`, err.message);
   }
 
   res.json(genericResponse);
