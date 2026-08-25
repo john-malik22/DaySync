@@ -1327,6 +1327,8 @@ app.post('/api/splits', authenticate, (req, res) => {
         joinedAt: new Date().toISOString()
       }
     ],
+    expenses: [],
+    settlements: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };

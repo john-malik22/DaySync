@@ -36,6 +36,7 @@ export function SplitsPage() {
 
   // Modals
   const [showCreateSplit, setShowCreateSplit] = useState(false);
+  const [isCreatingSplit, setIsCreatingSplit] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showSettleModal, setShowSettleModal] = useState(false);
@@ -99,22 +100,42 @@ export function SplitsPage() {
   // Create Split Handler
   const handleCreateSplit = async (e) => {
     e.preventDefault();
-    if (!newSplitName.trim()) return;
+    const trimmedName = newSplitName.trim();
+    if (!trimmedName) {
+      if (showToast) showToast('Please enter a Split name.', 'error');
+      return;
+    }
+
+    if (isCreatingSplit) return;
+    setIsCreatingSplit(true);
 
     try {
       const created = await api.createSplit({
-        name: newSplitName.trim(),
+        name: trimmedName,
         description: newSplitDesc.trim(),
         currency: newSplitCurrency
       });
+
+      const fullCreated = {
+        expenses: [],
+        settlements: [],
+        ...created
+      };
+
       setShowCreateSplit(false);
       setNewSplitName('');
       setNewSplitDesc('');
-      if (showToast) showToast(`Created shared Split "${created.name}"!`, 'success');
-      await fetchSplitsData();
-      setSelectedSplit(created);
+      if (showToast) showToast('Split created.', 'success');
+
+      setSplits(prev => [fullCreated, ...prev]);
+      setSelectedSplit(fullCreated);
     } catch (err) {
-      if (showToast) showToast(err.message || 'Could not create Split.', 'error');
+      const userMsg = (err?.status === 404 || err?.type === 'NOT_FOUND')
+        ? 'Unable to create this Split. Please try again.'
+        : (err?.message || 'Unable to create this Split. Please try again.');
+      if (showToast) showToast(userMsg, 'error');
+    } finally {
+      setIsCreatingSplit(false);
     }
   };
 
@@ -854,11 +875,22 @@ export function SplitsPage() {
               </div>
 
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '8px' }}>
-                <button type="button" onClick={() => setShowCreateSplit(false)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 14px' }}>
+                <button
+                  type="button"
+                  disabled={isCreatingSplit}
+                  onClick={() => setShowCreateSplit(false)}
+                  className="btn-secondary"
+                  style={{ fontSize: '12px', padding: '8px 14px' }}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary" style={{ fontSize: '12px', padding: '8px 16px' }}>
-                  Create Split
+                <button
+                  type="submit"
+                  disabled={isCreatingSplit}
+                  className="btn-primary"
+                  style={{ fontSize: '12px', padding: '8px 16px', opacity: isCreatingSplit ? 0.7 : 1 }}
+                >
+                  {isCreatingSplit ? 'Creating...' : 'Create Split'}
                 </button>
               </div>
             </form>
