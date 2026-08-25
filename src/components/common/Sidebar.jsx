@@ -33,8 +33,7 @@ export function Sidebar() {
     { label: 'Expenses', icon: CreditCard, path: '/app/expenses' },
     { label: 'Plans', icon: Repeat, path: '/app/plans' },
     { label: 'Splits', icon: Users, path: '/app/splits' },
-    { label: 'Habits', icon: Activity, path: '/app/habits' },
-    { label: 'Chat', icon: MessageSquare, path: '/app/chat' }
+    { label: 'Habits', icon: Activity, path: '/app/habits' }
   ];
 
   const handleNavClick = () => {
