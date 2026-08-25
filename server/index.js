@@ -124,7 +124,7 @@ function createAndStoreOtp(email, type = 'VERIFICATION') {
 
 // --- AUTHENTICATION & OTP ENDPOINTS ---
 
-// 1. Signup Route with Unverified Account Creation + OTP Email
+// 1. Signup Route: Pending Signup Creation (NO ACTIVE USER UNTIL OTP VERIFIED)
 app.post('/api/auth/signup', async (req, res) => {
   const { name, email, password } = req.body;
   if (!email || !password || !name) {
@@ -134,12 +134,13 @@ app.post('/api/auth/signup', async (req, res) => {
   const normalizedEmail = email.toLowerCase().trim();
   const store = db.read();
   store.users = store.users || [];
+  store.pendingSignups = store.pendingSignups || [];
 
-  let existingUser = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
-
-  if (existingUser && existingUser.emailVerified !== false) {
+  // Check if email ALREADY EXISTS in active users
+  const existingUser = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
+  if (existingUser) {
     return res.status(400).json({
-      error: 'An account with this email address already exists. Please Log In.',
+      error: 'An account with this email address already exists.',
       code: 'USER_EXISTS'
     });
   }
@@ -147,41 +148,37 @@ app.post('/api/auth/signup', async (req, res) => {
   const salt = bcrypt.genSaltSync(10);
   const passwordHash = bcrypt.hashSync(password, salt);
 
-  if (existingUser && existingUser.emailVerified === false) {
-    existingUser.name = name.trim();
-    existingUser.passwordHash = passwordHash;
-  } else {
-    existingUser = {
-      id: `usr_${Date.now()}`,
-      name: name.trim(),
-      email: normalizedEmail,
-      passwordHash: passwordHash,
-      emailVerified: false,
-      preferences: { theme: 'dark', currency: '₹' },
-      createdAt: new Date().toISOString()
-    };
-    store.users.push(existingUser);
-  }
+  // Clean up any stale pending signups for this email
+  store.pendingSignups = store.pendingSignups.filter(p => p.email !== normalizedEmail);
 
+  const pendingRecord = {
+    id: `pending_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    name: name.trim(),
+    email: normalizedEmail,
+    passwordHash: passwordHash,
+    createdAt: new Date().toISOString()
+  };
+
+  store.pendingSignups.push(pendingRecord);
   db.write(store);
 
   try {
-    const { rawOtp } = createAndStoreOtp(normalizedEmail, 'VERIFICATION');
+    const { rawOtp } = createAndStoreOtp(normalizedEmail, 'SIGNUP_VERIFICATION');
     await sendVerificationEmail({ to: normalizedEmail, otp: rawOtp });
   } catch (err) {
     return res.status(400).json({ error: err.message || 'Could not send verification email.' });
   }
 
-  console.log(`[SIGNUP OTP SENT] Verification code sent to: ${normalizedEmail}`);
+  console.log(`[SIGNUP OTP SENT] Pending signup verification code sent to: ${normalizedEmail}`);
 
   res.json({
     requiresVerification: true,
     email: normalizedEmail,
-    message: 'Account created. We sent a 6-digit verification code to your email.'
+    message: 'Account signup pending. We sent a 6-digit verification code to your email.'
   });
 });
 
-// 2. Resend Verification OTP
+// 2. Resend Signup Verification OTP
 app.post('/api/auth/send-verification-otp', async (req, res) => {
   const { email } = req.body;
   if (!email) {
@@ -190,18 +187,19 @@ app.post('/api/auth/send-verification-otp', async (req, res) => {
 
   const normalizedEmail = email.toLowerCase().trim();
   const store = db.read();
-  const user = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
+  const existingUser = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
+  const pending = (store.pendingSignups || []).find(p => p.email === normalizedEmail);
 
-  if (!user) {
-    return res.status(404).json({ error: 'No account found with this email address.' });
+  if (existingUser && existingUser.emailVerified !== false) {
+    return res.status(400).json({ error: 'An account with this email address already exists.' });
   }
 
-  if (user.emailVerified !== false) {
-    return res.status(400).json({ error: 'Your email address is already verified. Please Log In.' });
+  if (!pending && !existingUser) {
+    return res.status(404).json({ error: 'No pending signup found for this email address.' });
   }
 
   try {
-    const { rawOtp } = createAndStoreOtp(normalizedEmail, 'VERIFICATION');
+    const { rawOtp } = createAndStoreOtp(normalizedEmail, 'SIGNUP_VERIFICATION');
     await sendVerificationEmail({ to: normalizedEmail, otp: rawOtp });
   } catch (err) {
     return res.status(400).json({ error: err.message || 'Could not send verification code.' });
@@ -213,7 +211,7 @@ app.post('/api/auth/send-verification-otp', async (req, res) => {
   });
 });
 
-// 3. Verify Verification OTP & Activate Account
+// 3. Verify Signup OTP & Create Active User Account
 app.post('/api/auth/verify-verification-otp', (req, res) => {
   const { email, otp } = req.body;
   if (!email || !otp) {
@@ -223,46 +221,66 @@ app.post('/api/auth/verify-verification-otp', (req, res) => {
   const normalizedEmail = email.toLowerCase().trim();
   const store = db.read();
   store.otps = store.otps || [];
+  store.pendingSignups = store.pendingSignups || [];
+  store.users = store.users || [];
 
   const now = new Date().toISOString();
   const otpRecord = store.otps.find(o =>
     o.email === normalizedEmail &&
-    o.type === 'VERIFICATION' &&
+    (o.type === 'SIGNUP_VERIFICATION' || o.type === 'VERIFICATION') &&
     !o.used &&
     o.expiresAt > now
   );
 
   if (!otpRecord) {
-    return res.status(400).json({ error: 'Invalid or expired verification code. Please request a new code.' });
+    return res.status(400).json({ error: 'This code has expired. Please request a new code.' });
   }
 
   if (otpRecord.attempts >= otpRecord.maxAttempts) {
     otpRecord.used = true;
     db.write(store);
-    return res.status(400).json({ error: 'Too many invalid attempts. Please request a new verification code.' });
+    return res.status(400).json({ error: 'Too many invalid attempts. Please request a new code.' });
   }
 
   const inputHash = hashOtp(otp.trim());
   if (inputHash !== otpRecord.otpHash) {
     otpRecord.attempts += 1;
     db.write(store);
-    const remaining = otpRecord.maxAttempts - otpRecord.attempts;
-    return res.status(400).json({
-      error: `Invalid verification code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`
-    });
+    return res.status(400).json({ error: 'That code is incorrect.' });
   }
 
   otpRecord.used = true;
 
-  const user = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
-  if (!user) {
-    return res.status(404).json({ error: 'Account not found.' });
+  const pendingIndex = store.pendingSignups.findIndex(p => p.email === normalizedEmail);
+  const pending = pendingIndex !== -1 ? store.pendingSignups[pendingIndex] : null;
+  let user = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
+
+  if (!user && !pending) {
+    return res.status(400).json({ error: 'No pending signup found for this email address.' });
   }
 
-  user.emailVerified = true;
+  if (!user && pending) {
+    user = {
+      id: `usr_${Date.now()}`,
+      name: pending.name,
+      email: pending.email,
+      passwordHash: pending.passwordHash,
+      emailVerified: true,
+      preferences: { theme: 'dark', currency: '₹' },
+      createdAt: new Date().toISOString()
+    };
+    store.users.push(user);
+    store.pendingSignups.splice(pendingIndex, 1);
+  } else if (user) {
+    user.emailVerified = true;
+    if (pendingIndex !== -1) {
+      store.pendingSignups.splice(pendingIndex, 1);
+    }
+  }
+
   db.write(store);
 
-  console.log(`[VERIFICATION SUCCESS] Email verified for user: ${normalizedEmail}`);
+  console.log(`[SIGNUP COMPLETED] User account created and verified for: ${normalizedEmail}`);
 
   const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
   res.json({
@@ -316,7 +334,7 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-// 5. Forgot Password: Request OTP
+// 5. Forgot Password: Request OTP (ONLY DISPATCH IF USER EXISTS)
 app.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
   if (!email || !email.trim()) {
@@ -324,10 +342,19 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   }
 
   const normalizedEmail = email.toLowerCase().trim();
+  const store = db.read();
+  const user = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
+
   const genericResponse = {
     success: true,
     message: 'If an account exists with that email address, a password reset code has been sent.'
   };
+
+  // SECURITY RULE: If account DOES NOT exist, return generic response without sending OTP
+  if (!user) {
+    console.log(`[FORGOT PASSWORD] Account ${normalizedEmail} does not exist. Skipping Brevo dispatch.`);
+    return res.json(genericResponse);
+  }
 
   try {
     const { rawOtp } = createAndStoreOtp(normalizedEmail, 'RESET');

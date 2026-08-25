@@ -22,7 +22,8 @@ const freshInitialData = {
   notifications: [],
   summaries: [],
   otps: [],
-  resetTokens: []
+  resetTokens: [],
+  pendingSignups: []
 };
 
 // Simple JSON File DB Provider for local dev
