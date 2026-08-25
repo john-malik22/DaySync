@@ -4,7 +4,7 @@ import { ExpenseForm } from '../../components/expenses/ExpenseForm';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
 import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
-import { ArrowUpRight, ArrowDownRight, Wallet, Edit2, Trash2, Check, X } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Wallet, Edit2, Trash2, Check, X, CreditCard } from 'lucide-react';
 
 const EXPENSE_CATEGORIES = [
   { value: 'Recharges', label: '📱 Recharges' },

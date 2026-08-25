@@ -152,6 +152,11 @@ export const api = {
   // Auth & Account Management
   login: (data) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   signup: (data) => request('/auth/signup', { method: 'POST', body: JSON.stringify(data) }),
+  sendVerificationOtp: (email) => request('/auth/send-verification-otp', { method: 'POST', body: JSON.stringify({ email }) }),
+  verifyVerificationOtp: (data) => request('/auth/verify-verification-otp', { method: 'POST', body: JSON.stringify(data) }),
+  forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+  verifyResetOtp: (data) => request('/auth/verify-reset-otp', { method: 'POST', body: JSON.stringify(data) }),
+  resetPassword: (data) => request('/auth/reset-password', { method: 'POST', body: JSON.stringify(data) }),
   deleteAccount: () => request('/auth/delete-account', { method: 'DELETE' }),
   getMe: () => request('/auth/me'),
 
@@ -184,6 +189,12 @@ export const api = {
   markAllNotificationsRead: () => request('/notifications/mark-all-read', { method: 'POST' }),
   deleteNotification: (id) => request(`/notifications/${id}`, { method: 'DELETE' }),
   clearNotifications: () => request('/notifications/clear-all', { method: 'DELETE' }),
+
+  // Web Push Notifications
+  getVapidPublicKey: () => request('/notifications/push/vapid-public-key'),
+  getPushStatus: () => request('/notifications/push/status'),
+  subscribePush: (subscription) => request('/notifications/push/subscribe', { method: 'POST', body: JSON.stringify(subscription) }),
+  unsubscribePush: (endpoint) => request('/notifications/push/subscribe', { method: 'DELETE', body: JSON.stringify({ endpoint }) }),
 
   // Intelligence
   getNotices: () => request('/notices'),

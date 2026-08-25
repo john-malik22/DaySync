@@ -317,6 +317,12 @@ export function LunaProvider({ children }) {
     await fetchExpenses();
   };
 
+  const clearChatHistory = async () => {
+    await api.clearHistory();
+    setConversations([]);
+    if (userId) clientCache.save(userId, 'chat_history', []);
+  };
+
   return (
     <LunaContext.Provider
       value={{
@@ -339,6 +345,7 @@ export function LunaProvider({ children }) {
         toggleSidebar,
         closeSidebar,
         sendMessage,
+        clearChatHistory,
         addMemory,
         updateMemory,
         deleteMemory,

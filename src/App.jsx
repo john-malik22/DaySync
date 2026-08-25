@@ -13,6 +13,7 @@ import { WhatsNewModal } from './components/common/WhatsNewModal';
 import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
+import { ForgotPassword } from './pages/ForgotPassword';
 import { Onboarding } from './pages/Onboarding';
 import { Sidebar } from './components/common/Sidebar';
 
@@ -36,35 +37,38 @@ function AppLayout() {
   );
 }
 
-const STARTUP_ROUTE_MAP = {
+export const STARTUP_ROUTE_MAP = {
   dashboard: '/app/dashboard',
   tasks: '/app/task',
   task: '/app/task',
   expenses: '/app/expenses',
+  plans: '/app/expenses',
   habits: '/app/habits',
   goals: '/app/habits',
   memories: '/app/memories',
-  notifications: '/app/notifications',
+  notifications: '/app/dashboard',
   chat: '/app/chat',
   summary: '/app/summary'
 };
 
-function AppIndexRedirect() {
-  let targetPath = '/app/dashboard';
+export function getStartupRoute() {
   try {
     const saved = localStorage.getItem('daysync_startup_page');
     if (saved) {
       const cleanKey = String(saved).toLowerCase().replace('/app/', '').trim();
       if (STARTUP_ROUTE_MAP[cleanKey]) {
-        targetPath = STARTUP_ROUTE_MAP[cleanKey];
-      } else if (saved.startsWith('/app/')) {
-        targetPath = saved;
+        return STARTUP_ROUTE_MAP[cleanKey];
+      }
+      if (saved.startsWith('/app/')) {
+        return saved;
       }
     }
-  } catch (e) {
-    targetPath = '/app/dashboard';
-  }
-  return <Navigate to={targetPath} replace />;
+  } catch (e) {}
+  return '/app/dashboard';
+}
+
+function AppIndexRedirect() {
+  return <Navigate to={getStartupRoute()} replace />;
 }
 
 function PublicOnlyRoute() {
@@ -82,7 +86,7 @@ function PublicOnlyRoute() {
   }
 
   if (token || user) {
-    return <Navigate to="/app/dashboard" replace />;
+    return <Navigate to={getStartupRoute()} replace />;
   }
 
   return <Outlet />;
@@ -122,7 +126,7 @@ function RootRoute() {
     );
   }
   if (token || user) {
-    return <Navigate to="/app/dashboard" replace />;
+    return <Navigate to={getStartupRoute()} replace />;
   }
   return <Navigate to="/login" replace />;
 }
@@ -147,6 +151,8 @@ export default function App() {
                     <Route element={<PublicOnlyRoute />}>
                       <Route path="/login" element={<Login />} />
                       <Route path="/signup" element={<Signup />} />
+                      <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/reset-password" element={<ForgotPassword />} />
                     </Route>
 
                     <Route path="/onboarding" element={<Onboarding />} />
@@ -166,7 +172,7 @@ export default function App() {
                     </Route>
 
                     {/* Fallback */}
-                    <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+                    <Route path="*" element={<Navigate to={getStartupRoute()} replace />} />
                   </Routes>
                 </Router>
               </LunaProvider>

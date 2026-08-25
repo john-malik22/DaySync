@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useAuth } from '../../context/AuthContext';
+import { useLuna } from '../../context/LunaContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { usePWAUpdate } from '../../context/PWAUpdateContext';
 import { useToast } from '../../context/ToastContext';
@@ -32,7 +33,17 @@ import pkg from '../../../package.json';
 
 export function SettingsPage() {
   const { user, theme, toggleTheme, logout, deleteAccount } = useAuth();
-  const { preferences, updatePreferences, requestBrowserPermission } = useNotifications();
+  const { clearChatHistory } = useLuna();
+  const {
+    preferences,
+    updatePreferences,
+    pushSupported,
+    pushPermission,
+    pushEnabled,
+    pushLoading,
+    enablePush,
+    disablePush
+  } = useNotifications();
   const {
     currentVersion,
     latestVersion,
@@ -133,6 +144,20 @@ export function SettingsPage() {
     return 'dashboard';
   });
 
+  const handleTogglePush = async () => {
+    if (pushEnabled) {
+      await disablePush();
+      if (showToast) showToast('Push notifications disabled on this device.', 'info');
+    } else {
+      const res = await enablePush();
+      if (res.success) {
+        if (showToast) showToast('Push notifications enabled for this device!', 'success');
+      } else {
+        if (showToast) showToast(res.error || 'Could not enable push notifications.', 'error');
+      }
+    }
+  };
+
   const handleStartupPageChange = (e) => {
     const value = e.target.value;
     setStartupPage(value);
@@ -159,37 +184,20 @@ export function SettingsPage() {
   };
 
   // Privacy & Data Actions
-  const handleExportDataClick = () => {
-    setShowExportModal(true);
-  };
-
-  const handleConfirmExportData = async () => {
-    setShowExportModal(false);
-    if (isExportingData) return;
-    setIsExportingData(true);
-    if (showToast) showToast('Preparing your DaySync PDF export...', 'info');
-
-    try {
-      const data = await api.exportData();
-      if (!data) throw new Error('API returned empty export payload');
-      exportDataToPdf(data);
-      if (showToast) showToast('Your DaySync PDF export is ready.', 'success');
-    } catch (err) {
-      console.error('PDF export failed:', err);
-      if (showToast) showToast('Unable to export your data right now. Please try again.', 'error');
-    } finally {
-      setIsExportingData(false);
-    }
-  };
-
   const handleConfirmClearHistory = async () => {
+    if (isClearingHistory) return;
     setIsClearingHistory(true);
     try {
-      await api.clearHistory();
+      if (clearChatHistory) {
+        await clearChatHistory();
+      } else {
+        await api.clearHistory();
+      }
       setShowClearHistoryModal(false);
-      if (showToast) showToast('Chat history cleared successfully.', 'success');
+      if (showToast) showToast('Chat history cleared.', 'success');
     } catch (err) {
-      if (showToast) showToast('Unable to clear history right now. Please try again.', 'error');
+      setShowClearHistoryModal(false);
+      if (showToast) showToast('Unable to clear your chat history right now. Please try again.', 'error');
     } finally {
       setIsClearingHistory(false);
     }
@@ -389,6 +397,7 @@ export function SettingsPage() {
               <option value="dashboard">Dashboard</option>
               <option value="tasks">Tasks</option>
               <option value="expenses">Expenses</option>
+              <option value="plans">Plans</option>
               <option value="habits">Habits</option>
               <option value="goals">Goals</option>
               <option value="memories">Memories</option>
@@ -410,23 +419,40 @@ export function SettingsPage() {
 
           <div style={{
             padding: '12px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-            border: '1px solid var(--border-color)', marginBottom: 'var(--space-md)',
+            border: `1px solid ${pushEnabled ? 'var(--accent-primary)' : 'var(--border-color)'}`, marginBottom: 'var(--space-md)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px'
           }}>
             <div>
-              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)' }}>Browser Push Notifications</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                {preferences.browser ? 'Browser notifications enabled ✅' : 'Receive alerts even when DaySync is in the background'}
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Smartphone size={15} color="var(--accent-primary)" /> Push Notifications
+                {pushEnabled && (
+                  <span style={{ fontSize: '11px', background: 'rgba(47, 111, 115, 0.15)', color: 'var(--accent-primary)', padding: '2px 6px', borderRadius: '4px', fontWeight: '700' }}>
+                    Enabled ✓
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: '11px', color: pushPermission === 'denied' ? 'var(--accent-danger)' : 'var(--text-muted)', marginTop: '2px' }}>
+                {!pushSupported
+                  ? 'Push notifications are not supported on this device/browser.'
+                  : pushPermission === 'denied'
+                  ? 'Notifications are blocked in your browser/device settings.'
+                  : pushEnabled
+                  ? 'DaySync can send notifications to this device.'
+                  : 'Receive system/phone alerts for tasks, plans, and events.'}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={requestBrowserPermission}
-              className="btn-secondary"
-              style={{ fontSize: '12px', padding: '6px 12px' }}
-            >
-              <Smartphone size={14} /> {preferences.browser ? 'Enabled' : 'Enable Browser Push'}
-            </button>
+
+            {pushSupported && pushPermission !== 'denied' && (
+              <button
+                type="button"
+                onClick={handleTogglePush}
+                disabled={pushLoading}
+                className={pushEnabled ? 'btn-secondary' : 'btn-primary'}
+                style={{ fontSize: '12px', padding: '6px 14px' }}
+              >
+                {pushLoading ? 'Processing...' : pushEnabled ? 'Disable' : 'Enable'}
+              </button>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-sm)' }}>
@@ -530,24 +556,16 @@ export function SettingsPage() {
             <Shield size={18} color="var(--accent-primary)" /> Privacy & Data
           </h3>
           <p className="settings-compact-subtitle" style={{ color: 'var(--text-muted)' }}>
-            Export your data payload or clear your conversation history.
+            Manage stored conversation history and privacy.
           </p>
 
-          <div className="settings-btn-grid-2">
-            <button
-              type="button"
-              onClick={handleExportDataClick}
-              disabled={isExportingData}
-              className="btn-secondary"
-            >
-              <Download size={14} /> {isExportingData ? 'Exporting...' : 'Export My Data'}
-            </button>
-
+          <div style={{ marginTop: 'var(--space-xs)' }}>
             <button
               type="button"
               onClick={() => setShowClearHistoryModal(true)}
+              disabled={isClearingHistory}
               className="btn-secondary"
-              style={{ color: 'var(--accent-warning)' }}
+              style={{ color: 'var(--accent-warning)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
               <Trash2 size={14} /> Clear Chat History
             </button>
@@ -734,27 +752,14 @@ export function SettingsPage() {
       {/* 3. Clear History Confirmation Modal */}
       <ConfirmationModal
         isOpen={showClearHistoryModal}
-        title="Clear your conversation history?"
-        message="Are you sure you want to clear your stored chat messages? This action cannot be undone."
-        confirmText="Clear History"
+        title="Clear your chat history?"
+        message="Your conversations with Luna will be permanently removed."
+        confirmText={isClearingHistory ? "Clearing..." : "Clear History"}
         cancelText="Cancel"
         isDanger={true}
         isLoading={isClearingHistory}
         onConfirm={handleConfirmClearHistory}
         onCancel={() => setShowClearHistoryModal(false)}
-      />
-
-      {/* 4. Export PDF Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showExportModal}
-        title="Export your DaySync data?"
-        message="Your export may contain personal information from your account."
-        confirmText={isExportingData ? "Exporting..." : "Export PDF"}
-        cancelText="Cancel"
-        isDanger={false}
-        isLoading={isExportingData}
-        onConfirm={handleConfirmExportData}
-        onCancel={() => setShowExportModal(false)}
       />
     </div>
   );
