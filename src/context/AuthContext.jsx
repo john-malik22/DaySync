@@ -120,6 +120,15 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateUser = (updatedUserObj) => {
+    if (!updatedUserObj) return;
+    setUser(prev => {
+      const merged = { ...prev, ...updatedUserObj };
+      localStorage.setItem('daysync_user_profile', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
   const logout = () => {
     if (user?.id) clientCache.clearUserCache(user.id);
     localStorage.removeItem('luna_token');
@@ -129,7 +138,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, theme, toggleTheme, login, signup, deleteAccount, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, theme, toggleTheme, login, signup, deleteAccount, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

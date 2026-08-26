@@ -123,6 +123,109 @@ app.get('/api/auth/me', authenticate, (req, res) => {
   res.json({ user: { id: user.id, name: user.name, email: user.email, preferences: user.preferences } });
 });
 
+// Update Profile Name
+app.put('/api/auth/profile', authenticate, (req, res) => {
+  const { name } = req.body;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Name is required.' });
+  }
+
+  const store = db.read();
+  const user = store.users.find(u => u.id === req.user.id);
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+
+  user.name = name.trim();
+  db.write(store);
+
+  const updatedUser = { id: user.id, name: user.name, email: user.email, preferences: user.preferences };
+  res.json({ success: true, message: 'Profile name updated.', user: updatedUser });
+});
+
+// Change Password Route
+app.post('/api/auth/change-password', authenticate, (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current password and new password are required.' });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters.' });
+  }
+
+  const store = db.read();
+  const user = store.users.find(u => u.id === req.user.id);
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+
+  const isMatch = bcrypt.compareSync(currentPassword, user.passwordHash);
+  if (!isMatch) {
+    return res.status(400).json({ error: 'Current password is incorrect.' });
+  }
+
+  const salt = bcrypt.genSaltSync(10);
+  user.passwordHash = bcrypt.hashSync(newPassword, salt);
+  db.write(store);
+
+  res.json({ success: true, message: 'Password changed successfully.' });
+});
+
+// Send Email Change OTP
+app.post('/api/auth/send-email-otp', authenticate, (req, res) => {
+  const { newEmail } = req.body;
+  if (!newEmail || !newEmail.includes('@')) {
+    return res.status(400).json({ error: 'Valid new email address is required.' });
+  }
+
+  const normalized = newEmail.toLowerCase().trim();
+  const store = db.read();
+
+  const exists = store.users.find(u => u.email.toLowerCase() === normalized && u.id !== req.user.id);
+  if (exists) {
+    return res.status(400).json({ error: 'An account with this email already exists.' });
+  }
+
+  store.emailOTPs = store.emailOTPs || {};
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  store.emailOTPs[req.user.id] = {
+    newEmail: normalized,
+    otp,
+    expiresAt: Date.now() + 10 * 60 * 1000
+  };
+  db.write(store);
+
+  res.json({ success: true, message: `Verification code sent to ${normalized}.`, demoOtp: otp });
+});
+
+// Verify Email Change OTP
+app.post('/api/auth/verify-email-otp', authenticate, (req, res) => {
+  const { newEmail, otp } = req.body;
+  if (!newEmail || !otp) {
+    return res.status(400).json({ error: 'New email and OTP code are required.' });
+  }
+
+  const store = db.read();
+  const record = (store.emailOTPs || {})[req.user.id];
+
+  if (!record || record.newEmail !== newEmail.toLowerCase().trim() || record.otp !== otp.trim()) {
+    return res.status(400).json({ error: 'Invalid or expired verification code.' });
+  }
+
+  if (Date.now() > record.expiresAt) {
+    return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
+  }
+
+  const user = store.users.find(u => u.id === req.user.id);
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+
+  user.email = record.newEmail;
+  delete store.emailOTPs[req.user.id];
+  db.write(store);
+
+  const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+  const updatedUser = { id: user.id, name: user.name, email: user.email, preferences: user.preferences };
+
+  res.json({ success: true, message: 'Email address verified and updated successfully!', token, user: updatedUser });
+});
+
 // 3. Permanent Account Deletion Route
 app.delete('/api/auth/delete-account', authenticate, (req, res) => {
   const userId = req.user.id;

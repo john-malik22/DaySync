@@ -154,6 +154,10 @@ export const api = {
   signup: (data) => request('/auth/signup', { method: 'POST', body: JSON.stringify(data) }),
   deleteAccount: () => request('/auth/delete-account', { method: 'DELETE' }),
   getMe: () => request('/auth/me'),
+  updateProfile: (data) => request('/auth/profile', { method: 'PUT', body: JSON.stringify(data) }),
+  changePassword: (data) => request('/auth/change-password', { method: 'POST', body: JSON.stringify(data) }),
+  sendEmailOTP: (data) => request('/auth/send-email-otp', { method: 'POST', body: JSON.stringify(data) }),
+  verifyEmailOTP: (data) => request('/auth/verify-email-otp', { method: 'POST', body: JSON.stringify(data) }),
 
   // Chat
   sendMessage: (message) => request('/chat', { method: 'POST', body: JSON.stringify({ message }) }),

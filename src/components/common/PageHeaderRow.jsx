@@ -47,22 +47,34 @@ export function PageHeaderRow({ title, onSearch, titleStyle }) {
           {/* Mobile-Only Search Icon Button */}
           <button
             type="button"
-            onClick={toggleMobileSearch}
+            onClick={() => {
+              if (window.__daysync_openCommandPalette) window.__daysync_openCommandPalette();
+              else toggleMobileSearch();
+            }}
             className="mobile-search-icon-btn btn-secondary"
-            title="Search"
+            title="Global Search (Ctrl + K)"
             aria-label="Search"
           >
             <Search size={16} color="var(--accent-primary)" />
           </button>
 
           {/* Desktop Search Bar (Positioned beside notification bell) */}
-          <div className="header-search-bar">
+          <div
+            className="header-search-bar"
+            onClick={() => {
+              if (window.__daysync_openCommandPalette) window.__daysync_openCommandPalette();
+            }}
+            style={{ cursor: 'pointer' }}
+          >
             <Search size={14} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search or Ctrl + K..."
               value={searchTerm}
               onChange={handleSearchChange}
+              onFocus={() => {
+                if (window.__daysync_openCommandPalette) window.__daysync_openCommandPalette();
+              }}
               aria-label="Search input"
             />
           </div>
