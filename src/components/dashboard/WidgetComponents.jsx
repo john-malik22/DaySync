@@ -401,20 +401,69 @@ export function HabitStreakWidget() {
   );
 }
 
-// 10. Luna Suggestion Widget
+// 10. Luna Suggestion Widget (Luna Focus Insight)
 export function LunaSuggestionWidget() {
-  const { suggestion } = useLuna();
+  const { suggestion, resourceLoading, fetchSuggestion } = useLuna();
+
+  useEffect(() => {
+    window.__daysync_refetchSuggestion = fetchSuggestion;
+    return () => {
+      delete window.__daysync_refetchSuggestion;
+    };
+  }, [fetchSuggestion]);
+
+  // Loading skeleton state
+  if (resourceLoading?.suggestion && !suggestion) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Sparkles size={16} color="var(--accent-primary)" />
+          <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, fontWeight: '700' }}>
+            LUNA FOCUS INSIGHT
+          </h3>
+        </div>
+        <div style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', fontSize: '12px', color: 'var(--text-muted)' }}>
+          Analyzing daily focus insights...
+        </div>
+      </div>
+    );
+  }
+
+  // Extract recommendation text safely from string or object payload
+  const insightText = typeof suggestion === 'string'
+    ? suggestion
+    : (suggestion?.recommendation || suggestion?.text || suggestion?.message || null);
+
+  const whyText = typeof suggestion === 'object' ? suggestion?.why : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Sparkles size={16} color="var(--accent-primary)" />
-        <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, fontWeight: '700' }}>
-          LUNA FOCUS INSIGHT
-        </h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Sparkles size={16} color="var(--accent-primary)" />
+          <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, fontWeight: '700' }}>
+            LUNA FOCUS INSIGHT
+          </h3>
+        </div>
       </div>
-      <div style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', fontSize: '12px', color: 'var(--text-secondary)' }}>
-        {suggestion || "Stay focused on your highest priority tasks today. Luna is here to help!"}
+
+      <div style={{ padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        {insightText ? (
+          <>
+            <div style={{ fontSize: '12.5px', color: 'var(--text-primary)', lineHeight: '1.4', fontWeight: '600' }}>
+              {insightText}
+            </div>
+            {whyText && (
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {whyText}
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+            No focus insight available yet. Complete a few tasks or habits to generate a focus insight.
+          </div>
+        )}
       </div>
     </div>
   );
@@ -670,7 +719,11 @@ export function renderWidgetById(id) {
     case 'habit_streak':
       return <WidgetErrorBoundary title="Habit Streak"><HabitStreakWidget /></WidgetErrorBoundary>;
     case 'luna_suggestion':
-      return <WidgetErrorBoundary title="Luna Focus Insight"><LunaSuggestionWidget /></WidgetErrorBoundary>;
+      return (
+        <WidgetErrorBoundary title="Luna Focus Insight" onRetry={() => window.__daysync_refetchSuggestion && window.__daysync_refetchSuggestion()}>
+          <LunaSuggestionWidget />
+        </WidgetErrorBoundary>
+      );
     case 'ask_luna':
       return <WidgetErrorBoundary title="Ask Luna AI"><AskLunaWidget /></WidgetErrorBoundary>;
     case 'unread_notifications':
