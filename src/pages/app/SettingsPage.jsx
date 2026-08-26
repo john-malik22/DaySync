@@ -65,6 +65,7 @@ export function SettingsPage() {
   const privacyRef = useRef(null);
   const appRef = useRef(null);
   const upgradeRef = useRef(null);
+  const aboutRef = useRef(null);
 
   const [activeSection, setActiveSection] = useState('account');
 
@@ -82,7 +83,7 @@ export function SettingsPage() {
 
   const [showChangeEmailModal, setShowChangeEmailModal] = useState(false);
   const [newEmailInput, setNewEmailInput] = useState('');
-  const [emailOtpStep, setEmailOtpStep] = useState(1); // 1: Enter email, 2: Enter OTP
+  const [emailOtpStep, setEmailOtpStep] = useState(1);
   const [otpInput, setOtpInput] = useState('');
   const [isSendingEmailOtp, setIsSendingEmailOtp] = useState(false);
   const [isVerifyingEmailOtp, setIsVerifyingEmailOtp] = useState(false);
@@ -95,7 +96,7 @@ export function SettingsPage() {
   const [showPassToggle, setShowPassToggle] = useState(false);
   const [isChangingPass, setIsChangingPass] = useState(false);
 
-  // Appearance & Dashboard Density Preferences
+  // Appearance & Density Preferences
   const [dashboardDensity, setDashboardDensity] = useState(() => {
     return localStorage.getItem('daysync_dashboard_density') || 'comfortable';
   });
@@ -103,7 +104,7 @@ export function SettingsPage() {
     return localStorage.getItem('daysync_animations_enabled') !== 'false';
   });
 
-  // Active Dashboard Widgets Layout
+  // Active Widgets Layout
   const [activeWidgetIds, setActiveWidgetIds] = useState(() => {
     try {
       const saved = localStorage.getItem('daysync_widget_layout');
@@ -115,7 +116,7 @@ export function SettingsPage() {
     return DEFAULT_WIDGET_LAYOUT.map(w => w.id);
   });
 
-  // Granular Notification Toggles
+  // Notifications Toggles
   const [notifSettings, setNotifSettings] = useState(() => {
     try {
       const saved = localStorage.getItem('daysync_notif_settings');
@@ -133,7 +134,7 @@ export function SettingsPage() {
     };
   });
 
-  // Granular Luna Toggles
+  // Luna Toggles
   const [lunaSettings, setLunaSettings] = useState(() => {
     try {
       const saved = localStorage.getItem('daysync_luna_settings');
@@ -168,11 +169,14 @@ export function SettingsPage() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isClearingHistory, setIsClearingHistory] = useState(false);
-
-  // Push Permission Status
   const [pushStatus, setPushStatus] = useState('Enabled');
 
   useEffect(() => {
+    const density = localStorage.getItem('daysync_dashboard_density') || 'comfortable';
+    const anims = localStorage.getItem('daysync_animations_enabled') !== 'false';
+    document.documentElement.setAttribute('data-dashboard-density', density);
+    document.documentElement.setAttribute('data-animations', anims ? 'true' : 'false');
+
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {
       setPushStatus('Unsupported');
     } else if (Notification.permission === 'granted') {
@@ -186,12 +190,14 @@ export function SettingsPage() {
 
   const handleDensityChange = (density) => {
     setDashboardDensity(density);
+    document.documentElement.setAttribute('data-dashboard-density', density);
     localStorage.setItem('daysync_dashboard_density', density);
     if (showToast) showToast(`Dashboard density set to ${density}.`, 'info');
   };
 
   const handleToggleAnimations = (enabled) => {
     setAnimationsEnabled(enabled);
+    document.documentElement.setAttribute('data-animations', enabled ? 'true' : 'false');
     localStorage.setItem('daysync_animations_enabled', enabled ? 'true' : 'false');
     if (showToast) showToast(enabled ? 'UI animations enabled.' : 'UI animations disabled.', 'info');
   };
@@ -224,7 +230,7 @@ export function SettingsPage() {
     if (showToast) showToast('Default preference updated.', 'success');
   };
 
-  // 1. Account Action Handlers
+  // Account Handlers
   const handleOpenChangeName = () => {
     setNewNameInput(user?.name || '');
     setShowChangeNameModal(true);
@@ -318,7 +324,6 @@ export function SettingsPage() {
     }
   };
 
-  // Test Push Notification Action
   const handleTestNotification = async () => {
     if (!('Notification' in window)) {
       if (showToast) showToast("Push notifications aren't available on this device.", 'error');
@@ -352,14 +357,12 @@ export function SettingsPage() {
     }
   };
 
-  // Reset Dashboard Layout
   const handleResetDashboardLayout = () => {
     localStorage.setItem('daysync_widget_layout', JSON.stringify(DEFAULT_WIDGET_LAYOUT));
     setActiveWidgetIds(DEFAULT_WIDGET_LAYOUT.map(w => w.id));
-    if (showToast) showToast('Dashboard widget arrangement reset to default!', 'success');
+    if (showToast) showToast('Dashboard layout reset to default.', 'info');
   };
 
-  // Manage Widgets Handler
   const handleAddWidget = (widget) => {
     setActiveWidgetIds(prev => {
       if (prev.includes(widget.id)) return prev;
@@ -420,7 +423,8 @@ export function SettingsPage() {
     { key: 'luna', label: 'Luna', icon: Sparkles, ref: lunaRef },
     { key: 'defaults', label: 'Defaults', icon: SlidersHorizontal, ref: defaultsRef },
     { key: 'privacy', label: 'Privacy & Security', icon: Shield, ref: privacyRef },
-    { key: 'app', label: 'App / PWA', icon: Smartphone, ref: appRef }
+    { key: 'app', label: 'App / PWA', icon: Smartphone, ref: appRef },
+    { key: 'about', label: 'About DaySync', icon: Info, ref: aboutRef }
   ];
 
   return (
@@ -488,8 +492,11 @@ export function SettingsPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.12)', color: 'var(--accent-success)', fontSize: '11px', fontWeight: '700' }}>
-              <CheckCircle size={13} /> Verified
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Account Status: <strong style={{ color: 'var(--text-primary)' }}>Active</strong></span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.12)', color: 'var(--accent-success)', fontSize: '11px', fontWeight: '700' }}>
+                <CheckCircle size={13} /> Verified
+              </div>
             </div>
           </div>
 
@@ -517,12 +524,11 @@ export function SettingsPage() {
                 <Sparkles size={18} color="var(--accent-primary)" /> Upgrade DaySync
               </h3>
               <p style={{ margin: '6px 0 12px 0', fontSize: '12.5px', color: 'var(--text-muted)' }}>
-                Unlock a more personalized executive experience.
+                Get more personalization and advanced DaySync experiences.
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Zap size={13} color="var(--accent-primary)" /> More dashboard widgets & custom grid layouts</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Zap size={13} color="var(--accent-primary)" /> Advanced financial tracking & Split analytics</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Zap size={13} color="var(--accent-primary)" /> Priority Luna AI responses & daily briefings</div>
+              <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                <div>Current Plan: <strong style={{ color: 'var(--accent-success)' }}>Free</strong></div>
+                <div>Available: <strong style={{ color: 'var(--accent-primary)' }}>DaySync Plus</strong></div>
               </div>
             </div>
 
@@ -540,14 +546,17 @@ export function SettingsPage() {
 
         {/* 3. APP & APPEARANCE SECTION */}
         <div ref={appearanceRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Sun size={18} color="var(--accent-primary)" /> App & Appearance
           </h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 16px 0' }}>
+            These preferences change how DaySync looks and feels across the app.
+          </p>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <div>
               <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>Theme Mode</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Choose between Light Mode and Dark Mode</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Current: <strong style={{ color: 'var(--text-primary)', textTransform: 'capitalize' }}>{theme} Mode</strong></div>
             </div>
             <button type="button" onClick={toggleTheme} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
               {theme === 'dark' ? <Sun size={15} color="var(--accent-warning)" /> : <Moon size={15} />}
@@ -558,14 +567,14 @@ export function SettingsPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
             <div>
               <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>Dashboard Layout Density</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Comfortable spacing vs compact high-density view</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Current: <strong style={{ color: 'var(--text-primary)', textTransform: 'capitalize' }}>{dashboardDensity}</strong></div>
             </div>
             <div style={{ display: 'flex', gap: '6px' }}>
               <button
                 type="button"
                 onClick={() => handleDensityChange('comfortable')}
                 style={{
-                  padding: '4px 10px', fontSize: '11.5px', fontWeight: '700', borderRadius: '6px',
+                  padding: '5px 12px', fontSize: '11.5px', fontWeight: '700', borderRadius: '6px',
                   border: dashboardDensity === 'comfortable' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
                   background: dashboardDensity === 'comfortable' ? 'var(--accent-primary)' : 'var(--bg-secondary)',
                   color: dashboardDensity === 'comfortable' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer'
@@ -577,7 +586,7 @@ export function SettingsPage() {
                 type="button"
                 onClick={() => handleDensityChange('compact')}
                 style={{
-                  padding: '4px 10px', fontSize: '11.5px', fontWeight: '700', borderRadius: '6px',
+                  padding: '5px 12px', fontSize: '11.5px', fontWeight: '700', borderRadius: '6px',
                   border: dashboardDensity === 'compact' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
                   background: dashboardDensity === 'compact' ? 'var(--accent-primary)' : 'var(--bg-secondary)',
                   color: dashboardDensity === 'compact' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer'
@@ -591,7 +600,7 @@ export function SettingsPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
             <div>
               <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>UI Animations</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Enable smooth transitions and fade effects</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Current: <strong style={{ color: 'var(--text-primary)' }}>{animationsEnabled ? 'On' : 'Off'}</strong></div>
             </div>
             <label style={{ position: 'relative', display: 'inline-block', width: '40px', height: '22px' }}>
               <input
@@ -611,17 +620,26 @@ export function SettingsPage() {
 
         {/* 4. DASHBOARD SECTION */}
         <div ref={dashboardRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Layout size={18} color="var(--accent-primary)" /> Dashboard Settings
           </h3>
 
-          <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginBottom: '14px' }}>
-            Manage dashboard widgets, layout arrangements, and widget library density.
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
+            Customize your home screen with widgets, layouts, and spacing that fit the way you use DaySync.
           </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '14px' }}>
+            <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+              Active Widgets: <strong style={{ color: 'var(--text-primary)' }}>{activeWidgetIds.length}</strong>
+            </div>
+            <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+              Layout: <strong style={{ color: 'var(--text-primary)' }}>Custom</strong>
+            </div>
+          </div>
 
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button type="button" onClick={() => setIsWidgetPickerOpen(true)} className="btn-primary" style={{ fontSize: '12.5px' }}>
-              + Manage Widgets
+              Manage Widgets
             </button>
             <button type="button" onClick={handleResetDashboardLayout} className="btn-secondary" style={{ fontSize: '12.5px' }}>
               Reset Dashboard Layout
@@ -631,18 +649,22 @@ export function SettingsPage() {
 
         {/* 5. NOTIFICATIONS SECTION */}
         <div ref={notificationsRef} className="glass-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <h3 style={{ margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Bell size={18} color="var(--accent-primary)" /> Notification Settings
             </h3>
             <button type="button" onClick={handleTestNotification} className="btn-secondary" style={{ fontSize: '11.5px', padding: '4px 10px' }}>
-              Send Test Notification
+              Test Notification
             </button>
           </div>
 
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
+            Receive reminders and important DaySync updates even when the app is closed.
+          </p>
+
           <div style={{ padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Push Status</div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Push Notifications</div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Device WebPush availability</div>
             </div>
             <span style={{
@@ -677,9 +699,12 @@ export function SettingsPage() {
 
         {/* 6. LUNA SETTINGS SECTION */}
         <div ref={lunaRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Sparkles size={18} color="var(--accent-primary)" /> Luna AI Settings
           </h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
+            Luna helps you focus on tasks, plans, habits, and important moments using your DaySync data.
+          </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {[
@@ -774,22 +799,43 @@ export function SettingsPage() {
         {/* 9. APP / PWA SECTION */}
         <div ref={appRef} className="glass-card">
           <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Smartphone size={18} color="var(--accent-primary)" /> App & PWA
+            <Smartphone size={18} color="var(--accent-primary)" /> App & PWA Status
           </h3>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <div>
-              <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-primary)' }}>DaySync Version</div>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Build {currentVersion || '2.0.0'}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '14px' }}>
+            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Version</div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>2.0.0</div>
             </div>
 
-            <button type="button" onClick={checkForUpdates} disabled={checking} className="btn-secondary" style={{ fontSize: '12px' }}>
-              <RefreshCw size={14} /> {checking ? 'Checking...' : 'Check for Updates'}
-            </button>
+            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>App Status</div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent-success)' }}>Installed</div>
+            </div>
+
+            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Update Status</div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Automatic updates enabled</div>
+            </div>
           </div>
 
-          <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', fontSize: '12px', color: 'var(--text-secondary)' }}>
-            DaySync is installed and running natively in Web PWA mode.
+          <button type="button" onClick={checkForUpdates} disabled={checking} className="btn-secondary" style={{ fontSize: '12px' }}>
+            <RefreshCw size={14} /> {checking ? 'Checking...' : 'Check for Updates'}
+          </button>
+        </div>
+
+        {/* 10. ABOUT DAYSYNC SECTION */}
+        <div ref={aboutRef} className="glass-card">
+          <h3 style={{ marginBottom: '8px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Info size={18} color="var(--accent-primary)" /> About DaySync
+          </h3>
+          <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', margin: '0 0 12px 0', lineHeight: '1.5' }}>
+            DaySync brings your tasks, expenses, plans, habits, reminders, shared splits, and Luna assistance together in one place.
+          </p>
+          <div style={{ display: 'flex', gap: '16px', fontSize: '11.5px', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+            <div>Version: <strong style={{ color: 'var(--text-primary)' }}>2.0.0</strong></div>
+            <div>Engine: <strong style={{ color: 'var(--text-primary)' }}>Antigravity Core</strong></div>
+            <div>Purpose: <strong style={{ color: 'var(--text-primary)' }}>Built for everyday life</strong></div>
           </div>
         </div>
 
@@ -824,7 +870,7 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* 2. Change Email Modal (OTP Verification Flow) */}
+      {/* 2. Change Email Modal */}
       {showChangeEmailModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
           <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '20px', borderRadius: '16px' }}>

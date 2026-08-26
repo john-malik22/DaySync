@@ -81,7 +81,7 @@ export function DashboardWidgetWrapper({
 
   return (
     <div
-      className={`glass-card ${sizeClassMap[currentSize] || 'widget-size-wide'} ${isArrangeMode ? 'widget-arrange-active' : ''}`}
+      className={`glass-card dashboard-widget-card ${sizeClassMap[currentSize] || 'widget-size-wide'} ${isArrangeMode ? 'widget-arrange-active' : ''}`}
       style={{
         position: 'relative',
         display: 'flex',
