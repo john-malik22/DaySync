@@ -208,16 +208,6 @@ export const api = {
   getCurrentSuggestion: () => request('/suggestions/current'),
   getSummaries: () => request('/summaries'),
 
-  // Splits Feature
-  getSplits: () => request('/splits'),
-  createSplit: (data) => request('/splits', { method: 'POST', body: JSON.stringify(data) }),
-  previewSplit: (code) => request(`/splits/preview/${encodeURIComponent(code)}`),
-  joinSplit: (code) => request('/splits/join', { method: 'POST', body: JSON.stringify({ code }) }),
-  addSplitExpense: (splitId, data) => request(`/splits/${splitId}/expenses`, { method: 'POST', body: JSON.stringify(data) }),
-  deleteSplitExpense: (splitId, expenseId) => request(`/splits/${splitId}/expenses/${expenseId}`, { method: 'DELETE' }),
-  settleSplit: (splitId, data) => request(`/splits/${splitId}/settle`, { method: 'POST', body: JSON.stringify(data) }),
-  regenerateSplitCode: (splitId) => request(`/splits/${splitId}/regenerate-code`, { method: 'POST' }),
-
   // Privacy & Data
   exportData: () => request('/privacy/export', { method: 'POST' }),
   clearHistory: () => request('/privacy/clear-history', { method: 'POST' })

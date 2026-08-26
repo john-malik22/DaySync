@@ -4,7 +4,6 @@ import {
   MessageSquare, 
   LayoutDashboard, 
   CreditCard, 
-  Users,
   Brain, 
   CheckSquare,
   Activity,
@@ -27,7 +26,6 @@ export function Sidebar() {
     { label: 'Chat (AI)', icon: MessageSquare, path: '/app/chat' },
     { label: 'Dashboard', icon: LayoutDashboard, path: '/app/dashboard' },
     { label: 'Expenses', icon: CreditCard, path: '/app/expenses' },
-    { label: 'Splits', icon: Users, path: '/app/splits' },
     { label: 'Memory', icon: Brain, path: '/app/memories' },
     { label: 'Task', icon: CheckSquare, path: '/app/task' },
     { label: 'Habits', icon: Activity, path: '/app/habits' }
