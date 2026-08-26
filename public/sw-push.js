@@ -8,15 +8,19 @@ self.addEventListener('push', (event) => {
 
   try {
     const data = event.data.json();
-    const title = data.title || 'DaySync';
+    const title = 'DaySync';
+    const body = data.message || data.body || 'You have a new DaySync notification.';
+    const actionUrl = data.actionUrl || data.url || '/app/dashboard';
+
     const options = {
-      body: data.message || data.body || 'You have a new DaySync notification.',
-      icon: data.icon || '/icons/icon-192.png',
-      badge: data.badge || '/icons/icon-192.png',
-      tag: data.eventKey || data.id || `daysync-notif-${Date.now()}`,
+      body: body,
+      icon: '/icons/icon-192.png',
+      badge: '/icons/badge-72.png',
+      tag: data.eventKey || (data.id ? `daysync-notif-${data.id}` : `daysync-notif-${Date.now()}`),
       renotify: true,
+      vibrate: [100, 50, 100],
       data: {
-        url: data.actionUrl || '/app/notifications',
+        url: actionUrl,
         id: data.id
       }
     };
@@ -29,7 +33,7 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/app/notifications';
+  const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/app/dashboard';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {

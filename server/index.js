@@ -1169,11 +1169,11 @@ async function sendWebPushToUser(userId, notifPayload, store) {
   if (userSubs.length === 0) return;
 
   const pushPayload = JSON.stringify({
-    title: notifPayload.title || 'DaySync',
+    title: 'DaySync',
     message: notifPayload.message || '',
     icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
-    actionUrl: notifPayload.actionUrl || '/app/notifications',
+    badge: '/icons/badge-72.png',
+    actionUrl: notifPayload.actionUrl || '/app/dashboard',
     id: notifPayload.id,
     eventKey: notifPayload.eventKey
   });
