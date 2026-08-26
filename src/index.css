@@ -978,59 +978,88 @@ option {
   }
 }
 
-/* Dashboard 2.0 Customizable Widget Grid System */
+/* Dashboard 2.0 Explicit Fixed Grid Size Architecture */
 .dashboard-widget-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 150px;
   gap: var(--space-md);
   align-items: start;
 }
 
+/* S = Small (1 col x 1 row, 150px fixed height) */
+.widget-size-S,
 .widget-size-small {
   grid-column: span 1;
   grid-row: span 1;
-  min-height: auto;
-  align-self: start;
+  height: 150px;
+  max-height: 150px;
+  overflow: hidden;
 }
 
+/* W = Wide (2 cols x 1 row, 150px fixed height) */
+.widget-size-W,
 .widget-size-wide {
   grid-column: span 2;
   grid-row: span 1;
-  min-height: auto;
-  align-self: start;
+  height: 150px;
+  max-height: 150px;
+  overflow: hidden;
 }
 
+/* T = Tall (1 col x 2 rows, 316px fixed height) */
+.widget-size-T,
 .widget-size-tall {
   grid-column: span 1;
   grid-row: span 2;
-  min-height: 240px;
+  height: 316px;
+  max-height: 316px;
+  overflow: hidden;
 }
 
+/* L = Large (2 cols x 2 rows, 316px fixed height) */
+.widget-size-L,
 .widget-size-large {
   grid-column: span 2;
   grid-row: span 2;
-  min-height: 260px;
+  height: 316px;
+  max-height: 316px;
+  overflow: hidden;
 }
 
 @media (max-width: 1024px) {
   .dashboard-widget-grid {
     grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 150px;
   }
 }
 
 @media (max-width: 640px) {
   .dashboard-widget-grid {
     grid-template-columns: repeat(1, 1fr);
+    grid-auto-rows: minmax(140px, auto);
   }
 
-  .widget-size-wide,
-  .widget-size-large,
-  .widget-size-tall,
-  .widget-size-small {
+  .widget-size-S,
+  .widget-size-small,
+  .widget-size-W,
+  .widget-size-wide {
     grid-column: span 1;
     grid-row: span 1;
-    min-height: auto;
-    align-self: start;
+    height: 140px;
+    max-height: 140px;
+    overflow: hidden;
+  }
+
+  .widget-size-T,
+  .widget-size-tall,
+  .widget-size-L,
+  .widget-size-large {
+    grid-column: span 1;
+    grid-row: span 2;
+    height: 296px;
+    max-height: 296px;
+    overflow: hidden;
   }
 }
 

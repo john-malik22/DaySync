@@ -31,7 +31,7 @@ import {
   TrendingDown
 } from 'lucide-react';
 
-const formatDate = (dateStr) => {
+export const formatDate = (dateStr) => {
   if (!dateStr) return 'Today';
   try {
     const d = new Date(dateStr);
@@ -52,7 +52,7 @@ const formatDate = (dateStr) => {
   }
 };
 
-// Isolated Widget Error Boundary
+// Isolated Widget Error Boundary (Keeps fixed size on error)
 export class WidgetErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -78,9 +78,9 @@ export class WidgetErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div style={{
-          padding: '14px', borderRadius: 'var(--radius-sm)', background: 'rgba(239, 68, 68, 0.08)',
+          padding: '12px', borderRadius: 'var(--radius-sm)', background: 'rgba(239, 68, 68, 0.08)',
           border: '1px solid var(--accent-danger)', display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center', textAlign: 'center', minHeight: '90px'
+          alignItems: 'center', justifyContent: 'center', textAlign: 'center', height: '100%', boxSizing: 'border-box'
         }}>
           <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>
             {this.props.title || 'Widget'}
@@ -105,56 +105,71 @@ export class WidgetErrorBoundary extends React.Component {
 }
 
 // 1. Today's Tasks Widget
-export function TodayTasksWidget() {
+export function TodayTasksWidget({ widgetSize = 'T' }) {
   const { tasks, toggleTask } = useLuna();
   const todayStr = new Date().toISOString().split('T')[0];
   const allTasksToday = (tasks || []).filter(t => t.dueDate === todayStr || !t.dueDate);
   const completedCount = allTasksToday.filter(t => t.completed).length;
   const pendingTasks = allTasksToday.filter(t => !t.completed);
-  const nextTask = pendingTasks.find(t => t.priority === 'High') || pendingTasks[0];
+
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 4 : 2;
+  const displayTasks = pendingTasks.slice(0, maxItems);
+  const overflowCount = pendingTasks.length - displayTasks.length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <CheckSquare size={16} color="var(--accent-primary)" /> TODAY'S TASKS ({allTasksToday.length})
-        </h3>
-        <Link to="/app/task" aria-label="View all tasks" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          View All <ArrowRight size={13} />
-        </Link>
-      </div>
-
-      <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: '600' }}>
-        {completedCount} completed • {pendingTasks.length} pending
-      </div>
-
-      {pendingTasks.length === 0 ? (
-        <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-          You're all caught up. 🎉
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <CheckSquare size={15} color="var(--accent-primary)" /> TODAY'S TASKS ({allTasksToday.length})
+          </h3>
+          <Link to="/app/task" aria-label="View all tasks" style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}>
+            View All <ArrowRight size={12} />
+          </Link>
         </div>
-      ) : (
-        <div style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Next Task</div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-              <button
-                type="button"
-                onClick={() => toggleTask(nextTask.id, false)}
-                aria-label={`Mark task ${nextTask.title} complete`}
-                style={{
-                  width: '16px', height: '16px', borderRadius: '4px',
-                  border: '2px solid var(--accent-primary)', background: 'transparent',
-                  cursor: 'pointer', flexShrink: 0
-                }}
-              />
-              <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {nextTask.title}
-              </span>
-            </div>
-            <span className="badge" style={{ fontSize: '10px', background: nextTask.priority === 'High' ? 'rgba(239, 68, 68, 0.15)' : 'var(--bg-tertiary)', color: nextTask.priority === 'High' ? 'var(--accent-danger)' : 'var(--text-secondary)', flexShrink: 0 }}>
-              {nextTask.dueTime || 'Today'} • {nextTask.priority || 'Normal'}
-            </span>
+
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '8px' }}>
+          {completedCount} completed • {pendingTasks.length} pending
+        </div>
+
+        {pendingTasks.length === 0 ? (
+          <div style={{ padding: '12px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginTop: '4px' }}>
+            You're all caught up. 🎉
           </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {displayTasks.map(t => (
+              <div key={t.id} style={{
+                padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                  <button
+                    type="button"
+                    onClick={() => toggleTask(t.id, false)}
+                    aria-label={`Mark task ${t.title} complete`}
+                    style={{
+                      width: '15px', height: '15px', borderRadius: '3px',
+                      border: '2px solid var(--accent-primary)', background: 'transparent',
+                      cursor: 'pointer', flexShrink: 0
+                    }}
+                  />
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {t.title}
+                  </span>
+                </div>
+                <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', flexShrink: 0, marginLeft: '6px' }}>
+                  {t.dueTime || 'Today'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {overflowCount > 0 && (
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '4px' }}>
+          +{overflowCount} more task{overflowCount > 1 ? 's' : ''}
         </div>
       )}
     </div>
@@ -162,39 +177,51 @@ export function TodayTasksWidget() {
 }
 
 // 2. Upcoming Reminders Widget
-export function UpcomingRemindersWidget() {
+export function UpcomingRemindersWidget({ widgetSize = 'T' }) {
   const { tasks } = useLuna();
   const todayStr = new Date().toISOString().split('T')[0];
-  const upcomingReminders = (tasks || []).filter(t => !t.completed && t.dueDate && t.dueDate >= todayStr).slice(0, 3);
+  const upcomingReminders = (tasks || []).filter(t => !t.completed && t.dueDate && t.dueDate >= todayStr);
+
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 4 : 2;
+  const displayReminders = upcomingReminders.slice(0, maxItems);
+  const overflowCount = upcomingReminders.length - displayReminders.length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Clock size={16} color="var(--accent-primary)" /> UPCOMING REMINDERS ({upcomingReminders.length})
-        </h3>
-        <Link to="/app/task" aria-label="View all reminders" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          View All <ArrowRight size={13} />
-        </Link>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+          <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Clock size={15} color="var(--accent-primary)" /> REMINDERS ({upcomingReminders.length})
+          </h3>
+          <Link to="/app/task" aria-label="View all reminders" style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}>
+            View All <ArrowRight size={12} />
+          </Link>
+        </div>
+
+        {upcomingReminders.length === 0 ? (
+          <div style={{ padding: '12px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginTop: '4px' }}>
+            No upcoming reminders.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {displayReminders.map(rem => (
+              <div key={rem.id} style={{
+                padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+              }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rem.title}</div>
+                  <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{rem.dueDate === todayStr ? 'Today' : formatDate(rem.dueDate)} {rem.dueTime ? `• ${rem.dueTime}` : ''}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {upcomingReminders.length === 0 ? (
-        <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-          No upcoming reminders scheduled.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {upcomingReminders.map(rem => (
-            <div key={rem.id} style={{
-              padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-            }}>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rem.title}</div>
-                <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{rem.dueDate === todayStr ? 'Today' : formatDate(rem.dueDate)} {rem.dueTime ? `• ${rem.dueTime}` : ''}</div>
-              </div>
-            </div>
-          ))}
+      {overflowCount > 0 && (
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '4px' }}>
+          +{overflowCount} more
         </div>
       )}
     </div>
@@ -202,45 +229,60 @@ export function UpcomingRemindersWidget() {
 }
 
 // 3. Overdue Tasks Widget
-export function OverdueTasksWidget() {
+export function OverdueTasksWidget({ widgetSize = 'T' }) {
   const { tasks, toggleTask } = useLuna();
   const todayStr = new Date().toISOString().split('T')[0];
   const overdueTasks = (tasks || []).filter(t => !t.completed && t.dueDate && t.dueDate < todayStr);
 
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 4 : 2;
+  const displayTasks = overdueTasks.slice(0, maxItems);
+  const overflowCount = overdueTasks.length - displayTasks.length;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ color: 'var(--accent-danger)', fontSize: '13.5px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <AlertTriangle size={16} color="var(--accent-danger)" /> OVERDUE TASKS ({overdueTasks.length})
-        </h3>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+          <h3 style={{ color: 'var(--accent-danger)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <AlertTriangle size={15} color="var(--accent-danger)" /> OVERDUE ({overdueTasks.length})
+          </h3>
+          <Link to="/app/task" aria-label="View all tasks" style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-danger)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}>
+            View All <ArrowRight size={12} />
+          </Link>
+        </div>
+
+        {overdueTasks.length === 0 ? (
+          <div style={{ padding: '12px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginTop: '4px' }}>
+            No overdue tasks! 🎉
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {displayTasks.map(task => (
+              <div key={task.id} style={{
+                padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid var(--accent-danger)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+              }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.title}</div>
+                  <div style={{ fontSize: '10.5px', color: 'var(--accent-danger)' }}>Due: {formatDate(task.dueDate)}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => toggleTask(task.id, false)}
+                  className="btn-secondary"
+                  style={{ fontSize: '10px', padding: '3px 7px', flexShrink: 0, marginLeft: '6px' }}
+                  aria-label={`Done with ${task.title}`}
+                >
+                  Done
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {overdueTasks.length === 0 ? (
-        <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-          No overdue tasks! Everything is up to date. 🎉
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {overdueTasks.slice(0, 3).map(task => (
-            <div key={task.id} style={{
-              padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'rgba(239, 68, 68, 0.08)',
-              border: '1px solid var(--accent-danger)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-            }}>
-              <div>
-                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>{task.title}</div>
-                <div style={{ fontSize: '10.5px', color: 'var(--accent-danger)' }}>Due: {formatDate(task.dueDate)}</div>
-              </div>
-              <button
-                type="button"
-                onClick={() => toggleTask(task.id, false)}
-                className="btn-secondary"
-                style={{ fontSize: '10.5px', padding: '3px 8px' }}
-                aria-label={`Done with ${task.title}`}
-              >
-                Done
-              </button>
-            </div>
-          ))}
+      {overflowCount > 0 && (
+        <div style={{ fontSize: '11px', color: 'var(--accent-danger)', textAlign: 'right', paddingTop: '4px' }}>
+          +{overflowCount} more overdue
         </div>
       )}
     </div>
@@ -248,41 +290,50 @@ export function OverdueTasksWidget() {
 }
 
 // 4. Upcoming Plans Widget
-export function UpcomingPlansWidget() {
+export function UpcomingPlansWidget({ widgetSize = 'T' }) {
   const { plans } = useLuna();
-  const activePlans = (plans || []).filter(p => p.status !== 'cancelled').slice(0, 3);
+  const activePlans = (plans || []).filter(p => p.status !== 'cancelled');
+
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 3 : 2;
+  const displayPlans = activePlans.slice(0, maxItems);
+  const overflowCount = activePlans.length - displayPlans.length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Repeat size={16} color="var(--accent-primary)" /> UPCOMING PLANS ({activePlans.length})
-        </h3>
-        <Link to="/app/plans" aria-label="View plans page" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          Plans <ArrowRight size={13} />
-        </Link>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+          <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Repeat size={15} color="var(--accent-primary)" /> UPCOMING PLANS ({activePlans.length})
+          </h3>
+          <Link to="/app/plans" aria-label="View plans page" style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}>
+            View Plans <ArrowRight size={12} />
+          </Link>
+        </div>
+
+        {activePlans.length === 0 ? (
+          <div style={{ padding: '12px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginTop: '4px' }}>
+            No active plans.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {displayPlans.map(plan => (
+              <div key={plan.id} style={{
+                padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+              }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{plan.name || plan.title}</div>
+                  <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>₹{plan.amount || 0} • {plan.nextDueDate ? formatDate(plan.nextDueDate) : 'Active'}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {activePlans.length === 0 ? (
-        <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-          No active subscriptions or plans.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {activePlans.map(plan => (
-            <div key={plan.id} style={{
-              padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-            }}>
-              <div>
-                <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{plan.name || plan.title}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>₹{plan.amount || 0} / {plan.billingCycle || 'month'}</div>
-              </div>
-              <span className="badge" style={{ fontSize: '10px', background: 'var(--bg-tertiary)' }}>
-                {plan.nextDueDate ? `Next: ${formatDate(plan.nextDueDate)}` : 'Active'}
-              </span>
-            </div>
-          ))}
+      {overflowCount > 0 && (
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '4px' }}>
+          +{overflowCount} more plan{overflowCount > 1 ? 's' : ''}
         </div>
       )}
     </div>
@@ -290,88 +341,107 @@ export function UpcomingPlansWidget() {
 }
 
 // 5. Birthdays & Meetings Widget
-export function BirthdaysMeetingsWidget() {
+export function BirthdaysMeetingsWidget({ widgetSize = 'T' }) {
   const { tasks } = useLuna();
-  const lifeEvents = (tasks || []).filter(t => t.category === 'LIFE' || t.category === 'Meeting' || (t.title && t.title.toLowerCase().includes('birthday'))).slice(0, 3);
+  const lifeEvents = (tasks || []).filter(t => t.category === 'LIFE' || t.category === 'Meeting' || (t.title && t.title.toLowerCase().includes('birthday')));
+
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 4 : 2;
+  const displayEvents = lifeEvents.slice(0, maxItems);
+  const overflowCount = lifeEvents.length - displayEvents.length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Cake size={16} color="var(--accent-primary)" /> BIRTHDAYS & MEETINGS ({lifeEvents.length})
-        </h3>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+          <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Cake size={15} color="var(--accent-primary)" /> BIRTHDAYS & MEETINGS ({lifeEvents.length})
+          </h3>
+        </div>
+
+        {lifeEvents.length === 0 ? (
+          <div style={{ padding: '12px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginTop: '4px' }}>
+            No upcoming events.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {displayEvents.map(evt => (
+              <div key={evt.id} style={{
+                padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+              }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{evt.title}</div>
+                  <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{formatDate(evt.dueDate)}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {lifeEvents.length === 0 ? (
-        <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-          No upcoming birthdays or meetings.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {lifeEvents.map(evt => (
-            <div key={evt.id} style={{
-              padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-            }}>
-              <div>
-                <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{evt.title}</div>
-                <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{formatDate(evt.dueDate)}</div>
-              </div>
-              <span className="badge" style={{ fontSize: '10px', background: 'rgba(108, 99, 255, 0.15)', color: 'var(--accent-primary)' }}>Event</span>
-            </div>
-          ))}
+      {overflowCount > 0 && (
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '4px' }}>
+          +{overflowCount} more
         </div>
       )}
     </div>
   );
 }
 
-// 6. Spending Snapshot Widget (Main values: Spent, Received, Net + Today's detail)
-export function SpendingSnapshotWidget() {
+// 6. Spending Snapshot Widget (Fixed height adapt: S shows summary, W shows Spent/Received/Net, T/L adds breakdown)
+export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
   const { expenses } = useLuna();
   const todayStr = new Date().toISOString().split('T')[0];
 
   const totalSpent = (expenses || []).filter(e => e.type !== 'income').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
   const totalReceived = (expenses || []).filter(e => e.type === 'income').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
   const netBalance = totalReceived - totalSpent;
-
   const todaySpent = (expenses || []).filter(e => e.date === todayStr && e.type !== 'income').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Wallet size={16} color="var(--accent-primary)" /> SPENDING SNAPSHOT
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+        <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Wallet size={15} color="var(--accent-primary)" /> SPENDING SNAPSHOT
         </h3>
-        <Link to="/app/expenses" aria-label="Expenses page" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          Expenses <ArrowRight size={13} />
+        <Link to="/app/expenses" aria-label="Expenses page" style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}>
+          Expenses <ArrowRight size={12} />
         </Link>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-        <div style={{ background: 'var(--bg-secondary)', padding: '8px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+      {widgetSize === 'S' ? (
+        <div style={{ background: 'var(--bg-secondary)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', textAlign: 'center' }}>
           <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Spent</span>
-          <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--accent-danger)', marginTop: '2px' }}>
-            ₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-danger)', marginTop: '2px' }}>
+            ₹{totalSpent.toLocaleString()}
           </div>
         </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+          <div style={{ background: 'var(--bg-secondary)', padding: '6px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+            <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Spent</span>
+            <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--accent-danger)', marginTop: '2px' }}>
+              ₹{totalSpent.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </div>
+          </div>
 
-        <div style={{ background: 'var(--bg-secondary)', padding: '8px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-          <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Received</span>
-          <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--accent-success)', marginTop: '2px' }}>
-            ₹{totalReceived.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <div style={{ background: 'var(--bg-secondary)', padding: '6px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+            <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Received</span>
+            <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--accent-success)', marginTop: '2px' }}>
+              ₹{totalReceived.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </div>
+          </div>
+
+          <div style={{ background: 'var(--bg-secondary)', padding: '6px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+            <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Net</span>
+            <div style={{ fontSize: '1rem', fontWeight: '800', color: netBalance >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)', marginTop: '2px' }}>
+              {netBalance >= 0 ? '+' : ''}₹{netBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </div>
           </div>
         </div>
+      )}
 
-        <div style={{ background: 'var(--bg-secondary)', padding: '8px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-          <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Net</span>
-          <div style={{ fontSize: '1.1rem', fontWeight: '800', color: netBalance >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)', marginTop: '2px' }}>
-            {netBalance >= 0 ? '+' : ''}₹{netBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
+      <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '4px' }}>
         <span>Today: <strong>₹{todaySpent.toLocaleString()} spent</strong></span>
       </div>
     </div>
@@ -379,7 +449,7 @@ export function SpendingSnapshotWidget() {
 }
 
 // 7. Monthly Expenses Widget
-export function MonthlyExpensesWidget() {
+export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
   const { expenses } = useLuna();
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
@@ -391,21 +461,21 @@ export function MonthlyExpensesWidget() {
   }).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <DollarSign size={16} color="var(--accent-primary)" />
-        <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Monthly Expenses</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <DollarSign size={15} color="var(--accent-primary)" />
+        <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>Monthly Expenses</span>
       </div>
-      <div style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
-        ₹{monthlyTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      <div style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
+        ₹{monthlyTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
       </div>
-      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>This calendar month</span>
+      <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>This month</span>
     </div>
   );
 }
 
 // 8. Today's Spending Widget
-export function TodaySpendingWidget() {
+export function TodaySpendingWidget({ widgetSize = 'S' }) {
   const { expenses } = useLuna();
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -413,40 +483,40 @@ export function TodaySpendingWidget() {
     .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <TrendingUp size={16} color="var(--accent-primary)" />
-        <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Today's Spending</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <TrendingUp size={15} color="var(--accent-primary)" />
+        <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>Today's Spending</span>
       </div>
-      <div style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-        ₹{todayTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      <div style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+        ₹{todayTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
       </div>
-      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Logged today</span>
+      <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Logged today</span>
     </div>
   );
 }
 
 // 9. Habit Streak Widget
-export function HabitStreakWidget() {
+export function HabitStreakWidget({ widgetSize = 'S' }) {
   const { habits } = useLuna();
   const maxStreak = (habits || []).reduce((max, h) => Math.max(max, h.streak || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'center', alignItems: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', textAlign: 'center', alignItems: 'center' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <Flame size={18} color="var(--accent-warning)" />
-        <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Habit Streak</span>
+        <Flame size={16} color="var(--accent-warning)" />
+        <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>Habit Streak</span>
       </div>
-      <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-warning)' }}>
+      <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--accent-warning)' }}>
         {maxStreak} Days
       </div>
-      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Top active streak</span>
+      <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Top active streak</span>
     </div>
   );
 }
 
 // 10. Luna Suggestion Widget (Luna Focus Insight)
-export function LunaSuggestionWidget() {
+export function LunaSuggestionWidget({ widgetSize = 'W' }) {
   const { suggestion, resourceLoading, fetchSuggestion } = useLuna();
 
   useEffect(() => {
@@ -458,10 +528,10 @@ export function LunaSuggestionWidget() {
 
   if (resourceLoading?.suggestion && !suggestion) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Sparkles size={16} color="var(--accent-primary)" />
-          <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, fontWeight: '700' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Sparkles size={15} color="var(--accent-primary)" />
+          <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, fontWeight: '700' }}>
             LUNA FOCUS INSIGHT
           </h3>
         </div>
@@ -479,34 +549,34 @@ export function LunaSuggestionWidget() {
   const whyText = typeof suggestion === 'object' ? suggestion?.why : null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Sparkles size={16} color="var(--accent-primary)" />
-          <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, fontWeight: '700' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Sparkles size={15} color="var(--accent-primary)" />
+          <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, fontWeight: '700' }}>
             LUNA FOCUS INSIGHT
           </h3>
         </div>
-        <Link to="/app/task" aria-label="Open Tasks" style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          Open Tasks <ArrowRight size={12} />
+        <Link to="/app/task" aria-label="Open Tasks" style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}>
+          Tasks <ArrowRight size={12} />
         </Link>
       </div>
 
-      <div style={{ padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         {insightText ? (
           <>
-            <div style={{ fontSize: '12.5px', color: 'var(--text-primary)', lineHeight: '1.4', fontWeight: '600' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: '1.35', fontWeight: '600', display: '-webkit-box', WebkitLineClamp: widgetSize === 'S' ? 2 : 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
               {insightText}
             </div>
-            {whyText && (
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {whyText && widgetSize !== 'S' && (
+              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {whyText}
               </div>
             )}
           </>
         ) : (
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            No focus insight available yet. Complete a few tasks or habits to generate a focus insight.
+          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+            No focus insight available yet.
           </div>
         )}
       </div>
@@ -515,7 +585,7 @@ export function LunaSuggestionWidget() {
 }
 
 // 11. Ask Luna Quick Action Widget
-export function AskLunaWidget() {
+export function AskLunaWidget({ widgetSize = 'W' }) {
   const navigate = useNavigate();
   const [msg, setMsg] = useState('');
 
@@ -526,22 +596,22 @@ export function AskLunaWidget() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <MessageSquare size={16} color="var(--accent-primary)" />
-        <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Ask Luna AI</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <MessageSquare size={15} color="var(--accent-primary)" />
+        <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Ask Luna AI</span>
       </div>
       <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '6px' }}>
         <input
           type="text"
-          placeholder="Ask anything or record a task..."
+          placeholder="Ask anything..."
           value={msg}
           onChange={(e) => setMsg(e.target.value)}
           aria-label="Message Luna AI"
-          style={{ flex: 1, padding: '7px 10px', fontSize: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+          style={{ flex: 1, padding: '6px 10px', fontSize: '11.5px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
         />
-        <button type="submit" className="btn-primary" aria-label="Send message to Luna" style={{ padding: '7px 12px' }}>
-          <Send size={14} />
+        <button type="submit" className="btn-primary" aria-label="Send message to Luna" style={{ padding: '6px 10px' }}>
+          <Send size={13} />
         </button>
       </form>
     </div>
@@ -549,114 +619,131 @@ export function AskLunaWidget() {
 }
 
 // 12. Unread Notifications Widget
-export function UnreadNotificationsWidget() {
+export function UnreadNotificationsWidget({ widgetSize = 'S' }) {
   const { unreadCount } = useNotifications();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Bell size={16} color="var(--accent-primary)" />
-          <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Notifications</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Bell size={15} color="var(--accent-primary)" />
+          <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Notifications</span>
         </div>
-        <span className="badge" style={{ fontSize: '11px', background: (unreadCount || 0) > 0 ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: '#FFFFFF' }}>
-          {unreadCount || 0} Unread
-        </span>
       </div>
+      <div style={{ fontSize: '1.2rem', fontWeight: '800', color: (unreadCount || 0) > 0 ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
+        {unreadCount || 0} Unread
+      </div>
+      <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>System Alerts</span>
     </div>
   );
 }
 
-// 13. Habit Tracker Widget (3/5 completed • 🔥 7 day streak)
-export function HabitTrackerWidget() {
+// 13. Habit Tracker Widget
+export function HabitTrackerWidget({ widgetSize = 'S' }) {
   const { habits, toggleHabit } = useLuna();
   const allHabits = habits || [];
   const completedToday = allHabits.filter(h => h.completedToday).length;
   const maxStreak = allHabits.reduce((max, h) => Math.max(max, h.streak || 0), 0);
 
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 3 : 2;
+  const displayHabits = allHabits.slice(0, maxItems);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Activity size={16} color="var(--accent-primary)" /> HABITS ({allHabits.length})
-        </h3>
-        <Link to="/app/habits" aria-label="Habits page" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          Habits <ArrowRight size={13} />
-        </Link>
-      </div>
-
-      <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: '600' }}>
-        {completedToday} / {allHabits.length} completed • 🔥 {maxStreak} day streak
-      </div>
-
-      {allHabits.length === 0 ? (
-        <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-          No habits created yet.
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Activity size={15} color="var(--accent-primary)" /> HABITS ({allHabits.length})
+          </h3>
+          <Link to="/app/habits" aria-label="Habits page" style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}>
+            Habits <ArrowRight size={12} />
+          </Link>
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto' }}>
-          {allHabits.slice(0, 3).map(habit => (
-            <div key={habit.id} style={{
-              padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-            }}>
-              <div>
-                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>{habit.title}</div>
-                <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Streak: {habit.streak || 0} days</div>
+
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '6px' }}>
+          {completedToday} / {allHabits.length} completed • 🔥 {maxStreak}d streak
+        </div>
+
+        {allHabits.length === 0 ? (
+          <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginTop: '4px' }}>
+            No active habits.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {displayHabits.map(habit => (
+              <div key={habit.id} style={{
+                padding: '5px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+              }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{habit.title}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => toggleHabit(habit.id)}
+                  className="btn-secondary"
+                  aria-label={`Toggle habit ${habit.title}`}
+                  style={{ fontSize: '10px', padding: '2px 6px', flexShrink: 0, marginLeft: '6px' }}
+                >
+                  Toggle
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => toggleHabit(habit.id)}
-                className="btn-secondary"
-                aria-label={`Toggle habit ${habit.title}`}
-                style={{ fontSize: '10.5px', padding: '3px 8px' }}
-              >
-                Toggle
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 // 14. Recent Expenses Widget
-export function RecentExpensesWidget() {
+export function RecentExpensesWidget({ widgetSize = 'T' }) {
   const { expenses } = useLuna();
-  const recentExps = (expenses || []).slice(0, 3);
+  const recentExps = (expenses || []);
+
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 4 : 3;
+  const displayExpenses = recentExps.slice(0, maxItems);
+  const overflowCount = recentExps.length - displayExpenses.length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <CreditCard size={16} color="var(--accent-primary)" /> RECENT EXPENSES ({recentExps.length})
-        </h3>
-        <Link to="/app/expenses" aria-label="Expenses page" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          Expenses <ArrowRight size={13} />
-        </Link>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+          <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <CreditCard size={15} color="var(--accent-primary)" /> RECENT EXPENSES ({recentExps.length})
+          </h3>
+          <Link to="/app/expenses" aria-label="Expenses page" style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}>
+            View All <ArrowRight size={12} />
+          </Link>
+        </div>
+
+        {recentExps.length === 0 ? (
+          <div style={{ padding: '12px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginTop: '4px' }}>
+            No recent expenses.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {displayExpenses.map(exp => (
+              <div key={exp.id} style={{
+                padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+              }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{exp.description || exp.title}</div>
+                  <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{formatDate(exp.date)}</div>
+                </div>
+                <span style={{ fontSize: '11.5px', fontWeight: '700', color: exp.type === 'income' ? 'var(--accent-success)' : 'var(--accent-danger)', flexShrink: 0, marginLeft: '6px' }}>
+                  {exp.type === 'income' ? '+' : '-'}₹{exp.amount}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {recentExps.length === 0 ? (
-        <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-          No expenses logged yet.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {recentExps.map(exp => (
-            <div key={exp.id} style={{
-              padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-            }}>
-              <div>
-                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>{exp.description || exp.title}</div>
-                <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{formatDate(exp.date)}</div>
-              </div>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: exp.type === 'income' ? 'var(--accent-success)' : 'var(--accent-danger)' }}>
-                {exp.type === 'income' ? '+' : '-'}₹{exp.amount}
-              </span>
-            </div>
-          ))}
+      {overflowCount > 0 && (
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '4px' }}>
+          +{overflowCount} more expense{overflowCount > 1 ? 's' : ''}
         </div>
       )}
     </div>
@@ -664,21 +751,18 @@ export function RecentExpensesWidget() {
 }
 
 // 15. Quick Add Shortcuts Widget
-export function QuickAddWidget() {
+export function QuickAddWidget({ widgetSize = 'S' }) {
   const navigate = useNavigate();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: '700' }}>QUICK ACTION SHORTCUTS</div>
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-        <button type="button" onClick={() => navigate('/app/task')} className="btn-primary" aria-label="Add new task" style={{ flex: 1, padding: '8px 10px', fontSize: '11px', justifyContent: 'center' }}>
-          <Plus size={13} /> Task
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>SHORTCUTS</div>
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        <button type="button" onClick={() => navigate('/app/task')} className="btn-primary" aria-label="Add new task" style={{ flex: 1, padding: '6px 8px', fontSize: '10.5px', justifyContent: 'center' }}>
+          <Plus size={12} /> Task
         </button>
-        <button type="button" onClick={() => navigate('/app/expenses')} className="btn-secondary" aria-label="Add new expense" style={{ flex: 1, padding: '8px 10px', fontSize: '11px', justifyContent: 'center' }}>
-          <Plus size={13} /> Expense
-        </button>
-        <button type="button" onClick={() => navigate('/app/plans')} className="btn-secondary" aria-label="Add new plan" style={{ flex: 1, padding: '8px 10px', fontSize: '11px', justifyContent: 'center' }}>
-          <Plus size={13} /> Plan
+        <button type="button" onClick={() => navigate('/app/expenses')} className="btn-secondary" aria-label="Add new expense" style={{ flex: 1, padding: '6px 8px', fontSize: '10.5px', justifyContent: 'center' }}>
+          <Plus size={12} /> Expense
         </button>
       </div>
     </div>
@@ -686,7 +770,7 @@ export function QuickAddWidget() {
 }
 
 // 16. Clock & Date Widget
-export function ClockDateWidget() {
+export function ClockDateWidget({ widgetSize = 'S' }) {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -694,15 +778,15 @@ export function ClockDateWidget() {
     return () => clearInterval(timer);
   }, []);
 
-  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '6px 0' }}>
-      <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-primary)', letterSpacing: '0.5px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', height: '100%' }}>
+      <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--accent-primary)', letterSpacing: '0.5px' }}>
         {timeStr}
       </div>
-      <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-secondary)', marginTop: '2px' }}>
+      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', marginTop: '2px' }}>
         {dateStr}
       </div>
     </div>
@@ -710,7 +794,7 @@ export function ClockDateWidget() {
 }
 
 // 17. Split Balances Summary Widget
-export function SplitBalancesWidget() {
+export function SplitBalancesWidget({ widgetSize = 'S' }) {
   const [splits, setSplits] = useState([]);
   const [hasError, setHasError] = useState(false);
 
@@ -730,27 +814,27 @@ export function SplitBalancesWidget() {
   const firstSplit = splits[0];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Users size={16} color="var(--accent-primary)" />
-          <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Shared Splits</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Users size={15} color="var(--accent-primary)" />
+          <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Shared Splits</span>
         </div>
-        <Link to="/app/splits" aria-label="Splits page" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          Splits <ArrowRight size={13} />
+        <Link to="/app/splits" aria-label="Splits page" style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}>
+          Splits <ArrowRight size={12} />
         </Link>
       </div>
 
       {firstSplit ? (
-        <div style={{ padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>{firstSplit.name}</div>
+        <div style={{ padding: '6px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{firstSplit.name}</div>
             <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{firstSplit.members?.length || 1} members</div>
           </div>
-          <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent-primary)' }}>Active</span>
+          <span style={{ fontSize: '10.5px', fontWeight: '700', color: 'var(--accent-primary)', flexShrink: 0 }}>Active</span>
         </div>
       ) : (
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+        <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
           Active Splits: <strong style={{ color: 'var(--text-primary)' }}>{splits.length}</strong>
         </div>
       )}
@@ -758,53 +842,53 @@ export function SplitBalancesWidget() {
   );
 }
 
-// Main Widget Component Switcher with Isolated Widget Error Boundaries
-export function renderWidgetById(id) {
+// Main Widget Component Switcher with Isolated Fixed-Height Error Boundaries
+export function renderWidgetById(id, widgetSize = 'W') {
   switch (id) {
     case 'today_tasks':
-      return <WidgetErrorBoundary title="Today's Tasks"><TodayTasksWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Today's Tasks"><TodayTasksWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'upcoming_reminders':
-      return <WidgetErrorBoundary title="Upcoming Reminders"><UpcomingRemindersWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Upcoming Reminders"><UpcomingRemindersWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'overdue_tasks':
-      return <WidgetErrorBoundary title="Overdue Tasks"><OverdueTasksWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Overdue Tasks"><OverdueTasksWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'upcoming_plans':
     case 'active_plans':
-      return <WidgetErrorBoundary title="Upcoming Plans"><UpcomingPlansWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Upcoming Plans"><UpcomingPlansWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'birthdays_meetings':
     case 'upcoming_birthdays':
     case 'upcoming_meetings':
-      return <WidgetErrorBoundary title="Birthdays & Meetings"><BirthdaysMeetingsWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Birthdays & Meetings"><BirthdaysMeetingsWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'spending_snapshot':
-      return <WidgetErrorBoundary title="Spending Snapshot"><SpendingSnapshotWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Spending Snapshot"><SpendingSnapshotWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'monthly_expenses':
-      return <WidgetErrorBoundary title="Monthly Expenses"><MonthlyExpensesWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Monthly Expenses"><MonthlyExpensesWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'today_spending':
-      return <WidgetErrorBoundary title="Today's Spending"><TodaySpendingWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Today's Spending"><TodaySpendingWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'habit_streak':
-      return <WidgetErrorBoundary title="Habit Streak"><HabitStreakWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Habit Streak"><HabitStreakWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'luna_suggestion':
       return (
         <WidgetErrorBoundary title="Luna Focus Insight" onRetry={() => window.__daysync_refetchSuggestion && window.__daysync_refetchSuggestion()}>
-          <LunaSuggestionWidget />
+          <LunaSuggestionWidget widgetSize={widgetSize} />
         </WidgetErrorBoundary>
       );
     case 'ask_luna':
-      return <WidgetErrorBoundary title="Ask Luna AI"><AskLunaWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Ask Luna AI"><AskLunaWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'unread_notifications':
-      return <WidgetErrorBoundary title="Notifications Alert"><UnreadNotificationsWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Notifications Alert"><UnreadNotificationsWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'today_habits':
     case 'weekly_habits':
-      return <WidgetErrorBoundary title="Habit Tracker"><HabitTrackerWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Habit Tracker"><HabitTrackerWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'recent_expenses':
-      return <WidgetErrorBoundary title="Recent Expenses"><RecentExpensesWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Recent Expenses"><RecentExpensesWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'quick_add':
-      return <WidgetErrorBoundary title="Quick Action Shortcuts"><QuickAddWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Quick Action Shortcuts"><QuickAddWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'clock_date':
     case 'today_date':
-      return <WidgetErrorBoundary title="Clock & Date"><ClockDateWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Clock & Date"><ClockDateWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'split_balances':
     case 'active_splits':
-      return <WidgetErrorBoundary title="Shared Splits"><SplitBalancesWidget /></WidgetErrorBoundary>;
+      return <WidgetErrorBoundary title="Shared Splits"><SplitBalancesWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     default:
       return <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Widget [{id}]</div>;
   }

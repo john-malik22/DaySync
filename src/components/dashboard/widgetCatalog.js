@@ -24,6 +24,13 @@ import {
   Receipt
 } from 'lucide-react';
 
+export const WIDGET_SIZES = {
+  S: { label: 'Small', cols: 1, rows: 1 },
+  T: { label: 'Tall', cols: 1, rows: 2 },
+  W: { label: 'Wide', cols: 2, rows: 1 },
+  L: { label: 'Large', cols: 2, rows: 2 }
+};
+
 export const WIDGET_CATALOG = [
   // --- CORE WIDGETS ---
   {
@@ -32,8 +39,8 @@ export const WIDGET_CATALOG = [
     description: "See tasks scheduled for today and toggle completion.",
     category: "CORE",
     icon: CheckSquare,
-    supportedSizes: ['small', 'wide', 'tall', 'large'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W', 'T', 'L'],
+    defaultSize: 'T',
     requiredPlan: 'free'
   },
   {
@@ -42,8 +49,8 @@ export const WIDGET_CATALOG = [
     description: "View scheduled upcoming tasks and reminders.",
     category: "CORE",
     icon: Clock,
-    supportedSizes: ['small', 'wide', 'tall', 'large'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W', 'T', 'L'],
+    defaultSize: 'T',
     requiredPlan: 'free'
   },
   {
@@ -52,8 +59,8 @@ export const WIDGET_CATALOG = [
     description: "Keep track of tasks past their due date.",
     category: "CORE",
     icon: AlertTriangle,
-    supportedSizes: ['small', 'wide', 'tall'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W', 'T'],
+    defaultSize: 'T',
     requiredPlan: 'free'
   },
   {
@@ -62,8 +69,8 @@ export const WIDGET_CATALOG = [
     description: "Stay updated on recent system and reminder alerts.",
     category: "CORE",
     icon: Bell,
-    supportedSizes: ['small', 'wide', 'tall'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W', 'T'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
 
@@ -74,8 +81,8 @@ export const WIDGET_CATALOG = [
     description: "Check current balance, total spent, and income.",
     category: "FINANCE",
     icon: Wallet,
-    supportedSizes: ['small', 'wide', 'large'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W', 'L', 'T'],
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -84,8 +91,8 @@ export const WIDGET_CATALOG = [
     description: "Quick summary of your latest logged transactions.",
     category: "FINANCE",
     icon: CreditCard,
-    supportedSizes: ['small', 'wide', 'tall', 'large'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W', 'T', 'L'],
+    defaultSize: 'T',
     requiredPlan: 'free'
   },
   {
@@ -94,8 +101,8 @@ export const WIDGET_CATALOG = [
     description: "Track total expense amount logged this month.",
     category: "FINANCE",
     icon: DollarSign,
-    supportedSizes: ['small', 'wide'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
   {
@@ -104,8 +111,8 @@ export const WIDGET_CATALOG = [
     description: "Monitor expenses added today.",
     category: "FINANCE",
     icon: TrendingUp,
-    supportedSizes: ['small', 'wide'],
-    defaultSize: 'small',
+    supportedSizes: ['S', 'W'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
   {
@@ -114,8 +121,8 @@ export const WIDGET_CATALOG = [
     description: "Visual summary of expenses by category.",
     category: "FINANCE",
     icon: PieChart,
-    supportedSizes: ['wide', 'tall', 'large'],
-    defaultSize: 'wide',
+    supportedSizes: ['W', 'T', 'L'],
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -124,8 +131,8 @@ export const WIDGET_CATALOG = [
     description: "Track remaining allowance against monthly budget target.",
     category: "FINANCE",
     icon: Wallet,
-    supportedSizes: ['small', 'wide'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
 
@@ -136,8 +143,8 @@ export const WIDGET_CATALOG = [
     description: "View active subscriptions, recharges, and utility plans.",
     category: "PLANS",
     icon: Repeat,
-    supportedSizes: ['small', 'wide', 'tall', 'large'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W', 'T', 'L'],
+    defaultSize: 'T',
     requiredPlan: 'free'
   },
   {
@@ -146,8 +153,8 @@ export const WIDGET_CATALOG = [
     description: "List of currently active recurring payment plans.",
     category: "PLANS",
     icon: Repeat,
-    supportedSizes: ['small', 'wide', 'tall'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W', 'T'],
+    defaultSize: 'T',
     requiredPlan: 'free'
   },
   {
@@ -156,8 +163,8 @@ export const WIDGET_CATALOG = [
     description: "Total monthly expenditure on active plans.",
     category: "PLANS",
     icon: DollarSign,
-    supportedSizes: ['small', 'wide'],
-    defaultSize: 'small',
+    supportedSizes: ['S', 'W'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
   {
@@ -166,8 +173,8 @@ export const WIDGET_CATALOG = [
     description: "Countdown to your next expiring utility or subscription plan.",
     category: "PLANS",
     icon: Clock,
-    supportedSizes: ['small', 'wide'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
 
@@ -178,8 +185,8 @@ export const WIDGET_CATALOG = [
     description: "Track your active daily habits and streak.",
     category: "HABITS",
     icon: Activity,
-    supportedSizes: ['small', 'wide', 'tall', 'large'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W', 'T', 'L'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
   {
@@ -188,8 +195,8 @@ export const WIDGET_CATALOG = [
     description: "View your longest active habit completion streak.",
     category: "HABITS",
     icon: Flame,
-    supportedSizes: ['small', 'wide'],
-    defaultSize: 'small',
+    supportedSizes: ['S', 'W'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
   {
@@ -198,8 +205,8 @@ export const WIDGET_CATALOG = [
     description: "Summary of habit completions for the current week.",
     category: "HABITS",
     icon: Activity,
-    supportedSizes: ['wide', 'tall'],
-    defaultSize: 'wide',
+    supportedSizes: ['W', 'T'],
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
 
@@ -210,8 +217,8 @@ export const WIDGET_CATALOG = [
     description: "Personalized daily suggestion and focus insights from Luna.",
     category: "LUNA",
     icon: Sparkles,
-    supportedSizes: ['small', 'wide', 'tall', 'large'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W', 'T', 'L'],
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -220,8 +227,8 @@ export const WIDGET_CATALOG = [
     description: "Quick input field to message Luna AI directly.",
     category: "LUNA",
     icon: MessageSquare,
-    supportedSizes: ['wide'],
-    defaultSize: 'wide',
+    supportedSizes: ['W'],
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
 
@@ -232,8 +239,8 @@ export const WIDGET_CATALOG = [
     description: "Never miss upcoming birthdays, events, or meetings.",
     category: "LIFE",
     icon: Cake,
-    supportedSizes: ['small', 'wide', 'tall', 'large'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W', 'T', 'L'],
+    defaultSize: 'T',
     requiredPlan: 'free'
   },
   {
@@ -242,8 +249,8 @@ export const WIDGET_CATALOG = [
     description: "Upcoming friend & family birthdays list.",
     category: "LIFE",
     icon: Cake,
-    supportedSizes: ['small', 'wide'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
   {
@@ -252,8 +259,8 @@ export const WIDGET_CATALOG = [
     description: "Scheduled calendar meetings and work events.",
     category: "LIFE",
     icon: Briefcase,
-    supportedSizes: ['small', 'wide'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
 
@@ -264,8 +271,8 @@ export const WIDGET_CATALOG = [
     description: "Instant shortcuts to create tasks, expenses, and plans.",
     category: "UTILITY",
     icon: PlusCircle,
-    supportedSizes: ['small', 'wide'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
   {
@@ -274,8 +281,8 @@ export const WIDGET_CATALOG = [
     description: "Live time and current calendar date display.",
     category: "UTILITY",
     icon: Calendar,
-    supportedSizes: ['small', 'wide'],
-    defaultSize: 'small',
+    supportedSizes: ['S', 'W'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
   {
@@ -284,8 +291,8 @@ export const WIDGET_CATALOG = [
     description: "Full day, month, and date greeting readout.",
     category: "UTILITY",
     icon: Calendar,
-    supportedSizes: ['small', 'wide'],
-    defaultSize: 'small',
+    supportedSizes: ['S', 'W'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
 
@@ -296,8 +303,8 @@ export const WIDGET_CATALOG = [
     description: "Net amount you owe or are owed across shared Splits.",
     category: "SPLITS",
     icon: Users,
-    supportedSizes: ['small', 'wide', 'tall'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W', 'T'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   },
   {
@@ -306,21 +313,18 @@ export const WIDGET_CATALOG = [
     description: "List of your active group expense Splits.",
     category: "SPLITS",
     icon: Layers,
-    supportedSizes: ['small', 'wide', 'tall'],
-    defaultSize: 'wide',
+    supportedSizes: ['S', 'W', 'T'],
+    defaultSize: 'S',
     requiredPlan: 'free'
   }
 ];
 
+// First-time users get EXACTLY 6 initial widgets arranged in a balanced grid
 export const DEFAULT_WIDGET_LAYOUT = [
-  { id: 'today_tasks', size: 'wide', visible: true },
-  { id: 'upcoming_reminders', size: 'wide', visible: true },
-  { id: 'upcoming_plans', size: 'wide', visible: true },
-  { id: 'spending_snapshot', size: 'wide', visible: true },
-  { id: 'luna_suggestion', size: 'wide', visible: true },
-  { id: 'overdue_tasks', size: 'wide', visible: true },
-  { id: 'recent_expenses', size: 'wide', visible: true },
-  { id: 'birthdays_meetings', size: 'wide', visible: true },
-  { id: 'split_balances', size: 'wide', visible: true },
-  { id: 'today_habits', size: 'wide', visible: true }
+  { id: 'today_tasks', size: 'T', visible: true },
+  { id: 'upcoming_reminders', size: 'T', visible: true },
+  { id: 'upcoming_plans', size: 'T', visible: true },
+  { id: 'spending_snapshot', size: 'W', visible: true },
+  { id: 'luna_suggestion', size: 'W', visible: true },
+  { id: 'recent_expenses', size: 'T', visible: true }
 ];

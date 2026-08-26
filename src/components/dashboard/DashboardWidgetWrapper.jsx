@@ -73,20 +73,29 @@ export function DashboardWidgetWrapper({
   };
 
   const sizeClassMap = {
-    small: 'widget-size-small',
-    wide: 'widget-size-wide',
-    tall: 'widget-size-tall',
-    large: 'widget-size-large'
+    S: 'widget-size-S',
+    T: 'widget-size-T',
+    W: 'widget-size-W',
+    L: 'widget-size-L',
+    small: 'widget-size-S',
+    wide: 'widget-size-W',
+    tall: 'widget-size-T',
+    large: 'widget-size-L'
   };
+
+  const normalizedSize = ['S', 'T', 'W', 'L'].includes(currentSize)
+    ? currentSize
+    : (currentSize === 'small' ? 'S' : currentSize === 'tall' ? 'T' : currentSize === 'large' ? 'L' : 'W');
 
   return (
     <div
-      className={`glass-card dashboard-widget-card ${sizeClassMap[currentSize] || 'widget-size-wide'} ${isArrangeMode ? 'widget-arrange-active' : ''}`}
+      className={`glass-card dashboard-widget-card ${sizeClassMap[currentSize] || 'widget-size-W'} ${isArrangeMode ? 'widget-arrange-active' : ''}`}
       style={{
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        padding: '16px',
+        padding: '14px',
+        boxSizing: 'border-box',
         transition: isArrangeMode ? 'transform 0.18s ease, box-shadow 0.18s ease' : 'none',
         border: isArrangeMode ? '2px dashed var(--accent-primary)' : '1px solid var(--border-color)',
         boxShadow: isArrangeMode ? '0 8px 24px rgba(108, 99, 255, 0.18)' : 'var(--glass-shadow)',
@@ -109,31 +118,20 @@ export function DashboardWidgetWrapper({
       {/* Long-Press Progress Bar Indicator */}
       {holdingProgress > 0 && !isArrangeMode && (
         <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, height: '4px',
-          background: 'rgba(108, 99, 255, 0.2)', borderTopLeftRadius: 'var(--radius-sm)',
-          borderTopRightRadius: 'var(--radius-sm)', overflow: 'hidden', zIndex: 10
-        }}>
-          <div style={{
-            height: '100%', width: `${holdingProgress}%`, background: 'var(--accent-primary)',
-            transition: 'width 0.1s linear'
-          }} />
-        </div>
+          position: 'absolute', top: 0, left: 0, height: '3px',
+          width: `${holdingProgress}%`, background: 'var(--accent-primary)',
+          transition: 'width 0.1s linear', zIndex: 10
+        }} />
       )}
 
-      {/* Arrange Mode Toolbar Overlay inside widget */}
+      {/* Arrange Overlay Actions */}
       {isArrangeMode && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          paddingBottom: '8px', marginBottom: '8px', borderBottom: '1px solid var(--border-color)',
-          background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', padding: '6px 8px'
+          marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px dashed var(--border-color)'
         }}>
-          {/* Drag Handle & Move Controls */}
+          {/* Movement Arrow Buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ cursor: 'grab', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center' }} title="Drag to reorder">
-              <GripVertical size={16} />
-            </span>
-
-            {/* Reorder directional buttons for accessibility / mobile */}
             {!isFirst && (
               <button
                 type="button"
@@ -166,13 +164,13 @@ export function DashboardWidgetWrapper({
                 title={`Set size: ${sz}`}
                 style={{
                   fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px',
-                  border: currentSize === sz ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                  background: currentSize === sz ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                  color: currentSize === sz ? '#FFFFFF' : 'var(--text-secondary)',
+                  border: normalizedSize === sz ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                  background: normalizedSize === sz ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                  color: normalizedSize === sz ? '#FFFFFF' : 'var(--text-secondary)',
                   cursor: 'pointer', textTransform: 'uppercase'
                 }}
               >
-                {sz[0]}
+                {sz}
               </button>
             ))}
           </div>
@@ -192,9 +190,9 @@ export function DashboardWidgetWrapper({
         </div>
       )}
 
-      {/* Widget Content */}
-      <div style={{ flex: 1, minHeight: 0 }}>
-        {renderWidgetById(widgetItem.id)}
+      {/* Widget Content Container */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden' }}>
+        {renderWidgetById(widgetItem.id, normalizedSize)}
       </div>
     </div>
   );
