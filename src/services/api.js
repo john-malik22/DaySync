@@ -201,6 +201,10 @@ export const api = {
   updateSplit: (id, data) => request(`/splits/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteSplit: (id) => request(`/splits/${id}`, { method: 'DELETE' }),
 
+  previewSplit: (code) => request(`/splits/preview/${encodeURIComponent(code)}`),
+  joinSplit: (code) => request('/splits/join', { method: 'POST', body: JSON.stringify({ code }) }),
+  regenerateSplitCode: (splitId) => request(`/splits/${splitId}/regenerate-code`, { method: 'POST' }),
+
   inviteSplitMember: (id, targetUser) => request(`/splits/${id}/invitations`, { method: 'POST', body: JSON.stringify({ targetUser }) }),
   getMySplitInvitations: () => request('/split-invites/my-invites'),
   acceptSplitInvitation: (token) => request(`/split-invites/${token}/accept`, { method: 'POST' }),

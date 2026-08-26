@@ -61,6 +61,17 @@ export function SplitsPage() {
   const [settleToUser, setSettleToUser] = useState('');
   const [settleAmount, setSettleAmount] = useState('');
 
+  // Code-based Sharing & Joining States
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [joinCodeInput, setJoinCodeInput] = useState('');
+  const [joinPreview, setJoinPreview] = useState(null);
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinError, setJoinError] = useState('');
+
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareModalSplit, setShareModalSplit] = useState(null);
+  const [regeneratingCode, setRegeneratingCode] = useState(false);
+
   // Fetch all user splits & invitations
   const fetchSplitsData = useCallback(async () => {
     if (!userId) return;
@@ -266,14 +277,112 @@ export function SplitsPage() {
     }
   };
 
-  // Share / Copy Link Helper
+  // Code-based Sharing & Joining Handlers
+  const handleOpenJoinModal = () => {
+    setJoinCodeInput('');
+    setJoinPreview(null);
+    setJoinError('');
+    setShowJoinModal(true);
+  };
+
+  const handleJoinCodeChange = (e) => {
+    const raw = e.target.value;
+    const clean = raw.toUpperCase().replace(/\s+/g, '');
+    setJoinCodeInput(clean);
+    setJoinError('');
+    setJoinPreview(null);
+  };
+
+  const handlePreviewJoinCode = async (e) => {
+    e.preventDefault();
+    if (!joinCodeInput.trim()) {
+      setJoinError('Please enter a Split code.');
+      return;
+    }
+
+    setJoinLoading(true);
+    setJoinError('');
+    try {
+      const preview = await api.previewSplit(joinCodeInput.trim());
+      setJoinPreview(preview);
+    } catch (err) {
+      setJoinError(err.message || "That Split code isn't valid.");
+    } finally {
+      setJoinLoading(false);
+    }
+  };
+
+  const handleConfirmJoinCode = async () => {
+    if (!joinCodeInput.trim()) return;
+    setJoinLoading(true);
+    setJoinError('');
+
+    try {
+      const res = await api.joinSplit(joinCodeInput.trim());
+      if (showToast) showToast(res.message || 'Joined Split successfully!', 'success');
+      setShowJoinModal(false);
+      setJoinCodeInput('');
+      setJoinPreview(null);
+      await fetchSplitsData();
+      if (res.split) {
+        setSelectedSplit(res.split);
+      }
+    } catch (err) {
+      setJoinError(err.message || "Couldn't join the Split right now. Please try again.");
+    } finally {
+      setJoinLoading(false);
+    }
+  };
+
   const handleShareSplit = (split) => {
-    const shareUrl = `${window.location.origin}/app/splits?join=${split.id}`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareUrl);
-      if (showToast) showToast('Split invite link copied to clipboard!', 'success');
-    } else if (showToast) {
-      showToast(`Share link: ${shareUrl}`, 'info');
+    setShareModalSplit(split);
+    setShowShareModal(true);
+  };
+
+  const handleCopyCode = async (codeToCopy) => {
+    const code = codeToCopy || shareModalSplit?.shareCode;
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      if (showToast) showToast('Split code copied to clipboard!', 'success');
+    } catch (e) {
+      if (showToast) showToast(`Share Code: ${code}`, 'info');
+    }
+  };
+
+  const handleNativeShare = async (split) => {
+    const code = split?.shareCode || shareModalSplit?.shareCode;
+    if (!code) return;
+    const shareText = `Join my DaySync Split: ${split?.name || 'Group'}\nSplit Code: ${code}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Join ${split?.name || 'DaySync Split'}`,
+          text: shareText
+        });
+      } catch (err) {
+        handleCopyCode(code);
+      }
+    } else {
+      handleCopyCode(code);
+    }
+  };
+
+  const handleRegenerateCode = async () => {
+    if (!shareModalSplit?.id) return;
+    setRegeneratingCode(true);
+    try {
+      const res = await api.regenerateSplitCode(shareModalSplit.id);
+      if (showToast) showToast('Share code regenerated successfully.', 'success');
+      setShareModalSplit(prev => prev ? { ...prev, shareCode: res.shareCode } : prev);
+      if (selectedSplit && selectedSplit.id === shareModalSplit.id) {
+        setSelectedSplit(prev => prev ? { ...prev, shareCode: res.shareCode } : prev);
+      }
+      await fetchSplitsData();
+    } catch (err) {
+      if (showToast) showToast(err.message || 'Could not regenerate code.', 'error');
+    } finally {
+      setRegeneratingCode(false);
     }
   };
 
@@ -427,14 +536,24 @@ export function SplitsPage() {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowCreateSplit(true)}
-              className="btn-primary"
-              style={{ fontSize: '13px', padding: '8px 16px' }}
-            >
-              <Plus size={16} /> Create Split
-            </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setShowCreateSplit(true)}
+                className="btn-primary"
+                style={{ fontSize: '13px', padding: '8px 16px' }}
+              >
+                <Plus size={16} /> Create Split
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenJoinModal}
+                className="btn-secondary"
+                style={{ fontSize: '13px', padding: '8px 16px' }}
+              >
+                Join with Code
+              </button>
+            </div>
           </div>
 
           {splits.length === 0 ? (
@@ -446,14 +565,24 @@ export function SplitsPage() {
               <p style={{ fontSize: '13px', maxWidth: '380px', margin: '0 auto 20px auto', lineHeight: '1.5' }}>
                 Create a shared Split for trips, rent, or dining out to track shared expenses and settle balances easily.
               </p>
-              <button
-                type="button"
-                onClick={() => setShowCreateSplit(true)}
-                className="btn-primary"
-                style={{ padding: '10px 20px', fontSize: '13px' }}
-              >
-                <Plus size={16} /> Create Split
-              </button>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateSplit(true)}
+                  className="btn-primary"
+                  style={{ padding: '10px 20px', fontSize: '13px' }}
+                >
+                  <Plus size={16} /> Create Split
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenJoinModal}
+                  className="btn-secondary"
+                  style={{ padding: '10px 20px', fontSize: '13px' }}
+                >
+                  Join with Code
+                </button>
+              </div>
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-md)' }}>
@@ -1115,6 +1244,125 @@ export function SplitsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: JOIN WITH CODE (COMPACT MOBILE FRIENDLY MODAL) */}
+      {showJoinModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', zIndex: 1100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+        }}>
+          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '380px', padding: '24px', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Join a Split</h3>
+              <button type="button" onClick={() => setShowJoinModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <XCircle size={20} />
+              </button>
+            </div>
+
+            {joinError && (
+              <div style={{ padding: '10px 12px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid var(--accent-danger)', color: 'var(--accent-danger)', fontSize: '12px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <AlertCircle size={15} />
+                <span>{joinError}</span>
+              </div>
+            )}
+
+            {!joinPreview ? (
+              <form onSubmit={handlePreviewJoinCode} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Enter Split Code</label>
+                  <input
+                    type="text"
+                    value={joinCodeInput}
+                    onChange={handleJoinCodeChange}
+                    placeholder="e.g. GOA-7K4P2"
+                    required
+                    autoFocus
+                    style={{
+                      width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-color)',
+                      background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px',
+                      fontSize: '1.15rem', letterSpacing: '2px', textAlign: 'center', fontWeight: '700'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '6px' }}>
+                  <button type="button" onClick={() => setShowJoinModal(false)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 14px' }}>
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={joinLoading || !joinCodeInput.trim()} className="btn-primary" style={{ fontSize: '12px', padding: '8px 16px' }}>
+                    {joinLoading ? 'Checking...' : 'Preview Split'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ padding: '16px', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+                  <h4 style={{ fontSize: '1.1rem', fontWeight: '700', margin: '0 0 4px 0', color: 'var(--text-primary)' }}>{joinPreview.name}</h4>
+                  {joinPreview.description && <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>{joinPreview.description}</p>}
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                    Created by: <strong style={{ color: 'var(--text-primary)' }}>{joinPreview.ownerName}</strong> • {joinPreview.membersCount} member{joinPreview.membersCount === 1 ? '' : 's'}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="button" onClick={() => setJoinPreview(null)} className="btn-secondary" style={{ flex: 1, justifyContent: 'center', fontSize: '12px', padding: '8px' }}>
+                    Back
+                  </button>
+                  <button type="button" onClick={handleConfirmJoinCode} disabled={joinLoading} className="btn-primary" style={{ flex: 1, justifyContent: 'center', fontSize: '12px', padding: '8px' }}>
+                    {joinLoading ? 'Joining...' : 'Join Split'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 6: SHARE CODE POPUP */}
+      {showShareModal && shareModalSplit && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', zIndex: 1100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+        }}>
+          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '380px', padding: '24px', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Invite Friends</h3>
+              <button type="button" onClick={() => setShowShareModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <XCircle size={20} />
+              </button>
+            </div>
+
+            <div style={{ textAlign: 'center', padding: '16px 0' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Share Code for "{shareModalSplit.name}"</span>
+              <div style={{ fontSize: '1.6rem', fontWeight: '800', letterSpacing: '3px', color: 'var(--accent-primary)', marginTop: '6px', userSelect: 'all' }}>
+                {shareModalSplit.shareCode || 'GOA-7K4P2'}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+              <button type="button" onClick={() => handleCopyCode(shareModalSplit.shareCode)} className="btn-secondary" style={{ flex: 1, justifyContent: 'center', fontSize: '12px', padding: '9px', gap: '6px' }}>
+                Copy Code
+              </button>
+              <button type="button" onClick={() => handleNativeShare(shareModalSplit)} className="btn-primary" style={{ flex: 1, justifyContent: 'center', fontSize: '12px', padding: '9px', gap: '6px' }}>
+                Share
+              </button>
+            </div>
+
+            {shareModalSplit.ownerId === userId && (
+              <button
+                type="button"
+                onClick={handleRegenerateCode}
+                disabled={regeneratingCode}
+                style={{ width: '100%', background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '11px', marginTop: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              >
+                <RefreshCw size={13} /> {regeneratingCode ? 'Regenerating...' : 'Regenerate Code'}
+              </button>
+            )}
           </div>
         </div>
       )}
