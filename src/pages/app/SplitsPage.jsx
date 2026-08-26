@@ -635,13 +635,54 @@ export function SplitsPage() {
 
           {/* Split Summary Header Card */}
           <div className="glass-card" style={{ padding: '20px', border: '1px solid var(--accent-primary)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--text-primary)', fontWeight: '800' }}>
                   {selectedSplit.name}
                 </h2>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
                   Members: {(selectedSplit.members || []).map(m => getMemberName(m)).join(' • ')}
+                </div>
+
+                {/* Compact Secondary Split Code Control */}
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '8px',
+                  padding: '3px 10px', borderRadius: 'var(--radius-full)',
+                  background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+                  marginTop: '10px', flexWrap: 'wrap'
+                }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    Split Code: <strong style={{ color: 'var(--accent-primary)', letterSpacing: '1px', userSelect: 'all', fontWeight: '700' }}>{selectedSplit.shareCode || 'GOA-7K4P2'}</strong>
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => handleCopyCode(selectedSplit.shareCode)}
+                    style={{
+                      background: 'transparent', border: 'none', color: 'var(--text-secondary)',
+                      cursor: 'pointer', padding: '2px 4px', fontSize: '11px', fontWeight: '600',
+                      display: 'inline-flex', alignItems: 'center', gap: '3px', borderRadius: '4px'
+                    }}
+                    title="Copy Split Code"
+                  >
+                    <Copy size={12} /> Copy
+                  </button>
+
+                  {selectedSplit.ownerId === userId && (
+                    <button
+                      type="button"
+                      onClick={handleRegenerateCode}
+                      disabled={regeneratingCode}
+                      style={{
+                        background: 'transparent', border: 'none', color: 'var(--text-muted)',
+                        cursor: 'pointer', padding: '2px 4px', fontSize: '11px',
+                        display: 'inline-flex', alignItems: 'center', borderRadius: '4px'
+                      }}
+                      title="Regenerate Split Code"
+                    >
+                      <RefreshCw size={12} className={regeneratingCode ? 'animate-spin' : ''} />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -661,47 +702,10 @@ export function SplitsPage() {
               </div>
             </div>
 
-            {/* Split Code Block - Compact & Mobile Friendly */}
-            <div style={{
-              padding: '12px 16px', borderRadius: '12px', background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center',
-              justify: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '16px'
-            }}>
-              <div>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Split Code</span>
-                <div style={{ fontSize: '1.3rem', fontWeight: '800', letterSpacing: '2px', color: 'var(--accent-primary)', marginTop: '2px', userSelect: 'all' }}>
-                  {selectedSplit.shareCode || 'GOA-7K4P2'}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleCopyCode(selectedSplit.shareCode)}
-                  className="btn-secondary"
-                  style={{ fontSize: '12px', padding: '7px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <Copy size={14} /> Copy Code
-                </button>
-                {selectedSplit.ownerId === userId && (
-                  <button
-                    type="button"
-                    onClick={handleRegenerateCode}
-                    disabled={regeneratingCode}
-                    className="btn-secondary"
-                    style={{ fontSize: '12px', padding: '7px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                    title="Regenerate Share Code"
-                  >
-                    <RefreshCw size={13} /> {regeneratingCode ? '...' : ''}
-                  </button>
-                )}
-              </div>
-            </div>
-
             {/* Total Spent readout & Action buttons */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
-              paddingTop: '14px', borderTop: '1px solid var(--border-color)'
+              paddingTop: '14px', borderTop: '1px solid var(--border-color)', marginTop: '16px'
             }}>
               <div>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Group Total Spent</span>
