@@ -2,22 +2,24 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { DEFAULT_WIDGET_LAYOUT } from '../components/dashboard/widgetCatalog';
 
 export function Onboarding() {
   const navigate = useNavigate();
   const { user, signup } = useAuth();
-  const [selected, setSelected] = useState(['Daily planning', 'Expenses', 'Reminders', 'Learning']);
+  const [selected, setSelected] = useState(['Tasks', 'Expenses', 'Plans', 'Habits', 'Splits']);
 
   const options = [
-    'Task Management',
-    'Expense & Income Tracking',
-    'Reminders',
-    'AI Memory Context'
+    { id: 'Tasks', label: 'Task & Reminder Management' },
+    { id: 'Expenses', label: 'Expense & Spending Snapshot' },
+    { id: 'Plans', label: 'Subscriptions & Utility Plans' },
+    { id: 'Habits', label: 'Habit Tracking' },
+    { id: 'Splits', label: 'Shared Expense Splits' }
   ];
 
-  const toggleOption = (opt) => {
-    setSelected(prev => 
-      prev.includes(opt) ? prev.filter(item => item !== opt) : [...prev, opt]
+  const toggleOption = (id) => {
+    setSelected(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
 
@@ -29,6 +31,13 @@ export function Onboarding() {
         console.log('Session fallback:', e);
       }
     }
+
+    localStorage.setItem('daysync_onboarding_done', 'true');
+    // Ensure initial 6 default widgets are populated
+    const storageKey = `daysync_dashboard_layout_${user?.id || 'guest'}`;
+    if (!localStorage.getItem(storageKey)) {
+      localStorage.setItem(storageKey, JSON.stringify(DEFAULT_WIDGET_LAYOUT));
+    }
     navigate('/app/dashboard');
   };
 
@@ -37,49 +46,49 @@ export function Onboarding() {
       minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex',
       alignItems: 'center', justifyContent: 'center', padding: '24px'
     }}>
-      <div className="glass-card animate-fade-in" style={{ width: '480px', padding: '40px' }}>
+      <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '480px', padding: '32px', borderRadius: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
           <div style={{
-            width: '40px', height: '40px', borderRadius: '12px', background: 'var(--accent-gradient)',
+            width: '40px', height: '40px', borderRadius: '12px', background: 'var(--accent-primary)',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
             <Sparkles size={22} color="#fff" />
           </div>
           <div>
-            <h2 style={{ fontSize: '1.4rem' }}>Welcome to DaySync</h2>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Smart Life Companion with Luna AI</p>
+            <h2 style={{ fontSize: '1.3rem', margin: 0, color: 'var(--text-primary)' }}>Welcome to DaySync</h2>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>Smart Life Companion with Luna AI</p>
           </div>
         </div>
 
-        <h3 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>
-          What would you like DaySync to help with?
+        <h3 style={{ fontSize: '1.05rem', marginBottom: '6px', color: 'var(--text-primary)' }}>
+          What matters most to you?
         </h3>
-        <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', marginBottom: '24px' }}>
-          Select your primary goals to personalize your workspace.
+        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+          Select your primary focus areas to customize your DaySync experience.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '28px' }}>
           {options.map((opt) => {
-            const isChecked = selected.includes(opt);
+            const isChecked = selected.includes(opt.id);
             return (
               <div
-                key={opt}
-                onClick={() => toggleOption(opt)}
+                key={opt.id}
+                onClick={() => toggleOption(opt.id)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '14px 18px', borderRadius: '12px',
-                  background: isChecked ? 'rgba(99, 102, 241, 0.15)' : 'var(--bg-secondary)',
+                  padding: '12px 16px', borderRadius: '10px',
+                  background: isChecked ? 'rgba(108, 99, 255, 0.12)' : 'var(--bg-secondary)',
                   border: isChecked ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                  cursor: 'pointer', transition: 'all 0.2s ease'
+                  cursor: 'pointer', transition: 'all 0.15s ease'
                 }}
               >
-                <span style={{ fontSize: '0.95rem', fontWeight: '500' }}>{opt}</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>{opt.label}</span>
                 <div style={{
-                  width: '22px', height: '22px', borderRadius: '6px',
+                  width: '20px', height: '20px', borderRadius: '5px',
                   background: isChecked ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                  {isChecked && <CheckCircle2 size={16} color="#fff" />}
+                  {isChecked && <CheckCircle2 size={14} color="#fff" />}
                 </div>
               </div>
             );
@@ -89,9 +98,9 @@ export function Onboarding() {
         <button
           onClick={handleFinish}
           className="btn-primary"
-          style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '1rem', cursor: 'pointer' }}
+          style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '0.95rem', cursor: 'pointer' }}
         >
-          Continue to DaySync Dashboard <ArrowRight size={18} />
+          Continue to DaySync Dashboard <ArrowRight size={16} />
         </button>
       </div>
     </div>
