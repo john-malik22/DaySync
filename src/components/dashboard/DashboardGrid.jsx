@@ -86,7 +86,7 @@ export function DashboardGrid() {
 
     const newLayout = [
       ...layout,
-      { id: widgetDef.id, size: widgetDef.defaultSize || 'wide', visible: true }
+      { id: widgetDef.id, size: widgetDef.defaultSize || 'W', visible: true }
     ];
     saveLayoutToStorage(newLayout);
     if (showToast) showToast(`Added ${widgetDef.title} to Dashboard.`, 'success');

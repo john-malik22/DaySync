@@ -381,11 +381,21 @@ export function SettingsPage() {
   const handleAddWidget = (widget) => {
     setActiveWidgetIds(prev => {
       if (prev.includes(widget.id)) return prev;
-      const updated = [...prev, widget.id];
-      const newLayout = updated.map(id => ({ id, size: 'wide', visible: true }));
-      localStorage.setItem('daysync_widget_layout', JSON.stringify(newLayout));
-      return updated;
+      return [...prev, widget.id];
     });
+
+    try {
+      const storageKey = `daysync_dashboard_layout_${user?.id || 'guest'}`;
+      const saved = localStorage.getItem(storageKey);
+      let currentLayout = saved ? JSON.parse(saved) : DEFAULT_WIDGET_LAYOUT;
+      if (!Array.isArray(currentLayout)) currentLayout = DEFAULT_WIDGET_LAYOUT;
+
+      if (!currentLayout.some(w => w.id === widget.id)) {
+        currentLayout.push({ id: widget.id, size: widget.defaultSize || 'W', visible: true });
+        localStorage.setItem(storageKey, JSON.stringify(currentLayout));
+      }
+    } catch (e) {}
+
     if (showToast) showToast(`Added ${widget.title} widget to Dashboard.`, 'success');
   };
 

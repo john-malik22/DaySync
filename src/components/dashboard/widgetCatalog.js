@@ -40,7 +40,7 @@ export const WIDGET_CATALOG = [
     category: "CORE",
     icon: CheckSquare,
     supportedSizes: ['S', 'W', 'T', 'L'],
-    defaultSize: 'T',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -50,7 +50,7 @@ export const WIDGET_CATALOG = [
     category: "CORE",
     icon: Clock,
     supportedSizes: ['S', 'W', 'T', 'L'],
-    defaultSize: 'T',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -60,7 +60,7 @@ export const WIDGET_CATALOG = [
     category: "CORE",
     icon: AlertTriangle,
     supportedSizes: ['S', 'W', 'T'],
-    defaultSize: 'T',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -70,7 +70,7 @@ export const WIDGET_CATALOG = [
     category: "CORE",
     icon: Bell,
     supportedSizes: ['S', 'W', 'T'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
 
@@ -92,7 +92,7 @@ export const WIDGET_CATALOG = [
     category: "FINANCE",
     icon: CreditCard,
     supportedSizes: ['S', 'W', 'T', 'L'],
-    defaultSize: 'T',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -102,7 +102,7 @@ export const WIDGET_CATALOG = [
     category: "FINANCE",
     icon: DollarSign,
     supportedSizes: ['S', 'W'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -112,7 +112,7 @@ export const WIDGET_CATALOG = [
     category: "FINANCE",
     icon: TrendingUp,
     supportedSizes: ['S', 'W'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -132,7 +132,7 @@ export const WIDGET_CATALOG = [
     category: "FINANCE",
     icon: Wallet,
     supportedSizes: ['S', 'W'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
 
@@ -144,7 +144,7 @@ export const WIDGET_CATALOG = [
     category: "PLANS",
     icon: Repeat,
     supportedSizes: ['S', 'W', 'T', 'L'],
-    defaultSize: 'T',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -154,7 +154,7 @@ export const WIDGET_CATALOG = [
     category: "PLANS",
     icon: Repeat,
     supportedSizes: ['S', 'W', 'T'],
-    defaultSize: 'T',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -164,7 +164,7 @@ export const WIDGET_CATALOG = [
     category: "PLANS",
     icon: DollarSign,
     supportedSizes: ['S', 'W'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -174,7 +174,7 @@ export const WIDGET_CATALOG = [
     category: "PLANS",
     icon: Clock,
     supportedSizes: ['S', 'W'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
 
@@ -186,7 +186,7 @@ export const WIDGET_CATALOG = [
     category: "HABITS",
     icon: Activity,
     supportedSizes: ['S', 'W', 'T', 'L'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -196,7 +196,7 @@ export const WIDGET_CATALOG = [
     category: "HABITS",
     icon: Flame,
     supportedSizes: ['S', 'W'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -240,7 +240,7 @@ export const WIDGET_CATALOG = [
     category: "LIFE",
     icon: Cake,
     supportedSizes: ['S', 'W', 'T', 'L'],
-    defaultSize: 'T',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -250,7 +250,7 @@ export const WIDGET_CATALOG = [
     category: "LIFE",
     icon: Cake,
     supportedSizes: ['S', 'W'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -260,7 +260,7 @@ export const WIDGET_CATALOG = [
     category: "LIFE",
     icon: Briefcase,
     supportedSizes: ['S', 'W'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
 
@@ -272,7 +272,7 @@ export const WIDGET_CATALOG = [
     category: "UTILITY",
     icon: PlusCircle,
     supportedSizes: ['S', 'W'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -282,7 +282,7 @@ export const WIDGET_CATALOG = [
     category: "UTILITY",
     icon: Calendar,
     supportedSizes: ['S', 'W'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -292,7 +292,7 @@ export const WIDGET_CATALOG = [
     category: "UTILITY",
     icon: Calendar,
     supportedSizes: ['S', 'W'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
 
@@ -304,7 +304,7 @@ export const WIDGET_CATALOG = [
     category: "SPLITS",
     icon: Users,
     supportedSizes: ['S', 'W', 'T'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   },
   {
@@ -314,17 +314,17 @@ export const WIDGET_CATALOG = [
     category: "SPLITS",
     icon: Layers,
     supportedSizes: ['S', 'W', 'T'],
-    defaultSize: 'S',
+    defaultSize: 'W',
     requiredPlan: 'free'
   }
 ];
 
-// First-time users get EXACTLY 6 initial widgets arranged in a balanced grid
+// First-time users get EXACTLY 6 initial widgets, all defaulting to W (Wide)
 export const DEFAULT_WIDGET_LAYOUT = [
-  { id: 'today_tasks', size: 'T', visible: true },
-  { id: 'upcoming_reminders', size: 'T', visible: true },
-  { id: 'upcoming_plans', size: 'T', visible: true },
+  { id: 'today_tasks', size: 'W', visible: true },
+  { id: 'upcoming_reminders', size: 'W', visible: true },
+  { id: 'upcoming_plans', size: 'W', visible: true },
   { id: 'spending_snapshot', size: 'W', visible: true },
   { id: 'luna_suggestion', size: 'W', visible: true },
-  { id: 'recent_expenses', size: 'T', visible: true }
+  { id: 'recent_expenses', size: 'W', visible: true }
 ];
