@@ -120,9 +120,9 @@ async function request(url, options = {}) {
       let userMsg = rawMsg;
       if (!userMsg) {
         if (res.status === 401) userMsg = 'Your session has expired. Please log in again.';
-        else if (res.status === 404) userMsg = "We couldn't find what you're looking for.";
-        else if (res.status >= 500) userMsg = "DaySync couldn't reach the server right now.";
-        else userMsg = 'Unable to complete your request right now.';
+        else if (res.status === 404) userMsg = "The requested endpoint or resource was not found.";
+        else if (res.status >= 500) userMsg = `Server error (${res.status}). Please try again in a moment.`;
+        else userMsg = `Request failed (${res.status}). Please try again.`;
       }
 
       throw new ApiError(userMsg, res.status, errorType);

@@ -3,6 +3,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 import { db } from './db.js';
 import { classifyIntent } from './intentEngine.js';
 import { detectPotentialMemory } from './memoryEngine.js';
@@ -1284,9 +1285,15 @@ app.post('/api/privacy/clear-history', authenticate, (req, res) => {
   res.json({ success: true, message: 'Chat history cleared successfully.' });
 });
 
-// ==================================================
-// --- SPLITS SHARED EXPENSES ENDPOINTS ---
-// ==================================================
+// Helper to generate secure random Split Share Codes (e.g. GOA-7K4P2)
+function generateSplitShareCode(name) {
+  const cleanPrefix = (name || 'SPLIT')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, 3) || 'SPL';
+  const rand = crypto.randomBytes(3).toString('hex').toUpperCase().slice(0, 5);
+  return `${cleanPrefix}-${rand}`;
+}
 
 // 1. GET /api/splits - Get all splits user belongs to
 app.get('/api/splits', authenticate, (req, res) => {
