@@ -40,7 +40,9 @@ import {
   Activity,
   Repeat,
   CreditCard,
-  Users
+  Users,
+  Calendar,
+  Globe
 } from 'lucide-react';
 
 export function SettingsPage() {
@@ -57,7 +59,7 @@ export function SettingsPage() {
 
   // Section Scroll Refs
   const accountRef = useRef(null);
-  const appearanceRef = useRef(null);
+  const preferencesRef = useRef(null);
   const dashboardRef = useRef(null);
   const notificationsRef = useRef(null);
   const lunaRef = useRef(null);
@@ -74,6 +76,7 @@ export function SettingsPage() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
+  const [showDashboardResetModal, setShowDashboardResetModal] = useState(false);
   const [isWidgetPickerOpen, setIsWidgetPickerOpen] = useState(false);
 
   // Account Modals State
@@ -96,15 +99,21 @@ export function SettingsPage() {
   const [showPassToggle, setShowPassToggle] = useState(false);
   const [isChangingPass, setIsChangingPass] = useState(false);
 
-  // Appearance & Density Preferences
-  const [dashboardDensity, setDashboardDensity] = useState(() => {
-    return localStorage.getItem('daysync_dashboard_density') || 'comfortable';
+  // Functional System Preferences
+  const [dashboardRefresh, setDashboardRefresh] = useState(() => {
+    return localStorage.getItem('daysync_dashboard_refresh') || 'auto';
   });
-  const [animationsEnabled, setAnimationsEnabled] = useState(() => {
-    return localStorage.getItem('daysync_animations_enabled') !== 'false';
+  const [refreshOnReturn, setRefreshOnReturn] = useState(() => {
+    return localStorage.getItem('daysync_widget_refresh_on_return') !== 'false';
+  });
+  const [weekStartDay, setWeekStartDay] = useState(() => {
+    return localStorage.getItem('daysync_week_start') || 'monday';
+  });
+  const [dateFormat, setDateFormat] = useState(() => {
+    return localStorage.getItem('daysync_date_format') || 'DD MMM YYYY';
   });
 
-  // Active Widgets Layout
+  // Active Dashboard Widgets Layout
   const [activeWidgetIds, setActiveWidgetIds] = useState(() => {
     try {
       const saved = localStorage.getItem('daysync_widget_layout');
@@ -172,11 +181,6 @@ export function SettingsPage() {
   const [pushStatus, setPushStatus] = useState('Enabled');
 
   useEffect(() => {
-    const density = localStorage.getItem('daysync_dashboard_density') || 'comfortable';
-    const anims = localStorage.getItem('daysync_animations_enabled') !== 'false';
-    document.documentElement.setAttribute('data-dashboard-density', density);
-    document.documentElement.setAttribute('data-animations', anims ? 'true' : 'false');
-
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {
       setPushStatus('Unsupported');
     } else if (Notification.permission === 'granted') {
@@ -188,18 +192,28 @@ export function SettingsPage() {
     }
   }, []);
 
-  const handleDensityChange = (density) => {
-    setDashboardDensity(density);
-    document.documentElement.setAttribute('data-dashboard-density', density);
-    localStorage.setItem('daysync_dashboard_density', density);
-    if (showToast) showToast(`Dashboard density set to ${density}.`, 'info');
+  const handleDashboardRefreshChange = (mode) => {
+    setDashboardRefresh(mode);
+    localStorage.setItem('daysync_dashboard_refresh', mode);
+    if (showToast) showToast(`Dashboard refresh strategy set to ${mode}.`, 'info');
   };
 
-  const handleToggleAnimations = (enabled) => {
-    setAnimationsEnabled(enabled);
-    document.documentElement.setAttribute('data-animations', enabled ? 'true' : 'false');
-    localStorage.setItem('daysync_animations_enabled', enabled ? 'true' : 'false');
-    if (showToast) showToast(enabled ? 'UI animations enabled.' : 'UI animations disabled.', 'info');
+  const handleToggleRefreshOnReturn = (val) => {
+    setRefreshOnReturn(val);
+    localStorage.setItem('daysync_widget_refresh_on_return', val ? 'true' : 'false');
+    if (showToast) showToast(val ? 'Widget data will refresh when returning to Dashboard.' : 'Widget data reuse enabled on return.', 'info');
+  };
+
+  const handleWeekStartChange = (day) => {
+    setWeekStartDay(day);
+    localStorage.setItem('daysync_week_start', day);
+    if (showToast) showToast(`Week start day set to ${day === 'monday' ? 'Monday' : 'Sunday'}.`, 'success');
+  };
+
+  const handleDateFormatChange = (fmt) => {
+    setDateFormat(fmt);
+    localStorage.setItem('daysync_date_format', fmt);
+    if (showToast) showToast(`Date format updated to ${fmt}.`, 'success');
   };
 
   const handleToggleNotifSetting = (key) => {
@@ -357,7 +371,8 @@ export function SettingsPage() {
     }
   };
 
-  const handleResetDashboardLayout = () => {
+  const handleConfirmResetDashboard = () => {
+    setShowDashboardResetModal(false);
     localStorage.setItem('daysync_widget_layout', JSON.stringify(DEFAULT_WIDGET_LAYOUT));
     setActiveWidgetIds(DEFAULT_WIDGET_LAYOUT.map(w => w.id));
     if (showToast) showToast('Dashboard layout reset to default.', 'info');
@@ -417,11 +432,10 @@ export function SettingsPage() {
   const sectionsNav = [
     { key: 'account', label: 'Account', icon: User, ref: accountRef },
     { key: 'upgrade', label: 'Upgrade', icon: Zap, ref: upgradeRef },
-    { key: 'appearance', label: 'App & Appearance', icon: Sun, ref: appearanceRef },
+    { key: 'preferences', label: 'Preferences', icon: SlidersHorizontal, ref: preferencesRef },
     { key: 'dashboard', label: 'Dashboard', icon: Layout, ref: dashboardRef },
     { key: 'notifications', label: 'Notifications', icon: Bell, ref: notificationsRef },
     { key: 'luna', label: 'Luna', icon: Sparkles, ref: lunaRef },
-    { key: 'defaults', label: 'Defaults', icon: SlidersHorizontal, ref: defaultsRef },
     { key: 'privacy', label: 'Privacy & Security', icon: Shield, ref: privacyRef },
     { key: 'app', label: 'App / PWA', icon: Smartphone, ref: appRef },
     { key: 'about', label: 'About DaySync', icon: Info, ref: aboutRef }
@@ -544,77 +558,111 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* 3. APP & APPEARANCE SECTION */}
-        <div ref={appearanceRef} className="glass-card">
+        {/* 3. SYSTEM & FUNCTIONAL PREFERENCES */}
+        <div ref={preferencesRef} className="glass-card">
           <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sun size={18} color="var(--accent-primary)" /> App & Appearance
+            <SlidersHorizontal size={18} color="var(--accent-primary)" /> App & System Preferences
           </h3>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 16px 0' }}>
-            These preferences change how DaySync looks and feels across the app.
+            Configure functional date, refresh, startup, and theme preferences across DaySync.
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <div>
-              <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>Theme Mode</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Current: <strong style={{ color: 'var(--text-primary)', textTransform: 'capitalize' }}>{theme} Mode</strong></div>
-            </div>
-            <button type="button" onClick={toggleTheme} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
-              {theme === 'dark' ? <Sun size={15} color="var(--accent-warning)" /> : <Moon size={15} />}
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
-            <div>
-              <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>Dashboard Layout Density</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Current: <strong style={{ color: 'var(--text-primary)', textTransform: 'capitalize' }}>{dashboardDensity}</strong></div>
-            </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button
-                type="button"
-                onClick={() => handleDensityChange('comfortable')}
-                style={{
-                  padding: '5px 12px', fontSize: '11.5px', fontWeight: '700', borderRadius: '6px',
-                  border: dashboardDensity === 'comfortable' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                  background: dashboardDensity === 'comfortable' ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                  color: dashboardDensity === 'comfortable' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer'
-                }}
-              >
-                Comfortable
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDensityChange('compact')}
-                style={{
-                  padding: '5px 12px', fontSize: '11.5px', fontWeight: '700', borderRadius: '6px',
-                  border: dashboardDensity === 'compact' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                  background: dashboardDensity === 'compact' ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                  color: dashboardDensity === 'compact' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer'
-                }}
-              >
-                Compact
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+            {/* Theme Mode */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Theme Mode</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Current: <strong style={{ color: 'var(--text-primary)', textTransform: 'capitalize' }}>{theme} Mode</strong></div>
+              <button type="button" onClick={toggleTheme} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', width: '100%', justifyContent: 'center' }}>
+                {theme === 'dark' ? <Sun size={14} color="var(--accent-warning)" /> : <Moon size={14} />}
+                Switch to {theme === 'dark' ? 'Light' : 'Dark'} Mode
               </button>
             </div>
-          </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
-            <div>
-              <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>UI Animations</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Current: <strong style={{ color: 'var(--text-primary)' }}>{animationsEnabled ? 'On' : 'Off'}</strong></div>
+            {/* Dashboard Data Refresh */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Dashboard Data Refresh</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Strategy: <strong style={{ color: 'var(--text-primary)', textTransform: 'capitalize' }}>{dashboardRefresh}</strong></div>
+              <select
+                value={dashboardRefresh}
+                onChange={(e) => handleDashboardRefreshChange(e.target.value)}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }}
+              >
+                <option value="auto">Automatic (Background Sync)</option>
+                <option value="manual">Manual Refresh Only</option>
+              </select>
             </div>
-            <label style={{ position: 'relative', display: 'inline-block', width: '40px', height: '22px' }}>
-              <input
-                type="checkbox"
-                checked={animationsEnabled}
-                onChange={(e) => handleToggleAnimations(e.target.checked)}
-                style={{ opacity: 0, width: 0, height: 0 }}
-              />
-              <span style={{
-                position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-                background: animationsEnabled ? 'var(--accent-primary)' : 'var(--border-color)',
-                borderRadius: '20px', transition: '0.2s'
-              }} />
-            </label>
+
+            {/* Refresh Data on Return */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Refresh on Return</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Refresh widgets when returning to Dashboard</div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                <input
+                  type="checkbox"
+                  checked={refreshOnReturn}
+                  onChange={(e) => handleToggleRefreshOnReturn(e.target.checked)}
+                />
+                Enabled (Refetches stale data)
+              </label>
+            </div>
+
+            {/* Startup Page */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Open Page on Startup</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Choose default launch page</div>
+              <select
+                value={defaults.startupPage}
+                onChange={(e) => handleDefaultChange('startupPage', e.target.value)}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }}
+              >
+                <option value="dashboard">Dashboard</option>
+                <option value="tasks">Tasks</option>
+                <option value="expenses">Expenses</option>
+                <option value="plans">Plans</option>
+                <option value="splits">Shared Splits</option>
+                <option value="habits">Habits</option>
+                <option value="chat">Luna Chat</option>
+                <option value="settings">Settings</option>
+              </select>
+            </div>
+
+            {/* Week Start Day */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Week Start Day</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Calendar & habit views start day</div>
+              <select
+                value={weekStartDay}
+                onChange={(e) => handleWeekStartChange(e.target.value)}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }}
+              >
+                <option value="monday">Monday</option>
+                <option value="sunday">Sunday</option>
+              </select>
+            </div>
+
+            {/* Date Format */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Date Format</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Displayed date representation</div>
+              <select
+                value={dateFormat}
+                onChange={(e) => handleDateFormatChange(e.target.value)}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }}
+              >
+                <option value="DD MMM YYYY">23 Aug 2026</option>
+                <option value="DD/MM/YYYY">23/08/2026</option>
+                <option value="MM/DD/YYYY">08/23/2026</option>
+              </select>
+            </div>
+
+            {/* Currency */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Currency</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Primary system currency</div>
+              <div style={{ padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: '700' }}>
+                ₹ INR (Indian Rupee)
+              </div>
+            </div>
           </div>
         </div>
 
@@ -625,7 +673,7 @@ export function SettingsPage() {
           </h3>
 
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
-            Customize your home screen with widgets, layouts, and spacing that fit the way you use DaySync.
+            Arrange your widgets the way you use DaySync. Move, resize, add, or remove widgets anytime.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '14px' }}>
@@ -633,7 +681,7 @@ export function SettingsPage() {
               Active Widgets: <strong style={{ color: 'var(--text-primary)' }}>{activeWidgetIds.length}</strong>
             </div>
             <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-              Layout: <strong style={{ color: 'var(--text-primary)' }}>Custom</strong>
+              Layout: <strong style={{ color: 'var(--text-primary)' }}>Custom Arrangement</strong>
             </div>
           </div>
 
@@ -641,7 +689,7 @@ export function SettingsPage() {
             <button type="button" onClick={() => setIsWidgetPickerOpen(true)} className="btn-primary" style={{ fontSize: '12.5px' }}>
               Manage Widgets
             </button>
-            <button type="button" onClick={handleResetDashboardLayout} className="btn-secondary" style={{ fontSize: '12.5px' }}>
+            <button type="button" onClick={() => setShowDashboardResetModal(true)} className="btn-secondary" style={{ fontSize: '12.5px' }}>
               Reset Dashboard Layout
             </button>
           </div>
@@ -727,53 +775,7 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* 7. DEFAULTS SECTION */}
-        <div ref={defaultsRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <SlidersHorizontal size={18} color="var(--accent-primary)" /> System Defaults
-          </h3>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-            <div>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                Default Startup Page
-              </label>
-              <select
-                value={defaults.startupPage}
-                onChange={(e) => handleDefaultChange('startupPage', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }}
-              >
-                <option value="dashboard">Dashboard</option>
-                <option value="tasks">Tasks</option>
-                <option value="expenses">Expenses</option>
-                <option value="plans">Plans</option>
-                <option value="splits">Splits</option>
-                <option value="habits">Habits</option>
-                <option value="chat">Luna Chat</option>
-                <option value="settings">Settings</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                Default Expense Category
-              </label>
-              <select
-                value={defaults.expenseCategory}
-                onChange={(e) => handleDefaultChange('expenseCategory', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }}
-              >
-                <option value="General">General</option>
-                <option value="Food & Dining">Food & Dining</option>
-                <option value="Travel & Commute">Travel & Commute</option>
-                <option value="Utilities & Bills">Utilities & Bills</option>
-                <option value="Shopping">Shopping</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* 8. PRIVACY & SECURITY SECTION */}
+        {/* 7. PRIVACY & SECURITY SECTION */}
         <div ref={privacyRef} className="glass-card">
           <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Shield size={18} color="var(--accent-primary)" /> Privacy & Security
@@ -796,7 +798,7 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* 9. APP / PWA SECTION */}
+        {/* 8. APP / PWA SECTION */}
         <div ref={appRef} className="glass-card">
           <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Smartphone size={18} color="var(--accent-primary)" /> App & PWA Status
@@ -824,7 +826,7 @@ export function SettingsPage() {
           </button>
         </div>
 
-        {/* 10. ABOUT DAYSYNC SECTION */}
+        {/* 9. ABOUT DAYSYNC SECTION */}
         <div ref={aboutRef} className="glass-card">
           <h3 style={{ marginBottom: '8px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Info size={18} color="var(--accent-primary)" /> About DaySync
@@ -1034,6 +1036,7 @@ export function SettingsPage() {
       <ConfirmationModal isOpen={showLogoutModal} title="Log out of DaySync?" message="Are you sure you want to log out of your session?" confirmText="Log Out" cancelText="Cancel" isDanger={false} isLoading={isLoggingOut} onConfirm={handleConfirmLogout} onCancel={() => setShowLogoutModal(false)} />
       <ConfirmationModal isOpen={showDeleteModal} title="Delete your DaySync account?" message="Your account and associated data will be permanently deleted. This action cannot be undone." confirmText="Delete Account" cancelText="Cancel" isDanger={true} isLoading={isDeletingAccount} onConfirm={handleConfirmDeleteAccount} onCancel={() => setShowDeleteModal(false)} />
       <ConfirmationModal isOpen={showClearHistoryModal} title="Clear your conversation history?" message="Are you sure you want to clear your stored chat messages? This action cannot be undone." confirmText="Clear History" cancelText="Cancel" isDanger={true} isLoading={isClearingHistory} onConfirm={handleConfirmClearHistory} onCancel={() => setShowClearHistoryModal(false)} />
+      <ConfirmationModal isOpen={showDashboardResetModal} title="Reset Dashboard Layout?" message="This will restore the default widget arrangement and sizes. Your tasks, expenses, and data will not be affected." confirmText="Reset Layout" cancelText="Cancel" isDanger={true} onConfirm={handleConfirmResetDashboard} onCancel={() => setShowDashboardResetModal(false)} />
 
       {/* Widget Picker Modal */}
       <WidgetPickerModal

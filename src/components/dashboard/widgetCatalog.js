@@ -316,7 +316,11 @@ export const DEFAULT_WIDGET_LAYOUT = [
   { id: 'today_tasks', size: 'wide', visible: true },
   { id: 'upcoming_reminders', size: 'wide', visible: true },
   { id: 'upcoming_plans', size: 'wide', visible: true },
-  { id: 'birthdays_meetings', size: 'wide', visible: true },
   { id: 'spending_snapshot', size: 'wide', visible: true },
-  { id: 'luna_suggestion', size: 'wide', visible: true }
+  { id: 'luna_suggestion', size: 'wide', visible: true },
+  { id: 'overdue_tasks', size: 'wide', visible: true },
+  { id: 'recent_expenses', size: 'wide', visible: true },
+  { id: 'birthdays_meetings', size: 'wide', visible: true },
+  { id: 'split_balances', size: 'wide', visible: true },
+  { id: 'today_habits', size: 'wide', visible: true }
 ];

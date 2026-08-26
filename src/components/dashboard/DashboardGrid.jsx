@@ -31,11 +31,8 @@ export function DashboardGrid() {
     return DEFAULT_WIDGET_LAYOUT;
   });
 
-  // Re-sync layout and density when user changes
+  // Re-sync layout when user changes
   useEffect(() => {
-    const density = localStorage.getItem('daysync_dashboard_density') || 'comfortable';
-    document.documentElement.setAttribute('data-dashboard-density', density);
-
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {

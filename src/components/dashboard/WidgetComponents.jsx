@@ -35,7 +35,18 @@ const formatDate = (dateStr) => {
   if (!dateStr) return 'Today';
   try {
     const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const fmt = localStorage.getItem('daysync_date_format') || 'DD MMM YYYY';
+    if (fmt === 'DD/MM/YYYY') {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      return `${day}/${month}/${d.getFullYear()}`;
+    }
+    if (fmt === 'MM/DD/YYYY') {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      return `${month}/${day}/${d.getFullYear()}`;
+    }
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   } catch (e) {
     return dateStr;
   }

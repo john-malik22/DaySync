@@ -1034,45 +1034,6 @@ option {
   }
 }
 
-.widget-arrange-active {
-  animation: widgetPulse 2s infinite ease-in-out;
-}
-
-/* Dashboard Density Controls (Visibly alters spacing & padding) */
-[data-dashboard-density="compact"] .dashboard-widget-grid {
-  gap: 10px !important;
-}
-
-[data-dashboard-density="compact"] .dashboard-widget-card {
-  padding: 10px 12px !important;
-}
-
-[data-dashboard-density="comfortable"] .dashboard-widget-grid {
-  gap: 24px !important;
-}
-
-[data-dashboard-density="comfortable"] .dashboard-widget-card {
-  padding: 20px !important;
-}
-
-/* UI Animations Toggle & Reduced Motion Accessibility */
-[data-animations="false"] *,
-[data-animations="false"] *::before,
-[data-animations="false"] *::after {
-  animation: none !important;
-  transition: none !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-  }
-}
-
 @keyframes widgetPulse {
   0%, 100% { border-color: var(--accent-primary); }
   50% { border-color: var(--color-secondary); }
