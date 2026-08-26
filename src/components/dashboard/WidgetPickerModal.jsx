@@ -20,57 +20,63 @@ export function WidgetPickerModal({ isOpen, onClose, activeWidgetIds, onAddWidge
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(8px)',
-      zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+      background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)',
+      zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px'
     }}>
       <div className="glass-card animate-fade-in" style={{
-        width: '100%', maxWidth: '540px', maxHeight: '85vh', display: 'flex', flexDirection: 'column',
-        padding: '20px', borderRadius: 'var(--radius-md)'
+        width: '100%', maxWidth: '480px', maxHeight: '82vh', display: 'flex', flexDirection: 'column',
+        padding: '16px', borderRadius: '16px'
       }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-          <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--text-primary)', fontWeight: '700' }}>
+        {/* Modal Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: '700' }}>
             + Add Widget to Dashboard
           </h3>
           <button
+            type="button"
             onClick={onClose}
             style={{
               background: 'transparent', border: 'none', color: 'var(--text-secondary)',
-              cursor: 'pointer', padding: '4px', borderRadius: '50%'
+              cursor: 'pointer', padding: '4px', borderRadius: '50%', display: 'flex', alignItems: 'center'
             }}
+            title="Close"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Search Bar */}
-        <div style={{ position: 'relative', marginBottom: '12px' }}>
-          <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+        <div style={{ position: 'relative', marginBottom: '10px' }}>
+          <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             placeholder="Search widgets..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
-              width: '100%', padding: '8px 12px 8px 36px', borderRadius: 'var(--radius-sm)',
+              width: '100%', padding: '7px 10px 7px 32px', borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border-color)', background: 'var(--bg-secondary)',
-              color: 'var(--text-primary)', fontSize: '13px'
+              color: 'var(--text-primary)', fontSize: '12px'
             }}
           />
         </div>
 
-        {/* Category Chips */}
-        <div className="scroll-row" style={{ gap: '6px', marginBottom: '14px', paddingBottom: '4px' }}>
+        {/* Category Horizontal Scroll Chips */}
+        <div className="scroll-row" style={{
+          display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap', gap: '6px',
+          marginBottom: '10px', paddingBottom: '4px', scrollbarWidth: 'none'
+        }}>
           {categories.map(cat => (
             <button
               key={cat}
+              type="button"
               onClick={() => setSelectedCategory(cat)}
               style={{
                 padding: '4px 10px', borderRadius: 'var(--radius-full)', fontSize: '11px', fontWeight: '700',
                 border: selectedCategory === cat ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
                 background: selectedCategory === cat ? 'var(--accent-primary)' : 'var(--bg-secondary)',
                 color: selectedCategory === cat ? '#FFFFFF' : 'var(--text-secondary)',
-                cursor: 'pointer'
+                cursor: 'pointer', flexShrink: 0
               }}
             >
               {cat}
@@ -78,10 +84,10 @@ export function WidgetPickerModal({ isOpen, onClose, activeWidgetIds, onAddWidge
           ))}
         </div>
 
-        {/* Widget List */}
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', paddingRight: '4px' }}>
+        {/* Compact Widget Row List */}
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '2px' }}>
           {filteredWidgets.length === 0 ? (
-            <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+            <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
               No matching widgets found.
             </div>
           ) : (
@@ -93,44 +99,58 @@ export function WidgetPickerModal({ isOpen, onClose, activeWidgetIds, onAddWidge
                 <div
                   key={widget.id}
                   style={{
-                    padding: '12px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                    padding: '8px 12px', borderRadius: '10px', background: 'var(--bg-secondary)',
                     border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    gap: '12px'
+                    gap: '10px', minHeight: '54px'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {/* Left Icon + Text Block */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
                     <div style={{
-                      width: '36px', height: '36px', borderRadius: 'var(--radius-sm)',
+                      width: '32px', height: '32px', borderRadius: '8px',
                       background: 'rgba(108, 99, 255, 0.12)', color: 'var(--accent-primary)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                     }}>
-                      <IconComp size={18} />
+                      <IconComp size={16} />
                     </div>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{widget.title}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{widget.description}</div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{
+                        fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                      }}>
+                        {widget.title}
+                      </div>
+                      <div style={{
+                        fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                      }}>
+                        {widget.description}
+                      </div>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => !isAdded && onAddWidget(widget)}
-                    disabled={isAdded}
-                    className={isAdded ? 'btn-secondary' : 'btn-primary'}
-                    style={{
-                      fontSize: '12px', padding: '6px 12px', minHeight: '32px', flexShrink: 0,
-                      opacity: isAdded ? 0.7 : 1
-                    }}
-                  >
-                    {isAdded ? (
-                      <>
-                        <Check size={14} color="var(--accent-success)" /> Added
-                      </>
-                    ) : (
-                      <>
-                        <Plus size={14} /> Add
-                      </>
-                    )}
-                  </button>
+                  {/* Right Compact Action Control */}
+                  {isAdded ? (
+                    <div style={{
+                      fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: 'var(--radius-full)',
+                      background: 'rgba(16, 185, 129, 0.12)', border: '1px solid var(--accent-success)',
+                      color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0
+                    }}>
+                      <Check size={13} /> Added
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => onAddWidget(widget)}
+                      className="btn-primary"
+                      style={{
+                        fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: 'var(--radius-full)',
+                        display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, minHeight: '28px'
+                      }}
+                    >
+                      <Plus size={13} /> Add
+                    </button>
+                  )}
                 </div>
               );
             })
