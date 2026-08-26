@@ -1311,10 +1311,23 @@ app.get('/api/splits', authenticate, (req, res) => {
   });
   if (modified) db.write(store);
 
-  const userSplits = store.splits.filter(s =>
-    (s.members || []).some(m => (m.userId === userId || m.id === userId)) ||
-    s.ownerId === userId
-  );
+  const userSplits = store.splits
+    .filter(s =>
+      (s.members || []).some(m => (m.userId === userId || m.id === userId)) ||
+      s.ownerId === userId
+    )
+    .map(s => {
+      const storeExp = (store.splitExpenses || []).filter(e => e.splitId === s.id);
+      const storeSettlements = (store.splitSettlements || []).filter(set => set.splitId === s.id);
+      const mergedExpenses = storeExp.length > 0 ? storeExp : (s.expenses || []);
+      const mergedSettlements = storeSettlements.length > 0 ? storeSettlements : (s.settlements || []);
+
+      return {
+        ...s,
+        expenses: mergedExpenses,
+        settlements: mergedSettlements
+      };
+    });
 
   res.json(userSplits);
 });
@@ -1661,6 +1674,26 @@ app.post('/api/splits/:id/settlements', authenticate, (req, res) => {
 
   db.write(store);
   res.json(newSettlement);
+});
+
+// 12. DELETE /api/splits/:id/expenses/:expenseId - Delete split expense
+app.delete('/api/splits/:id/expenses/:expenseId', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) return res.status(404).json({ error: 'Split not found.' });
+  const isMember = (split.members || []).some(m => (m.userId === userId || m.id === userId)) || split.ownerId === userId;
+  if (!isMember) return res.status(403).json({ error: 'Access denied.' });
+
+  store.splitExpenses = (store.splitExpenses || []).filter(e => !(e.id === req.params.expenseId && e.splitId === req.params.id));
+  if (Array.isArray(split.expenses)) {
+    split.expenses = split.expenses.filter(e => e.id !== req.params.expenseId);
+  }
+  split.updatedAt = new Date().toISOString();
+
+  db.write(store);
+  res.json({ success: true, message: 'Expense deleted successfully.' });
 });
 
 db.ready
