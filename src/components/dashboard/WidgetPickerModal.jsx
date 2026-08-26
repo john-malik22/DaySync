@@ -8,7 +8,7 @@ export function WidgetPickerModal({ isOpen, onClose, activeWidgetIds, onAddWidge
 
   if (!isOpen) return null;
 
-  const categories = ['ALL', 'CORE', 'FINANCE', 'PLANS', 'HABITS', 'LUNA', 'LIFE', 'UTILITY'];
+  const categories = ['ALL', 'CORE', 'FINANCE', 'PLANS', 'HABITS', 'LUNA', 'LIFE', 'UTILITY', 'SPLITS'];
 
   const filteredWidgets = WIDGET_CATALOG.filter(w => {
     const matchesSearch = w.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

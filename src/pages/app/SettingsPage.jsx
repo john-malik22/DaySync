@@ -26,7 +26,9 @@ import {
   Sliders,
   Database,
   Lock,
-  ExternalLink
+  ExternalLink,
+  Zap,
+  X
 } from 'lucide-react';
 import pkg from '../../../package.json';
 
@@ -50,6 +52,7 @@ export function SettingsPage() {
 
   // Section scroll refs
   const accountRef = useRef(null);
+  const upgradeRef = useRef(null);
   const appearanceRef = useRef(null);
   const notificationsRef = useRef(null);
   const lunaRef = useRef(null);
@@ -61,6 +64,7 @@ export function SettingsPage() {
   const [activeSection, setActiveSection] = useState('account');
 
   // Confirmation Modals State
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
@@ -221,6 +225,7 @@ export function SettingsPage() {
 
   const sectionsNav = [
     { key: 'account', label: 'Account', icon: User, ref: accountRef },
+    { key: 'upgrade', label: 'Upgrade', icon: Zap, ref: upgradeRef },
     { key: 'appearance', label: 'Appearance', icon: Sun, ref: appearanceRef },
     { key: 'notifications', label: 'Notifications', icon: Bell, ref: notificationsRef },
     { key: 'luna', label: 'Luna', icon: Sparkles, ref: lunaRef },
@@ -320,7 +325,36 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* 2. APPEARANCE SECTION */}
+        {/* 2. UPGRADE DAYSYNC SECTION */}
+        <div ref={upgradeRef} className="glass-card" style={{ border: '1px solid var(--accent-primary)', background: 'linear-gradient(135deg, rgba(108, 99, 255, 0.08) 0%, rgba(18, 18, 26, 0.6) 100%)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
+            <div style={{ flex: 1, minWidth: '240px' }}>
+              <h3 style={{ margin: 0, color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.1rem', fontWeight: '800' }}>
+                <Sparkles size={18} color="var(--accent-primary)" /> Upgrade DaySync
+              </h3>
+              <p style={{ margin: '6px 0 12px 0', fontSize: '12.5px', color: 'var(--text-muted)' }}>
+                Unlock a more personalized executive experience.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Zap size={13} color="var(--accent-primary)" /> More dashboard widgets & custom grid layouts</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Zap size={13} color="var(--accent-primary)" /> Advanced financial tracking & Split analytics</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Zap size={13} color="var(--accent-primary)" /> Priority Luna AI responses & daily briefings</div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowUpgradeModal(true)}
+              className="btn-primary"
+              style={{ fontSize: '12.5px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              aria-label="View DaySync Plus plans"
+            >
+              <Zap size={14} /> View Plans
+            </button>
+          </div>
+        </div>
+
+        {/* 3. APPEARANCE SECTION */}
         <div ref={appearanceRef} className="glass-card">
           <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Sun size={18} color="var(--accent-primary)" /> Appearance
@@ -755,6 +789,73 @@ export function SettingsPage() {
         onConfirm={handleConfirmExportData}
         onCancel={() => setShowExportModal(false)}
       />
+
+      {/* 5. Upgrade Preview Modal */}
+      {showUpgradeModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)', zIndex: 1100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+        }}>
+          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '420px', padding: '24px', borderRadius: '16px', border: '1px solid var(--accent-primary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={20} color="var(--accent-primary)" /> DaySync Plus Preview
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowUpgradeModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+                aria-label="Close upgrade preview modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Current Membership</div>
+              <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>
+                Free Plan <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent-success)' }}>(Active)</span>
+              </div>
+            </div>
+
+            <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(108, 99, 255, 0.08)', border: '1px solid var(--accent-primary)', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>DaySync Plus</span>
+                <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-primary)' }}>₹199 / month</span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+                Enhanced capabilities for ultimate productivity and automated organization.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                <div>✦ Unlimited executive widgets & layouts</div>
+                <div>✦ Advanced Split debt simplification</div>
+                <div>✦ Priority AI assistant response time</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setShowUpgradeModal(false)}
+                className="btn-secondary"
+                style={{ fontSize: '12px', padding: '8px 16px' }}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                disabled
+                className="btn-primary"
+                aria-label="Upgrade to DaySync Plus coming soon"
+                style={{ fontSize: '12px', padding: '8px 16px', opacity: 0.8, cursor: 'not-allowed' }}
+              >
+                Coming Soon
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
