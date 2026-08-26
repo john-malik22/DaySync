@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLuna } from '../../context/LunaContext';
 import { useNotifications } from '../../context/NotificationContext';
-import { ErrorBoundary } from '../common/ErrorBoundary';
 import { api } from '../../services/api';
 import {
   CheckSquare,
@@ -27,7 +26,8 @@ import {
   Flame,
   Briefcase,
   Layers,
-  Send
+  Send,
+  RotateCcw
 } from 'lucide-react';
 
 const formatDate = (dateStr) => {
@@ -39,6 +39,58 @@ const formatDate = (dateStr) => {
     return dateStr;
   }
 };
+
+// Isolated Widget Error Boundary
+export class WidgetErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error(`[WidgetErrorBoundary] Caught runtime exception in widget:`, error, errorInfo);
+  }
+
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+    if (this.props.onRetry) {
+      this.props.onRetry();
+    }
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          padding: '14px', borderRadius: 'var(--radius-sm)', background: 'rgba(239, 68, 68, 0.08)',
+          border: '1px solid var(--accent-danger)', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', textAlign: 'center', minHeight: '90px'
+        }}>
+          <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>
+            {this.props.title || 'Widget'}
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--accent-danger)', marginBottom: '10px' }}>
+            Couldn't load this widget.
+          </div>
+          <button
+            type="button"
+            onClick={this.handleRetry}
+            className="btn-secondary"
+            style={{ fontSize: '11px', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+          >
+            <RotateCcw size={12} /> Retry
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // 1. Today's Tasks Widget
 export function TodayTasksWidget() {
@@ -222,7 +274,7 @@ export function UpcomingPlansWidget() {
 // 5. Birthdays & Meetings Widget
 export function BirthdaysMeetingsWidget() {
   const { tasks } = useLuna();
-  const lifeEvents = (tasks || []).filter(t => t.category === 'LIFE' || t.category === 'Meeting' || t.title.toLowerCase().includes('birthday')).slice(0, 4);
+  const lifeEvents = (tasks || []).filter(t => t.category === 'LIFE' || t.category === 'Meeting' || (t.title && t.title.toLowerCase().includes('birthday'))).slice(0, 4);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -256,15 +308,15 @@ export function BirthdaysMeetingsWidget() {
   );
 }
 
-// 6. Spending Snapshot Widget
+// 6. Spending Snapshot Widget (Compact, space-efficient)
 export function SpendingSnapshotWidget() {
   const { expenses } = useLuna();
   const totalSpent = (expenses || []).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <h3 style={{ color: 'var(--accent-primary)', fontSize: '14px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Wallet size={16} color="var(--accent-primary)" /> SPENDING SNAPSHOT
         </h3>
         <Link to="/app/expenses" aria-label="Expenses page" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -272,10 +324,10 @@ export function SpendingSnapshotWidget() {
         </Link>
       </div>
 
-      <div style={{ background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-        <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Expenses Logged</span>
-        <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>
-          ₹{totalSpent.toLocaleString()}
+      <div style={{ background: 'var(--bg-secondary)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+        <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Total Expenses Logged</span>
+        <div style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>
+          ₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
       </div>
     </div>
@@ -295,15 +347,15 @@ export function MonthlyExpensesWidget() {
   }).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <DollarSign size={16} color="var(--accent-primary)" />
         <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Monthly Expenses</span>
       </div>
-      <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
-        ₹{monthlyTotal.toLocaleString()}
+      <div style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
+        ₹{monthlyTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
-      <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>This calendar month</span>
+      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>This calendar month</span>
     </div>
   );
 }
@@ -317,15 +369,15 @@ export function TodaySpendingWidget() {
     .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <TrendingUp size={16} color="var(--accent-primary)" />
         <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Today's Spending</span>
       </div>
-      <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-        ₹{todayTotal.toLocaleString()}
+      <div style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+        ₹{todayTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
-      <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Logged today</span>
+      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Logged today</span>
     </div>
   );
 }
@@ -336,15 +388,15 @@ export function HabitStreakWidget() {
   const maxStreak = (habits || []).reduce((max, h) => Math.max(max, h.streak || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', textAlign: 'center' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '4px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'center', alignItems: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         <Flame size={18} color="var(--accent-warning)" />
         <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Habit Streak</span>
       </div>
-      <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--accent-warning)' }}>
+      <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-warning)' }}>
         {maxStreak} Days
       </div>
-      <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Top active streak</span>
+      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Top active streak</span>
     </div>
   );
 }
@@ -354,14 +406,14 @@ export function LunaSuggestionWidget() {
   const { suggestion } = useLuna();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <Sparkles size={16} color="var(--accent-primary)" />
-        <h3 style={{ color: 'var(--accent-primary)', fontSize: '14px', margin: 0, fontWeight: '700' }}>
+        <h3 style={{ color: 'var(--accent-primary)', fontSize: '13.5px', margin: 0, fontWeight: '700' }}>
           LUNA FOCUS INSIGHT
         </h3>
       </div>
-      <div style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', fontSize: '12px', color: 'var(--text-secondary)', flex: 1, display: 'flex', alignItems: 'center' }}>
+      <div style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', fontSize: '12px', color: 'var(--text-secondary)' }}>
         {suggestion || "Stay focused on your highest priority tasks today. Luna is here to help!"}
       </div>
     </div>
@@ -380,8 +432,8 @@ export function AskLunaWidget() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <MessageSquare size={16} color="var(--accent-primary)" />
         <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Ask Luna AI</span>
       </div>
@@ -407,14 +459,14 @@ export function UnreadNotificationsWidget() {
   const { unreadCount } = useNotifications();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Bell size={16} color="var(--accent-primary)" />
           <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Notifications</span>
         </div>
-        <span className="badge" style={{ fontSize: '11px', background: unreadCount > 0 ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: '#FFFFFF' }}>
-          {unreadCount} Unread
+        <span className="badge" style={{ fontSize: '11px', background: (unreadCount || 0) > 0 ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: '#FFFFFF' }}>
+          {unreadCount || 0} Unread
         </span>
       </div>
     </div>
@@ -429,7 +481,7 @@ export function HabitTrackerWidget() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <h3 style={{ color: 'var(--accent-primary)', fontSize: '14px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Activity size={16} color="var(--accent-primary)" /> HABITS ({habits?.length || 0})
+          <Activity size={16} color="var(--accent-primary)" /> HABITS ({(habits || []).length})
         </h3>
         <Link to="/app/habits" aria-label="Habits page" style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
           Habits <ArrowRight size={13} />
@@ -515,8 +567,8 @@ export function QuickAddWidget() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-      <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '8px' }}>QUICK ACTION SHORTCUTS</div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: '700' }}>QUICK ACTION SHORTCUTS</div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         <button type="button" onClick={() => navigate('/app/task')} className="btn-primary" aria-label="Add new task" style={{ flex: 1, padding: '8px 10px', fontSize: '11px', justifyContent: 'center' }}>
           <Plus size={13} /> Task
@@ -545,11 +597,11 @@ export function ClockDateWidget() {
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center', padding: '10px 0' }}>
-      <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--accent-primary)', letterSpacing: '0.5px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '6px 0' }}>
+      <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-primary)', letterSpacing: '0.5px' }}>
         {timeStr}
       </div>
-      <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', marginTop: '4px' }}>
+      <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-secondary)', marginTop: '2px' }}>
         {dateStr}
       </div>
     </div>
@@ -559,14 +611,24 @@ export function ClockDateWidget() {
 // 17. Split Balances Summary Widget
 export function SplitBalancesWidget() {
   const [splits, setSplits] = useState([]);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    api.getSplits().then(res => setSplits(Array.isArray(res) ? res : [])).catch(() => {});
+    api.getSplits()
+      .then(res => {
+        setSplits(Array.isArray(res) ? res : []);
+        setHasError(false);
+      })
+      .catch(() => setHasError(true));
   }, []);
 
+  if (hasError) {
+    throw new Error("Couldn't load Split Balances.");
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Users size={16} color="var(--accent-primary)" />
           <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Shared Splits</span>
@@ -583,49 +645,49 @@ export function SplitBalancesWidget() {
   );
 }
 
-// Main Widget Component Switcher with Error Boundary Wrap
+// Main Widget Component Switcher with Isolated Widget Error Boundaries
 export function renderWidgetById(id) {
   switch (id) {
     case 'today_tasks':
-      return <ErrorBoundary><TodayTasksWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Today's Tasks"><TodayTasksWidget /></WidgetErrorBoundary>;
     case 'upcoming_reminders':
-      return <ErrorBoundary><UpcomingRemindersWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Upcoming Reminders"><UpcomingRemindersWidget /></WidgetErrorBoundary>;
     case 'overdue_tasks':
-      return <ErrorBoundary><OverdueTasksWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Overdue Tasks"><OverdueTasksWidget /></WidgetErrorBoundary>;
     case 'upcoming_plans':
     case 'active_plans':
-      return <ErrorBoundary><UpcomingPlansWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Upcoming Plans"><UpcomingPlansWidget /></WidgetErrorBoundary>;
     case 'birthdays_meetings':
     case 'upcoming_birthdays':
     case 'upcoming_meetings':
-      return <ErrorBoundary><BirthdaysMeetingsWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Birthdays & Meetings"><BirthdaysMeetingsWidget /></WidgetErrorBoundary>;
     case 'spending_snapshot':
-      return <ErrorBoundary><SpendingSnapshotWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Spending Snapshot"><SpendingSnapshotWidget /></WidgetErrorBoundary>;
     case 'monthly_expenses':
-      return <ErrorBoundary><MonthlyExpensesWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Monthly Expenses"><MonthlyExpensesWidget /></WidgetErrorBoundary>;
     case 'today_spending':
-      return <ErrorBoundary><TodaySpendingWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Today's Spending"><TodaySpendingWidget /></WidgetErrorBoundary>;
     case 'habit_streak':
-      return <ErrorBoundary><HabitStreakWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Habit Streak"><HabitStreakWidget /></WidgetErrorBoundary>;
     case 'luna_suggestion':
-      return <ErrorBoundary><LunaSuggestionWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Luna Focus Insight"><LunaSuggestionWidget /></WidgetErrorBoundary>;
     case 'ask_luna':
-      return <ErrorBoundary><AskLunaWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Ask Luna AI"><AskLunaWidget /></WidgetErrorBoundary>;
     case 'unread_notifications':
-      return <ErrorBoundary><UnreadNotificationsWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Notifications Alert"><UnreadNotificationsWidget /></WidgetErrorBoundary>;
     case 'today_habits':
     case 'weekly_habits':
-      return <ErrorBoundary><HabitTrackerWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Habit Tracker"><HabitTrackerWidget /></WidgetErrorBoundary>;
     case 'recent_expenses':
-      return <ErrorBoundary><RecentExpensesWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Recent Expenses"><RecentExpensesWidget /></WidgetErrorBoundary>;
     case 'quick_add':
-      return <ErrorBoundary><QuickAddWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Quick Action Shortcuts"><QuickAddWidget /></WidgetErrorBoundary>;
     case 'clock_date':
     case 'today_date':
-      return <ErrorBoundary><ClockDateWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Clock & Date"><ClockDateWidget /></WidgetErrorBoundary>;
     case 'split_balances':
     case 'active_splits':
-      return <ErrorBoundary><SplitBalancesWidget /></ErrorBoundary>;
+      return <WidgetErrorBoundary title="Shared Splits"><SplitBalancesWidget /></WidgetErrorBoundary>;
     default:
       return <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Widget [{id}]</div>;
   }

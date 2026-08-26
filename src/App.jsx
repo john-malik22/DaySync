@@ -28,65 +28,28 @@ import { SummaryPage } from './pages/app/SummaryPage';
 import { SettingsPage } from './pages/app/SettingsPage';
 
 import { CommandPaletteModal } from './components/common/CommandPaletteModal';
-import { QuickAddModal } from './components/common/QuickAddModal';
-import { Plus } from 'lucide-react';
 
 function AppLayout() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = React.useState(false);
-  const [isQuickAddOpen, setIsQuickAddOpen] = React.useState(false);
 
   React.useEffect(() => {
     window.__daysync_openCommandPalette = () => setIsCommandPaletteOpen(true);
-    window.__daysync_openQuickAdd = () => setIsQuickAddOpen(true);
     return () => {
       delete window.__daysync_openCommandPalette;
-      delete window.__daysync_openQuickAdd;
     };
   }, []);
-
-  const handleOpenQuickAdd = (target) => {
-    if (target === 'command_palette') {
-      setIsCommandPaletteOpen(true);
-    } else {
-      setIsQuickAddOpen(true);
-    }
-  };
 
   return (
     <div className="app-shell-layout">
       <Sidebar />
       <div className="main-content-area">
-        <Outlet context={{ openCommandPalette: () => setIsCommandPaletteOpen(true), openQuickAdd: () => setIsQuickAddOpen(true) }} />
+        <Outlet context={{ openCommandPalette: () => setIsCommandPaletteOpen(true) }} />
       </div>
 
-      {/* Floating Global Quick Add Action Button */}
-      <button
-        type="button"
-        onClick={() => setIsQuickAddOpen(true)}
-        aria-label="Global Quick Add"
-        title="Quick Add (Task, Expense, Plan, Habit, Split)"
-        style={{
-          position: 'fixed', bottom: '24px', right: '24px', zIndex: 999,
-          width: '48px', height: '48px', borderRadius: '50%',
-          background: 'var(--accent-primary)', color: '#FFFFFF', border: 'none',
-          boxShadow: '0 6px 20px rgba(108, 99, 255, 0.4)', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'transform 0.18s ease'
-        }}
-      >
-        <Plus size={24} />
-      </button>
-
-      {/* Global Command Palette & Quick Add Modals */}
+      {/* Global Command Palette Overlay */}
       <CommandPaletteModal
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
-        onOpenQuickAdd={handleOpenQuickAdd}
-      />
-
-      <QuickAddModal
-        isOpen={isQuickAddOpen}
-        onClose={() => setIsQuickAddOpen(false)}
       />
     </div>
   );

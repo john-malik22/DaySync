@@ -983,31 +983,33 @@ option {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-md);
-  align-items: stretch;
+  align-items: start;
 }
 
 .widget-size-small {
   grid-column: span 1;
   grid-row: span 1;
-  min-height: 140px;
+  min-height: auto;
+  align-self: start;
 }
 
 .widget-size-wide {
   grid-column: span 2;
   grid-row: span 1;
-  min-height: 180px;
+  min-height: auto;
+  align-self: start;
 }
 
 .widget-size-tall {
   grid-column: span 1;
   grid-row: span 2;
-  min-height: 320px;
+  min-height: 240px;
 }
 
 .widget-size-large {
   grid-column: span 2;
   grid-row: span 2;
-  min-height: 340px;
+  min-height: 260px;
 }
 
 @media (max-width: 1024px) {
@@ -1028,6 +1030,7 @@ option {
     grid-column: span 1;
     grid-row: span 1;
     min-height: auto;
+    align-self: start;
   }
 }
 

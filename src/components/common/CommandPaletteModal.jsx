@@ -43,12 +43,12 @@ export function CommandPaletteModal({ isOpen, onClose, onOpenQuickAdd }) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         if (isOpen) onClose();
-        else onOpenQuickAdd ? onOpenQuickAdd('command_palette') : null;
+        else if (window.__daysync_openCommandPalette) window.__daysync_openCommandPalette();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, onOpenQuickAdd]);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -56,11 +56,11 @@ export function CommandPaletteModal({ isOpen, onClose, onOpenQuickAdd }) {
 
   // Quick Commands
   const commandsList = [
-    { type: 'command', id: 'add_task', label: 'Add Task', icon: Plus, action: () => { onClose(); onOpenQuickAdd && onOpenQuickAdd('task'); } },
-    { type: 'command', id: 'add_expense', label: 'Add Expense', icon: Plus, action: () => { onClose(); onOpenQuickAdd && onOpenQuickAdd('expense'); } },
-    { type: 'command', id: 'add_plan', label: 'Add Plan', icon: Plus, action: () => { onClose(); onOpenQuickAdd && onOpenQuickAdd('plan'); } },
-    { type: 'command', id: 'add_habit', label: 'Add Habit', icon: Plus, action: () => { onClose(); onOpenQuickAdd && onOpenQuickAdd('habit'); } },
-    { type: 'command', id: 'add_split_expense', label: 'Add Split Expense', icon: Plus, action: () => { onClose(); onOpenQuickAdd && onOpenQuickAdd('split_expense'); } }
+    { type: 'command', id: 'add_task', label: 'Add Task', icon: Plus, route: '/app/task' },
+    { type: 'command', id: 'add_expense', label: 'Add Expense', icon: Plus, route: '/app/expenses' },
+    { type: 'command', id: 'add_plan', label: 'Add Plan', icon: Plus, route: '/app/plans' },
+    { type: 'command', id: 'add_habit', label: 'Add Habit', icon: Plus, route: '/app/habits' },
+    { type: 'command', id: 'add_split_expense', label: 'Add Split Expense', icon: Plus, route: '/app/splits' }
   ].filter(c => !query || c.label.toLowerCase().includes(query));
 
   // Page Shortcuts
