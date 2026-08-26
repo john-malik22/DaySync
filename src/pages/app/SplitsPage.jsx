@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -21,12 +22,16 @@ import {
 // Helper utilities for crash-proof member handling
 const getMemberId = (m) => m?.userId || m?.id || '';
 const getMemberName = (m) => m?.userName || m?.name || m?.userEmail || m?.email || 'Member';
+const getMemberEmail = (m) => m?.userEmail || m?.email || '';
 const getMemberInitial = (m) => {
   const name = getMemberName(m);
   return (name[0] || 'M').toUpperCase();
 };
 
 export function SplitsPage() {
+  const { id: routeSplitId } = useParams();
+  const navigate = useNavigate();
+
   const { user } = useAuth();
   const { showToast } = useToast();
   const userId = user?.id;
@@ -34,6 +39,8 @@ export function SplitsPage() {
   const [splits, setSplits] = useState([]);
   const [selectedSplit, setSelectedSplit] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [splitDetailLoading, setSplitDetailLoading] = useState(false);
+  const [splitNotFound, setSplitNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState('expenses'); // 'expenses', 'balances', 'members'
 
   // Modals
@@ -90,6 +97,42 @@ export function SplitsPage() {
     }
   }, [userId, selectedSplit?.id]);
 
+  // Sync route param with backend fetch (Restores Split on page refresh)
+  useEffect(() => {
+    if (!routeSplitId) {
+      setSelectedSplit(null);
+      setSplitNotFound(false);
+      return;
+    }
+
+    if (!userId) return; // Wait for auth initialization on refresh
+
+    let isMounted = true;
+    const loadSplitDetail = async () => {
+      setSplitDetailLoading(true);
+      setSplitNotFound(false);
+      try {
+        const data = await api.getSplitById(routeSplitId);
+        if (isMounted) {
+          setSelectedSplit(data);
+        }
+      } catch (err) {
+        if (isMounted) {
+          if (err?.status === 404) {
+            setSplitNotFound(true);
+          } else if (showToast) {
+            showToast(err?.message || 'Could not load Split details.', 'error');
+          }
+        }
+      } finally {
+        if (isMounted) setSplitDetailLoading(false);
+      }
+    };
+
+    loadSplitDetail();
+    return () => { isMounted = false; };
+  }, [routeSplitId, userId]);
+
   // Polling interval (every 5 seconds when active)
   useEffect(() => {
     fetchSplitsData();
@@ -100,6 +143,19 @@ export function SplitsPage() {
     }, 5000);
     return () => clearInterval(interval);
   }, [fetchSplitsData]);
+
+  // Navigation helpers
+  const handleOpenSplit = (split) => {
+    if (!split?.id) return;
+    setSelectedSplit(split);
+    navigate(`/app/splits/${split.id}`);
+  };
+
+  const handleBackToAllSplits = () => {
+    setSelectedSplit(null);
+    setSplitNotFound(false);
+    navigate('/app/splits');
+  };
 
   // Create Split Handler
   const handleCreateSplit = async (e) => {
@@ -133,7 +189,7 @@ export function SplitsPage() {
       if (showToast) showToast(`Split "${trimmedName}" created!`, 'success');
 
       setSplits(prev => [fullCreated, ...prev.filter(s => s.id !== fullCreated.id)]);
-      setSelectedSplit(fullCreated);
+      handleOpenSplit(fullCreated);
     } catch (err) {
       if (showToast) showToast(err?.message || 'Unable to create this Split.', 'error');
     } finally {
@@ -278,7 +334,7 @@ export function SplitsPage() {
       setJoinPreview(null);
       await fetchSplitsData();
       if (res.split) {
-        setSelectedSplit(res.split);
+        handleOpenSplit(res.split);
       }
     } catch (err) {
       setJoinError(err.message || "Couldn't join the Split right now. Please try again.");
@@ -428,8 +484,25 @@ export function SplitsPage() {
     <div className="page-container" style={{ maxWidth: '920px' }}>
       <PageHeaderRow title="Splits & Group Expenses" />
 
-      {/* VIEW A: LIST OF USER SPLITS */}
-      {!selectedSplit ? (
+      {/* VIEW A: SPLIT NOT FOUND ERROR STATE */}
+      {splitNotFound ? (
+        <div className="glass-card animate-fade-in" style={{ padding: '40px 20px', textAlign: 'center', margin: '20px 0' }}>
+          <AlertCircle size={44} color="var(--accent-danger)" style={{ margin: '0 auto 12px auto' }} />
+          <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', margin: '0 0 8px 0' }}>Split not found.</h3>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+            The requested Split does not exist or you do not have permission to view it.
+          </p>
+          <button type="button" onClick={handleBackToAllSplits} className="btn-primary" style={{ fontSize: '13px', padding: '10px 20px' }}>
+            Back to All Splits
+          </button>
+        </div>
+      ) : splitDetailLoading ? (
+        /* LOADING DETAIL STATE */
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+          Loading Split details...
+        </div>
+      ) : !selectedSplit ? (
+        /* VIEW B: LIST OF ALL USER SPLITS */
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
             <div>
@@ -504,7 +577,7 @@ export function SplitsPage() {
                 return (
                   <div
                     key={split.id}
-                    onClick={() => setSelectedSplit(split)}
+                    onClick={() => handleOpenSplit(split)}
                     className="glass-card clickable animate-fade-in"
                     style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}
                   >
@@ -546,13 +619,13 @@ export function SplitsPage() {
           )}
         </div>
       ) : (
-        /* VIEW B: SELECTED SPLIT DETAIL VIEW */
+        /* VIEW C: SELECTED SPLIT DETAIL VIEW */
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           {/* Back Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
             <button
               type="button"
-              onClick={() => setSelectedSplit(null)}
+              onClick={handleBackToAllSplits}
               className="btn-secondary"
               style={{ fontSize: '12px', padding: '6px 12px' }}
             >
@@ -592,7 +665,7 @@ export function SplitsPage() {
             <div style={{
               padding: '12px 16px', borderRadius: '12px', background: 'var(--bg-secondary)',
               border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center',
-              justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '16px'
+              justify: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '16px'
             }}>
               <div>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Split Code</span>
@@ -847,51 +920,57 @@ export function SplitsPage() {
             <div className="glass-card" style={{ padding: '18px' }}>
               <div style={{ marginBottom: '14px' }}>
                 <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--text-primary)', fontWeight: '700' }}>
-                  Persistent Members ({(selectedSplit.members || []).length})
+                  Members ({(selectedSplit.members || []).length})
                 </h4>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {(selectedSplit.members || []).map((m, idx) => {
-                  const uid = getMemberId(m);
-                  const name = getMemberName(m);
-                  const email = getMemberEmail(m);
-                  const initial = getMemberInitial(m);
+              {(selectedSplit.members || []).length === 0 ? (
+                <div style={{ padding: '12px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                  No members yet.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {(selectedSplit.members || []).map((m, idx) => {
+                    const uid = getMemberId(m);
+                    const name = getMemberName(m);
+                    const email = getMemberEmail(m);
+                    const initial = getMemberInitial(m);
 
-                  return (
-                    <div
-                      key={uid || idx}
-                      style={{
-                        padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-                        border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{
-                          width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-primary)',
-                          color: '#FFFFFF', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}>
-                          {initial}
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                            {name} {uid === userId ? '(You)' : ''}
+                    return (
+                      <div
+                        key={uid || idx}
+                        style={{
+                          padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                          border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{
+                            width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-primary)',
+                            color: '#FFFFFF', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          }}>
+                            {initial}
                           </div>
-                          {email && <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{email}</div>}
+                          <div>
+                            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                              {name} {uid === userId ? '(You)' : ''}
+                            </div>
+                            {email && <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{email}</div>}
+                          </div>
                         </div>
-                      </div>
 
-                      <span style={{
-                        fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: 'var(--radius-full)',
-                        background: m.role === 'owner' ? 'rgba(255, 176, 32, 0.15)' : 'var(--color-primary-soft)',
-                        color: m.role === 'owner' ? 'var(--accent-warning)' : 'var(--accent-primary)'
-                      }}>
-                        {m.role === 'owner' ? 'Owner' : 'Member'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+                        <span style={{
+                          fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: 'var(--radius-full)',
+                          background: m.role === 'owner' ? 'rgba(255, 176, 32, 0.15)' : 'var(--color-primary-soft)',
+                          color: m.role === 'owner' ? 'var(--accent-warning)' : 'var(--accent-primary)'
+                        }}>
+                          {m.role === 'owner' ? 'Owner' : 'Member'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

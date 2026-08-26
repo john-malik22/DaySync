@@ -163,6 +163,7 @@ export default function App() {
                       <Route path="expenses" element={<ExpensesPage />} />
                       <Route path="plans" element={<PlansPage />} />
                       <Route path="splits" element={<SplitsPage />} />
+                      <Route path="splits/:id" element={<SplitsPage />} />
                       <Route path="task" element={<TaskPage />} />
                       <Route path="planner" element={<Navigate to="/app/task" replace />} />
                       <Route path="habits" element={<HabitsPage />} />
