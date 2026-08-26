@@ -3,7 +3,6 @@ import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
-import { ConfirmationModal } from '../../components/common/ConfirmationModal';
 import {
   Users,
   Plus,
@@ -11,17 +10,21 @@ import {
   ArrowLeft,
   CheckCircle2,
   XCircle,
-  Share2,
   DollarSign,
-  UserPlus,
-  Trash2,
-  Check,
-  Clock,
-  Sparkles,
-  Receipt,
-  Search,
-  UserCheck
+  Copy,
+  AlertCircle,
+  QrCode,
+  RefreshCw,
+  Trash2
 } from 'lucide-react';
+
+// Helper utilities for crash-proof member handling
+const getMemberId = (m) => m?.userId || m?.id || '';
+const getMemberName = (m) => m?.userName || m?.name || m?.userEmail || m?.email || 'Member';
+const getMemberInitial = (m) => {
+  const name = getMemberName(m);
+  return (name[0] || 'M').toUpperCase();
+};
 
 export function SplitsPage() {
   const { user } = useAuth();
@@ -29,7 +32,6 @@ export function SplitsPage() {
   const userId = user?.id;
 
   const [splits, setSplits] = useState([]);
-  const [invitations, setInvitations] = useState([]);
   const [selectedSplit, setSelectedSplit] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('expenses'); // 'expenses', 'balances', 'members'
@@ -38,7 +40,6 @@ export function SplitsPage() {
   const [showCreateSplit, setShowCreateSplit] = useState(false);
   const [isCreatingSplit, setIsCreatingSplit] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
-  const [showAddMember, setShowAddMember] = useState(false);
   const [showSettleModal, setShowSettleModal] = useState(false);
 
   // Form States
@@ -54,9 +55,6 @@ export function SplitsPage() {
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [customAmounts, setCustomAmounts] = useState({});
 
-  // Add Member Form
-  const [memberTargetInput, setMemberTargetInput] = useState('');
-
   // Settlement Form
   const [settleToUser, setSettleToUser] = useState('');
   const [settleAmount, setSettleAmount] = useState('');
@@ -68,20 +66,15 @@ export function SplitsPage() {
   const [joinLoading, setJoinLoading] = useState(false);
   const [joinError, setJoinError] = useState('');
 
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [shareModalSplit, setShareModalSplit] = useState(null);
   const [regeneratingCode, setRegeneratingCode] = useState(false);
 
-  // Fetch all user splits & invitations
+  // Fetch all user splits
   const fetchSplitsData = useCallback(async () => {
     if (!userId) return;
     try {
-      const [splitList, inviteList] = await Promise.all([
-        api.getSplits().catch(() => []),
-        api.getMySplitInvitations().catch(() => [])
-      ]);
-      setSplits(Array.isArray(splitList) ? splitList : []);
-      setInvitations(Array.isArray(inviteList) ? inviteList : []);
+      const splitList = await api.getSplits().catch(() => []);
+      const list = Array.isArray(splitList) ? splitList : [];
+      setSplits(list);
 
       // Refresh selected split if currently open
       if (selectedSplit?.id) {
@@ -97,7 +90,7 @@ export function SplitsPage() {
     }
   }, [userId, selectedSplit?.id]);
 
-  // Near-real-time polling interval (every 5 seconds when active)
+  // Polling interval (every 5 seconds when active)
   useEffect(() => {
     fetchSplitsData();
     const interval = setInterval(() => {
@@ -130,21 +123,19 @@ export function SplitsPage() {
       const fullCreated = {
         expenses: [],
         settlements: [],
+        members: [],
         ...created
       };
 
       setShowCreateSplit(false);
       setNewSplitName('');
       setNewSplitDesc('');
-      if (showToast) showToast('Split created.', 'success');
+      if (showToast) showToast(`Split "${trimmedName}" created!`, 'success');
 
-      setSplits(prev => [fullCreated, ...prev]);
+      setSplits(prev => [fullCreated, ...prev.filter(s => s.id !== fullCreated.id)]);
       setSelectedSplit(fullCreated);
     } catch (err) {
-      const userMsg = (err?.status === 404 || err?.type === 'NOT_FOUND')
-        ? 'Unable to create this Split. Please try again.'
-        : (err?.message || 'Unable to create this Split. Please try again.');
-      if (showToast) showToast(userMsg, 'error');
+      if (showToast) showToast(err?.message || 'Unable to create this Split.', 'error');
     } finally {
       setIsCreatingSplit(false);
     }
@@ -153,11 +144,12 @@ export function SplitsPage() {
   // Open Add Expense modal
   const handleOpenAddExpense = () => {
     if (!selectedSplit) return;
+    const members = selectedSplit.members || [];
     setExpDesc('');
     setExpAmount('');
     setExpPaidBy(userId);
     setExpSplitMethod('EQUAL');
-    setSelectedParticipants(selectedSplit.members.map(m => m.userId));
+    setSelectedParticipants(members.map(m => getMemberId(m)).filter(Boolean));
     setCustomAmounts({});
     setShowAddExpense(true);
   };
@@ -184,7 +176,6 @@ export function SplitsPage() {
         owedAmount: Math.round(share * 100) / 100
       }));
     } else {
-      // Custom Amount
       let customSum = 0;
       participantsData = selectedParticipants.map(uid => {
         const amt = parseFloat(customAmounts[uid] || 0);
@@ -209,49 +200,11 @@ export function SplitsPage() {
 
       setShowAddExpense(false);
       if (showToast) showToast(`Added expense "${expDesc}" to ${selectedSplit.name}!`, 'success');
-      const refreshed = await api.getSplitById(selectedSplit.id);
-      setSelectedSplit(refreshed);
+      const refreshed = await api.getSplitById(selectedSplit.id).catch(() => null);
+      if (refreshed) setSelectedSplit(refreshed);
       await fetchSplitsData();
     } catch (err) {
       if (showToast) showToast(err.message || 'Could not add expense.', 'error');
-    }
-  };
-
-  // Invite Member Handler
-  const handleInviteMember = async (e) => {
-    e.preventDefault();
-    if (!memberTargetInput.trim() || !selectedSplit) return;
-
-    try {
-      const res = await api.inviteSplitMember(selectedSplit.id, memberTargetInput.trim());
-      setShowAddMember(false);
-      setMemberTargetInput('');
-      if (showToast) showToast(res.message || 'Invitation sent successfully!', 'success');
-      const refreshed = await api.getSplitById(selectedSplit.id);
-      setSelectedSplit(refreshed);
-    } catch (err) {
-      if (showToast) showToast(err.message || 'Could not send invitation.', 'error');
-    }
-  };
-
-  // Accept / Decline Invitation
-  const handleAcceptInvite = async (token) => {
-    try {
-      await api.acceptSplitInvitation(token);
-      if (showToast) showToast('Joined Split successfully!', 'success');
-      await fetchSplitsData();
-    } catch (err) {
-      if (showToast) showToast(err.message || 'Could not accept invitation.', 'error');
-    }
-  };
-
-  const handleDeclineInvite = async (token) => {
-    try {
-      await api.declineSplitInvitation(token);
-      if (showToast) showToast('Invitation declined.', 'info');
-      await fetchSplitsData();
-    } catch (err) {
-      if (showToast) showToast(err.message || 'Could not decline invitation.', 'error');
     }
   };
 
@@ -269,8 +222,8 @@ export function SplitsPage() {
       setSettleToUser('');
       setSettleAmount('');
       if (showToast) showToast('Settlement marked as paid!', 'success');
-      const refreshed = await api.getSplitById(selectedSplit.id);
-      setSelectedSplit(refreshed);
+      const refreshed = await api.getSplitById(selectedSplit.id).catch(() => null);
+      if (refreshed) setSelectedSplit(refreshed);
       await fetchSplitsData();
     } catch (err) {
       if (showToast) showToast(err.message || 'Could not record settlement.', 'error');
@@ -334,50 +287,24 @@ export function SplitsPage() {
     }
   };
 
-  const handleShareSplit = (split) => {
-    setShareModalSplit(split);
-    setShowShareModal(true);
-  };
-
   const handleCopyCode = async (codeToCopy) => {
-    const code = codeToCopy || shareModalSplit?.shareCode;
+    const code = codeToCopy || selectedSplit?.shareCode;
     if (!code) return;
     try {
       await navigator.clipboard.writeText(code);
       if (showToast) showToast('Split code copied to clipboard!', 'success');
     } catch (e) {
-      if (showToast) showToast(`Share Code: ${code}`, 'info');
-    }
-  };
-
-  const handleNativeShare = async (split) => {
-    const code = split?.shareCode || shareModalSplit?.shareCode;
-    if (!code) return;
-    const shareText = `Join my DaySync Split: ${split?.name || 'Group'}\nSplit Code: ${code}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Join ${split?.name || 'DaySync Split'}`,
-          text: shareText
-        });
-      } catch (err) {
-        handleCopyCode(code);
-      }
-    } else {
-      handleCopyCode(code);
+      if (showToast) showToast(`Split Code: ${code}`, 'info');
     }
   };
 
   const handleRegenerateCode = async () => {
-    if (!shareModalSplit?.id) return;
+    if (!selectedSplit?.id) return;
     setRegeneratingCode(true);
     try {
-      const res = await api.regenerateSplitCode(shareModalSplit.id);
+      const res = await api.regenerateSplitCode(selectedSplit.id);
       if (showToast) showToast('Share code regenerated successfully.', 'success');
-      setShareModalSplit(prev => prev ? { ...prev, shareCode: res.shareCode } : prev);
-      if (selectedSplit && selectedSplit.id === shareModalSplit.id) {
-        setSelectedSplit(prev => prev ? { ...prev, shareCode: res.shareCode } : prev);
-      }
+      setSelectedSplit(prev => prev ? { ...prev, shareCode: res.shareCode } : prev);
       await fetchSplitsData();
     } catch (err) {
       if (showToast) showToast(err.message || 'Could not regenerate code.', 'error');
@@ -386,12 +313,13 @@ export function SplitsPage() {
     }
   };
 
-  // Calculations for current selected split
+  // Crash-proof calculations for current selected split
   const membersMap = React.useMemo(() => {
-    if (!selectedSplit?.members) return {};
+    if (!selectedSplit?.members || !Array.isArray(selectedSplit.members)) return {};
     const map = {};
     selectedSplit.members.forEach(m => {
-      map[m.userId] = m.userName || m.userEmail || `User ${m.userId.slice(-4)}`;
+      const uid = getMemberId(m);
+      if (uid) map[uid] = getMemberName(m);
     });
     return map;
   }, [selectedSplit]);
@@ -400,41 +328,54 @@ export function SplitsPage() {
   const { totalSpent, myNetBalance, memberBalances, suggestedSettlements } = React.useMemo(() => {
     if (!selectedSplit) return { totalSpent: 0, myNetBalance: 0, memberBalances: {}, suggestedSettlements: [] };
 
-    const expenses = selectedSplit.expenses || [];
-    const settlements = selectedSplit.settlements || [];
-    const members = selectedSplit.members || [];
+    const expenses = Array.isArray(selectedSplit.expenses) ? selectedSplit.expenses : [];
+    const settlements = Array.isArray(selectedSplit.settlements) ? selectedSplit.settlements : [];
+    const members = Array.isArray(selectedSplit.members) ? selectedSplit.members : [];
 
     let total = 0;
     const balances = {};
-    members.forEach(m => { balances[m.userId] = 0; });
+    members.forEach(m => {
+      const uid = getMemberId(m);
+      if (uid) balances[uid] = 0;
+    });
 
     // Process Expenses
     expenses.forEach(exp => {
-      total += (exp.amount || 0);
-      const paidBy = exp.paidByUserId;
-      if (balances[paidBy] !== undefined) {
-        balances[paidBy] += exp.amount;
+      const amt = parseFloat(exp.amount) || 0;
+      total += amt;
+      const paidBy = exp.paidByUserId || exp.paidBy;
+      if (paidBy && balances[paidBy] !== undefined) {
+        balances[paidBy] += amt;
       }
-      (exp.participants || []).forEach(p => {
-        if (balances[p.userId] !== undefined) {
-          balances[p.userId] -= (p.owedAmount || 0);
+
+      const participants = Array.isArray(exp.participants) ? exp.participants : (Array.isArray(exp.splitWith) ? exp.splitWith : []);
+      const count = participants.length || 1;
+
+      participants.forEach(p => {
+        const pUid = typeof p === 'string' ? p : getMemberId(p);
+        const owed = typeof p === 'object' && p?.owedAmount !== undefined ? parseFloat(p.owedAmount) : (amt / count);
+        if (pUid && balances[pUid] !== undefined) {
+          balances[pUid] -= (owed || 0);
         }
       });
     });
 
     // Process Completed Settlements
     settlements.forEach(s => {
-      if (s.status === 'completed') {
-        if (balances[s.fromUserId] !== undefined) balances[s.fromUserId] += s.amount;
-        if (balances[s.toUserId] !== undefined) balances[s.toUserId] -= s.amount;
+      if (s.status === 'completed' || s.from) {
+        const fromId = s.fromUserId || s.from;
+        const toId = s.toUserId || s.to;
+        const amt = parseFloat(s.amount) || 0;
+        if (fromId && balances[fromId] !== undefined) balances[fromId] += amt;
+        if (toId && balances[toId] !== undefined) balances[toId] -= amt;
       }
     });
 
     const myNet = balances[userId] || 0;
 
     // Debt Simplification Algorithm
-    const debtors = [];  // net < 0
-    const creditors = []; // net > 0
+    const debtors = [];
+    const creditors = [];
 
     Object.entries(balances).forEach(([uid, net]) => {
       const rounded = Math.round(net * 100) / 100;
@@ -474,54 +415,18 @@ export function SplitsPage() {
     };
   }, [selectedSplit, userId, membersMap]);
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Recently';
+    try {
+      return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   return (
     <div className="page-container" style={{ maxWidth: '920px' }}>
-      <PageHeaderRow title="Splits & Shared Expenses" />
-
-      {/* Pending Invitations Banner */}
-      {invitations.length > 0 && !selectedSplit && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: 'var(--space-md)' }}>
-          {invitations.map(inv => (
-            <div
-              key={inv.id}
-              className="glass-card animate-fade-in"
-              style={{
-                padding: '12px 16px', background: 'rgba(108, 99, 255, 0.12)',
-                border: '1px solid var(--accent-primary)', display: 'flex', alignItems: 'center',
-                justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px'
-              }}
-            >
-              <div>
-                <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Users size={16} color="var(--accent-primary)" /> Invitation to join "{inv.splitName || 'Shared Split'}"
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  Invited by {inv.inviterName || 'a DaySync user'}.
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleAcceptInvite(inv.token)}
-                  className="btn-primary"
-                  style={{ fontSize: '12px', padding: '6px 14px', background: 'var(--accent-success)', border: 'none' }}
-                >
-                  <CheckCircle2 size={14} /> Accept
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDeclineInvite(inv.token)}
-                  className="btn-secondary"
-                  style={{ fontSize: '12px', padding: '6px 14px', color: 'var(--accent-danger)' }}
-                >
-                  <XCircle size={14} /> Decline
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <PageHeaderRow title="Splits & Group Expenses" />
 
       {/* VIEW A: LIST OF USER SPLITS */}
       {!selectedSplit ? (
@@ -556,7 +461,11 @@ export function SplitsPage() {
             </div>
           </div>
 
-          {splits.length === 0 ? (
+          {loading ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+              Loading your Splits...
+            </div>
+          ) : splits.length === 0 ? (
             <div className="glass-card" style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
               <Users size={44} color="var(--accent-primary)" style={{ margin: '0 auto 12px auto', opacity: 0.7 }} />
               <h4 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', margin: '0 0 6px 0' }}>
@@ -587,35 +496,31 @@ export function SplitsPage() {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-md)' }}>
               {splits.map(split => {
-                const memberCount = (split.members || []).length;
-                const totalExp = (split.expenses || []).reduce((a, b) => a + (b.amount || 0), 0);
+                const members = Array.isArray(split.members) ? split.members : [];
+                const expenses = Array.isArray(split.expenses) ? split.expenses : [];
+                const memberCount = members.length || 1;
+                const totalExp = expenses.reduce((a, b) => a + (parseFloat(b.amount) || 0), 0);
 
                 return (
                   <div
                     key={split.id}
-                    className="glass-card animate-fade-in"
                     onClick={() => setSelectedSplit(split)}
-                    style={{
-                      padding: '18px', cursor: 'pointer', display: 'flex', flexDirection: 'column',
-                      gap: '12px', border: '1px solid var(--border-color)', transition: 'all 0.2s ease'
-                    }}
+                    className="glass-card clickable animate-fade-in"
+                    style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)', fontWeight: '700' }}>
+                        <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: '700' }}>
                           {split.name}
                         </h4>
                         {split.description && (
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>
                             {split.description}
-                          </div>
+                          </p>
                         )}
                       </div>
-                      <span style={{
-                        fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: 'var(--radius-full)',
-                        background: 'var(--color-primary-soft)', color: 'var(--accent-primary)'
-                      }}>
-                        {memberCount} Member{memberCount > 1 ? 's' : ''}
+                      <span className="badge" style={{ fontSize: '11px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
+                        {memberCount} member{memberCount === 1 ? '' : 's'}
                       </span>
                     </div>
 
@@ -631,7 +536,7 @@ export function SplitsPage() {
                       </div>
 
                       <span style={{ fontSize: '12px', color: 'var(--accent-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        Open <ArrowRight size={14} />
+                        View Split <ArrowRight size={14} />
                       </span>
                     </div>
                   </div>
@@ -643,7 +548,7 @@ export function SplitsPage() {
       ) : (
         /* VIEW B: SELECTED SPLIT DETAIL VIEW */
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-          {/* Back Header & Controls */}
+          {/* Back Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
             <button
               type="button"
@@ -653,36 +558,17 @@ export function SplitsPage() {
             >
               <ArrowLeft size={14} /> Back to All Splits
             </button>
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={() => setShowAddMember(true)}
-                className="btn-secondary"
-                style={{ fontSize: '12px', padding: '6px 12px' }}
-              >
-                <UserPlus size={14} /> Add Members
-              </button>
-              <button
-                type="button"
-                onClick={() => handleShareSplit(selectedSplit)}
-                className="btn-secondary"
-                style={{ fontSize: '12px', padding: '6px 12px' }}
-              >
-                <Share2 size={14} /> Share Invite Link
-              </button>
-            </div>
           </div>
 
           {/* Split Summary Header Card */}
           <div className="glass-card" style={{ padding: '20px', border: '1px solid var(--accent-primary)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.35rem', color: 'var(--text-primary)', fontWeight: '800' }}>
+                <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--text-primary)', fontWeight: '800' }}>
                   {selectedSplit.name}
                 </h2>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>Members: {(selectedSplit.members || []).map(m => m.userName || m.userEmail).join(' • ')}</span>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  Members: {(selectedSplit.members || []).map(m => getMemberName(m)).join(' • ')}
                 </div>
               </div>
 
@@ -699,6 +585,43 @@ export function SplitsPage() {
                     ? `You owe ${selectedSplit.currency || '₹'}${Math.abs(myNetBalance).toFixed(2)}`
                     : 'Settled ✓'}
                 </div>
+              </div>
+            </div>
+
+            {/* Split Code Block - Compact & Mobile Friendly */}
+            <div style={{
+              padding: '12px 16px', borderRadius: '12px', background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center',
+              justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '16px'
+            }}>
+              <div>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Split Code</span>
+                <div style={{ fontSize: '1.3rem', fontWeight: '800', letterSpacing: '2px', color: 'var(--accent-primary)', marginTop: '2px', userSelect: 'all' }}>
+                  {selectedSplit.shareCode || 'GOA-7K4P2'}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => handleCopyCode(selectedSplit.shareCode)}
+                  className="btn-secondary"
+                  style={{ fontSize: '12px', padding: '7px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Copy size={14} /> Copy Code
+                </button>
+                {selectedSplit.ownerId === userId && (
+                  <button
+                    type="button"
+                    onClick={handleRegenerateCode}
+                    disabled={regeneratingCode}
+                    className="btn-secondary"
+                    style={{ fontSize: '12px', padding: '7px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    title="Regenerate Share Code"
+                  >
+                    <RefreshCw size={13} /> {regeneratingCode ? '...' : ''}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -721,7 +644,7 @@ export function SplitsPage() {
                   className="btn-primary"
                   style={{ fontSize: '13px', padding: '8px 16px' }}
                 >
-                  <Plus size={15} /> Add Shared Expense
+                  <Plus size={15} /> Add Expense
                 </button>
                 <button
                   type="button"
@@ -735,9 +658,10 @@ export function SplitsPage() {
             </div>
           </div>
 
-          {/* Sub-Tabs: Expenses, Balances & Settlements, Members */}
+          {/* Sub-Tabs: Expenses, Balances, Members */}
           <div className="scroll-row" style={{ gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
             <button
+              type="button"
               onClick={() => setActiveTab('expenses')}
               style={{
                 padding: '6px 16px', borderRadius: 'var(--radius-full)', fontSize: '12px', fontWeight: '700',
@@ -746,9 +670,10 @@ export function SplitsPage() {
                 color: activeTab === 'expenses' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer'
               }}
             >
-              Expense History ({(selectedSplit.expenses || []).length})
+              Recent Expenses ({(selectedSplit.expenses || []).length})
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('balances')}
               style={{
                 padding: '6px 16px', borderRadius: 'var(--radius-full)', fontSize: '12px', fontWeight: '700',
@@ -757,9 +682,10 @@ export function SplitsPage() {
                 color: activeTab === 'balances' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer'
               }}
             >
-              Balances & Settlements ({suggestedSettlements.length})
+              Balances ({suggestedSettlements.length})
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('members')}
               style={{
                 padding: '6px 16px', borderRadius: 'var(--radius-full)', fontSize: '12px', fontWeight: '700',
@@ -777,13 +703,16 @@ export function SplitsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {(selectedSplit.expenses || []).length === 0 ? (
                 <div className="glass-card" style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
-                  No shared expenses logged in this Split yet. Tap <strong>+ Add Shared Expense</strong> to start!
+                  No shared expenses logged in this Split yet. Tap <strong>+ Add Expense</strong> to start!
                 </div>
               ) : (
                 (selectedSplit.expenses || []).map(exp => {
-                  const paidByName = membersMap[exp.paidByUserId] || 'Member';
-                  const myParticipant = (exp.participants || []).find(p => p.userId === userId);
-                  const isPayer = exp.paidByUserId === userId;
+                  const paidByUid = exp.paidByUserId || exp.paidBy;
+                  const paidByName = membersMap[paidByUid] || exp.paidByName || 'Member';
+                  const isPayer = paidByUid === userId;
+                  const participants = Array.isArray(exp.participants) ? exp.participants : (Array.isArray(exp.splitWith) ? exp.splitWith : []);
+                  const myParticipant = participants.find(p => (typeof p === 'object' ? (p.userId === userId || p.id === userId) : p === userId));
+                  const owedAmount = myParticipant?.owedAmount !== undefined ? parseFloat(myParticipant.owedAmount) : ((parseFloat(exp.amount) || 0) / (participants.length || 1));
 
                   return (
                     <div
@@ -793,7 +722,7 @@ export function SplitsPage() {
                     >
                       <div>
                         <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                          {exp.description}
+                          {exp.description || exp.title || 'Expense'}
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                           Paid by <strong>{isPayer ? 'You' : paidByName}</strong> • {selectedSplit.currency || '₹'}{exp.amount} total
@@ -803,16 +732,16 @@ export function SplitsPage() {
                       <div style={{ textAlign: 'right' }}>
                         {isPayer ? (
                           <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-success)' }}>
-                            You lent {selectedSplit.currency || '₹'}{(exp.amount - (myParticipant?.owedAmount || 0)).toFixed(2)}
+                            You lent {selectedSplit.currency || '₹'}{(exp.amount - owedAmount).toFixed(2)}
                           </div>
                         ) : myParticipant ? (
                           <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-danger)' }}>
-                            Your share: {selectedSplit.currency || '₹'}{myParticipant.owedAmount.toFixed(2)}
+                            Your share: {selectedSplit.currency || '₹'}{owedAmount.toFixed(2)}
                           </div>
                         ) : (
                           <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Not involved</div>
                         )}
-                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{formatDate(exp.date)}</div>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{formatDate(exp.date || exp.createdAt)}</div>
                       </div>
                     </div>
                   );
@@ -821,10 +750,9 @@ export function SplitsPage() {
             </div>
           )}
 
-          {/* TAB CONTENT 2: BALANCES & SIMPLIFIED SETTLEMENTS */}
+          {/* TAB CONTENT 2: BALANCES & SETTLEMENTS */}
           {activeTab === 'balances' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {/* Member Individual Balances */}
               <div className="glass-card" style={{ padding: '16px' }}>
                 <h4 style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-primary)', fontWeight: '700' }}>
                   Member Balances
@@ -858,7 +786,6 @@ export function SplitsPage() {
                 </div>
               </div>
 
-              {/* Simplified Settlement Plan */}
               <div className="glass-card" style={{ padding: '16px' }}>
                 <h4 style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-primary)', fontWeight: '700' }}>
                   Suggested Settlements
@@ -903,7 +830,7 @@ export function SplitsPage() {
                               className="btn-primary"
                               style={{ fontSize: '12px', padding: '6px 14px', background: 'var(--accent-success)', border: 'none' }}
                             >
-                              <CheckCircle2 size={14} /> Mark as Paid
+                              <CheckCircle2 size={14} /> Settle Up
                             </button>
                           )}
                         </div>
@@ -918,53 +845,52 @@ export function SplitsPage() {
           {/* TAB CONTENT 3: MEMBERS */}
           {activeTab === 'members' && (
             <div className="glass-card" style={{ padding: '18px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <div style={{ marginBottom: '14px' }}>
                 <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--text-primary)', fontWeight: '700' }}>
                   Persistent Members ({(selectedSplit.members || []).length})
                 </h4>
-                <button
-                  type="button"
-                  onClick={() => setShowAddMember(true)}
-                  className="btn-secondary"
-                  style={{ fontSize: '12px', padding: '4px 10px' }}
-                >
-                  <UserPlus size={14} /> Add Member
-                </button>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {(selectedSplit.members || []).map(m => (
-                  <div
-                    key={m.userId}
-                    style={{
-                      padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-                      border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{
-                        width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-primary)',
-                        color: '#FFFFFF', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                      }}>
-                        {(m.userName || m.userEmail || 'U')[0].toUpperCase()}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                          {m.userName || m.userEmail} {m.userId === userId ? '(You)' : ''}
-                        </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{m.userEmail || 'DaySync Member'}</div>
-                      </div>
-                    </div>
+                {(selectedSplit.members || []).map((m, idx) => {
+                  const uid = getMemberId(m);
+                  const name = getMemberName(m);
+                  const email = getMemberEmail(m);
+                  const initial = getMemberInitial(m);
 
-                    <span style={{
-                      fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: 'var(--radius-full)',
-                      background: m.role === 'owner' ? 'rgba(255, 176, 32, 0.15)' : 'var(--color-primary-soft)',
-                      color: m.role === 'owner' ? 'var(--accent-warning)' : 'var(--accent-primary)'
-                    }}>
-                      {m.role === 'owner' ? 'Owner' : 'Member'}
-                    </span>
-                  </div>
-                ))}
+                  return (
+                    <div
+                      key={uid || idx}
+                      style={{
+                        padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{
+                          width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-primary)',
+                          color: '#FFFFFF', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                          {initial}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                            {name} {uid === userId ? '(You)' : ''}
+                          </div>
+                          {email && <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{email}</div>}
+                        </div>
+                      </div>
+
+                      <span style={{
+                        fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: 'var(--radius-full)',
+                        background: m.role === 'owner' ? 'rgba(255, 176, 32, 0.15)' : 'var(--color-primary-soft)',
+                        color: m.role === 'owner' ? 'var(--accent-warning)' : 'var(--accent-primary)'
+                      }}>
+                        {m.role === 'owner' ? 'Owner' : 'Member'}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -979,24 +905,29 @@ export function SplitsPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
         }}>
           <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '420px', padding: '24px' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', color: 'var(--text-primary)' }}>Create New Shared Split</h3>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', color: 'var(--text-primary)' }}>
+              Create New Split
+            </h3>
+
             <form onSubmit={handleCreateSplit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Split Name</label>
                 <input
                   type="text"
-                  placeholder="e.g. Goa Trip, Flatmates, Dinner"
+                  placeholder="e.g. Goa Trip, Apartment Rent"
                   value={newSplitName}
                   onChange={(e) => setNewSplitName(e.target.value)}
+                  autoFocus
+                  required
                   style={{ width: '100%', padding: '9px 12px', fontSize: '13px', marginTop: '4px' }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Optional Description</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Description (Optional)</label>
                 <input
                   type="text"
-                  placeholder="e.g. Beach house & food expenses"
+                  placeholder="e.g. Weekend getaway expenses"
                   value={newSplitDesc}
                   onChange={(e) => setNewSplitDesc(e.target.value)}
                   style={{ width: '100%', padding: '9px 12px', fontSize: '13px', marginTop: '4px' }}
@@ -1004,21 +935,10 @@ export function SplitsPage() {
               </div>
 
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '8px' }}>
-                <button
-                  type="button"
-                  disabled={isCreatingSplit}
-                  onClick={() => setShowCreateSplit(false)}
-                  className="btn-secondary"
-                  style={{ fontSize: '12px', padding: '8px 14px' }}
-                >
+                <button type="button" onClick={() => setShowCreateSplit(false)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 14px' }}>
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={isCreatingSplit}
-                  className="btn-primary"
-                  style={{ fontSize: '12px', padding: '8px 16px', opacity: isCreatingSplit ? 0.7 : 1 }}
-                >
+                <button type="submit" disabled={isCreatingSplit} className="btn-primary" style={{ fontSize: '12px', padding: '8px 16px' }}>
                   {isCreatingSplit ? 'Creating...' : 'Create Split'}
                 </button>
               </div>
@@ -1027,14 +947,14 @@ export function SplitsPage() {
         </div>
       )}
 
-      {/* MODAL 2: ADD SHARED EXPENSE */}
+      {/* MODAL 2: ADD EXPENSE */}
       {showAddExpense && selectedSplit && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', zIndex: 1100,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
         }}>
-          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto', padding: '24px' }}>
+          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '440px', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
             <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', color: 'var(--text-primary)' }}>
               Add Expense to "{selectedSplit.name}"
             </h3>
@@ -1044,9 +964,11 @@ export function SplitsPage() {
                 <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Description</label>
                 <input
                   type="text"
-                  placeholder="e.g. Dinner, Fuel, Hotel"
+                  placeholder="e.g. Dinner, Fuel, Grocery"
                   value={expDesc}
                   onChange={(e) => setExpDesc(e.target.value)}
+                  autoFocus
+                  required
                   style={{ width: '100%', padding: '9px 12px', fontSize: '13px', marginTop: '4px' }}
                 />
               </div>
@@ -1059,6 +981,7 @@ export function SplitsPage() {
                   placeholder="0.00"
                   value={expAmount}
                   onChange={(e) => setExpAmount(e.target.value)}
+                  required
                   style={{ width: '100%', padding: '9px 12px', fontSize: '13px', marginTop: '4px' }}
                 />
               </div>
@@ -1070,11 +993,14 @@ export function SplitsPage() {
                   onChange={(e) => setExpPaidBy(e.target.value)}
                   style={{ width: '100%', padding: '9px 12px', fontSize: '13px', marginTop: '4px' }}
                 >
-                  {selectedSplit.members.map(m => (
-                    <option key={m.userId} value={m.userId}>
-                      {m.userId === userId ? 'You' : (m.userName || m.userEmail)}
-                    </option>
-                  ))}
+                  {(selectedSplit.members || []).map(m => {
+                    const uid = getMemberId(m);
+                    return (
+                      <option key={uid} value={uid}>
+                        {uid === userId ? 'You' : getMemberName(m)}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
@@ -1084,57 +1010,62 @@ export function SplitsPage() {
                   <button
                     type="button"
                     onClick={() => setExpSplitMethod('EQUAL')}
-                    className={expSplitMethod === 'EQUAL' ? 'btn-primary' : 'btn-secondary'}
-                    style={{ flex: 1, fontSize: '12px', padding: '6px' }}
+                    style={{
+                      flex: 1, padding: '8px', fontSize: '12px', fontWeight: '700', borderRadius: 'var(--radius-sm)',
+                      border: expSplitMethod === 'EQUAL' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                      background: expSplitMethod === 'EQUAL' ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                      color: expSplitMethod === 'EQUAL' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer'
+                    }}
                   >
-                    Equal Split
+                    Split Equally
                   </button>
                   <button
                     type="button"
                     onClick={() => setExpSplitMethod('CUSTOM')}
-                    className={expSplitMethod === 'CUSTOM' ? 'btn-primary' : 'btn-secondary'}
-                    style={{ flex: 1, fontSize: '12px', padding: '6px' }}
+                    style={{
+                      flex: 1, padding: '8px', fontSize: '12px', fontWeight: '700', borderRadius: 'var(--radius-sm)',
+                      border: expSplitMethod === 'CUSTOM' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                      background: expSplitMethod === 'CUSTOM' ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                      color: expSplitMethod === 'CUSTOM' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer'
+                    }}
                   >
-                    Custom Amounts
+                    Custom Share
                   </button>
                 </div>
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Split Between Members</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
-                  {selectedSplit.members.map(m => {
-                    const isChecked = selectedParticipants.includes(m.userId);
+                <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '4px', display: 'block' }}>
+                  Split Between Members
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '160px', overflowY: 'auto' }}>
+                  {(selectedSplit.members || []).map(m => {
+                    const uid = getMemberId(m);
+                    const isChecked = selectedParticipants.includes(uid);
                     return (
-                      <div
-                        key={m.userId}
-                        style={{
-                          padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-                          border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-                        }}
-                      >
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                      <div key={uid} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                           <input
                             type="checkbox"
                             checked={isChecked}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setSelectedParticipants(prev => [...prev, m.userId]);
+                                setSelectedParticipants(prev => [...prev, uid]);
                               } else {
-                                setSelectedParticipants(prev => prev.filter(id => id !== m.userId));
+                                setSelectedParticipants(prev => prev.filter(id => id !== uid));
                               }
                             }}
                             style={{ accentColor: 'var(--accent-primary)' }}
                           />
-                          <span>{m.userId === userId ? 'You' : (m.userName || m.userEmail)}</span>
+                          <span>{uid === userId ? 'You' : getMemberName(m)}</span>
                         </label>
 
                         {expSplitMethod === 'CUSTOM' && isChecked && (
                           <input
                             type="number"
                             placeholder="Amount (₹)"
-                            value={customAmounts[m.userId] || ''}
-                            onChange={(e) => setCustomAmounts({ ...customAmounts, [m.userId]: e.target.value })}
+                            value={customAmounts[uid] || ''}
+                            onChange={(e) => setCustomAmounts({ ...customAmounts, [uid]: e.target.value })}
                             style={{ width: '100px', padding: '4px 8px', fontSize: '12px' }}
                           />
                         )}
@@ -1157,44 +1088,7 @@ export function SplitsPage() {
         </div>
       )}
 
-      {/* MODAL 3: ADD / INVITE MEMBER */}
-      {showAddMember && selectedSplit && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', zIndex: 1100,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
-        }}>
-          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '420px', padding: '24px' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', color: 'var(--text-primary)' }}>
-              Invite Member to "{selectedSplit.name}"
-            </h3>
-
-            <form onSubmit={handleInviteMember} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>DaySync Email or Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. bhoomi@daysync.ai or Rahul"
-                  value={memberTargetInput}
-                  onChange={(e) => setMemberTargetInput(e.target.value)}
-                  style={{ width: '100%', padding: '9px 12px', fontSize: '13px', marginTop: '4px' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '8px' }}>
-                <button type="button" onClick={() => setShowAddMember(false)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 14px' }}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary" style={{ fontSize: '12px', padding: '8px 16px' }}>
-                  Send Invitation
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 4: SETTLE UP */}
+      {/* MODAL 3: SETTLE UP */}
       {showSettleModal && selectedSplit && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -1215,11 +1109,14 @@ export function SplitsPage() {
                   style={{ width: '100%', padding: '9px 12px', fontSize: '13px', marginTop: '4px' }}
                 >
                   <option value="">Select Member...</option>
-                  {selectedSplit.members.filter(m => m.userId !== userId).map(m => (
-                    <option key={m.userId} value={m.userId}>
-                      {m.userName || m.userEmail}
-                    </option>
-                  ))}
+                  {(selectedSplit.members || []).filter(m => getMemberId(m) !== userId).map(m => {
+                    const uid = getMemberId(m);
+                    return (
+                      <option key={uid} value={uid}>
+                        {getMemberName(m)}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
@@ -1248,7 +1145,7 @@ export function SplitsPage() {
         </div>
       )}
 
-      {/* MODAL 5: JOIN WITH CODE (COMPACT MOBILE FRIENDLY MODAL) */}
+      {/* MODAL 4: JOIN WITH CODE (COMPACT MOBILE FRIENDLY MODAL) */}
       {showJoinModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -1317,51 +1214,6 @@ export function SplitsPage() {
                   </button>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 6: SHARE CODE POPUP */}
-      {showShareModal && shareModalSplit && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', zIndex: 1100,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
-        }}>
-          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '380px', padding: '24px', borderRadius: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Invite Friends</h3>
-              <button type="button" onClick={() => setShowShareModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                <XCircle size={20} />
-              </button>
-            </div>
-
-            <div style={{ textAlign: 'center', padding: '16px 0' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Share Code for "{shareModalSplit.name}"</span>
-              <div style={{ fontSize: '1.6rem', fontWeight: '800', letterSpacing: '3px', color: 'var(--accent-primary)', marginTop: '6px', userSelect: 'all' }}>
-                {shareModalSplit.shareCode || 'GOA-7K4P2'}
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
-              <button type="button" onClick={() => handleCopyCode(shareModalSplit.shareCode)} className="btn-secondary" style={{ flex: 1, justifyContent: 'center', fontSize: '12px', padding: '9px', gap: '6px' }}>
-                Copy Code
-              </button>
-              <button type="button" onClick={() => handleNativeShare(shareModalSplit)} className="btn-primary" style={{ flex: 1, justifyContent: 'center', fontSize: '12px', padding: '9px', gap: '6px' }}>
-                Share
-              </button>
-            </div>
-
-            {shareModalSplit.ownerId === userId && (
-              <button
-                type="button"
-                onClick={handleRegenerateCode}
-                disabled={regeneratingCode}
-                style={{ width: '100%', background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '11px', marginTop: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-              >
-                <RefreshCw size={13} /> {regeneratingCode ? 'Regenerating...' : 'Regenerate Code'}
-              </button>
             )}
           </div>
         </div>

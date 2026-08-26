@@ -1292,9 +1292,21 @@ app.post('/api/privacy/clear-history', authenticate, (req, res) => {
 app.get('/api/splits', authenticate, (req, res) => {
   const store = db.read();
   const userId = req.user.id;
+  store.splits = store.splits || [];
 
-  const userSplits = (store.splits || []).filter(s =>
-    (s.members || []).some(m => m.userId === userId)
+  let modified = false;
+  store.splits.forEach(s => {
+    if (!s.shareCode) {
+      s.shareCode = generateSplitShareCode(s.name);
+      s.codeActive = true;
+      modified = true;
+    }
+  });
+  if (modified) db.write(store);
+
+  const userSplits = store.splits.filter(s =>
+    (s.members || []).some(m => (m.userId === userId || m.id === userId)) ||
+    s.ownerId === userId
   );
 
   res.json(userSplits);
@@ -1312,18 +1324,28 @@ app.post('/api/splits', authenticate, (req, res) => {
     return res.status(400).json({ error: 'Split name is required.' });
   }
 
+  let shareCode = generateSplitShareCode(name.trim());
+  while (store.splits.some(s => s.shareCode === shareCode)) {
+    shareCode = generateSplitShareCode(name.trim());
+  }
+
   const newSplit = {
     id: `split_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
     name: name.trim(),
     description: description ? description.trim() : '',
     currency: currency || '₹',
+    shareCode,
+    codeActive: true,
     ownerId: userId,
     members: [
       {
         userId,
+        id: userId,
         role: 'owner',
         userName: userObj?.name || 'Owner',
+        name: userObj?.name || 'Owner',
         userEmail: userObj?.email || '',
+        email: userObj?.email || '',
         joinedAt: new Date().toISOString()
       }
     ],
@@ -1338,7 +1360,7 @@ app.post('/api/splits', authenticate, (req, res) => {
   res.json(newSplit);
 });
 
-// 3. GET /api/splits/:id - Get detailed split with expenses & settlements (SERVER-SIDE AUTHORIZATION CHECK)
+// 3. GET /api/splits/:id - Get detailed split with expenses & settlements
 app.get('/api/splits/:id', authenticate, (req, res) => {
   const store = db.read();
   const userId = req.user.id;
@@ -1348,19 +1370,28 @@ app.get('/api/splits/:id', authenticate, (req, res) => {
     return res.status(404).json({ error: 'Split not found.' });
   }
 
+  if (!split.shareCode) {
+    split.shareCode = generateSplitShareCode(split.name);
+    split.codeActive = true;
+    db.write(store);
+  }
+
   // Verify server-side membership
-  const isMember = (split.members || []).some(m => m.userId === userId);
+  const isMember = (split.members || []).some(m => (m.userId === userId || m.id === userId)) || split.ownerId === userId;
   if (!isMember) {
     return res.status(403).json({ error: 'Access denied. You are not a member of this Split.' });
   }
 
-  const expenses = (store.splitExpenses || []).filter(e => e.splitId === split.id);
-  const settlements = (store.splitSettlements || []).filter(s => s.splitId === split.id);
+  const storeExp = (store.splitExpenses || []).filter(e => e.splitId === split.id);
+  const storeSettlements = (store.splitSettlements || []).filter(s => s.splitId === split.id);
+
+  const mergedExpenses = storeExp.length > 0 ? storeExp : (split.expenses || []);
+  const mergedSettlements = storeSettlements.length > 0 ? storeSettlements : (split.settlements || []);
 
   res.json({
     ...split,
-    expenses,
-    settlements
+    expenses: mergedExpenses,
+    settlements: mergedSettlements
   });
 });
 
