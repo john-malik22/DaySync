@@ -96,7 +96,15 @@ export function NotificationProvider({ children }) {
           setNewArrival(true);
           setTimeout(() => setNewArrival(false), 3000);
 
-          if (preferences.browser && 'Notification' in window && Notification.permission === 'granted') {
+          const isQuietHours = () => {
+            if (localStorage.getItem('daysync_quiet_hours_enabled') === 'true') {
+              const currentHour = new Date().getHours();
+              return currentHour >= 22 || currentHour < 8;
+            }
+            return false;
+          };
+
+          if (!isQuietHours() && preferences.browser && 'Notification' in window && Notification.permission === 'granted') {
             newItems.forEach(item => {
               try {
                 new Notification(item.title, {

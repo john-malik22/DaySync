@@ -23,34 +23,15 @@ import { PlansPage } from './pages/app/PlansPage';
 import { SplitsPage } from './pages/app/SplitsPage';
 import { TaskPage } from './pages/app/TaskPage';
 import { HabitsPage } from './pages/app/HabitsPage';
-import { MemoriesPage } from './pages/app/MemoriesPage';
-import { SummaryPage } from './pages/app/SummaryPage';
 import { SettingsPage } from './pages/app/SettingsPage';
 
-import { CommandPaletteModal } from './components/common/CommandPaletteModal';
-
 function AppLayout() {
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    window.__daysync_openCommandPalette = () => setIsCommandPaletteOpen(true);
-    return () => {
-      delete window.__daysync_openCommandPalette;
-    };
-  }, []);
-
   return (
     <div className="app-shell-layout">
       <Sidebar />
       <div className="main-content-area">
-        <Outlet context={{ openCommandPalette: () => setIsCommandPaletteOpen(true) }} />
+        <Outlet />
       </div>
-
-      {/* Global Command Palette Overlay */}
-      <CommandPaletteModal
-        isOpen={isCommandPaletteOpen}
-        onClose={() => setIsCommandPaletteOpen(false)}
-      />
     </div>
   );
 }
@@ -63,11 +44,8 @@ export const STARTUP_ROUTE_MAP = {
   plans: '/app/plans',
   splits: '/app/splits',
   habits: '/app/habits',
-  goals: '/app/habits',
-  memories: '/app/memories',
-  notifications: '/app/notifications',
   chat: '/app/chat',
-  summary: '/app/summary'
+  settings: '/app/settings'
 };
 
 function AppIndexRedirect() {
@@ -78,126 +56,61 @@ function AppIndexRedirect() {
       const cleanKey = String(saved).toLowerCase().replace('/app/', '').trim();
       if (STARTUP_ROUTE_MAP[cleanKey]) {
         targetPath = STARTUP_ROUTE_MAP[cleanKey];
-      } else if (saved.startsWith('/app/')) {
-        targetPath = saved;
       }
     }
-  } catch (e) {
-    targetPath = '/app/dashboard';
-  }
+  } catch (e) {}
+
   return <Navigate to={targetPath} replace />;
 }
 
-function PublicOnlyRoute() {
-  const { user, token, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'var(--bg-primary)', color: 'var(--accent-primary)', fontSize: '1rem', fontWeight: '600'
-      }}>
-        Verifying Session...
-      </div>
-    );
-  }
-
-  if (token || user) {
-    return <Navigate to="/app/dashboard" replace />;
-  }
-
-  return <Outlet />;
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return user ? children : <Navigate to="/login" replace />;
 }
 
-function ProtectedRoute() {
-  const { user, token, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'var(--bg-primary)', color: 'var(--accent-primary)', fontSize: '1rem', fontWeight: '600'
-      }}>
-        Verifying Session...
-      </div>
-    );
-  }
-
-  if (!token && !user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <AppLayout />;
-}
-
-function RootRoute() {
-  const { user, token, loading } = useAuth();
-  if (loading) {
-    return (
-      <div style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'var(--bg-primary)', color: 'var(--accent-primary)', fontSize: '1rem', fontWeight: '600'
-      }}>
-        Verifying Session...
-      </div>
-    );
-  }
-  if (token || user) {
-    return <Navigate to="/app/dashboard" replace />;
-  }
-  return <Navigate to="/login" replace />;
-}
-
-export default function App() {
+export function App() {
   return (
     <ErrorBoundary>
-      <PWAUpdateProvider>
-        <ToastProvider>
-          <OfflineBanner />
-          <UpdatePromptModal />
-          <WhatsNewModal />
-          <AuthProvider>
-            <NotificationProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <PWAUpdateProvider>
               <LunaProvider>
+                <OfflineBanner />
+                <UpdatePromptModal />
+                <WhatsNewModal />
                 <Router>
                   <Routes>
-                    {/* Root Entrance */}
-                    <Route path="/" element={<RootRoute />} />
-                    
-                    {/* Public Unauthenticated Routes */}
-                    <Route element={<PublicOnlyRoute />}>
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/signup" element={<Signup />} />
-                    </Route>
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
-                    <Route path="/onboarding" element={<Onboarding />} />
-
-                    {/* Main Application Protected Shell Routes */}
-                    <Route path="/app" element={<ProtectedRoute />}>
+                    <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                       <Route index element={<AppIndexRedirect />} />
                       <Route path="dashboard" element={<DashboardPage />} />
-                      <Route path="chat" element={<ChatPage />} />
+                      <Route path="task" element={<TaskPage />} />
                       <Route path="expenses" element={<ExpensesPage />} />
                       <Route path="plans" element={<PlansPage />} />
                       <Route path="splits" element={<SplitsPage />} />
                       <Route path="splits/:id" element={<SplitsPage />} />
-                      <Route path="task" element={<TaskPage />} />
-                      <Route path="planner" element={<Navigate to="/app/task" replace />} />
                       <Route path="habits" element={<HabitsPage />} />
-                      <Route path="memories" element={<MemoriesPage />} />
-                      <Route path="summary" element={<SummaryPage />} />
+                      <Route path="chat" element={<ChatPage />} />
                       <Route path="settings" element={<SettingsPage />} />
+                      <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
                     </Route>
 
-                    {/* Fallback */}
-                    <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </Router>
               </LunaProvider>
-            </NotificationProvider>
-          </AuthProvider>
-        </ToastProvider>
-      </PWAUpdateProvider>
+            </PWAUpdateProvider>
+          </NotificationProvider>
+        </AuthProvider>
+      </ToastProvider>
     </ErrorBoundary>
   );
 }
+
+export default App;

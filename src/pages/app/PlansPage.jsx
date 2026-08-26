@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
 import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
 import { calculateEndDate, formatHumanDate, parseDateComponents, parseDuration } from '../../services/dateUtils';
-import { Repeat, ShieldCheck, ArrowRight, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { Repeat, ArrowRight, CheckCircle2, Clock, AlertCircle, Plus } from 'lucide-react';
 
 export function PlansPage() {
+  const navigate = useNavigate();
   const { expenses, errors, resourceLoading, fetchExpenses, isFromCache, lastSyncedAt } = useLuna();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('All');
@@ -90,8 +91,16 @@ export function PlansPage() {
       const durInfo = parseDuration(curr.durationValue ? { value: curr.durationValue, unit: curr.durationUnit } : curr.duration, curr.frequency);
       if (durInfo.durationUnit === 'years') return acc + (amt / (durInfo.durationValue * 12));
       if (durInfo.durationUnit === 'days') return acc + (amt * (30 / durInfo.durationValue));
-      return acc + (amt / durInfo.durationValue);
+      return acc + (amt / (durInfo.durationValue || 1));
     }, 0);
+  }, [plans]);
+
+  const endingSoonCount = useMemo(() => {
+    return plans.filter(p => {
+      const endDate = getEffectiveEndDate(p);
+      const rem = getDaysRemaining(endDate);
+      return rem !== null && rem >= 0 && rem <= 5;
+    }).length;
   }, [plans]);
 
   const getPlanDurationLabel = (plan) => {
@@ -118,24 +127,17 @@ export function PlansPage() {
 
   return (
     <div className="page-container">
-      {/* Top Header Row */}
-      <PageHeaderRow title="Plans & Commitments" onSearch={setSearch} />
-
-      {/* VIEW ONLY Disclaimer Banner */}
-      <div style={{
-        padding: '12px 16px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-        border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: '10px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <ShieldCheck size={18} color="var(--accent-primary)" />
-          <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-            <strong>View-Only Mode:</strong> Plans read directly from your financial records. To add, edit, or cancel a plan, manage it from Expenses.
-          </div>
-        </div>
-        <Link to="/app/expenses" className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-          Manage in Expenses <ArrowRight size={13} />
-        </Link>
+      {/* Top Header Row with Add Plan Action */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-sm)' }}>
+        <PageHeaderRow title="Plans & Commitments" onSearch={setSearch} />
+        <button
+          type="button"
+          onClick={() => navigate('/app/expenses')}
+          className="btn-primary"
+          style={{ fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', flexShrink: 0 }}
+        >
+          <Plus size={14} /> Add Plan
+        </button>
       </div>
 
       {/* Plan Summary Stat Cards */}
@@ -151,19 +153,15 @@ export function PlansPage() {
         </div>
 
         <div className="glass-card" style={{ padding: '14px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600', marginBottom: '4px' }}>Upcoming Renewals</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600', marginBottom: '4px' }}>Ending Soon</div>
           <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-warning)' }}>
-            {plans.filter(p => {
-              const endDate = getEffectiveEndDate(p);
-              const rem = getDaysRemaining(endDate);
-              return rem !== null && rem >= 0 && rem <= 5;
-            }).length}
+            {endingSoonCount}
           </div>
         </div>
       </div>
 
       {/* Category Filter Chips */}
-      <div className="scroll-row">
+      <div className="scroll-row" style={{ marginBottom: '14px' }}>
         {categories.map(cat => (
           <button
             key={cat}
@@ -208,13 +206,11 @@ export function PlansPage() {
               {search || filter !== 'All' ? 'No matching plans found.' : 'No active plans recorded yet.'}
             </div>
             <div style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '360px' }}>
-              {search || filter !== 'All' ? 'Try adjusting your search or filters.' : 'Create a recurring expense, recharge, subscription, or warranty in Expenses to view your plans here.'}
+              {search || filter !== 'All' ? 'Try adjusting your search or filters.' : 'Add your subscriptions, recharges, utilities, or warranties to track your plans.'}
             </div>
-            {!(search || filter !== 'All') && (
-              <Link to="/app/expenses" className="btn-primary" style={{ marginTop: '6px', fontSize: '13px', padding: '8px 16px', textDecoration: 'none' }}>
-                Go to Expenses
-              </Link>
-            )}
+            <button type="button" onClick={() => navigate('/app/expenses')} className="btn-primary" style={{ marginTop: '6px', fontSize: '13px', padding: '8px 16px' }}>
+              Add a Plan
+            </button>
           </div>
         ) : (
           <div className="grid-2" style={{ gap: 'var(--space-sm)' }}>
@@ -274,7 +270,7 @@ export function PlansPage() {
                     </div>
 
                     <div>
-                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px' }}>END DATE</span>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px' }}>NEXT PAYMENT / EXPIRY</span>
                       <strong style={{ color: isExpiringSoon ? 'var(--accent-warning)' : isExpired ? 'var(--accent-danger)' : 'var(--text-primary)' }}>
                         {formatHumanDate(endDateIso)}
                       </strong>

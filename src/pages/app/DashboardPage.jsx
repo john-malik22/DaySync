@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useAuth } from '../../context/AuthContext';
 import { useLuna } from '../../context/LunaContext';
@@ -7,7 +7,6 @@ import { DashboardGrid } from '../../components/dashboard/DashboardGrid';
 export function DashboardPage() {
   const { user } = useAuth();
   const { tasks, expenses, plans, habits } = useLuna();
-  const [search, setSearch] = useState('');
   const firstName = user?.name ? user.name.split(' ')[0] : 'User';
 
   const todayStr = new Date().toISOString().split('T')[0];
@@ -24,10 +23,9 @@ export function DashboardPage() {
 
   return (
     <div className="page-container">
-      {/* Top Header Row — greeting & search */}
+      {/* Top Header Row — greeting */}
       <PageHeaderRow
         title={`Hello, ${firstName}`}
-        onSearch={setSearch}
         titleStyle={{ fontSize: 'clamp(26px, 4.5vw, 36px)' }}
       />
 

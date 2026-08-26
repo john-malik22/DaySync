@@ -753,6 +753,37 @@ export function SettingsPage() {
               </label>
             ))}
           </div>
+
+          {/* Quiet Hours Settings */}
+          <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border-color)' }}>
+            <div style={{ fontWeight: '700', fontSize: '13.5px', color: 'var(--text-primary)', marginBottom: '4px' }}>
+              Quiet Hours
+            </div>
+            <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+              Silence non-critical notifications during your rest hours (local timezone).
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+              <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12.5px', fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer' }}>
+                  <span>Quiet Hours ON/OFF</span>
+                  <input
+                    type="checkbox"
+                    checked={localStorage.getItem('daysync_quiet_hours_enabled') === 'true'}
+                    onChange={(e) => {
+                      localStorage.setItem('daysync_quiet_hours_enabled', e.target.checked ? 'true' : 'false');
+                      if (showToast) showToast(e.target.checked ? 'Quiet Hours enabled (22:00 to 08:00).' : 'Quiet Hours disabled.', 'info');
+                    }}
+                  />
+                </label>
+              </div>
+
+              <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Schedule</span>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)' }}>22:00 – 08:00</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 6. LUNA SETTINGS SECTION */}
