@@ -1186,7 +1186,11 @@ async function sendWebPushToUser(userId, notifPayload, store) {
         endpoint: sub.endpoint,
         keys: sub.keys
       };
-      await webpush.sendNotification(pushSubscriptionFormat, pushPayload);
+      const options = {
+        TTL: 86400, // 24h delivery window for closed PWA / sleeping device
+        urgency: 'high' // High urgency for immediate FCM background wakeup on Android
+      };
+      await webpush.sendNotification(pushSubscriptionFormat, pushPayload, options);
       console.log(`[WebPush] Push notification delivered to user ${userId} (${sub.endpoint.slice(0, 30)}...).`);
     } catch (err) {
       console.warn(`[WebPush] Error sending push to user ${userId}:`, err.statusCode || err.message);

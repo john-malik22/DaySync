@@ -11,8 +11,8 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['icons/icon-192.png', 'icons/icon-512.png', 'icons/badge-72.png'],
       workbox: {
-        skipWaiting: false,
-        clientsClaim: false,
+        skipWaiting: true,
+        clientsClaim: true,
         importScripts: ['/sw-push.js'],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
         navigateFallback: '/index.html',
