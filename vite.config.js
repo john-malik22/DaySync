@@ -9,10 +9,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: 'auto',
-      includeAssets: ['icons/icon-192.png', 'icons/icon-512.png'],
+      includeAssets: ['icons/icon-192.png', 'icons/icon-512.png', 'icons/badge-72.png'],
       workbox: {
-        skipWaiting: false,
-        clientsClaim: false,
+        skipWaiting: true,
+        clientsClaim: true,
         importScripts: ['/sw-push.js'],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
         navigateFallback: '/index.html',
@@ -46,6 +46,12 @@ export default defineConfig({
             type: 'image/png',
             purpose: 'any maskable'
           },
+          {
+            src: '/icons/badge-72.png',
+            sizes: '72x72',
+            type: 'image/png',
+            purpose: 'any'
+          }
         ],
       },
     }),
