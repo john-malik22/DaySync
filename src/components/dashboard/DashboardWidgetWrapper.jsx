@@ -22,11 +22,11 @@ export function DashboardWidgetWrapper({
   const startPosRef = useRef({ x: 0, y: 0 });
 
   const catalogDef = WIDGET_CATALOG.find(w => w.id === widgetItem.id) || {
-    supportedSizes: ['small', 'wide'],
-    defaultSize: 'wide'
+    supportedSizes: ['S', 'W', 'T', 'L'],
+    defaultSize: 'W'
   };
 
-  const currentSize = widgetItem.size || catalogDef.defaultSize || 'wide';
+  const currentSize = widgetItem.size || catalogDef.defaultSize || 'W';
 
   // Long-press handler (3.5 seconds)
   const handleTouchOrMouseDown = (e) => {
@@ -74,8 +74,8 @@ export function DashboardWidgetWrapper({
 
   const sizeClassMap = {
     S: 'widget-size-S',
-    T: 'widget-size-T',
     W: 'widget-size-W',
+    T: 'widget-size-T',
     L: 'widget-size-L',
     small: 'widget-size-S',
     wide: 'widget-size-W',
@@ -83,13 +83,13 @@ export function DashboardWidgetWrapper({
     large: 'widget-size-L'
   };
 
-  const normalizedSize = ['S', 'T', 'W', 'L'].includes(currentSize)
+  const normalizedSize = ['S', 'W', 'T', 'L'].includes(currentSize)
     ? currentSize
     : (currentSize === 'small' ? 'S' : currentSize === 'tall' ? 'T' : currentSize === 'large' ? 'L' : 'W');
 
   return (
     <div
-      className={`glass-card dashboard-widget-card ${sizeClassMap[currentSize] || 'widget-size-W'} ${isArrangeMode ? 'widget-arrange-active' : ''}`}
+      className={`glass-card dashboard-widget-card ${sizeClassMap[normalizedSize] || 'widget-size-W'} ${isArrangeMode ? 'widget-arrange-active' : ''}`}
       style={{
         position: 'relative',
         display: 'flex',
@@ -156,23 +156,26 @@ export function DashboardWidgetWrapper({
 
           {/* Size Selector Buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {catalogDef.supportedSizes.map(sz => (
-              <button
-                key={sz}
-                type="button"
-                onClick={() => onChangeWidgetSize(widgetItem.id, sz)}
-                title={`Set size: ${sz}`}
-                style={{
-                  fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px',
-                  border: normalizedSize === sz ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                  background: normalizedSize === sz ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                  color: normalizedSize === sz ? '#FFFFFF' : 'var(--text-secondary)',
-                  cursor: 'pointer', textTransform: 'uppercase'
-                }}
-              >
-                {sz}
-              </button>
-            ))}
+            {(catalogDef.supportedSizes || ['S', 'W', 'T', 'L']).map(sz => {
+              const szMap = { S: 'S (2×2)', W: 'W (2×4)', T: 'T (4×2)', L: 'L (4×4)' };
+              return (
+                <button
+                  key={sz}
+                  type="button"
+                  onClick={() => onChangeWidgetSize(widgetItem.id, sz)}
+                  title={`Set size: ${szMap[sz] || sz}`}
+                  style={{
+                    fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px',
+                    border: normalizedSize === sz ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                    background: normalizedSize === sz ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                    color: normalizedSize === sz ? '#FFFFFF' : 'var(--text-secondary)',
+                    cursor: 'pointer', textTransform: 'uppercase'
+                  }}
+                >
+                  {sz}
+                </button>
+              );
+            })}
           </div>
 
           {/* Remove / Hide Control */}

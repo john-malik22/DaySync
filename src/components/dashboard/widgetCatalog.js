@@ -25,10 +25,10 @@ import {
 } from 'lucide-react';
 
 export const WIDGET_SIZES = {
-  S: { label: 'Small', cols: 1, rows: 1 },
-  T: { label: 'Tall', cols: 1, rows: 2 },
-  W: { label: 'Wide', cols: 2, rows: 1 },
-  L: { label: 'Large', cols: 2, rows: 2 }
+  S: { label: 'Small (2×2)', cols: 2, rows: 2 },
+  W: { label: 'Wide (2×4)', cols: 2, rows: 4 },
+  T: { label: 'Tall (4×2)', cols: 4, rows: 2 },
+  L: { label: 'Large (4×4)', cols: 4, rows: 4 }
 };
 
 export const WIDGET_CATALOG = [
