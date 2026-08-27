@@ -499,13 +499,7 @@ export function SettingsPage() {
     window.navigator.standalone === true
   );
 
-  const getUpdateStatusText = () => {
-    if (checking) return 'Checking...';
-    if (updateAvailable) return 'Update available';
-    if (hasCheckedManually) return '✓ Up to date';
-    if (fetchError) return 'Unable to check';
-    return 'Not checked';
-  };
+
 
   const detectedTimezoneName = () => {
     try {
@@ -999,44 +993,57 @@ export function SettingsPage() {
 
         {/* 8. APP / PWA SECTION */}
         <div ref={appRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Smartphone size={18} color="var(--accent-primary)" /> App & PWA Status
           </h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
+            Application build version and installation status.
+          </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
             {/* Card 1 — Version */}
-            <div style={{ padding: '12px 14px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '94px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Version</div>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>2.0.0</div>
+            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '2px' }}>Version</div>
+              <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-primary)' }}>2.0.0</div>
             </div>
 
-            {/* Card 2 — Update Status */}
-            <div style={{ padding: '12px 14px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '94px' }}>
-              <div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '2px' }}>Update Status</div>
-                <div style={{
-                  fontSize: '13.5px', fontWeight: '700',
-                  color: updateAvailable ? 'var(--accent-warning)' : (hasCheckedManually && !fetchError) ? 'var(--accent-success)' : 'var(--text-primary)'
-                }}>
-                  {getUpdateStatusText()}
+            {/* Card 2 — Update */}
+            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '2px' }}>Update</div>
+              
+              {updateAvailable && (
+                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-warning)', marginBottom: '4px' }}>
+                  New version available
                 </div>
-              </div>
+              )}
+              {hasCheckedManually && !updateAvailable && !checking && !fetchError && (
+                <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-success)', marginBottom: '4px' }}>
+                  ✓ You're up to date
+                </div>
+              )}
+              {fetchError && (
+                <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--accent-danger)', marginBottom: '4px' }}>
+                  Unable to check
+                </div>
+              )}
 
-              <div style={{ marginTop: '6px' }}>
+              <div>
                 {updateAvailable ? (
                   <button
                     type="button"
                     onClick={updateApp}
-                    style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: 0, fontSize: '11.5px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    className="btn-primary"
+                    style={{ padding: '4px 10px', fontSize: '11.5px', fontWeight: '700', width: 'auto' }}
                   >
-                    [ Update Now ]
+                    Update to Latest Version ↻
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={checkForUpdates}
                     disabled={checking}
-                    style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: 0, fontSize: '11.5px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px', opacity: checking ? 0.7 : 1 }}
+                    className="btn-secondary"
+                    style={{ padding: '4px 10px', fontSize: '11.5px', fontWeight: '600', width: 'auto', opacity: checking ? 0.7 : 1 }}
                   >
                     {checking ? 'Checking...' : 'Check for Updates ↻'}
                   </button>
@@ -1045,9 +1052,9 @@ export function SettingsPage() {
             </div>
 
             {/* Card 3 — Installation */}
-            <div style={{ padding: '12px 14px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '94px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Installation</div>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent-success)' }}>
+            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '2px' }}>Installation</div>
+              <div style={{ fontSize: '13.5px', fontWeight: '700', color: isStandalone ? 'var(--accent-success)' : 'var(--text-primary)' }}>
                 {isStandalone ? 'Installed (PWA)' : 'Browser Mode'}
               </div>
             </div>
