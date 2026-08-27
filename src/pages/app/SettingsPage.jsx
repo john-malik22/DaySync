@@ -48,10 +48,13 @@ import {
   HelpCircle
 } from 'lucide-react';
 
+import { useLuna } from '../../context/LunaContext';
+
 export function SettingsPage() {
   const navigate = useNavigate();
   const { user, token, theme, toggleTheme, logout, deleteAccount, updateUser } = useAuth();
   const { preferences, updatePreferences } = useNotifications();
+  const { startingBalance, updateStartingBalance } = useLuna();
   const {
     currentVersion,
     updateAvailable,
@@ -63,6 +66,22 @@ export function SettingsPage() {
     openWhatsNewModal
   } = usePWAUpdate();
   const { showToast } = useToast();
+
+  const [isEditingBalance, setIsEditingBalance] = useState(false);
+  const [balanceInput, setBalanceInput] = useState('');
+
+  const handleSaveStartingBalance = (e) => {
+    e.preventDefault();
+    if (!balanceInput) return;
+    updateStartingBalance(balanceInput);
+    setIsEditingBalance(false);
+    if (showToast) showToast('Starting balance updated.', 'success');
+  };
+
+  const handleStartEditBalance = () => {
+    setBalanceInput(startingBalance !== null ? startingBalance.toString() : '');
+    setIsEditingBalance(true);
+  };
 
   // Section Scroll Refs
   const accountRef = useRef(null);
@@ -760,6 +779,33 @@ export function SettingsPage() {
               <div style={{ padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: '700' }}>
                 ₹ INR (Indian Rupee)
               </div>
+            </div>
+
+            {/* Starting Account Balance */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Starting Account Balance</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Opening financial balance (e.g. ₹50,000)</div>
+              {isEditingBalance ? (
+                <form onSubmit={handleSaveStartingBalance} style={{ display: 'flex', gap: '6px' }}>
+                  <input
+                    type="number"
+                    value={balanceInput}
+                    onChange={(e) => setBalanceInput(e.target.value)}
+                    placeholder="50000"
+                    style={{ flex: 1, padding: '4px 8px', fontSize: '12px', minHeight: '32px' }}
+                    autoFocus
+                  />
+                  <button type="submit" className="btn-primary" style={{ padding: '4px 10px', fontSize: '12px', minHeight: '32px' }}>Save</button>
+                  <button type="button" onClick={() => setIsEditingBalance(false)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '12px', minHeight: '32px' }}>Cancel</button>
+                </form>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--accent-primary)' }}>
+                    ₹{startingBalance !== null ? startingBalance.toLocaleString() : '0'}
+                  </span>
+                  <button type="button" onClick={handleStartEditBalance} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '11.5px' }}>Edit</button>
+                </div>
+              )}
             </div>
 
             {/* Language & Region */}
