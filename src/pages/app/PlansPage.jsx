@@ -130,22 +130,22 @@ export function PlansPage() {
       {/* Top Header Row */}
       <PageHeaderRow title="Plans & Commitments" onSearch={setSearch} />
 
-      {/* Plan Summary Stat Cards */}
-      <div className="grid-3" style={{ margin: 'var(--space-sm) 0' }}>
-        <div className="glass-card" style={{ padding: '14px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600', marginBottom: '4px' }}>Active Plans</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)' }}>{plans.length}</div>
-        </div>
-
-        <div className="glass-card" style={{ padding: '14px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600', marginBottom: '4px' }}>Est. Monthly Cost</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-primary)' }}>₹{Math.round(totalMonthlyPlanCost).toLocaleString('en-IN')}</div>
-        </div>
-
-        <div className="glass-card" style={{ padding: '14px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600', marginBottom: '4px' }}>Ending Soon</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-warning)' }}>
-            {endingSoonCount}
+      {/* Combined Plan Summary Stat Card */}
+      <div className="glass-card" style={{ padding: '12px 16px', margin: 'var(--space-sm) 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <div>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>ACTIVE PLANS</span>
+              <strong style={{ fontSize: '1.2rem', color: 'var(--text-primary)' }}>{plans.length}</strong>
+            </div>
+            <div style={{ borderLeft: '1px solid var(--border-color)', paddingLeft: '16px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>EST. MONTHLY COST</span>
+              <strong style={{ fontSize: '1.2rem', color: 'var(--accent-primary)' }}>₹{Math.round(totalMonthlyPlanCost).toLocaleString('en-IN')}</strong>
+            </div>
+            <div style={{ borderLeft: '1px solid var(--border-color)', paddingLeft: '16px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>ENDING SOON</span>
+              <strong style={{ fontSize: '1.2rem', color: endingSoonCount > 0 ? 'var(--accent-warning)' : 'var(--text-primary)' }}>{endingSoonCount}</strong>
+            </div>
           </div>
         </div>
       </div>
