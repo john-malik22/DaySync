@@ -52,7 +52,10 @@ export function SettingsPage() {
     currentVersion,
     updateAvailable,
     checking,
+    hasCheckedManually,
+    fetchError,
     checkForUpdates,
+    updateApp,
     openWhatsNewModal
   } = usePWAUpdate();
   const { showToast } = useToast();
@@ -113,10 +116,22 @@ export function SettingsPage() {
     return localStorage.getItem('daysync_date_format') || 'DD MMM YYYY';
   });
 
+  // Quiet Hours Preferences
+  const [quietHoursEnabled, setQuietHoursEnabled] = useState(() => {
+    return localStorage.getItem('daysync_quiet_hours_enabled') === 'true';
+  });
+  const [quietStart, setQuietStart] = useState(() => {
+    return localStorage.getItem('daysync_quiet_hours_start') || '22:00';
+  });
+  const [quietEnd, setQuietEnd] = useState(() => {
+    return localStorage.getItem('daysync_quiet_hours_end') || '08:00';
+  });
+
   // Active Dashboard Widgets Layout
   const [activeWidgetIds, setActiveWidgetIds] = useState(() => {
     try {
-      const saved = localStorage.getItem('daysync_widget_layout');
+      const storageKey = `daysync_dashboard_layout_${user?.id || 'guest'}`;
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
         return parsed.map(w => w.id || w);
@@ -214,6 +229,24 @@ export function SettingsPage() {
     setDateFormat(fmt);
     localStorage.setItem('daysync_date_format', fmt);
     if (showToast) showToast(`Date format updated to ${fmt}.`, 'success');
+  };
+
+  const handleToggleQuietHours = (val) => {
+    setQuietHoursEnabled(val);
+    localStorage.setItem('daysync_quiet_hours_enabled', val ? 'true' : 'false');
+    if (showToast) showToast(val ? `Quiet Hours enabled (${quietStart} – ${quietEnd}).` : 'Quiet Hours disabled.', 'info');
+  };
+
+  const handleQuietStartChange = (val) => {
+    setQuietStart(val);
+    localStorage.setItem('daysync_quiet_hours_start', val);
+    if (showToast) showToast(`Quiet Hours updated to ${val} – ${quietEnd}.`, 'info');
+  };
+
+  const handleQuietEndChange = (val) => {
+    setQuietEnd(val);
+    localStorage.setItem('daysync_quiet_hours_end', val);
+    if (showToast) showToast(`Quiet Hours updated to ${quietStart} – ${val}.`, 'info');
   };
 
   const handleToggleNotifSetting = (key) => {
@@ -373,7 +406,8 @@ export function SettingsPage() {
 
   const handleConfirmResetDashboard = () => {
     setShowDashboardResetModal(false);
-    localStorage.setItem('daysync_widget_layout', JSON.stringify(DEFAULT_WIDGET_LAYOUT));
+    const storageKey = `daysync_dashboard_layout_${user?.id || 'guest'}`;
+    localStorage.setItem(storageKey, JSON.stringify(DEFAULT_WIDGET_LAYOUT));
     setActiveWidgetIds(DEFAULT_WIDGET_LAYOUT.map(w => w.id));
     if (showToast) showToast('Dashboard layout reset to default.', 'info');
   };
@@ -437,6 +471,19 @@ export function SettingsPage() {
     } finally {
       setIsDeletingAccount(false);
     }
+  };
+
+  const isStandalone = typeof window !== 'undefined' && (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true
+  );
+
+  const getUpdateStatusText = () => {
+    if (checking) return 'Checking...';
+    if (updateAvailable) return 'Update available';
+    if (hasCheckedManually) return 'Up to date';
+    if (fetchError) return 'Unable to check';
+    return 'Not checked';
   };
 
   const sectionsNav = [
@@ -781,19 +828,40 @@ export function SettingsPage() {
                   <span>Quiet Hours ON/OFF</span>
                   <input
                     type="checkbox"
-                    checked={localStorage.getItem('daysync_quiet_hours_enabled') === 'true'}
-                    onChange={(e) => {
-                      localStorage.setItem('daysync_quiet_hours_enabled', e.target.checked ? 'true' : 'false');
-                      if (showToast) showToast(e.target.checked ? 'Quiet Hours enabled (22:00 to 08:00).' : 'Quiet Hours disabled.', 'info');
-                    }}
+                    checked={quietHoursEnabled}
+                    onChange={(e) => handleToggleQuietHours(e.target.checked)}
                   />
                 </label>
               </div>
 
               <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Schedule</span>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)' }}>22:00 – 08:00</span>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)' }}>{quietStart} – {quietEnd}</span>
               </div>
+
+              {quietHoursEnabled && (
+                <>
+                  <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Start Time</label>
+                    <input
+                      type="time"
+                      value={quietStart}
+                      onChange={(e) => handleQuietStartChange(e.target.value)}
+                      style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: '700' }}
+                    />
+                  </div>
+
+                  <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>End Time</label>
+                    <input
+                      type="time"
+                      value={quietEnd}
+                      onChange={(e) => handleQuietEndChange(e.target.value)}
+                      style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: '700' }}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -864,19 +932,30 @@ export function SettingsPage() {
             </div>
 
             <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>App Status</div>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent-success)' }}>Installed</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Update Status</div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: updateAvailable ? 'var(--accent-warning)' : 'var(--text-primary)' }}>
+                {getUpdateStatusText()}
+              </div>
             </div>
 
             <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Update Status</div>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Automatic updates enabled</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Installation</div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent-success)' }}>
+                {isStandalone ? 'Installed (PWA)' : 'Browser Mode'}
+              </div>
             </div>
           </div>
 
-          <button type="button" onClick={checkForUpdates} disabled={checking} className="btn-secondary" style={{ fontSize: '12px' }}>
-            <RefreshCw size={14} /> {checking ? 'Checking...' : 'Check for Updates'}
-          </button>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button type="button" onClick={checkForUpdates} disabled={checking} className="btn-secondary" style={{ fontSize: '12px' }}>
+              <RefreshCw size={14} /> {checking ? 'Checking...' : 'Check for Updates'}
+            </button>
+            {updateAvailable && (
+              <button type="button" onClick={updateApp} className="btn-primary" style={{ fontSize: '12px' }}>
+                Update Now
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 9. ABOUT DAYSYNC SECTION */}

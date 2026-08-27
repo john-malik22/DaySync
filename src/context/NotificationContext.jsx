@@ -97,11 +97,27 @@ export function NotificationProvider({ children }) {
           setTimeout(() => setNewArrival(false), 3000);
 
           const isQuietHours = () => {
-            if (localStorage.getItem('daysync_quiet_hours_enabled') === 'true') {
-              const currentHour = new Date().getHours();
-              return currentHour >= 22 || currentHour < 8;
+            if (localStorage.getItem('daysync_quiet_hours_enabled') !== 'true') {
+              return false;
             }
-            return false;
+
+            const startStr = localStorage.getItem('daysync_quiet_hours_start') || '22:00';
+            const endStr = localStorage.getItem('daysync_quiet_hours_end') || '08:00';
+
+            const [startH, startM] = startStr.split(':').map(Number);
+            const [endH, endM] = endStr.split(':').map(Number);
+
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const startMinutes = startH * 60 + (startM || 0);
+            const endMinutes = endH * 60 + (endM || 0);
+
+            if (startMinutes === endMinutes) return false;
+            if (startMinutes < endMinutes) {
+              return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+            } else {
+              return currentMinutes >= startMinutes || currentMinutes < endMinutes;
+            }
           };
 
           if (!isQuietHours() && preferences.browser && 'Notification' in window && Notification.permission === 'granted') {
