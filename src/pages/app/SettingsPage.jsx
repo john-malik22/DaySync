@@ -603,18 +603,18 @@ export function SettingsPage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 'var(--space-xs)', flexWrap: 'wrap' }}>
-            <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '12px' }}>
-              <Edit2 size={14} /> Change Name
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+            <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <Edit2 size={14} style={{ flexShrink: 0 }} /> Change Name
             </button>
-            <button type="button" onClick={handleOpenChangeEmail} className="btn-secondary" style={{ fontSize: '12px' }}>
-              <Mail size={14} /> Change Email
+            <button type="button" onClick={handleOpenChangeEmail} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <Mail size={14} style={{ flexShrink: 0 }} /> Change Email
             </button>
-            <button type="button" onClick={handleOpenChangePassword} className="btn-secondary" style={{ fontSize: '12px' }}>
-              <Key size={14} /> Change Password
+            <button type="button" onClick={handleOpenChangePassword} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <Key size={14} style={{ flexShrink: 0 }} /> Change Password
             </button>
-            <button type="button" onClick={() => setShowLogoutModal(true)} className="btn-secondary" style={{ fontSize: '12px' }}>
-              <LogOut size={14} /> Log Out
+            <button type="button" onClick={() => setShowLogoutModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <LogOut size={14} style={{ flexShrink: 0 }} /> Log Out
             </button>
           </div>
         </div>
