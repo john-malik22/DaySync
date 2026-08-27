@@ -791,21 +791,32 @@ export function SettingsPage() {
             Arrange, resize, add, or remove widgets anytime to make DaySync fit the way you use it.
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '14px' }}>
-            <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '12px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
               Active Widgets: <strong style={{ color: 'var(--text-primary)' }}>{activeWidgetIds.length}</strong>
             </div>
-            <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-              Layout: <strong style={{ color: 'var(--text-primary)' }}>Custom Arrangement</strong>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+              Layout: <strong style={{ color: 'var(--text-primary)' }}>Custom</strong>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button type="button" onClick={() => setIsWidgetPickerOpen(true)} className="btn-primary" style={{ fontSize: '12.5px' }}>
-              Manage Widgets
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+            <button
+              type="button"
+              onClick={() => setIsWidgetPickerOpen(true)}
+              className="btn-primary"
+              style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <SlidersHorizontal size={14} /> Manage Widgets
             </button>
-            <button type="button" onClick={() => setShowDashboardResetModal(true)} className="btn-secondary" style={{ fontSize: '12.5px' }}>
-              Reset Dashboard Layout
+            <button
+              type="button"
+              onClick={() => setShowDashboardResetModal(true)}
+              className="btn-secondary"
+              aria-label="Reset Dashboard Layout"
+              style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <RefreshCw size={14} /> Reset Layout
             </button>
           </div>
         </div>
