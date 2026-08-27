@@ -80,6 +80,7 @@ export function SettingsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
   const [showDashboardResetModal, setShowDashboardResetModal] = useState(false);
+  const [showQuietHoursModal, setShowQuietHoursModal] = useState(false);
   const [isWidgetPickerOpen, setIsWidgetPickerOpen] = useState(false);
 
   // Account Modals State
@@ -126,6 +127,10 @@ export function SettingsPage() {
   const [quietEnd, setQuietEnd] = useState(() => {
     return localStorage.getItem('daysync_quiet_hours_end') || '08:00';
   });
+
+  // Temp values for Quiet Hours Edit Modal
+  const [tempQuietStart, setTempQuietStart] = useState(quietStart);
+  const [tempQuietEnd, setTempQuietEnd] = useState(quietEnd);
 
   // Active Dashboard Widgets Layout
   const [activeWidgetIds, setActiveWidgetIds] = useState(() => {
@@ -237,16 +242,20 @@ export function SettingsPage() {
     if (showToast) showToast(val ? `Quiet Hours enabled (${quietStart} – ${quietEnd}).` : 'Quiet Hours disabled.', 'info');
   };
 
-  const handleQuietStartChange = (val) => {
-    setQuietStart(val);
-    localStorage.setItem('daysync_quiet_hours_start', val);
-    if (showToast) showToast(`Quiet Hours updated to ${val} – ${quietEnd}.`, 'info');
+  const handleOpenQuietHoursModal = () => {
+    setTempQuietStart(quietStart);
+    setTempQuietEnd(quietEnd);
+    setShowQuietHoursModal(true);
   };
 
-  const handleQuietEndChange = (val) => {
-    setQuietEnd(val);
-    localStorage.setItem('daysync_quiet_hours_end', val);
-    if (showToast) showToast(`Quiet Hours updated to ${quietStart} – ${val}.`, 'info');
+  const handleSaveQuietHoursModal = (e) => {
+    e?.preventDefault();
+    setQuietStart(tempQuietStart);
+    setQuietEnd(tempQuietEnd);
+    localStorage.setItem('daysync_quiet_hours_start', tempQuietStart);
+    localStorage.setItem('daysync_quiet_hours_end', tempQuietEnd);
+    setShowQuietHoursModal(false);
+    if (showToast) showToast(`Quiet Hours schedule updated to ${tempQuietStart} – ${tempQuietEnd}.`, 'success');
   };
 
   const handleToggleNotifSetting = (key) => {
@@ -815,8 +824,18 @@ export function SettingsPage() {
 
           {/* Quiet Hours Settings */}
           <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border-color)' }}>
-            <div style={{ fontWeight: '700', fontSize: '13.5px', color: 'var(--text-primary)', marginBottom: '4px' }}>
-              Quiet Hours
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <div style={{ fontWeight: '700', fontSize: '13.5px', color: 'var(--text-primary)' }}>
+                Quiet Hours
+              </div>
+              <button
+                type="button"
+                onClick={handleOpenQuietHoursModal}
+                className="btn-secondary"
+                style={{ fontSize: '11.5px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                <Edit2 size={12} /> Edit
+              </button>
             </div>
             <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
               Silence non-critical notifications during your rest hours (local timezone).
@@ -836,32 +855,10 @@ export function SettingsPage() {
 
               <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Schedule</span>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)' }}>{quietStart} – {quietEnd}</span>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: quietHoursEnabled ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
+                  {quietStart} – {quietEnd}
+                </span>
               </div>
-
-              {quietHoursEnabled && (
-                <>
-                  <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Start Time</label>
-                    <input
-                      type="time"
-                      value={quietStart}
-                      onChange={(e) => handleQuietStartChange(e.target.value)}
-                      style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: '700' }}
-                    />
-                  </div>
-
-                  <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>End Time</label>
-                    <input
-                      type="time"
-                      value={quietEnd}
-                      onChange={(e) => handleQuietEndChange(e.target.value)}
-                      style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: '700' }}
-                    />
-                  </div>
-                </>
-              )}
             </div>
           </div>
         </div>
@@ -925,20 +922,20 @@ export function SettingsPage() {
             <Smartphone size={18} color="var(--accent-primary)" /> App & PWA Status
           </h3>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '14px' }}>
-            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '16px' }}>
+            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Version</div>
               <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>2.0.0</div>
             </div>
 
-            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Update Status</div>
               <div style={{ fontSize: '13px', fontWeight: '700', color: updateAvailable ? 'var(--accent-warning)' : 'var(--text-primary)' }}>
                 {getUpdateStatusText()}
               </div>
             </div>
 
-            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Installation</div>
               <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent-success)' }}>
                 {isStandalone ? 'Installed (PWA)' : 'Browser Mode'}
@@ -946,12 +943,23 @@ export function SettingsPage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button type="button" onClick={checkForUpdates} disabled={checking} className="btn-secondary" style={{ fontSize: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={checkForUpdates}
+              disabled={checking}
+              className="btn-secondary"
+              style={{ fontSize: '12.5px', padding: '8px 20px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
               <RefreshCw size={14} /> {checking ? 'Checking...' : 'Check for Updates'}
             </button>
             {updateAvailable && (
-              <button type="button" onClick={updateApp} className="btn-primary" style={{ fontSize: '12px' }}>
+              <button
+                type="button"
+                onClick={updateApp}
+                className="btn-primary"
+                style={{ fontSize: '12.5px', padding: '8px 20px' }}
+              >
                 Update Now
               </button>
             )}
@@ -1112,7 +1120,81 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* 4. Upgrade Preview Modal */}
+      {/* 4. Quiet Hours Edit Modal */}
+      {showQuietHoursModal && (
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(8px)',
+            zIndex: 1150, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+          }}
+          onKeyDown={(e) => e.key === 'Escape' && setShowQuietHoursModal(false)}
+        >
+          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '360px', padding: '20px', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Edit Quiet Hours</h3>
+              <button
+                type="button"
+                onClick={() => setShowQuietHoursModal(false)}
+                aria-label="Close Quiet Hours modal"
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+              Set start and end times to silence non-critical push notifications.
+            </p>
+
+            <form onSubmit={handleSaveQuietHoursModal}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+                  <label style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--text-primary)' }}>Start Time</label>
+                  <input
+                    type="time"
+                    value={tempQuietStart}
+                    onChange={(e) => setTempQuietStart(e.target.value)}
+                    style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '13px', fontWeight: '700' }}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+                  <label style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--text-primary)' }}>End Time</label>
+                  <input
+                    type="time"
+                    value={tempQuietEnd}
+                    onChange={(e) => setTempQuietEnd(e.target.value)}
+                    style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '13px', fontWeight: '700' }}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowQuietHoursModal(false)}
+                  className="btn-secondary"
+                  style={{ fontSize: '12px', padding: '6px 14px' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  style={{ fontSize: '12px', padding: '6px 14px' }}
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Upgrade Preview Modal */}
       {showUpgradeModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
