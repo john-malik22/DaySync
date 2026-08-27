@@ -130,22 +130,34 @@ export function PlansPage() {
       {/* Top Header Row */}
       <PageHeaderRow title="Plans & Commitments" onSearch={setSearch} />
 
-      {/* Combined Plan Summary Stat Card */}
-      <div className="glass-card" style={{ padding: '12px 16px', margin: 'var(--space-sm) 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <div>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>ACTIVE PLANS</span>
-              <strong style={{ fontSize: '1.2rem', color: 'var(--text-primary)' }}>{plans.length}</strong>
-            </div>
-            <div style={{ borderLeft: '1px solid var(--border-color)', paddingLeft: '16px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>EST. MONTHLY COST</span>
-              <strong style={{ fontSize: '1.2rem', color: 'var(--accent-primary)' }}>₹{Math.round(totalMonthlyPlanCost).toLocaleString('en-IN')}</strong>
-            </div>
-            <div style={{ borderLeft: '1px solid var(--border-color)', paddingLeft: '16px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>ENDING SOON</span>
-              <strong style={{ fontSize: '1.2rem', color: endingSoonCount > 0 ? 'var(--accent-warning)' : 'var(--text-primary)' }}>{endingSoonCount}</strong>
-            </div>
+      {/* Combined 3-Column Plan Summary Stat Card */}
+      <div className="glass-card" style={{ padding: '10px 8px', margin: '8px 0 12px 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', textAlign: 'center', alignItems: 'center' }}>
+          <div style={{ padding: '0 4px', borderRight: '1px solid var(--border-color)' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              Active
+            </span>
+            <strong style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
+              {plans.length}
+            </strong>
+          </div>
+
+          <div style={{ padding: '0 4px', borderRight: '1px solid var(--border-color)' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              Monthly
+            </span>
+            <strong style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent-primary)', display: 'block', lineHeight: '1.2' }}>
+              ₹{Math.round(totalMonthlyPlanCost).toLocaleString('en-IN')}
+            </strong>
+          </div>
+
+          <div style={{ padding: '0 4px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              Ending Soon
+            </span>
+            <strong style={{ fontSize: '1.15rem', fontWeight: '800', color: endingSoonCount > 0 ? 'var(--accent-warning)' : 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
+              {endingSoonCount}
+            </strong>
           </div>
         </div>
       </div>
