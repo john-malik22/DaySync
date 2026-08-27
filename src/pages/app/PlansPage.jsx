@@ -127,18 +127,8 @@ export function PlansPage() {
 
   return (
     <div className="page-container">
-      {/* Top Header Row with Add Plan Action */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-sm)' }}>
-        <PageHeaderRow title="Plans & Commitments" onSearch={setSearch} />
-        <button
-          type="button"
-          onClick={() => navigate('/app/expenses')}
-          className="btn-primary"
-          style={{ fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', flexShrink: 0 }}
-        >
-          <Plus size={14} /> Add Plan
-        </button>
-      </div>
+      {/* Top Header Row */}
+      <PageHeaderRow title="Plans & Commitments" onSearch={setSearch} />
 
       {/* Plan Summary Stat Cards */}
       <div className="grid-3" style={{ margin: 'var(--space-sm) 0' }}>

@@ -673,6 +673,18 @@ export function SettingsPage() {
                 ₹ INR (Indian Rupee)
               </div>
             </div>
+
+            {/* Language & Region */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Language & Region</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>System language & locale</div>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                English (India • IST)
+              </div>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                More languages coming later.
+              </div>
+            </div>
           </div>
         </div>
 
