@@ -7,26 +7,26 @@ import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
 import { ArrowUpRight, ArrowDownRight, Wallet, Edit2, Trash2, Check, X, CreditCard } from 'lucide-react';
 
 const EXPENSE_CATEGORIES = [
-  { value: 'Recharges', label: '📱 Recharges' },
-  { value: 'Electricity Bill', label: '⚡ Electricity' },
-  { value: 'Daily Travelling', label: '🚗 Transport' },
-  { value: 'Subscriptions', label: '🍿 Subscriptions' },
-  { value: 'Groceries', label: '🛒 Groceries' },
-  { value: 'Food', label: '🍔 Dining' },
-  { value: 'Shopping', label: '🛍️ Shopping' },
-  { value: 'Healthcare', label: '🏥 Healthcare' },
-  { value: 'Entertainment', label: '🎟️ Entertainment' },
-  { value: 'Other', label: '🏷️ Other' }
+  { value: 'Recharges', label: '📱 Recharge', ariaLabel: 'Recharge category' },
+  { value: 'Electricity Bill', label: '💡 Bills', ariaLabel: 'Bills category' },
+  { value: 'Food', label: '🍔 Food', ariaLabel: 'Food category' },
+  { value: 'Groceries', label: '🛒 Groceries', ariaLabel: 'Groceries category' },
+  { value: 'Shopping', label: '🛍️ Shopping', ariaLabel: 'Shopping category' },
+  { value: 'Daily Travelling', label: '🚗 Travel', ariaLabel: 'Travel category' },
+  { value: 'Subscriptions', label: '🎬 Subscriptions', ariaLabel: 'Subscriptions category' },
+  { value: 'Healthcare', label: '❤️ Health', ariaLabel: 'Health category' },
+  { value: 'Entertainment', label: '🎟️ Entertainment', ariaLabel: 'Entertainment category' },
+  { value: 'Other', label: '📦 Other', ariaLabel: 'Other category' }
 ];
 
 const INCOME_CATEGORIES = [
-  { value: 'Salary', label: '💼 Salary' },
-  { value: 'Freelance', label: '💻 Freelance' },
-  { value: 'Pocket Money', label: '🎁 Allowance' },
-  { value: 'Cashback & Rewards', label: '💰 Cashback' },
-  { value: 'Refunds', label: '🔄 Refunds' },
-  { value: 'Investments', label: '📈 Investments' },
-  { value: 'Other Income', label: '💵 Other' }
+  { value: 'Salary', label: '💼 Salary', ariaLabel: 'Salary category' },
+  { value: 'Freelance', label: '💻 Freelance', ariaLabel: 'Freelance category' },
+  { value: 'Pocket Money', label: '🎁 Allowance', ariaLabel: 'Allowance category' },
+  { value: 'Cashback & Rewards', label: '💰 Cashback', ariaLabel: 'Cashback category' },
+  { value: 'Refunds', label: '🔄 Refunds', ariaLabel: 'Refunds category' },
+  { value: 'Investments', label: '📈 Investments', ariaLabel: 'Investments category' },
+  { value: 'Other Income', label: '💵 Other', ariaLabel: 'Other Income category' }
 ];
 
 export function ExpensesPage() {

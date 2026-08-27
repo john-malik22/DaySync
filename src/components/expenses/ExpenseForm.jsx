@@ -5,26 +5,26 @@ import { useToast } from '../../context/ToastContext';
 import { calculateEndDate, parseDuration, formatHumanDate } from '../../services/dateUtils';
 
 const EXPENSE_CATEGORIES = [
-  { value: 'Recharges', label: '📱 Recharges (Mobile/DTH)' },
-  { value: 'Electricity Bill', label: '⚡ Electricity Bill & Utilities' },
-  { value: 'Daily Travelling', label: '🚗 Daily Travelling & Transport' },
-  { value: 'Subscriptions', label: '🍿 Subscriptions (Netflix, Cloud)' },
-  { value: 'Groceries', label: '🛒 Groceries & Supplies' },
-  { value: 'Food', label: '🍔 Dining & Food' },
-  { value: 'Shopping', label: '🛍️ Shopping & Apparel' },
-  { value: 'Healthcare', label: '🏥 Healthcare & Medical' },
-  { value: 'Entertainment', label: '🎟️ Entertainment & Movies' },
-  { value: 'Other', label: '🏷️ Other Expenses' }
+  { value: 'Recharges', label: '📱 Recharge', ariaLabel: 'Recharge category' },
+  { value: 'Electricity Bill', label: '💡 Bills', ariaLabel: 'Bills category' },
+  { value: 'Food', label: '🍔 Food', ariaLabel: 'Food category' },
+  { value: 'Groceries', label: '🛒 Groceries', ariaLabel: 'Groceries category' },
+  { value: 'Shopping', label: '🛍️ Shopping', ariaLabel: 'Shopping category' },
+  { value: 'Daily Travelling', label: '🚗 Travel', ariaLabel: 'Travel category' },
+  { value: 'Subscriptions', label: '🎬 Subscriptions', ariaLabel: 'Subscriptions category' },
+  { value: 'Healthcare', label: '❤️ Health', ariaLabel: 'Health category' },
+  { value: 'Entertainment', label: '🎟️ Entertainment', ariaLabel: 'Entertainment category' },
+  { value: 'Other', label: '📦 Other', ariaLabel: 'Other category' }
 ];
 
 const INCOME_CATEGORIES = [
-  { value: 'Salary', label: '💼 Salary & Paycheck' },
-  { value: 'Freelance', label: '💻 Freelance & Client Work' },
-  { value: 'Pocket Money', label: '🎁 Pocket Money & Allowance' },
-  { value: 'Cashback & Rewards', label: '💰 Cashback & Rewards' },
-  { value: 'Refunds', label: '🔄 Refunds & Returns' },
-  { value: 'Investments', label: '📈 Investments & Dividends' },
-  { value: 'Other Income', label: '💵 Other Income' }
+  { value: 'Salary', label: '💼 Salary', ariaLabel: 'Salary category' },
+  { value: 'Freelance', label: '💻 Freelance', ariaLabel: 'Freelance category' },
+  { value: 'Pocket Money', label: '🎁 Allowance', ariaLabel: 'Allowance category' },
+  { value: 'Cashback & Rewards', label: '💰 Cashback', ariaLabel: 'Cashback category' },
+  { value: 'Refunds', label: '🔄 Refunds', ariaLabel: 'Refunds category' },
+  { value: 'Investments', label: '📈 Investments', ariaLabel: 'Investments category' },
+  { value: 'Other Income', label: '💵 Other', ariaLabel: 'Other Income category' }
 ];
 
 export function ExpenseForm() {
