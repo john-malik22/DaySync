@@ -111,84 +111,48 @@ export function ExpensesPage() {
   return (
     <div className="page-container">
       {/* Top Header Row */}
-      <PageHeaderRow title="Expenses" onSearch={setSearch} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+        <PageHeaderRow title="Expenses" onSearch={setSearch} />
+      </div>
 
-      {/* Row 1: LOG TRANSACTION (Left) | TOTAL BALANCE + SPENT/RECEIVED SUMMARY (Right) */}
-      <div className="expenses-top-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 'var(--space-lg)', alignItems: 'start' }}>
-        {/* LOG TRANSACTION Card */}
-        <ExpenseForm />
+      {/* Top Summary Card (Total | Spent | Received) */}
+      <div className="glass-card" style={{ padding: '12px 14px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+          <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '13.5px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Wallet size={16} color="var(--accent-primary)" /> FINANCIAL SUMMARY
+          </h3>
 
-        {/* TOTAL BALANCE Card with Compact Spent & Received Summary Blocks */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-          <div>
-            <h3 style={{ marginBottom: '8px', color: 'var(--accent-primary)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Wallet size={16} color="var(--accent-primary)" /> TOTAL BALANCE
-            </h3>
+          <Link
+            to="/app/settings"
+            className="btn-primary"
+            style={{ fontSize: '12px', padding: '5px 12px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+          >
+            <CreditCard size={14} /> Add Transaction
+          </Link>
+        </div>
 
-            {startingBalance === null || isEditingBalance ? (
-              <div style={{ marginTop: '4px' }}>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>
-                  {startingBalance === null ? 'Starting Account Balance not set' : 'Starting Account Balance'}
-                </div>
-                <form onSubmit={handleSaveStartingBalance} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <input
-                    type="number"
-                    placeholder="Enter amount (e.g. 50000)"
-                    min="0"
-                    step="any"
-                    value={balanceInput}
-                    onChange={(e) => setBalanceInput(e.target.value)}
-                    required
-                    style={{ flex: 1, minHeight: '34px', fontSize: '12px', padding: '4px 8px' }}
-                  />
-                  <button type="submit" className="btn-primary" style={{ minHeight: '34px', padding: '0 10px', fontSize: '12px', flexShrink: 0 }}>
-                    <Check size={14} /> Save
-                  </button>
-                  {isEditingBalance && startingBalance !== null && (
-                    <button type="button" onClick={() => setIsEditingBalance(false)} className="btn-secondary" style={{ minHeight: '34px', padding: '0 6px', fontSize: '12px', flexShrink: 0 }}>
-                      <X size={14} />
-                    </button>
-                  )}
-                </form>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{
-                    fontSize: '1.8rem',
-                    fontWeight: '800',
-                    color: currentBalance >= 0 ? 'var(--text-primary)' : 'var(--accent-danger)'
-                  }}>
-                    {currentBalance >= 0 ? '+' : ''}₹{currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleStartEditBalance}
-                  title="Edit Starting Balance"
-                  style={{
-                    padding: '4px', width: '28px', height: '28px',
-                    borderRadius: 'var(--radius-sm)', background: 'transparent',
-                    border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                  }}
-                >
-                  <Edit2 size={14} />
-                </button>
-              </div>
-            )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', textAlign: 'center' }}>
+          {/* Column 1: Total Balance */}
+          <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', marginBottom: '2px' }}>Total Balance</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: '800', color: currentBalance >= 0 ? 'var(--text-primary)' : 'var(--accent-danger)' }}>
+              {currentBalance >= 0 ? '+' : ''}₹{currentBalance.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            </div>
           </div>
 
-          {/* Compact Spent & Received Summary Blocks */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-xs)', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
-            <div style={{ padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Spent</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--accent-danger)' }}>-₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+          {/* Column 2: Spent */}
+          <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', marginBottom: '2px' }}>Spent</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-danger)' }}>
+              -₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </div>
-            <div style={{ padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Received</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--accent-primary)' }}>+₹{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+          </div>
+
+          {/* Column 3: Received */}
+          <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', marginBottom: '2px' }}>Received</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-success)' }}>
+              +₹{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </div>
           </div>
         </div>

@@ -9,6 +9,7 @@ import { ConfirmationModal } from '../../components/common/ConfirmationModal';
 import { WidgetPickerModal } from '../../components/dashboard/WidgetPickerModal';
 import { DEFAULT_WIDGET_LAYOUT } from '../../components/dashboard/widgetCatalog';
 import { api } from '../../services/api';
+import { ExpenseForm } from '../../components/expenses/ExpenseForm';
 import {
   User,
   Bell,
@@ -33,6 +34,8 @@ import {
   Eye,
   EyeOff,
   Edit2,
+  Plus,
+  CreditCard,
   Key,
   CheckCircle,
   AlertCircle,
@@ -40,7 +43,6 @@ import {
   Layers,
   Activity,
   Repeat,
-  CreditCard,
   Users,
   Calendar,
   Globe,
@@ -137,6 +139,9 @@ export function SettingsPage() {
   // Temp values for Quiet Hours Edit Modal
   const [tempQuietStart, setTempQuietStart] = useState(quietStart);
   const [tempQuietEnd, setTempQuietEnd] = useState(quietEnd);
+
+  // Expense Entry Modal State
+  const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
 
   // Active Dashboard Widgets Layout
   const [activeWidgetIds, setActiveWidgetIds] = useState(() => {
@@ -991,6 +996,27 @@ export function SettingsPage() {
           </div>
         </div>
 
+        {/* EXPENSE ENTRY SECTION */}
+        <div className="glass-card">
+          <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CreditCard size={18} color="var(--accent-primary)" /> Expense Entry
+          </h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
+            Log new expense or income transactions to your records.
+          </p>
+
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowAddExpenseModal(true)}
+              className="btn-primary"
+              style={{ fontSize: '12.5px', padding: '7px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Plus size={15} /> Add Transaction
+            </button>
+          </div>
+        </div>
+
         {/* 8. APP / PWA SECTION */}
         <div ref={appRef} className="glass-card">
           <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1361,6 +1387,38 @@ export function SettingsPage() {
       <ConfirmationModal isOpen={showDeleteModal} title="Delete your DaySync account?" message="Your account and associated data will be permanently deleted. This action cannot be undone." confirmText="Delete Account" cancelText="Cancel" isDanger={true} isLoading={isDeletingAccount} onConfirm={handleConfirmDeleteAccount} onCancel={() => setShowDeleteModal(false)} />
       <ConfirmationModal isOpen={showClearHistoryModal} title="Clear your conversation history?" message="Are you sure you want to clear your stored chat messages? This action cannot be undone." confirmText="Clear History" cancelText="Cancel" isDanger={true} isLoading={isClearingHistory} onConfirm={handleConfirmClearHistory} onCancel={() => setShowClearHistoryModal(false)} />
       <ConfirmationModal isOpen={showDashboardResetModal} title="Reset Dashboard Layout?" message="This will restore the default widget arrangement and sizes. Your tasks, expenses, and data will not be affected." confirmText="Reset Layout" cancelText="Cancel" isDanger={true} onConfirm={handleConfirmResetDashboard} onCancel={() => setShowDashboardResetModal(false)} />
+
+      {/* Expense Entry Modal */}
+      {showAddExpenseModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1100, padding: '16px'
+        }}>
+          <div className="glass-card animate-scale-in" style={{
+            maxWidth: '460px', width: '100%', padding: '18px 20px',
+            background: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+            maxHeight: '90vh', overflowY: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '15px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <CreditCard size={17} /> LOG TRANSACTION
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddExpenseModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+                aria-label="Close form"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <ExpenseForm onSuccess={() => setShowAddExpenseModal(false)} />
+          </div>
+        </div>
+      )}
 
       {/* Widget Picker Modal */}
       <WidgetPickerModal

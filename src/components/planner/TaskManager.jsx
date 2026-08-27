@@ -186,7 +186,8 @@ export function TaskManager({ searchFilter }) {
         </div>
 
         <form onSubmit={handleAddTask} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div className="mobile-stack-form" style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '8px' }}>
+          {/* Full-Width Title Input */}
+          <div>
             {taskType === 'birthday' ? (
               <input
                 type="text"
@@ -194,6 +195,7 @@ export function TaskManager({ searchFilter }) {
                 value={personName}
                 onChange={(e) => { setPersonName(e.target.value); setTitle(`${e.target.value}'s Birthday`); }}
                 disabled={isSubmitting}
+                style={{ width: '100%' }}
                 required
               />
             ) : (
@@ -203,22 +205,27 @@ export function TaskManager({ searchFilter }) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 disabled={isSubmitting}
+                style={{ width: '100%' }}
                 required
               />
             )}
+          </div>
 
+          {/* Priority + Save Button on Same Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
               disabled={isSubmitting}
+              style={{ width: '100%', minHeight: '36px', fontSize: '12px' }}
             >
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
+              <option value="High">High Priority</option>
+              <option value="Medium">Medium Priority</option>
+              <option value="Low">Low Priority</option>
             </select>
 
-            <button type="submit" className="btn-primary" disabled={isSubmitting}>
-              <Plus size={16} /> {isSubmitting ? 'Saving...' : 'Save'}
+            <button type="submit" className="btn-primary" disabled={isSubmitting} style={{ minHeight: '36px', fontSize: '12px', justifyContent: 'center' }}>
+              <Plus size={15} /> {isSubmitting ? 'Saving...' : 'Save'}
             </button>
           </div>
 

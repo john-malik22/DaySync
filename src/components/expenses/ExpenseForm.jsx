@@ -27,7 +27,7 @@ const INCOME_CATEGORIES = [
   { value: 'Other Income', label: '💵 Other', ariaLabel: 'Other Income category' }
 ];
 
-export function ExpenseForm() {
+export function ExpenseForm({ onSuccess }) {
   const { addExpense } = useLuna();
   const { showToast } = useToast();
 
@@ -116,6 +116,7 @@ export function ExpenseForm() {
       setDescription('');
       setIsPlan(false);
       if (showToast) showToast(isPlan ? 'Plan saved successfully.' : 'Transaction saved successfully.', 'success');
+      if (onSuccess) onSuccess();
     } catch (err) {
       if (showToast) showToast(err.message || 'Couldn\'t save transaction. Please try again.', 'error');
     } finally {
@@ -126,76 +127,91 @@ export function ExpenseForm() {
   const activeCategories = txType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   return (
-    <div className="glass-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
-        <h3 style={{ color: 'var(--accent-primary)', margin: 0 }}>LOG TRANSACTION</h3>
-
-        <div style={{ display: 'flex', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '3px', border: '1px solid var(--border-color)' }}>
-          <button
-            type="button"
-            onClick={() => handleTypeSwitch('expense')}
-            disabled={isSubmitting}
-            style={{
-              padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
-              background: txType === 'expense' ? 'var(--accent-primary)' : 'transparent',
-              color: txType === 'expense' ? '#FFFFFF' : 'var(--text-secondary)',
-              fontWeight: txType === 'expense' ? '700' : '500', fontSize: '13px',
-              display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s ease'
-            }}
-          >
-            <ArrowDownRight size={14} /> Spent
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTypeSwitch('income')}
-            disabled={isSubmitting}
-            style={{
-              padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
-              background: txType === 'income' ? 'var(--accent-primary)' : 'transparent',
-              color: txType === 'income' ? '#FFFFFF' : 'var(--text-secondary)',
-              fontWeight: txType === 'income' ? '700' : '500', fontSize: '13px',
-              display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s ease'
-            }}
-          >
-            <ArrowUpRight size={14} /> Received
-          </button>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-        <div className="mobile-stack-form" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1.5fr auto', gap: 'var(--space-sm)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {/* Row 1: Amount + Spent/Received Switch */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: '8px', alignItems: 'center' }}>
           <input
             type="number"
             placeholder="Amount (₹)"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             disabled={isSubmitting}
+            style={{ width: '100%', minHeight: '38px', fontSize: '13px' }}
             required
+            autoFocus
           />
+
+          <div style={{ display: 'flex', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '2px', border: '1px solid var(--border-color)', height: '38px', boxSizing: 'border-box' }}>
+            <button
+              type="button"
+              onClick={() => handleTypeSwitch('expense')}
+              disabled={isSubmitting}
+              style={{
+                flex: 1, borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+                background: txType === 'expense' ? 'var(--accent-primary)' : 'transparent',
+                color: txType === 'expense' ? '#FFFFFF' : 'var(--text-secondary)',
+                fontWeight: txType === 'expense' ? '700' : '500', fontSize: '12px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', transition: 'all 0.15s ease'
+              }}
+            >
+              <ArrowDownRight size={13} /> Spent
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTypeSwitch('income')}
+              disabled={isSubmitting}
+              style={{
+                flex: 1, borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+                background: txType === 'income' ? 'var(--accent-primary)' : 'transparent',
+                color: txType === 'income' ? '#FFFFFF' : 'var(--text-secondary)',
+                fontWeight: txType === 'income' ? '700' : '500', fontSize: '12px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', transition: 'all 0.15s ease'
+              }}
+            >
+              <ArrowUpRight size={13} /> Received
+            </button>
+          </div>
+        </div>
+
+        {/* Row 2: Category Selector */}
+        <div>
+          <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>CATEGORY</label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             disabled={isSubmitting}
+            aria-label="Transaction category"
+            style={{ width: '100%', minHeight: '36px', fontSize: '12.5px' }}
           >
             {activeCategories.map(cat => (
-              <option key={cat.value} value={cat.value}>{cat.label}</option>
+              <option key={cat.value} value={cat.value} aria-label={cat.ariaLabel || cat.label}>{cat.label}</option>
             ))}
           </select>
+        </div>
+
+        {/* Row 3: Description Input */}
+        <div>
+          <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>DESCRIPTION</label>
           <input
             type="text"
             placeholder="Description (e.g. Netflix, Jio recharge)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             disabled={isSubmitting}
+            style={{ width: '100%', minHeight: '36px', fontSize: '12.5px' }}
           />
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={isSubmitting}
-          >
-            <Plus size={16} /> {isSubmitting ? 'Saving...' : 'Save'}
-          </button>
         </div>
+
+        {/* Row 4: Save Action */}
+        <button
+          type="submit"
+          className="btn-primary"
+          disabled={isSubmitting}
+          style={{ width: '100%', minHeight: '38px', fontSize: '13px', justifyContent: 'center', marginTop: '4px' }}
+        >
+          <Plus size={16} /> {isSubmitting ? 'Saving...' : 'Save Transaction'}
+        </button>
 
         {/* Plan Toggle Checkbox */}
         {txType === 'expense' && (
