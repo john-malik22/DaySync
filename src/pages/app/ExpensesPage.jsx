@@ -43,13 +43,13 @@ export function ExpensesPage() {
   const [isEditingBalance, setIsEditingBalance] = useState(false);
   const [balanceInput, setBalanceInput] = useState('');
 
-  const totalIncome = expenses
-    .filter(e => e.type === 'income')
-    .reduce((acc, curr) => acc + curr.amount, 0);
+  const totalIncome = (expenses || [])
+    .filter(e => e && e.type === 'income')
+    .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
-  const totalSpent = expenses
-    .filter(e => e.type !== 'income')
-    .reduce((acc, curr) => acc + curr.amount, 0);
+  const totalSpent = (expenses || [])
+    .filter(e => e && e.type !== 'income')
+    .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   const currentBalance = (startingBalance !== null ? startingBalance : 0) + totalIncome - totalSpent;
 
@@ -67,11 +67,12 @@ export function ExpensesPage() {
   };
 
   const startEdit = (exp) => {
+    if (!exp) return;
     setEditingId(exp.id);
     setEditTxType(exp.type || 'expense');
-    setEditAmount(exp.amount.toString());
-    setEditCategory(exp.category);
-    setEditDescription(exp.description);
+    setEditAmount((exp.amount || 0).toString());
+    setEditCategory(exp.category || 'Recharges');
+    setEditDescription(exp.description || '');
   };
 
   const handleSaveEdit = async (id) => {
@@ -102,33 +103,31 @@ export function ExpensesPage() {
     }
   };
 
-  const filteredExpenses = expenses.filter(exp => 
-    !search || 
-    exp.description.toLowerCase().includes(search.toLowerCase()) || 
-    exp.category.toLowerCase().includes(search.toLowerCase())
+  const filteredExpenses = (expenses || []).filter(exp => 
+    exp && (!search || 
+    (exp.description && exp.description.toLowerCase().includes(search.toLowerCase())) || 
+    (exp.category && exp.category.toLowerCase().includes(search.toLowerCase())))
   );
 
   return (
     <div className="page-container">
       {/* Top Header Row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-        <PageHeaderRow title="Expenses" onSearch={setSearch} />
+      <PageHeaderRow title="Expenses" onSearch={setSearch} />
+
+      {/* Row 1: TRANSACTION ENTRY (Inline Compact Log Transaction Form) */}
+      <div className="glass-card" style={{ marginBottom: '16px', padding: '14px 16px' }}>
+        <h3 style={{ margin: '0 0 10px 0', color: 'var(--accent-primary)', fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
+          LOG TRANSACTION
+        </h3>
+        <ExpenseForm />
       </div>
 
-      {/* Top Summary Card (Total | Spent | Received) */}
+      {/* Row 2: FINANCIAL SUMMARY CARD (Total Balance | Spent | Received) */}
       <div className="glass-card" style={{ padding: '12px 14px', marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
           <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '13.5px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Wallet size={16} color="var(--accent-primary)" /> FINANCIAL SUMMARY
           </h3>
-
-          <Link
-            to="/app/settings"
-            className="btn-primary"
-            style={{ fontSize: '12px', padding: '5px 12px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-          >
-            <CreditCard size={14} /> Add Transaction
-          </Link>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', textAlign: 'center' }}>
