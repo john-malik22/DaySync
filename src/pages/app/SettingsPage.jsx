@@ -953,25 +953,45 @@ export function SettingsPage() {
 
         {/* 7. PRIVACY & SECURITY SECTION */}
         <div ref={privacyRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Shield size={18} color="var(--accent-primary)" /> Privacy & Security
           </h3>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
-            Manage account protection, active browser sessions, and personal conversation privacy.
+            Keep your account credentials and conversation history protected.
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Security Summary</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Email Verified • Password Protected • 1 Active Session</div>
-              </div>
-              <span style={{ fontSize: '11px', color: 'var(--accent-success)', fontWeight: '700' }}>Protected</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {/* Status Rows */}
+            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--text-primary)' }}>Security Status</span>
+              <span style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <CheckCircle size={13} /> Protected
+              </span>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '4px' }}>
-              <button type="button" onClick={() => setShowClearHistoryModal(true)} className="btn-secondary" style={{ fontSize: '12px', color: 'var(--accent-danger)' }}>
-                <Trash2 size={14} /> Clear Chat History
+            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Email</span>
+              <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Check size={12} /> Verified
+              </span>
+            </div>
+
+            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Password</span>
+              <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Check size={12} /> Protected
+              </span>
+            </div>
+
+            {/* Clear Chat History */}
+            <div style={{ marginTop: '6px' }}>
+              <button
+                type="button"
+                onClick={() => setShowClearHistoryModal(true)}
+                className="btn-secondary"
+                style={{ fontSize: '12px', color: 'var(--accent-danger)', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Trash2 size={13} /> Clear Chat History
               </button>
             </div>
           </div>
