@@ -922,47 +922,54 @@ export function SettingsPage() {
             <Smartphone size={18} color="var(--accent-primary)" /> App & PWA Status
           </h3>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '16px' }}>
-            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+            {/* Card 1 — Version */}
+            <div style={{ padding: '12px 14px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '94px' }}>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Version</div>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>2.0.0</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>2.0.0</div>
             </div>
 
-            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Update Status</div>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: updateAvailable ? 'var(--accent-warning)' : 'var(--text-primary)' }}>
-                {getUpdateStatusText()}
+            {/* Card 2 — Update Status */}
+            <div style={{ padding: '12px 14px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '94px' }}>
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '2px' }}>Update Status</div>
+                <div style={{
+                  fontSize: '13.5px', fontWeight: '700',
+                  color: updateAvailable ? 'var(--accent-warning)' : (hasCheckedManually && !fetchError) ? 'var(--accent-success)' : 'var(--text-primary)'
+                }}>
+                  {getUpdateStatusText()}
+                </div>
+              </div>
+
+              <div style={{ marginTop: '6px' }}>
+                {updateAvailable ? (
+                  <button
+                    type="button"
+                    onClick={updateApp}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: 0, fontSize: '11.5px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    [ Update Now ]
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={checkForUpdates}
+                    disabled={checking}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: 0, fontSize: '11.5px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px', opacity: checking ? 0.7 : 1 }}
+                  >
+                    {checking ? 'Checking...' : 'Check for Updates ↻'}
+                  </button>
+                )}
               </div>
             </div>
 
-            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+            {/* Card 3 — Installation */}
+            <div style={{ padding: '12px 14px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '94px' }}>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Installation</div>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent-success)' }}>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent-success)' }}>
                 {isStandalone ? 'Installed (PWA)' : 'Browser Mode'}
               </div>
             </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={checkForUpdates}
-              disabled={checking}
-              className="btn-secondary"
-              style={{ fontSize: '12.5px', padding: '8px 20px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <RefreshCw size={14} /> {checking ? 'Checking...' : 'Check for Updates'}
-            </button>
-            {updateAvailable && (
-              <button
-                type="button"
-                onClick={updateApp}
-                className="btn-primary"
-                style={{ fontSize: '12.5px', padding: '8px 20px' }}
-              >
-                Update Now
-              </button>
-            )}
           </div>
         </div>
 
