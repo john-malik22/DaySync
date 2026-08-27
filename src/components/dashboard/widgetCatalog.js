@@ -319,12 +319,12 @@ export const WIDGET_CATALOG = [
   }
 ];
 
-// First-time users get EXACTLY 6 initial widgets, all defaulting to W (Wide)
+// First-time users get EXACTLY 6 priority widgets in deliberate product order
 export const DEFAULT_WIDGET_LAYOUT = [
+  { id: 'spending_snapshot', size: 'W', visible: true },
+  { id: 'upcoming_plans', size: 'W', visible: true },
+  { id: 'split_balances', size: 'W', visible: true },
   { id: 'today_tasks', size: 'W', visible: true },
   { id: 'upcoming_reminders', size: 'W', visible: true },
-  { id: 'upcoming_plans', size: 'W', visible: true },
-  { id: 'spending_snapshot', size: 'W', visible: true },
-  { id: 'luna_suggestion', size: 'W', visible: true },
-  { id: 'recent_expenses', size: 'W', visible: true }
+  { id: 'luna_suggestion', size: 'W', visible: true }
 ];
