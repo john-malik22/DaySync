@@ -76,7 +76,8 @@ export function TaskManager({ searchFilter }) {
       return;
     }
 
-    if (confirm('Are you sure you want to delete this item?')) {
+    const needsConfirm = localStorage.getItem('daysync_confirm_delete') !== 'false';
+    if (!needsConfirm || confirm('Are you sure you want to delete this item?')) {
       try {
         await deleteTask(id);
         if (showToast) showToast('Item deleted.', 'info');

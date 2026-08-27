@@ -91,7 +91,8 @@ export function ExpensesPage() {
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this expense transaction?')) {
+    const needsConfirm = localStorage.getItem('daysync_confirm_delete') !== 'false';
+    if (!needsConfirm || confirm('Are you sure you want to delete this expense transaction?')) {
       try {
         await deleteExpense(id);
         if (showToast) showToast('Expense transaction deleted.', 'info');

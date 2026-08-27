@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
@@ -42,10 +43,12 @@ import {
   CreditCard,
   Users,
   Calendar,
-  Globe
+  Globe,
+  HelpCircle
 } from 'lucide-react';
 
 export function SettingsPage() {
+  const navigate = useNavigate();
   const { user, token, theme, toggleTheme, logout, deleteAccount, updateUser } = useAuth();
   const { preferences, updatePreferences } = useNotifications();
   const {
@@ -115,6 +118,9 @@ export function SettingsPage() {
   });
   const [dateFormat, setDateFormat] = useState(() => {
     return localStorage.getItem('daysync_date_format') || 'DD MMM YYYY';
+  });
+  const [confirmDelete, setConfirmDelete] = useState(() => {
+    return localStorage.getItem('daysync_confirm_delete') !== 'false';
   });
 
   // Quiet Hours Preferences
@@ -234,6 +240,12 @@ export function SettingsPage() {
     setDateFormat(fmt);
     localStorage.setItem('daysync_date_format', fmt);
     if (showToast) showToast(`Date format updated to ${fmt}.`, 'success');
+  };
+
+  const handleToggleConfirmDelete = (val) => {
+    setConfirmDelete(val);
+    localStorage.setItem('daysync_confirm_delete', val ? 'true' : 'false');
+    if (showToast) showToast(val ? 'Confirmation modal before deletion enabled.' : 'Direct item deletion enabled.', 'info');
   };
 
   const handleToggleQuietHours = (val) => {
@@ -490,9 +502,17 @@ export function SettingsPage() {
   const getUpdateStatusText = () => {
     if (checking) return 'Checking...';
     if (updateAvailable) return 'Update available';
-    if (hasCheckedManually) return 'Up to date';
+    if (hasCheckedManually) return '✓ Up to date';
     if (fetchError) return 'Unable to check';
     return 'Not checked';
+  };
+
+  const detectedTimezoneName = () => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
+    } catch (e) {
+      return 'Asia/Kolkata';
+    }
   };
 
   const sectionsNav = [
@@ -543,6 +563,9 @@ export function SettingsPage() {
           <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <User size={18} color="var(--accent-primary)" /> Account
           </h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
+            Manage your personal profile, verified credentials, and active account security.
+          </p>
 
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -630,7 +653,7 @@ export function SettingsPage() {
             <SlidersHorizontal size={18} color="var(--accent-primary)" /> App & System Preferences
           </h3>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 16px 0' }}>
-            Configure functional date, refresh, startup, and theme preferences across DaySync.
+            Configure functional date, refresh, startup, timezone, and theme preferences across DaySync.
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
@@ -721,6 +744,20 @@ export function SettingsPage() {
               </select>
             </div>
 
+            {/* Confirm Before Deleting */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Confirm Before Deleting</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Ask confirmation before deleting items</div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                <input
+                  type="checkbox"
+                  checked={confirmDelete}
+                  onChange={(e) => handleToggleConfirmDelete(e.target.checked)}
+                />
+                Enabled ({confirmDelete ? 'Prompt confirmation' : 'Direct deletion'})
+              </label>
+            </div>
+
             {/* Currency */}
             <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
               <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Currency</div>
@@ -735,10 +772,10 @@ export function SettingsPage() {
               <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Language & Region</div>
               <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>System language & locale</div>
               <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                English (India • IST)
+                English (India • {detectedTimezoneName()})
               </div>
               <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                More languages coming later.
+                More languages coming soon.
               </div>
             </div>
           </div>
@@ -751,7 +788,7 @@ export function SettingsPage() {
           </h3>
 
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
-            Arrange your widgets the way you use DaySync. Move, resize, add, or remove widgets anytime.
+            Arrange, resize, add, or remove widgets anytime to make DaySync fit the way you use it.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '14px' }}>
@@ -785,7 +822,7 @@ export function SettingsPage() {
           </div>
 
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
-            Receive reminders and important DaySync updates even when the app is closed.
+            Control what DaySync can notify you about even when the app is closed.
           </p>
 
           <div style={{ padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -838,7 +875,7 @@ export function SettingsPage() {
               </button>
             </div>
             <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
-              Silence non-critical notifications during your rest hours (local timezone).
+              Silence normal notifications during your rest hours (local timezone).
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
@@ -865,11 +902,21 @@ export function SettingsPage() {
 
         {/* 6. LUNA SETTINGS SECTION */}
         <div ref={lunaRef} className="glass-card">
-          <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles size={18} color="var(--accent-primary)" /> Luna AI Settings
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <h3 style={{ margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Sparkles size={18} color="var(--accent-primary)" /> Luna AI Settings
+            </h3>
+            <span style={{
+              fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px',
+              background: lunaSettings.enabled ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+              color: lunaSettings.enabled ? 'var(--accent-success)' : 'var(--accent-danger)'
+            }}>
+              Luna Status: {lunaSettings.enabled ? 'Active' : 'Disabled'}
+            </span>
+          </div>
+
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
-            Luna helps you focus on tasks, plans, habits, and important moments using your DaySync data.
+            Luna uses your DaySync activity to help you focus on tasks, plans, habits, and important moments.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -898,14 +945,17 @@ export function SettingsPage() {
           <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Shield size={18} color="var(--accent-primary)" /> Privacy & Security
           </h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
+            Manage account protection, active browser sessions, and personal conversation privacy.
+          </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Active Sessions</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>1 Active Browser Session (Current)</div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Security Summary</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Email Verified • Password Protected • 1 Active Session</div>
               </div>
-              <span style={{ fontSize: '11px', color: 'var(--accent-success)', fontWeight: '700' }}>Active</span>
+              <span style={{ fontSize: '11px', color: 'var(--accent-success)', fontWeight: '700' }}>Protected</span>
             </div>
 
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '4px' }}>
@@ -973,18 +1023,33 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* 9. ABOUT DAYSYNC SECTION */}
+        {/* 9. ABOUT DAYSYNC & HELP SECTION */}
         <div ref={aboutRef} className="glass-card">
           <h3 style={{ marginBottom: '8px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Info size={18} color="var(--accent-primary)" /> About DaySync
+            <Info size={18} color="var(--accent-primary)" /> About DaySync & Help
           </h3>
           <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', margin: '0 0 12px 0', lineHeight: '1.5' }}>
-            DaySync brings your tasks, expenses, plans, habits, reminders, shared splits, and Luna assistance together in one place.
+            DaySync brings your tasks, expenses, plans, habits, reminders, shared splits, and Luna assistance together in one everyday workspace.
           </p>
-          <div style={{ display: 'flex', gap: '16px', fontSize: '11.5px', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '16px', fontSize: '11.5px', color: 'var(--text-secondary)', flexWrap: 'wrap', marginBottom: '14px' }}>
             <div>Version: <strong style={{ color: 'var(--text-primary)' }}>2.0.0</strong></div>
             <div>Engine: <strong style={{ color: 'var(--text-primary)' }}>Antigravity Core</strong></div>
-            <div>Purpose: <strong style={{ color: 'var(--text-primary)' }}>Built for everyday life</strong></div>
+            <div>Platform: <strong style={{ color: 'var(--text-primary)' }}>{isStandalone ? 'PWA' : 'Web Browser'}</strong></div>
+            <div>Network: <strong style={{ color: navigator.onLine ? 'var(--accent-success)' : 'var(--accent-warning)' }}>{navigator.onLine ? 'Online' : 'Offline'}</strong></div>
+          </div>
+
+          <div style={{ paddingTop: '12px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <HelpCircle size={14} color="var(--accent-primary)" /> Need help or have questions?
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/app/chat')}
+              className="btn-secondary"
+              style={{ fontSize: '12px', padding: '5px 12px' }}
+            >
+              Ask Luna Assistant
+            </button>
           </div>
         </div>
 
