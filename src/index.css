@@ -1010,6 +1010,20 @@ option {
   }
 }
 
+/* Plans Page Responsive 2-Column Desktop Grid */
+.plans-desktop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .plans-desktop-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Dashboard 2.0 Web/Desktop Widget System (Restored Classic V2 Web Appearance) */
 .dashboard-widget-grid {
   display: grid;

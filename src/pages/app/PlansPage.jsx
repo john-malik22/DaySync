@@ -127,35 +127,35 @@ export function PlansPage() {
 
   return (
     <div className="page-container">
-      {/* Top Header Row */}
-      <PageHeaderRow title="Plans & Commitments" onSearch={setSearch} />
+      {/* Top Header Row: Page Title PLANS & COMMITMENTS */}
+      <PageHeaderRow title="PLANS & COMMITMENTS" onSearch={setSearch} />
 
       {/* Combined 3-Column Plan Summary Stat Card */}
-      <div className="glass-card" style={{ padding: '10px 8px', margin: '8px 0 12px 0' }}>
+      <div className="glass-card" style={{ padding: '14px 16px', margin: '8px 0 16px 0' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', textAlign: 'center', alignItems: 'center' }}>
-          <div style={{ padding: '0 4px', borderRight: '1px solid var(--border-color)' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ padding: '0 8px', borderRight: '1px solid var(--border-color)' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '700', textTransform: 'uppercase' }}>
               Active
             </span>
-            <strong style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
+            <strong style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
               {plans.length}
             </strong>
           </div>
 
-          <div style={{ padding: '0 4px', borderRight: '1px solid var(--border-color)' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ padding: '0 8px', borderRight: '1px solid var(--border-color)' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '700', textTransform: 'uppercase' }}>
               Monthly
             </span>
-            <strong style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent-primary)', display: 'block', lineHeight: '1.2' }}>
+            <strong style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--accent-primary)', display: 'block', lineHeight: '1.2' }}>
               ₹{Math.round(totalMonthlyPlanCost).toLocaleString('en-IN')}
             </strong>
           </div>
 
-          <div style={{ padding: '0 4px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ padding: '0 8px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '700', textTransform: 'uppercase' }}>
               Ending Soon
             </span>
-            <strong style={{ fontSize: '1.15rem', fontWeight: '800', color: endingSoonCount > 0 ? 'var(--accent-warning)' : 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
+            <strong style={{ fontSize: '1.3rem', fontWeight: '800', color: endingSoonCount > 0 ? 'var(--accent-warning)' : 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
               {endingSoonCount}
             </strong>
           </div>
@@ -163,13 +163,13 @@ export function PlansPage() {
       </div>
 
       {/* Category Filter Chips */}
-      <div className="scroll-row" style={{ marginBottom: '14px' }}>
+      <div className="scroll-row" style={{ marginBottom: '16px' }}>
         {categories.map(cat => (
           <button
             key={cat}
             onClick={() => setFilter(cat)}
             style={{
-              padding: '5px 14px', borderRadius: 'var(--radius-full)',
+              padding: '6px 16px', borderRadius: 'var(--radius-full)',
               background: filter === cat ? 'var(--accent-primary)' : 'var(--bg-card)',
               color: filter === cat ? '#FFFFFF' : 'var(--text-secondary)',
               border: `1px solid ${filter === cat ? 'var(--accent-primary)' : 'var(--border-color)'}`,
@@ -184,7 +184,7 @@ export function PlansPage() {
       {/* Main Plans Display Container */}
       <div className="glass-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
-          <h3 style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '14px', fontWeight: '800', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Repeat size={16} color="var(--accent-primary)" /> RECURRING PLANS ({sortedAndFilteredPlans.length})
           </h3>
           {isFromCache?.expenses && <StaleIndicator timestamp={lastSyncedAt?.expenses} />}
@@ -215,7 +215,7 @@ export function PlansPage() {
             </button>
           </div>
         ) : (
-          <div className="grid-2" style={{ gap: 'var(--space-sm)' }}>
+          <div className="plans-desktop-grid">
             {sortedAndFilteredPlans.map(plan => {
               const startDateIso = plan.startDate || plan.date;
               const endDateIso = getEffectiveEndDate(plan);
@@ -228,7 +228,7 @@ export function PlansPage() {
                 <div key={plan.id} style={{
                   padding: '14px 16px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
                   border: `1px solid ${isExpiringSoon ? 'var(--accent-warning)' : isExpired ? 'rgba(255, 75, 75, 0.4)' : 'var(--border-color)'}`,
-                  display: 'flex', flexDirection: 'column', gap: '10px'
+                  display: 'flex', flexDirection: 'column', gap: '10px', alignSelf: 'start'
                 }}>
                   {/* Top Line: Name & Category Badge */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
@@ -244,7 +244,7 @@ export function PlansPage() {
                     <span style={{
                       fontSize: '11px', fontWeight: '700', padding: '3px 8px', borderRadius: '4px',
                       background: badgeStyle.bg, color: badgeStyle.color,
-                      display: 'inline-flex', alignItems: 'center', gap: '4px'
+                      display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0
                     }}>
                       {isExpired ? <AlertCircle size={12} /> : isExpiringSoon ? <Clock size={12} /> : <CheckCircle2 size={12} />}
                       {status === 'ACTIVE' ? 'Active' : text}
@@ -253,11 +253,11 @@ export function PlansPage() {
 
                   {/* Pricing & Duration */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
                       ₹{parseFloat(plan.amount || 0).toLocaleString('en-IN')}
                     </div>
-                    <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', background: 'var(--bg-tertiary)', padding: '2px 8px', borderRadius: '4px' }}>
-                      Current plan: {getPlanDurationLabel(plan)}
+                    <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-secondary)', background: 'var(--bg-tertiary)', padding: '2px 8px', borderRadius: '4px' }}>
+                      Current: {getPlanDurationLabel(plan)}
                     </div>
                   </div>
 
@@ -267,12 +267,12 @@ export function PlansPage() {
                     paddingTop: '8px', borderTop: '1px dashed var(--border-color)', fontSize: '12px'
                   }}>
                     <div>
-                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px' }}>START DATE</span>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px', fontWeight: '700' }}>START DATE</span>
                       <strong style={{ color: 'var(--text-primary)' }}>{formatHumanDate(startDateIso)}</strong>
                     </div>
 
                     <div>
-                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px' }}>NEXT PAYMENT / EXPIRY</span>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px', fontWeight: '700' }}>NEXT PAYMENT / EXPIRY</span>
                       <strong style={{ color: isExpiringSoon ? 'var(--accent-warning)' : isExpired ? 'var(--accent-danger)' : 'var(--text-primary)' }}>
                         {formatHumanDate(endDateIso)}
                       </strong>
