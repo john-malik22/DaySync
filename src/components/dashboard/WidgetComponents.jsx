@@ -117,7 +117,7 @@ export function TodayTasksWidget({ widgetSize = 'T' }) {
   const overflowCount = pendingTasks.length - displayTasks.length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
           <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -168,7 +168,7 @@ export function TodayTasksWidget({ widgetSize = 'T' }) {
       </div>
 
       {overflowCount > 0 && (
-        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '4px' }}>
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '2px' }}>
           +{overflowCount} more task{overflowCount > 1 ? 's' : ''}
         </div>
       )}
@@ -187,7 +187,7 @@ export function UpcomingRemindersWidget({ widgetSize = 'T' }) {
   const overflowCount = upcomingReminders.length - displayReminders.length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -220,7 +220,7 @@ export function UpcomingRemindersWidget({ widgetSize = 'T' }) {
       </div>
 
       {overflowCount > 0 && (
-        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '4px' }}>
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '2px' }}>
           +{overflowCount} more
         </div>
       )}
@@ -239,7 +239,7 @@ export function OverdueTasksWidget({ widgetSize = 'T' }) {
   const overflowCount = overdueTasks.length - displayTasks.length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <h3 style={{ color: 'var(--accent-danger)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -281,7 +281,7 @@ export function OverdueTasksWidget({ widgetSize = 'T' }) {
       </div>
 
       {overflowCount > 0 && (
-        <div style={{ fontSize: '11px', color: 'var(--accent-danger)', textAlign: 'right', paddingTop: '4px' }}>
+        <div style={{ fontSize: '11px', color: 'var(--accent-danger)', textAlign: 'right', paddingTop: '2px' }}>
           +{overflowCount} more overdue
         </div>
       )}
@@ -299,7 +299,7 @@ export function UpcomingPlansWidget({ widgetSize = 'T' }) {
   const overflowCount = activePlans.length - displayPlans.length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -332,7 +332,7 @@ export function UpcomingPlansWidget({ widgetSize = 'T' }) {
       </div>
 
       {overflowCount > 0 && (
-        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '4px' }}>
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '2px' }}>
           +{overflowCount} more plan{overflowCount > 1 ? 's' : ''}
         </div>
       )}
@@ -350,7 +350,7 @@ export function BirthdaysMeetingsWidget({ widgetSize = 'T' }) {
   const overflowCount = lifeEvents.length - displayEvents.length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -380,7 +380,7 @@ export function BirthdaysMeetingsWidget({ widgetSize = 'T' }) {
       </div>
 
       {overflowCount > 0 && (
-        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '4px' }}>
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '2px' }}>
           +{overflowCount} more
         </div>
       )}
@@ -388,7 +388,7 @@ export function BirthdaysMeetingsWidget({ widgetSize = 'T' }) {
   );
 }
 
-// 6. Spending Snapshot Widget (Fixed height adapt: S shows summary, W shows Spent/Received/Net, T/L adds breakdown)
+// 6. Spending Snapshot Widget
 export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
   const { expenses } = useLuna();
   const todayStr = new Date().toISOString().split('T')[0];
@@ -399,8 +399,8 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
   const todaySpent = (expenses || []).filter(e => e.date === todayStr && e.type !== 'income').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
         <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Wallet size={15} color="var(--accent-primary)" /> SPENDING SNAPSHOT
         </h3>
@@ -441,7 +441,7 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
         </div>
       )}
 
-      <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '4px' }}>
+      <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span>Today: <strong>₹{todaySpent.toLocaleString()} spent</strong></span>
       </div>
     </div>
@@ -461,7 +461,7 @@ export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
   }).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         <DollarSign size={15} color="var(--accent-primary)" />
         <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>Monthly Expenses</span>
@@ -483,7 +483,7 @@ export function TodaySpendingWidget({ widgetSize = 'S' }) {
     .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         <TrendingUp size={15} color="var(--accent-primary)" />
         <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>Today's Spending</span>
@@ -502,7 +502,7 @@ export function HabitStreakWidget({ widgetSize = 'S' }) {
   const maxStreak = (habits || []).reduce((max, h) => Math.max(max, h.streak || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', textAlign: 'center', alignItems: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'center', alignItems: 'center' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         <Flame size={16} color="var(--accent-warning)" />
         <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>Habit Streak</span>
@@ -528,7 +528,7 @@ export function LunaSuggestionWidget({ widgetSize = 'W' }) {
 
   if (resourceLoading?.suggestion && !suggestion) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Sparkles size={15} color="var(--accent-primary)" />
           <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, fontWeight: '700' }}>
@@ -549,8 +549,8 @@ export function LunaSuggestionWidget({ widgetSize = 'W' }) {
   const whyText = typeof suggestion === 'object' ? suggestion?.why : null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Sparkles size={15} color="var(--accent-primary)" />
           <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, fontWeight: '700' }}>
@@ -562,14 +562,14 @@ export function LunaSuggestionWidget({ widgetSize = 'W' }) {
         </Link>
       </div>
 
-      <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
         {insightText ? (
           <>
-            <div style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: '1.35', fontWeight: '600', display: '-webkit-box', WebkitLineClamp: widgetSize === 'S' ? 2 : 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: '1.4', fontWeight: '600' }}>
               {insightText}
             </div>
             {whyText && widgetSize !== 'S' && (
-              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
                 {whyText}
               </div>
             )}
@@ -596,7 +596,7 @@ export function AskLunaWidget({ widgetSize = 'W' }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         <MessageSquare size={15} color="var(--accent-primary)" />
         <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Ask Luna AI</span>
@@ -623,7 +623,7 @@ export function UnreadNotificationsWidget({ widgetSize = 'S' }) {
   const { unreadCount } = useNotifications();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Bell size={15} color="var(--accent-primary)" />
@@ -649,7 +649,7 @@ export function HabitTrackerWidget({ widgetSize = 'S' }) {
   const displayHabits = allHabits.slice(0, maxItems);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
           <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -706,7 +706,7 @@ export function RecentExpensesWidget({ widgetSize = 'T' }) {
   const overflowCount = recentExps.length - displayExpenses.length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <h3 style={{ color: 'var(--accent-primary)', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -742,7 +742,7 @@ export function RecentExpensesWidget({ widgetSize = 'T' }) {
       </div>
 
       {overflowCount > 0 && (
-        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '4px' }}>
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', paddingTop: '2px' }}>
           +{overflowCount} more expense{overflowCount > 1 ? 's' : ''}
         </div>
       )}
@@ -755,7 +755,7 @@ export function QuickAddWidget({ widgetSize = 'S' }) {
   const navigate = useNavigate();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>SHORTCUTS</div>
       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
         <button type="button" onClick={() => navigate('/app/task')} className="btn-primary" aria-label="Add new task" style={{ flex: 1, padding: '6px 8px', fontSize: '10.5px', justifyContent: 'center' }}>
@@ -782,11 +782,11 @@ export function ClockDateWidget({ widgetSize = 'S' }) {
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: '4px' }}>
       <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--accent-primary)', letterSpacing: '0.5px' }}>
         {timeStr}
       </div>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', marginTop: '2px' }}>
+      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)' }}>
         {dateStr}
       </div>
     </div>
@@ -814,7 +814,7 @@ export function SplitBalancesWidget({ widgetSize = 'S' }) {
   const firstSplit = splits[0];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Users size={15} color="var(--accent-primary)" />
