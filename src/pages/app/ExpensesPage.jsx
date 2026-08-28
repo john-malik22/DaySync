@@ -40,9 +40,6 @@ export function ExpensesPage() {
   const [editCategory, setEditCategory] = useState('Recharges');
   const [editDescription, setEditDescription] = useState('');
 
-  const [isEditingBalance, setIsEditingBalance] = useState(false);
-  const [balanceInput, setBalanceInput] = useState('');
-
   const totalIncome = (expenses || [])
     .filter(e => e && e.type === 'income')
     .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
@@ -52,19 +49,6 @@ export function ExpensesPage() {
     .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   const currentBalance = (startingBalance !== null ? startingBalance : 0) + totalIncome - totalSpent;
-
-  const handleSaveStartingBalance = (e) => {
-    e.preventDefault();
-    if (!balanceInput) return;
-    updateStartingBalance(balanceInput);
-    setIsEditingBalance(false);
-    if (showToast) showToast('Starting balance updated.', 'success');
-  };
-
-  const handleStartEditBalance = () => {
-    setBalanceInput(startingBalance !== null ? startingBalance.toString() : '');
-    setIsEditingBalance(true);
-  };
 
   const startEdit = (exp) => {
     if (!exp) return;
@@ -111,56 +95,60 @@ export function ExpensesPage() {
 
   return (
     <div className="page-container">
-      {/* Top Header Row */}
-      <PageHeaderRow title="Expenses" onSearch={setSearch} />
+      {/* Top Header Row: Page Title EXPENSES */}
+      <PageHeaderRow title="EXPENSES" onSearch={setSearch} />
 
-      {/* Row 1: TRANSACTION ENTRY (Inline Compact Log Transaction Form) */}
-      <div className="glass-card" style={{ marginBottom: '16px', padding: '14px 16px' }}>
-        <h3 style={{ margin: '0 0 10px 0', color: 'var(--accent-primary)', fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
-          LOG TRANSACTION
-        </h3>
-        <ExpenseForm />
-      </div>
+      {/* UPPER TWO-COLUMN SECTION (Left: Log Transaction | Right: Financial Summary) */}
+      <div className="expenses-top-grid">
+        {/* LEFT CONTAINER — LOG TRANSACTION */}
+        <div className="glass-card" style={{ padding: '16px' }}>
+          <h3 style={{ margin: '0 0 12px 0', color: 'var(--accent-primary)', fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
+            LOG TRANSACTION
+          </h3>
+          <ExpenseForm />
+        </div>
 
-      {/* Row 2: FINANCIAL SUMMARY CARD (Total Balance | Spent | Received) */}
-      <div className="glass-card" style={{ padding: '12px 14px', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+        {/* RIGHT CONTAINER — FINANCIAL SUMMARY */}
+        <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '13.5px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Wallet size={16} color="var(--accent-primary)" /> FINANCIAL SUMMARY
           </h3>
-        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', textAlign: 'center' }}>
-          {/* Column 1: Total Balance */}
-          <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+          {/* Main Total Balance Box */}
+          <div style={{ padding: '12px 14px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', textAlign: 'center' }}>
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', marginBottom: '2px' }}>Total Balance</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: '800', color: currentBalance >= 0 ? 'var(--text-primary)' : 'var(--accent-danger)' }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: '800', color: currentBalance >= 0 ? 'var(--text-primary)' : 'var(--accent-danger)' }}>
               {currentBalance >= 0 ? '+' : ''}₹{currentBalance.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </div>
           </div>
 
-          {/* Column 2: Spent */}
-          <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', marginBottom: '2px' }}>Spent</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-danger)' }}>
-              -₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+          {/* Spent & Received 2-Column Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', textAlign: 'center' }}>
+            {/* Spent */}
+            <div style={{ padding: '10px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', marginBottom: '2px' }}>Spent</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent-danger)' }}>
+                -₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
             </div>
-          </div>
 
-          {/* Column 3: Received */}
-          <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', marginBottom: '2px' }}>Received</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-success)' }}>
-              +₹{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            {/* Received */}
+            <div style={{ padding: '10px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', marginBottom: '2px' }}>Received</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent-success)' }}>
+                +₹{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Row 2: SINGLE RECENT ACTIVITY SECTION WITH COMPACT EDIT/DELETE ICON BUTTONS */}
+      {/* HISTORY SECTION (Full-Width Transaction List) */}
       <div className="glass-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
-          <h3 style={{ margin: 0, color: 'var(--accent-primary)' }}>RECENT ACTIVITY</h3>
+          <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
+            HISTORY ({filteredExpenses.length})
+          </h3>
           {isFromCache?.expenses && <StaleIndicator timestamp={lastSyncedAt?.expenses} />}
         </div>
         
@@ -276,7 +264,7 @@ export function ExpensesPage() {
                   {/* Right: Amount & Compact Icon Buttons [✎] [🗑] */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                     <span style={{ fontSize: '13px', fontWeight: '700', color: isIncome ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
-                      {isIncome ? '+' : '-'}₹{exp.amount.toLocaleString()}
+                      {isIncome ? '+' : '-'}₹{(exp.amount || 0).toLocaleString()}
                     </span>
 
                     {/* Small Edit Icon Button [✎] */}

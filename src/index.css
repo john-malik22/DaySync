@@ -995,6 +995,21 @@ option {
   }
 }
 
+/* Expenses Page Responsive Two-Container Grid */
+.expenses-top-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: var(--space-md);
+  align-items: start;
+  margin-bottom: var(--space-md);
+}
+
+@media (max-width: 768px) {
+  .expenses-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Dashboard 2.0 Web/Desktop Widget System (Restored Classic V2 Web Appearance) */
 .dashboard-widget-grid {
   display: grid;
