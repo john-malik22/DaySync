@@ -94,7 +94,6 @@ export function DashboardWidgetWrapper({
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        padding: '14px',
         boxSizing: 'border-box',
         transition: isArrangeMode ? 'transform 0.18s ease, box-shadow 0.18s ease' : 'none',
         border: isArrangeMode ? '2px dashed var(--accent-primary)' : '1px solid var(--border-color)',
