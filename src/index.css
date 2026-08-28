@@ -978,6 +978,23 @@ option {
   }
 }
 
+/* Task Page Responsive Two-Container Grid */
+.task-top-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: var(--space-md);
+  align-items: stretch;
+}
+
+@media (max-width: 768px) {
+  .task-top-grid {
+    grid-template-columns: 1fr;
+  }
+  .task-blank-panel {
+    display: none;
+  }
+}
+
 /* Dashboard 2.0 Web/Desktop Widget System (Restored Classic V2 Web Appearance) */
 .dashboard-widget-grid {
   display: grid;

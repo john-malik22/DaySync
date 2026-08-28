@@ -7,8 +7,8 @@ export function TaskPage() {
 
   return (
     <div className="page-container">
-      {/* Top Header Row: Page Title on Left | Search on Right */}
-      <PageHeaderRow title="Task" onSearch={setSearch} />
+      {/* Top Header Row: Page Title TASK */}
+      <PageHeaderRow title="TASK" onSearch={setSearch} />
 
       {/* Standalone Task Manager */}
       <TaskManager searchFilter={search} />

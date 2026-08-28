@@ -135,124 +135,128 @@ export function TaskManager({ searchFilter }) {
     }
   };
 
-  const filteredTasks = tasks.filter(t => !searchFilter || t.title.toLowerCase().includes(searchFilter.toLowerCase()));
+  const filteredTasks = (tasks || []).filter(t => !searchFilter || (t.title && t.title.toLowerCase().includes(searchFilter.toLowerCase())));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-      {/* TASK & REMINDERS Form Card */}
-      <div className="glass-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-sm)', flexWrap: 'wrap', gap: '8px' }}>
-          <h3 style={{ color: 'var(--accent-primary)', margin: 0, fontSize: '15px' }}>TASK & REMINDERS</h3>
+      {/* TOP TWO-CONTAINER AREA (Left: Add Task | Right: Blank Container) */}
+      <div className="task-top-grid">
+        {/* LEFT CONTAINER — ADD TASK */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <h3 style={{ color: 'var(--accent-primary)', margin: 0, fontSize: '15px', fontWeight: '800' }}>Add Task</h3>
 
-          {/* Type selector: Task, Birthday, Meeting */}
-          <div style={{ display: 'flex', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '2px', border: '1px solid var(--border-color)' }}>
-            <button
-              type="button"
-              onClick={() => setTaskType('task')}
-              style={{
-                padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
-                background: taskType === 'task' ? 'var(--accent-primary)' : 'transparent',
-                color: taskType === 'task' ? '#FFFFFF' : 'var(--text-secondary)',
-                fontSize: '12px', fontWeight: '600'
-              }}
-            >
-              Task
-            </button>
-            <button
-              type="button"
-              onClick={() => setTaskType('birthday')}
-              style={{
-                padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
-                background: taskType === 'birthday' ? 'var(--accent-primary)' : 'transparent',
-                color: taskType === 'birthday' ? '#FFFFFF' : 'var(--text-secondary)',
-                fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px'
-              }}
-            >
-              <Cake size={13} /> Birthday
-            </button>
-            <button
-              type="button"
-              onClick={() => setTaskType('meeting')}
-              style={{
-                padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
-                background: taskType === 'meeting' ? 'var(--accent-primary)' : 'transparent',
-                color: taskType === 'meeting' ? '#FFFFFF' : 'var(--text-secondary)',
-                fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px'
-              }}
-            >
-              <Users size={13} /> Meeting
-            </button>
-          </div>
-        </div>
-
-        <form onSubmit={handleAddTask} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {/* Full-Width Title Input */}
-          <div>
-            {taskType === 'birthday' ? (
-              <input
-                type="text"
-                placeholder="Person Name (e.g. Rahul, Anjali)"
-                value={personName}
-                onChange={(e) => { setPersonName(e.target.value); setTitle(`${e.target.value}'s Birthday`); }}
-                disabled={isSubmitting}
-                style={{ width: '100%' }}
-                required
-              />
-            ) : (
-              <input
-                type="text"
-                placeholder={taskType === 'meeting' ? "Meeting Title (e.g. Project Review)" : "Add new task or reminder..."}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                disabled={isSubmitting}
-                style={{ width: '100%' }}
-                required
-              />
-            )}
+            {/* Type selector: Task, Birthday, Meeting */}
+            <div style={{ display: 'flex', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '2px', border: '1px solid var(--border-color)' }}>
+              <button
+                type="button"
+                onClick={() => setTaskType('task')}
+                style={{
+                  padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+                  background: taskType === 'task' ? 'var(--accent-primary)' : 'transparent',
+                  color: taskType === 'task' ? '#FFFFFF' : 'var(--text-secondary)',
+                  fontSize: '12px', fontWeight: '600'
+                }}
+              >
+                Task
+              </button>
+              <button
+                type="button"
+                onClick={() => setTaskType('birthday')}
+                style={{
+                  padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+                  background: taskType === 'birthday' ? 'var(--accent-primary)' : 'transparent',
+                  color: taskType === 'birthday' ? '#FFFFFF' : 'var(--text-secondary)',
+                  fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px'
+                }}
+              >
+                <Cake size={13} /> Birthday
+              </button>
+              <button
+                type="button"
+                onClick={() => setTaskType('meeting')}
+                style={{
+                  padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+                  background: taskType === 'meeting' ? 'var(--accent-primary)' : 'transparent',
+                  color: taskType === 'meeting' ? '#FFFFFF' : 'var(--text-secondary)',
+                  fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px'
+                }}
+              >
+                <Users size={13} /> Meeting
+              </button>
+            </div>
           </div>
 
-          {/* Priority + Save Button on Same Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
-            <select
-              value={priority}
-              onChange={(e) => setPriority(e.target.value)}
-              disabled={isSubmitting}
-              style={{ width: '100%', minHeight: '36px', fontSize: '12px' }}
-            >
-              <option value="High">High Priority</option>
-              <option value="Medium">Medium Priority</option>
-              <option value="Low">Low Priority</option>
-            </select>
-
-            <button type="submit" className="btn-primary" disabled={isSubmitting} style={{ minHeight: '36px', fontSize: '12px', justifyContent: 'center' }}>
-              <Plus size={15} /> {isSubmitting ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-
-          {/* Compact 2-Column Mobile Date & Time controls */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', paddingTop: '4px' }}>
+          <form onSubmit={handleAddTask} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* Task Title Input */}
             <div>
-              <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>DUE DATE</label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                style={{ width: '100%', fontSize: '12px', padding: '4px 8px', minHeight: '34px' }}
-              />
+              {taskType === 'birthday' ? (
+                <input
+                  type="text"
+                  placeholder="Person Name (e.g. Rahul, Anjali)"
+                  value={personName}
+                  onChange={(e) => { setPersonName(e.target.value); setTitle(`${e.target.value}'s Birthday`); }}
+                  disabled={isSubmitting}
+                  style={{ width: '100%' }}
+                  required
+                />
+              ) : (
+                <input
+                  type="text"
+                  placeholder={taskType === 'meeting' ? "Meeting Title (e.g. Project Review)" : "Add new task or reminder..."}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  disabled={isSubmitting}
+                  style={{ width: '100%' }}
+                  required
+                />
+              )}
             </div>
 
-            <div>
-              <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>TIME</label>
-              <input
-                type="time"
-                value={dueTime}
-                onChange={(e) => setDueTime(e.target.value)}
-                style={{ width: '100%', fontSize: '12px', padding: '4px 8px', minHeight: '34px' }}
-              />
+            {/* Row 2: Priority + Save Button */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                disabled={isSubmitting}
+                style={{ width: '100%', minHeight: '36px', fontSize: '12px' }}
+              >
+                <option value="High">High Priority</option>
+                <option value="Medium">Medium Priority</option>
+                <option value="Low">Low Priority</option>
+              </select>
+
+              <button type="submit" className="btn-primary" disabled={isSubmitting} style={{ minHeight: '36px', fontSize: '12px', justifyContent: 'center' }}>
+                <Plus size={15} /> {isSubmitting ? 'Saving...' : 'Save'}
+              </button>
             </div>
 
+            {/* Row 3: Date + Time */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div>
+                <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '700' }}>DUE DATE</label>
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  style={{ width: '100%', fontSize: '12px', padding: '4px 8px', minHeight: '34px' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '700' }}>TIME</label>
+                <input
+                  type="time"
+                  value={dueTime}
+                  onChange={(e) => setDueTime(e.target.value)}
+                  style={{ width: '100%', fontSize: '12px', padding: '4px 8px', minHeight: '34px' }}
+                />
+              </div>
+            </div>
+
+            {/* Row 4: Recurring */}
             <div>
-              <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>RECURRING</label>
+              <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '700' }}>RECURRING</label>
               <select
                 value={recurring}
                 onChange={(e) => setRecurring(e.target.value)}
@@ -270,7 +274,7 @@ export function TaskManager({ searchFilter }) {
 
             {taskType === 'meeting' && (
               <div>
-                <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>PEOPLE / LOCATION</label>
+                <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '700' }}>PEOPLE / LOCATION</label>
                 <input
                   type="text"
                   placeholder="e.g. Rahul (Zoom)"
@@ -280,14 +284,23 @@ export function TaskManager({ searchFilter }) {
                 />
               </div>
             )}
-          </div>
-        </form>
+          </form>
+        </div>
+
+        {/* RIGHT CONTAINER — BLANK CONTAINER (RESERVED FOR FUTURE EXPANSION) */}
+        <div className="glass-card task-blank-panel" style={{
+          display: 'flex', flexDirection: 'column', height: '100%', minHeight: '220px'
+        }}>
+          {/* Intentionally blank container matching sketch layout */}
+        </div>
       </div>
 
-      {/* RECENT TASK TO DO Card */}
+      {/* HISTORY SECTION */}
       <div className="glass-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-sm)' }}>
-          <h3 style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>TASKS & REMINDERS ({filteredTasks.length})</h3>
+          <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '14.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
+            HISTORY ({filteredTasks.length})
+          </h3>
           {isFromCache?.tasks && <StaleIndicator timestamp={lastSyncedAt?.tasks} />}
         </div>
 
