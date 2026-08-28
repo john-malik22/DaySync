@@ -28,7 +28,10 @@ import {
   Layers,
   Send,
   RotateCcw,
-  TrendingDown
+  TrendingDown,
+  Target,
+  Zap,
+  Award
 } from 'lucide-react';
 
 export const formatDate = (dateStr) => {
@@ -104,7 +107,7 @@ export class WidgetErrorBoundary extends React.Component {
   }
 }
 
-// 1. Today's Tasks Widget
+// 1. Today's Tasks Widget (S=1 item, W=2 items, T=3 items, L=4 items)
 export function TodayTasksWidget({ widgetSize = 'T' }) {
   const { tasks, toggleTask } = useLuna();
   const todayStr = new Date().toISOString().split('T')[0];
@@ -112,7 +115,7 @@ export function TodayTasksWidget({ widgetSize = 'T' }) {
   const completedCount = allTasksToday.filter(t => t.completed).length;
   const pendingTasks = allTasksToday.filter(t => !t.completed);
 
-  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 4 : 2;
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 2 : widgetSize === 'T' ? 3 : 4;
   const displayTasks = pendingTasks.slice(0, maxItems);
   const overflowCount = pendingTasks.length - displayTasks.length;
 
@@ -182,7 +185,7 @@ export function UpcomingRemindersWidget({ widgetSize = 'T' }) {
   const todayStr = new Date().toISOString().split('T')[0];
   const upcomingReminders = (tasks || []).filter(t => !t.completed && t.dueDate && t.dueDate >= todayStr);
 
-  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 4 : 2;
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 2 : widgetSize === 'T' ? 3 : 4;
   const displayReminders = upcomingReminders.slice(0, maxItems);
   const overflowCount = upcomingReminders.length - displayReminders.length;
 
@@ -234,7 +237,7 @@ export function OverdueTasksWidget({ widgetSize = 'T' }) {
   const todayStr = new Date().toISOString().split('T')[0];
   const overdueTasks = (tasks || []).filter(t => !t.completed && t.dueDate && t.dueDate < todayStr);
 
-  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 4 : 2;
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 2 : widgetSize === 'T' ? 3 : 4;
   const displayTasks = overdueTasks.slice(0, maxItems);
   const overflowCount = overdueTasks.length - displayTasks.length;
 
@@ -294,7 +297,7 @@ export function UpcomingPlansWidget({ widgetSize = 'T' }) {
   const { plans } = useLuna();
   const activePlans = (plans || []).filter(p => p.status !== 'cancelled');
 
-  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 3 : 2;
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 2 : widgetSize === 'T' ? 3 : 4;
   const displayPlans = activePlans.slice(0, maxItems);
   const overflowCount = activePlans.length - displayPlans.length;
 
@@ -345,7 +348,7 @@ export function BirthdaysMeetingsWidget({ widgetSize = 'T' }) {
   const { tasks } = useLuna();
   const lifeEvents = (tasks || []).filter(t => t.category === 'LIFE' || t.category === 'Meeting' || (t.title && t.title.toLowerCase().includes('birthday')));
 
-  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 4 : 2;
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 2 : widgetSize === 'T' ? 3 : 4;
   const displayEvents = lifeEvents.slice(0, maxItems);
   const overflowCount = lifeEvents.length - displayEvents.length;
 
@@ -388,7 +391,7 @@ export function BirthdaysMeetingsWidget({ widgetSize = 'T' }) {
   );
 }
 
-// 6. Spending Snapshot Widget
+// 6. Spending Snapshot Widget (S=1 value, W=vertical stack, T=horizontal grid, L=full overview)
 export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
   const { expenses } = useLuna();
   const todayStr = new Date().toISOString().split('T')[0];
@@ -417,7 +420,7 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
           </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: widgetSize === 'T' || widgetSize === 'L' ? '1fr 1fr 1fr' : '1fr', gap: '6px' }}>
           <div style={{ background: 'var(--bg-secondary)', padding: '6px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
             <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Spent</span>
             <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--accent-danger)', marginTop: '2px' }}>
@@ -645,7 +648,7 @@ export function HabitTrackerWidget({ widgetSize = 'S' }) {
   const completedToday = allHabits.filter(h => h.completedToday).length;
   const maxStreak = allHabits.reduce((max, h) => Math.max(max, h.streak || 0), 0);
 
-  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 3 : 2;
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 2 : widgetSize === 'T' ? 3 : 4;
   const displayHabits = allHabits.slice(0, maxItems);
 
   return (
@@ -701,7 +704,7 @@ export function RecentExpensesWidget({ widgetSize = 'T' }) {
   const { expenses } = useLuna();
   const recentExps = (expenses || []);
 
-  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 1 : widgetSize === 'L' ? 4 : 3;
+  const maxItems = widgetSize === 'S' ? 1 : widgetSize === 'W' ? 2 : widgetSize === 'T' ? 3 : 4;
   const displayExpenses = recentExps.slice(0, maxItems);
   const overflowCount = recentExps.length - displayExpenses.length;
 
@@ -842,6 +845,96 @@ export function SplitBalancesWidget({ widgetSize = 'S' }) {
   );
 }
 
+// 18. Account Balance Widget (Net = Starting Balance + Received - Spent)
+export function AccountBalanceWidget({ widgetSize = 'S' }) {
+  const { expenses, startingBalance } = useLuna();
+  const totalSpent = (expenses || []).filter(e => e && e.type !== 'income').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const totalReceived = (expenses || []).filter(e => e && e.type === 'income').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const currentBalance = (startingBalance !== null ? startingBalance : 0) + totalReceived - totalSpent;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Wallet size={15} color="var(--accent-primary)" />
+        <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Account Balance</span>
+      </div>
+      <div style={{ fontSize: '1.4rem', fontWeight: '800', color: currentBalance >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>
+        {currentBalance >= 0 ? '+' : ''}₹{currentBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+      </div>
+      {widgetSize !== 'S' && (
+        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'flex', gap: '10px' }}>
+          <span>Received: +₹{totalReceived.toLocaleString()}</span>
+          <span>Spent: -₹{totalSpent.toLocaleString()}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 19. Daily Progress Widget
+export function DailyProgressWidget({ widgetSize = 'S' }) {
+  const { tasks, habits } = useLuna();
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const todayTasks = (tasks || []).filter(t => t.dueDate === todayStr || !t.dueDate);
+  const completedTasks = todayTasks.filter(t => t.completed).length;
+
+  const allHabits = habits || [];
+  const completedHabits = allHabits.filter(h => h.completedToday).length;
+
+  const totalItems = todayTasks.length + allHabits.length;
+  const completedItems = completedTasks + completedHabits;
+  const progressPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 100;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Target size={15} color="var(--accent-primary)" />
+        <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Daily Progress</span>
+      </div>
+      <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
+        {progressPct}% Done
+      </div>
+      <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+        Tasks: {completedTasks}/{todayTasks.length} • Habits: {completedHabits}/{allHabits.length}
+      </div>
+    </div>
+  );
+}
+
+// 20. Next Important Item Widget
+export function NextImportantItemWidget({ widgetSize = 'S' }) {
+  const { tasks } = useLuna();
+  const pendingTasks = (tasks || []).filter(t => !t.completed);
+
+  const pendingHigh = pendingTasks.filter(t => t.priority === 'High');
+  const nextItem = pendingHigh.length > 0 ? pendingHigh[pendingHigh.length - 1] : pendingTasks[0];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Zap size={15} color="var(--accent-warning)" />
+        <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Next Important</span>
+      </div>
+
+      {nextItem ? (
+        <div style={{ padding: '6px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {nextItem.title}
+          </div>
+          <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {nextItem.dueDate ? formatDate(nextItem.dueDate) : 'Today'} {nextItem.dueTime ? `• ${nextItem.dueTime}` : ''}
+          </div>
+        </div>
+      ) : (
+        <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+          No pending items.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Main Widget Component Switcher with Isolated Fixed-Height Error Boundaries
 export function renderWidgetById(id, widgetSize = 'W') {
   switch (id) {
@@ -853,12 +946,15 @@ export function renderWidgetById(id, widgetSize = 'W') {
       return <WidgetErrorBoundary title="Overdue Tasks"><OverdueTasksWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'upcoming_plans':
     case 'active_plans':
+    case 'monthly_plan_cost':
+    case 'plan_expiry_countdown':
       return <WidgetErrorBoundary title="Upcoming Plans"><UpcomingPlansWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'birthdays_meetings':
     case 'upcoming_birthdays':
-    case 'upcoming_meetings':
       return <WidgetErrorBoundary title="Birthdays & Meetings"><BirthdaysMeetingsWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'spending_snapshot':
+    case 'expense_breakdown':
+    case 'remaining_budget':
       return <WidgetErrorBoundary title="Spending Snapshot"><SpendingSnapshotWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'monthly_expenses':
       return <WidgetErrorBoundary title="Monthly Expenses"><MonthlyExpensesWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
@@ -886,6 +982,14 @@ export function renderWidgetById(id, widgetSize = 'W') {
     case 'clock_date':
     case 'today_date':
       return <WidgetErrorBoundary title="Clock & Date"><ClockDateWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
+    case 'upcoming_meetings':
+      return <WidgetErrorBoundary title="Upcoming Meetings"><BirthdaysMeetingsWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
+    case 'account_balance':
+      return <WidgetErrorBoundary title="Account Balance"><AccountBalanceWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
+    case 'daily_progress':
+      return <WidgetErrorBoundary title="Daily Progress"><DailyProgressWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
+    case 'next_important_item':
+      return <WidgetErrorBoundary title="Next Important Item"><NextImportantItemWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'split_balances':
     case 'active_splits':
       return <WidgetErrorBoundary title="Shared Splits"><SplitBalancesWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;

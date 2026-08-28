@@ -163,6 +163,7 @@ export function DashboardWidgetWrapper({
                   type="button"
                   onClick={() => onChangeWidgetSize(widgetItem.id, sz)}
                   title={`Set size: ${szMap[sz] || sz}`}
+                  aria-label={`Set size ${szMap[sz] || sz}`}
                   style={{
                     fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px',
                     border: normalizedSize === sz ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
