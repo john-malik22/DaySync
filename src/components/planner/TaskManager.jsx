@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, Check, Trash2, CheckCircle2, Calendar, Clock, Repeat, Cake, Users, ChevronDown, ChevronUp, Tag } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
 import { ErrorState, StaleIndicator } from '../common/ErrorState';
+import { formatDate } from '../dashboard/WidgetComponents';
 
 export function TaskManager({ searchFilter }) {
   const { tasks, addTask, updateTask, toggleTask, deleteTask, errors, resourceLoading, fetchTasks, isFromCache, lastSyncedAt } = useLuna();
@@ -137,9 +138,47 @@ export function TaskManager({ searchFilter }) {
 
   const filteredTasks = (tasks || []).filter(t => !searchFilter || (t.title && t.title.toLowerCase().includes(searchFilter.toLowerCase())));
 
+  // Strict Fallback Priority Logic: High -> Medium -> Low (Latest 3 pending tasks)
+  const priorityPanelData = useMemo(() => {
+    const pendingTasks = (tasks || []).filter(t => !t.completed);
+
+    const pendingHigh = pendingTasks.filter(t => t.priority === 'High');
+    if (pendingHigh.length > 0) {
+      return {
+        title: 'HIGH PRIORITY',
+        color: 'var(--accent-danger)',
+        tasks: pendingHigh.slice(-3).reverse()
+      };
+    }
+
+    const pendingMedium = pendingTasks.filter(t => t.priority === 'Medium');
+    if (pendingMedium.length > 0) {
+      return {
+        title: 'MEDIUM PRIORITY',
+        color: 'var(--accent-warning)',
+        tasks: pendingMedium.slice(-3).reverse()
+      };
+    }
+
+    const pendingLow = pendingTasks.filter(t => t.priority === 'Low');
+    if (pendingLow.length > 0) {
+      return {
+        title: 'LOW PRIORITY',
+        color: 'var(--accent-primary)',
+        tasks: pendingLow.slice(-3).reverse()
+      };
+    }
+
+    return {
+      title: 'PRIORITY TASKS',
+      color: 'var(--accent-primary)',
+      tasks: []
+    };
+  }, [tasks]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-      {/* TOP TWO-CONTAINER AREA (Left: Add Task | Right: Blank Container) */}
+      {/* TOP TWO-CONTAINER AREA (Left: Add Task | Right: Priority Tasks Panel) */}
       <div className="task-top-grid">
         {/* LEFT CONTAINER — ADD TASK */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -231,15 +270,15 @@ export function TaskManager({ searchFilter }) {
               </button>
             </div>
 
-            {/* Row 3: Date + Time */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            {/* Row 3: Due Date + Time + Recurring IN ONE ROW */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 1.1fr', gap: '8px' }}>
               <div>
                 <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '700' }}>DUE DATE</label>
                 <input
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  style={{ width: '100%', fontSize: '12px', padding: '4px 8px', minHeight: '34px' }}
+                  style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
                 />
               </div>
 
@@ -249,27 +288,26 @@ export function TaskManager({ searchFilter }) {
                   type="time"
                   value={dueTime}
                   onChange={(e) => setDueTime(e.target.value)}
-                  style={{ width: '100%', fontSize: '12px', padding: '4px 8px', minHeight: '34px' }}
+                  style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
                 />
               </div>
-            </div>
 
-            {/* Row 4: Recurring */}
-            <div>
-              <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '700' }}>RECURRING</label>
-              <select
-                value={recurring}
-                onChange={(e) => setRecurring(e.target.value)}
-                style={{ width: '100%', fontSize: '12px', padding: '4px 8px', minHeight: '34px' }}
-              >
-                <option value="None">None</option>
-                <option value="Daily">Daily</option>
-                <option value="Every weekday">Every weekday</option>
-                <option value="Weekly">Weekly</option>
-                <option value="Every Monday">Every Monday</option>
-                <option value="Every 2 weeks">Every 2 weeks</option>
-                <option value="Monthly">Monthly</option>
-              </select>
+              <div>
+                <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '700' }}>RECURRING</label>
+                <select
+                  value={recurring}
+                  onChange={(e) => setRecurring(e.target.value)}
+                  style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
+                >
+                  <option value="None">None</option>
+                  <option value="Daily">Daily</option>
+                  <option value="Every weekday">Every weekday</option>
+                  <option value="Weekly">Weekly</option>
+                  <option value="Every Monday">Every Monday</option>
+                  <option value="Every 2 weeks">Every 2 weeks</option>
+                  <option value="Monthly">Monthly</option>
+                </select>
+              </div>
             </div>
 
             {taskType === 'meeting' && (
@@ -287,11 +325,54 @@ export function TaskManager({ searchFilter }) {
           </form>
         </div>
 
-        {/* RIGHT CONTAINER — BLANK CONTAINER (RESERVED FOR FUTURE EXPANSION) */}
+        {/* RIGHT CONTAINER — PRIORITY TASKS PANEL */}
         <div className="glass-card task-blank-panel" style={{
-          display: 'flex', flexDirection: 'column', height: '100%', minHeight: '220px'
+          display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', minHeight: '220px'
         }}>
-          {/* Intentionally blank container matching sketch layout */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ color: priorityPanelData.color, margin: 0, fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
+              {priorityPanelData.title}
+            </h3>
+            {priorityPanelData.tasks.length > 0 && (
+              <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '700' }}>
+                LATEST {priorityPanelData.tasks.length}
+              </span>
+            )}
+          </div>
+
+          {priorityPanelData.tasks.length === 0 ? (
+            <div style={{
+              padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12.5px',
+              background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1
+            }}>
+              No priority tasks to show.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+              {priorityPanelData.tasks.map((task) => (
+                <div key={task.id} style={{
+                  padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {task.title}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                      {task.dueDate ? formatDate(task.dueDate) : 'Today'} {task.dueTime ? `• ${task.dueTime}` : ''}
+                    </div>
+                  </div>
+                  <span style={{
+                    fontSize: '10.5px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px',
+                    background: 'var(--bg-tertiary)', color: priorityPanelData.color, flexShrink: 0, marginLeft: '8px'
+                  }}>
+                    {task.priority}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
