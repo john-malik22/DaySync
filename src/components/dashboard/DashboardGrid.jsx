@@ -4,10 +4,14 @@ import { useToast } from '../../context/ToastContext';
 import { ConfirmationModal } from '../common/ConfirmationModal';
 import { DashboardWidgetWrapper } from './DashboardWidgetWrapper';
 import { WidgetPickerModal } from './WidgetPickerModal';
-import { DEFAULT_WIDGET_LAYOUT, WIDGET_CATALOG } from './widgetCatalog';
+import { DEFAULT_WIDGET_LAYOUT, WIDGET_CATALOG, SHOW_DASHBOARD_WIDGETS } from './widgetCatalog';
 import { Plus, Check, RotateCcw, Sliders } from 'lucide-react';
 
 export function DashboardGrid() {
+  if (!SHOW_DASHBOARD_WIDGETS) {
+    return null;
+  }
+
   const { user } = useAuth();
   const { showToast } = useToast();
   const userId = user?.id || 'guest';

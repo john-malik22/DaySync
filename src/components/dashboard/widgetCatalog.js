@@ -265,3 +265,7 @@ export const DEFAULT_WIDGET_LAYOUT = [
   { id: 'upcoming_reminders', size: 'T', visible: true },
   { id: 'luna_suggestion', size: 'W', visible: true }
 ];
+
+// Centralized Switch: Set to false to completely clear the Dashboard grid canvas for widget redesign
+export const SHOW_DASHBOARD_WIDGETS = false;
+
