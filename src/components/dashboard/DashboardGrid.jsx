@@ -51,7 +51,7 @@ export function DashboardGrid() {
   const storageKey = `daysync_dashboard_layout_${userId}`;
 
   const [isArrangeMode, setIsArrangeMode] = useState(false);
-  const [devGlobalSize, setDevGlobalSize] = useState('W');
+  const [devWidgetSize, setDevWidgetSize] = useState('W');
   const [showPicker, setShowPicker] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [draggedWidgetId, setDraggedWidgetId] = useState(null);
@@ -224,27 +224,50 @@ export function DashboardGrid() {
       )}
 
       {/* Temporary Dashboard Development Size Switch */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '16px' }}>
-        <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginRight: '4px' }}>
-          Dev Size:
+      <div
+        className="dev-widget-size-switcher"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '18px',
+          padding: '8px 14px',
+          background: 'var(--bg-card)',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--border-color)',
+          boxShadow: 'var(--glass-shadow)'
+        }}
+      >
+        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+          Widget Size
         </span>
-        {['S', 'W', 'T', 'L'].map(sz => (
-          <button
-            key={sz}
-            type="button"
-            onClick={() => setDevGlobalSize(sz)}
-            aria-label={`Set all widgets to ${sz} size`}
-            style={{
-              fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: 'var(--radius-sm, 6px)',
-              border: devGlobalSize === sz ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-              background: devGlobalSize === sz ? 'var(--accent-primary)' : 'var(--bg-card)',
-              color: devGlobalSize === sz ? '#FFFFFF' : 'var(--text-secondary)',
-              cursor: 'pointer', transition: 'all 0.15s ease'
-            }}
-          >
-            {sz}{devGlobalSize === sz ? '●' : ''}
-          </button>
-        ))}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {['S', 'W', 'T', 'L'].map(sz => (
+            <button
+              key={sz}
+              type="button"
+              onClick={() => setDevWidgetSize(sz)}
+              aria-label={`Set all widgets to ${sz} size`}
+              style={{
+                fontSize: '12px',
+                fontWeight: '700',
+                padding: '4px 11px',
+                borderRadius: 'var(--radius-sm, 6px)',
+                border: devWidgetSize === sz ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                background: devWidgetSize === sz ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                color: devWidgetSize === sz ? '#FFFFFF' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '2px'
+              }}
+            >
+              {sz}{devWidgetSize === sz ? '●' : ''}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Grid of Widgets */}
@@ -252,7 +275,7 @@ export function DashboardGrid() {
         {layout.map((item, index) => (
           <DashboardWidgetWrapper
             key={item.id}
-            widgetItem={{ ...item, size: devGlobalSize || item.size }}
+            widgetItem={{ ...item, size: devWidgetSize || item.size }}
             isArrangeMode={isArrangeMode}
             isEditActive={false}
             onEnterArrangeMode={() => {}}
