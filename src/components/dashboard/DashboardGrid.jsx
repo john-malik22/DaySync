@@ -4,49 +4,43 @@ import { useToast } from '../../context/ToastContext';
 import { ConfirmationModal } from '../common/ConfirmationModal';
 import { DashboardWidgetWrapper } from './DashboardWidgetWrapper';
 import { WidgetPickerModal } from './WidgetPickerModal';
-import { DEFAULT_WIDGET_LAYOUT, WIDGET_CATALOG, SHOW_DASHBOARD_WIDGETS } from './widgetCatalog';
+import { DEFAULT_WIDGET_LAYOUT, WIDGET_CATALOG, SHOW_DASHBOARD_WIDGETS, SHOW_BASE_GRID_ONLY, SHOW_WIDE_GRID_ONLY, SHOW_TALL_GRID_ONLY } from './widgetCatalog';
 import { Plus, Check, RotateCcw, Sliders } from 'lucide-react';
 
-// Temporary Isolated Developer Size Switcher (Removed completely when per-widget edit mode is built)
-export function DevWidgetSizeSwitcher({ devSize, setDevSize }) {
-  return (
-    <div className="dev-size-switcher glass-card" style={{
-      padding: '6px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center',
-      justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap', border: '1px solid var(--border-color)',
-      borderRadius: 'var(--radius-md)', background: 'var(--bg-card)'
-    }}>
-      <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-        Widget Size (Dev Switch):
-      </span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        {[
-          { sz: 'S', label: 'Small' },
-          { sz: 'W', label: 'Wide' },
-          { sz: 'T', label: 'Tall' },
-          { sz: 'L', label: 'Large' }
-        ].map(({ sz, label }) => (
-          <button
-            key={sz}
-            type="button"
-            onClick={() => setDevSize(sz)}
-            aria-label={`Set global development size to ${label}`}
-            style={{
-              fontSize: '11px', fontWeight: '700', padding: '3px 9px', borderRadius: '4px',
-              border: devSize === sz ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-              background: devSize === sz ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-              color: devSize === sz ? '#FFFFFF' : 'var(--text-secondary)',
-              cursor: 'pointer'
-            }}
-          >
-            {sz}{devSize === sz ? '●' : ''}
-          </button>
+export function DashboardGrid() {
+  if (SHOW_TALL_GRID_ONLY) {
+    const tallSlots = Array.from({ length: 20 }, (_, i) => `tall-slot-${String(i + 1).padStart(2, '0')}`);
+    return (
+      <div className="dashboard-tall-grid">
+        {tallSlots.map(slotId => (
+          <div key={slotId} className="glass-card dashboard-tall-slot" />
         ))}
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-export function DashboardGrid() {
+  if (SHOW_WIDE_GRID_ONLY) {
+    const wideSlots = Array.from({ length: 20 }, (_, i) => `wide-slot-${String(i + 1).padStart(2, '0')}`);
+    return (
+      <div className="dashboard-wide-grid">
+        {wideSlots.map(slotId => (
+          <div key={slotId} className="glass-card dashboard-wide-slot" />
+        ))}
+      </div>
+    );
+  }
+
+  if (SHOW_BASE_GRID_ONLY) {
+    const slots = Array.from({ length: 20 }, (_, i) => `slot-${String(i + 1).padStart(2, '0')}`);
+    return (
+      <div className="dashboard-base-grid">
+        {slots.map(slotId => (
+          <div key={slotId} className="glass-card dashboard-base-slot" />
+        ))}
+      </div>
+    );
+  }
+
   if (!SHOW_DASHBOARD_WIDGETS) {
     return null;
   }
@@ -56,8 +50,6 @@ export function DashboardGrid() {
   const userId = user?.id || 'guest';
   const storageKey = `daysync_dashboard_layout_${userId}`;
 
-  // Temporary global development size state (defaults to 'W')
-  const [devWidgetSize, setDevWidgetSize] = useState('W');
   const [isArrangeMode, setIsArrangeMode] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -182,19 +174,8 @@ export function DashboardGrid() {
 
   const activeWidgetIds = layout.map(w => w.id);
 
-  const gridClassMap = {
-    S: 'dashboard-base-grid',
-    W: 'dashboard-wide-grid',
-    T: 'dashboard-tall-grid',
-    L: 'dashboard-large-grid'
-  };
-  const activeGridClass = gridClassMap[devWidgetSize] || 'dashboard-wide-grid';
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-      {/* Temporary Isolated Global Developer Size Switcher */}
-      <DevWidgetSizeSwitcher devSize={devWidgetSize} setDevSize={setDevWidgetSize} />
-
       {/* Arrange Mode Toolbar */}
       {isArrangeMode && (
         <div className="glass-card animate-fade-in" style={{
@@ -242,12 +223,11 @@ export function DashboardGrid() {
       )}
 
       {/* Grid of Widgets */}
-      <div className={activeGridClass}>
+      <div className="dashboard-widget-grid">
         {layout.map((item, index) => (
           <DashboardWidgetWrapper
             key={item.id}
             widgetItem={item}
-            overrideSize={devWidgetSize}
             isArrangeMode={isArrangeMode}
             onEnterArrangeMode={() => setIsArrangeMode(true)}
             onRemoveWidget={handleRemoveWidget}
