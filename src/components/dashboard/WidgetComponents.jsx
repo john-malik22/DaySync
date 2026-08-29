@@ -935,8 +935,15 @@ export function NextImportantItemWidget({ widgetSize = 'S' }) {
   );
 }
 
+// Centralized Layout-Design Flag: Set to false to render empty widget containers for grid layout testing
+export const SHOW_WIDGET_CONTENT = false;
+
 // Main Widget Component Switcher with Isolated Fixed-Height Error Boundaries
 export function renderWidgetById(id, widgetSize = 'W') {
+  if (!SHOW_WIDGET_CONTENT) {
+    return null;
+  }
+
   switch (id) {
     case 'today_tasks':
       return <WidgetErrorBoundary title="Today's Tasks"><TodayTasksWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
