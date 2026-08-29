@@ -269,7 +269,9 @@ export const DEFAULT_WIDGET_LAYOUT = [
 // Centralized Switches for Dashboard Grid Layout Phases
 export const SHOW_DASHBOARD_WIDGETS = true;
 export const SHOW_BASE_GRID_ONLY = false;
-export const SHOW_WIDE_GRID_ONLY = true;
+export const SHOW_WIDE_GRID_ONLY = false;
+export const SHOW_TALL_GRID_ONLY = true;
+
 
 
 

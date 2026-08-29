@@ -1190,4 +1190,40 @@ option {
   }
 }
 
+/* 20-Container Dashboard Tall Grid (5 Columns x 4 Rows) */
+.dashboard-tall-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-md);
+  width: 100%;
+}
+
+.dashboard-tall-slot {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 280px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--glass-shadow);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-tall-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-tall-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-sm);
+  }
+  .dashboard-tall-slot {
+    min-height: 240px;
+  }
+}
+
+
 

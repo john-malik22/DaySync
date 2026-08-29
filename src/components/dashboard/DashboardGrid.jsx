@@ -4,10 +4,21 @@ import { useToast } from '../../context/ToastContext';
 import { ConfirmationModal } from '../common/ConfirmationModal';
 import { DashboardWidgetWrapper } from './DashboardWidgetWrapper';
 import { WidgetPickerModal } from './WidgetPickerModal';
-import { DEFAULT_WIDGET_LAYOUT, WIDGET_CATALOG, SHOW_DASHBOARD_WIDGETS, SHOW_BASE_GRID_ONLY, SHOW_WIDE_GRID_ONLY } from './widgetCatalog';
+import { DEFAULT_WIDGET_LAYOUT, WIDGET_CATALOG, SHOW_DASHBOARD_WIDGETS, SHOW_BASE_GRID_ONLY, SHOW_WIDE_GRID_ONLY, SHOW_TALL_GRID_ONLY } from './widgetCatalog';
 import { Plus, Check, RotateCcw, Sliders } from 'lucide-react';
 
 export function DashboardGrid() {
+  if (SHOW_TALL_GRID_ONLY) {
+    const tallSlots = Array.from({ length: 20 }, (_, i) => `tall-slot-${String(i + 1).padStart(2, '0')}`);
+    return (
+      <div className="dashboard-tall-grid">
+        {tallSlots.map(slotId => (
+          <div key={slotId} className="glass-card dashboard-tall-slot" />
+        ))}
+      </div>
+    );
+  }
+
   if (SHOW_WIDE_GRID_ONLY) {
     const wideSlots = Array.from({ length: 20 }, (_, i) => `wide-slot-${String(i + 1).padStart(2, '0')}`);
     return (
