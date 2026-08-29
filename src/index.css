@@ -1172,7 +1172,8 @@ option {
 .dashboard-wide-slot {
   box-sizing: border-box;
   width: 100%;
-  min-height: 280px;
+  height: 140px;
+  min-height: 140px;
   border-radius: var(--radius-md);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -1186,9 +1187,11 @@ option {
     gap: var(--space-sm);
   }
   .dashboard-wide-slot {
-    min-height: 240px;
+    height: 120px;
+    min-height: 120px;
   }
 }
+
 
 /* 20-Container Dashboard Tall Grid (5 Columns x 4 Rows) */
 .dashboard-tall-grid {
