@@ -51,6 +51,7 @@ export function DashboardGrid() {
   const storageKey = `daysync_dashboard_layout_${userId}`;
 
   const [isArrangeMode, setIsArrangeMode] = useState(false);
+  const [devGlobalSize, setDevGlobalSize] = useState('W');
   const [showPicker, setShowPicker] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [draggedWidgetId, setDraggedWidgetId] = useState(null);
@@ -222,14 +223,40 @@ export function DashboardGrid() {
         </div>
       )}
 
+      {/* Temporary Dashboard Development Size Switch */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '16px' }}>
+        <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginRight: '4px' }}>
+          Dev Size:
+        </span>
+        {['S', 'W', 'T', 'L'].map(sz => (
+          <button
+            key={sz}
+            type="button"
+            onClick={() => setDevGlobalSize(sz)}
+            aria-label={`Set all widgets to ${sz} size`}
+            style={{
+              fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: 'var(--radius-sm, 6px)',
+              border: devGlobalSize === sz ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+              background: devGlobalSize === sz ? 'var(--accent-primary)' : 'var(--bg-card)',
+              color: devGlobalSize === sz ? '#FFFFFF' : 'var(--text-secondary)',
+              cursor: 'pointer', transition: 'all 0.15s ease'
+            }}
+          >
+            {sz}{devGlobalSize === sz ? '●' : ''}
+          </button>
+        ))}
+      </div>
+
       {/* Grid of Widgets */}
       <div className="dashboard-widget-grid">
         {layout.map((item, index) => (
           <DashboardWidgetWrapper
             key={item.id}
-            widgetItem={item}
+            widgetItem={{ ...item, size: devGlobalSize || item.size }}
             isArrangeMode={isArrangeMode}
-            onEnterArrangeMode={() => setIsArrangeMode(true)}
+            isEditActive={false}
+            onEnterArrangeMode={() => {}}
+            onCloseEdit={() => {}}
             onRemoveWidget={handleRemoveWidget}
             onChangeWidgetSize={handleChangeWidgetSize}
             onMoveWidget={handleMoveWidget}
