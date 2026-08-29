@@ -142,13 +142,22 @@ export function DashboardGrid() {
 
   const activeWidgetIds = layout.map(w => w.id);
 
+  const fullLayout = React.useMemo(() => {
+    const layoutMap = new Map((layout || []).map(item => [item.id, item]));
+    return WIDGET_CATALOG.map(catalogItem => {
+      const existing = layoutMap.get(catalogItem.id);
+      return existing ? { ...existing, size: devWidgetSize } : { id: catalogItem.id, size: devWidgetSize, visible: true };
+    });
+  }, [layout, devWidgetSize]);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+    <div className="dashboard-grid-container">
       {/* Arrange Mode Toolbar */}
       {isArrangeMode && (
         <div className="glass-card animate-fade-in" style={{
           padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexWrap: 'wrap', gap: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--accent-primary)'
+          flexWrap: 'wrap', gap: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--accent-primary)',
+          marginBottom: '16px'
         }}>
           <div>
             <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -237,12 +246,12 @@ export function DashboardGrid() {
         </div>
       </div>
 
-      {/* Grid of Widgets */}
-      <div className="dashboard-widget-grid">
-        {layout.map((item, index) => (
+      {/* Grid of All 20 Widgets */}
+      <div className={`dashboard-widget-grid grid-mode-${devWidgetSize}`}>
+        {fullLayout.map((item, index) => (
           <DashboardWidgetWrapper
             key={item.id}
-            widgetItem={{ ...item, size: devWidgetSize || item.size }}
+            widgetItem={{ ...item, size: devWidgetSize }}
             isArrangeMode={isArrangeMode}
             isEditActive={false}
             onEnterArrangeMode={() => {}}
@@ -251,7 +260,7 @@ export function DashboardGrid() {
             onChangeWidgetSize={handleChangeWidgetSize}
             onMoveWidget={handleMoveWidget}
             isFirst={index === 0}
-            isLast={index === layout.length - 1}
+            isLast={index === fullLayout.length - 1}
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDrop={handleDrop}

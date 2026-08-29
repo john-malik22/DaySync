@@ -256,15 +256,13 @@ export const WIDGET_CATALOG = [
   }
 ];
 
-// First-time users get EXACTLY 6 priority widgets in deliberate product order
-export const DEFAULT_WIDGET_LAYOUT = [
-  { id: 'spending_snapshot', size: 'W', visible: true },
-  { id: 'upcoming_plans', size: 'T', visible: true },
-  { id: 'split_balances', size: 'S', visible: true },
-  { id: 'today_tasks', size: 'T', visible: true },
-  { id: 'upcoming_reminders', size: 'T', visible: true },
-  { id: 'luna_suggestion', size: 'W', visible: true }
-];
+// Default layout contains ALL 20 widgets from catalog
+export const DEFAULT_WIDGET_LAYOUT = WIDGET_CATALOG.map(w => ({
+  id: w.id,
+  size: w.defaultSize || 'W',
+  visible: true
+}));
+
 
 // Centralized Dashboard Widget System Switch
 export const SHOW_DASHBOARD_WIDGETS = true;
