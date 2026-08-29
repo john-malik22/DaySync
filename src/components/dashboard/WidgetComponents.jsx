@@ -3,28 +3,8 @@ import { Link } from 'react-router-dom';
 import { useLuna } from '../../context/LunaContext';
 import { useNotifications } from '../../context/NotificationContext';
 import {
-  CheckSquare,
-  Clock,
-  AlertTriangle,
-  Repeat,
-  Cake,
-  Users,
-  Wallet,
-  Sparkles,
-  Bell,
-  Activity,
-  CreditCard,
-  PlusCircle,
-  Calendar,
-  ArrowRight,
   Plus,
-  TrendingUp,
-  DollarSign,
-  Flame,
-  Briefcase,
-  RotateCcw,
-  Target,
-  Zap
+  RotateCcw
 } from 'lucide-react';
 
 export const SHOW_WIDGET_CONTENT = true;
@@ -76,7 +56,29 @@ export class WidgetErrorBoundary extends React.Component {
   }
 }
 
-// 1. SPENDING SNAPSHOT (S Mode: Total Spent)
+// Common S Inner Surface Container Wrapper
+const SmallWidgetWrapper = ({ label, labelColor = 'var(--text-muted)', bgTint, borderTint, children }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ fontSize: '11px', fontWeight: '700', color: labelColor, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+      {label}
+    </div>
+    <div style={{
+      background: bgTint,
+      border: `1px solid ${borderTint}`,
+      borderRadius: 'var(--radius-sm, 8px)',
+      padding: '8px 10px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      minHeight: '66px',
+      boxSizing: 'border-box'
+    }}>
+      {children}
+    </div>
+  </div>
+);
+
+// 1. SPENDING SNAPSHOT (S Mode: Total Spent - Soft Pink/Red Tint)
 export function SpendingSnapshotWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { expenses } = useLuna();
@@ -85,18 +87,15 @@ export function SpendingSnapshotWidget({ widgetSize = 'S' }) {
     .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Total Spent
-      </div>
-      <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+    <SmallWidgetWrapper label="TOTAL SPENT" bgTint="rgba(239, 68, 68, 0.08)" borderTint="rgba(239, 68, 68, 0.18)">
+      <div style={{ fontSize: '19px', fontWeight: '800', color: 'var(--accent-danger, #EF4444)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
         ${totalSpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 2. ACCOUNT BALANCE (S Mode: Total Balance)
+// 2. ACCOUNT BALANCE (S Mode: Total Balance - Soft Teal/Green Tint)
 export function AccountBalanceWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { expenses } = useLuna();
@@ -106,18 +105,15 @@ export function AccountBalanceWidget({ widgetSize = 'S' }) {
   const totalBalance = startingBalance + totalIncome - totalSpent;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Total Balance
-      </div>
-      <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--accent-success, #10B981)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+    <SmallWidgetWrapper label="TOTAL BALANCE" bgTint="rgba(16, 185, 129, 0.08)" borderTint="rgba(16, 185, 129, 0.18)">
+      <div style={{ fontSize: '19px', fontWeight: '800', color: 'var(--accent-success, #10B981)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
         ${totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 3. MONTHLY EXPENSES (S Mode: Monthly Spent)
+// 3. MONTHLY EXPENSES (S Mode: Monthly Spent - Soft Purple Tint)
 export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { expenses } = useLuna();
@@ -132,18 +128,15 @@ export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
   }).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Monthly Spent
-      </div>
-      <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+    <SmallWidgetWrapper label="MONTHLY SPENT" bgTint="rgba(139, 92, 246, 0.08)" borderTint="rgba(139, 92, 246, 0.18)">
+      <div style={{ fontSize: '19px', fontWeight: '800', color: 'var(--accent-purple, #8B5CF6)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
         ${monthlySpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 4. TODAY'S SPENDING (S Mode: Today Spent)
+// 4. TODAY'S SPENDING (S Mode: Today Spent - Soft Orange/Red Tint)
 export function TodaySpendingWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { expenses } = useLuna();
@@ -156,18 +149,15 @@ export function TodaySpendingWidget({ widgetSize = 'S' }) {
   }).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Today Spent
-      </div>
-      <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+    <SmallWidgetWrapper label="TODAY SPENT" bgTint="rgba(249, 115, 22, 0.08)" borderTint="rgba(249, 115, 22, 0.18)">
+      <div style={{ fontSize: '19px', fontWeight: '800', color: 'var(--accent-warning, #F97316)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
         ${todaySpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 5. RECENT EXPENSES (S Mode: Latest Expense)
+// 5. RECENT EXPENSES (S Mode: Latest Expense - Soft Blue Tint)
 export function RecentExpensesWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { expenses } = useLuna();
@@ -176,27 +166,24 @@ export function RecentExpensesWidget({ widgetSize = 'S' }) {
     .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))[0];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Latest Expense
-      </div>
+    <SmallWidgetWrapper label="RECENT EXPENSE" bgTint="rgba(59, 130, 246, 0.08)" borderTint="rgba(59, 130, 246, 0.18)">
       {latestExpense ? (
-        <>
-          <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+          <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {latestExpense.merchant || latestExpense.category || latestExpense.description || 'Expense'}
-          </div>
-          <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--accent-primary)', marginTop: '2px' }}>
+          </span>
+          <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-primary, #3B82F6)', flexShrink: 0 }}>
             ${parseFloat(latestExpense.amount).toFixed(2)}
-          </div>
-        </>
+          </span>
+        </div>
       ) : (
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>$0.00 logged</div>
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No recent expense</div>
       )}
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 6. UPCOMING PLANS (S Mode: Nearest Plan)
+// 6. UPCOMING PLANS (S Mode: Nearest Plan - Soft Indigo/Purple Tint)
 export function UpcomingPlansWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { plans } = useLuna();
@@ -212,27 +199,24 @@ export function UpcomingPlansWidget({ widgetSize = 'S' }) {
   const daysRem = nearestPlan ? getDaysRemaining(nearestPlan.nextDueDate || nearestPlan.dueDate) : null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Upcoming Plan
-      </div>
+    <SmallWidgetWrapper label="UPCOMING PLAN" bgTint="rgba(99, 102, 241, 0.08)" borderTint="rgba(99, 102, 241, 0.18)">
       {nearestPlan ? (
         <>
           <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {nearestPlan.name || nearestPlan.title}
           </div>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', marginTop: '2px' }}>
-            {daysRem != null ? `${daysRem} days remaining` : 'Active'}
+          <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-primary, #6366F1)', marginTop: '2px' }}>
+            {daysRem != null ? `${daysRem} days left` : 'Active'}
           </div>
         </>
       ) : (
         <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No upcoming plan</div>
       )}
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 7. SHARED SPLITS (S Mode: Owed & Pay amounts)
+// 7. SHARED SPLITS (S Mode: Owed & Pay amounts - Soft Teal Tint)
 export function SplitBalancesWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
 
@@ -240,18 +224,20 @@ export function SplitBalancesWidget({ widgetSize = 'S' }) {
   const payAmount = parseFloat(localStorage.getItem('daysync_splits_pay') || 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: '4px', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        You are owed: <strong style={{ color: 'var(--accent-success, #10B981)', fontWeight: '700' }}>${owedAmount.toFixed(2)}</strong>
+    <SmallWidgetWrapper label="SHARED SPLITS" bgTint="rgba(20, 184, 166, 0.08)" borderTint="rgba(20, 184, 166, 0.18)">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+        <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          Owed: <strong style={{ color: 'var(--accent-success, #10B981)', fontWeight: '800' }}>${owedAmount.toFixed(2)}</strong>
+        </div>
+        <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          Pay: <strong style={{ color: 'var(--accent-danger, #EF4444)', fontWeight: '800' }}>${payAmount.toFixed(2)}</strong>
+        </div>
       </div>
-      <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        You have to pay: <strong style={{ color: 'var(--accent-danger, #EF4444)', fontWeight: '700' }}>${payAmount.toFixed(2)}</strong>
-      </div>
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 8. TODAY'S TASKS (S Mode: One High Priority Task)
+// 8. TODAY'S TASKS (S Mode: One Task - Soft Purple Tint)
 export function TodayTasksWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { tasks } = useLuna();
@@ -259,28 +245,24 @@ export function TodayTasksWidget({ widgetSize = 'S' }) {
 
   const pendingToday = (tasks || []).filter(t => !t.completed && (t.dueDate === todayStr || !t.dueDate));
 
-  // Find High Priority task first; fallback to highest available priority
   const priorityTask = pendingToday.find(t => t.priority === 'HIGH' || t.priority === 'High') ||
                        pendingToday.find(t => t.priority === 'MEDIUM' || t.priority === 'Medium') ||
                        pendingToday[0];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Today's Priority Task
-      </div>
+    <SmallWidgetWrapper label="TODAY'S TASK" bgTint="rgba(168, 85, 247, 0.08)" borderTint="rgba(168, 85, 247, 0.18)">
       {priorityTask ? (
         <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
           {priorityTask.title}
         </div>
       ) : (
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No tasks for today 🎉</div>
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No task today 🎉</div>
       )}
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 9. OVERDUE TASKS (S Mode: One Overdue Task)
+// 9. OVERDUE TASKS (S Mode: One Overdue Task - Soft Red/Pink Tint)
 export function OverdueTasksWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { tasks } = useLuna();
@@ -296,27 +278,24 @@ export function OverdueTasksWidget({ widgetSize = 'S' }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent-danger, #EF4444)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Overdue Task
-      </div>
+    <SmallWidgetWrapper label="OVERDUE TASK" labelColor="var(--accent-danger, #EF4444)" bgTint="rgba(239, 68, 68, 0.1)" borderTint="rgba(239, 68, 68, 0.22)">
       {overdueTask ? (
         <>
           <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {overdueTask.title}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--accent-danger, #EF4444)', fontWeight: '600', marginTop: '2px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--accent-danger, #EF4444)', fontWeight: '700', marginTop: '2px' }}>
             {getDaysOverdue(overdueTask.dueDate)} day{getDaysOverdue(overdueTask.dueDate) > 1 ? 's' : ''} overdue
           </div>
         </>
       ) : (
         <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No overdue tasks 👍</div>
       )}
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 10. UPCOMING REMINDERS (S Mode: One Nearest Reminder)
+// 10. UPCOMING REMINDERS (S Mode: One Reminder - Soft Amber Tint)
 export function UpcomingRemindersWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { tasks } = useLuna();
@@ -326,44 +305,38 @@ export function UpcomingRemindersWidget({ widgetSize = 'S' }) {
   const nearestReminder = upcomingReminders.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))[0];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Upcoming Reminder
-      </div>
+    <SmallWidgetWrapper label="REMINDER" bgTint="rgba(245, 158, 11, 0.08)" borderTint="rgba(245, 158, 11, 0.18)">
       {nearestReminder ? (
         <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
           {nearestReminder.title}
         </div>
       ) : (
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No upcoming reminders</div>
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No reminder</div>
       )}
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 11. NOTIFICATIONS (S Mode: Latest Notification)
+// 11. NOTIFICATIONS (S Mode: Latest Notification - Soft Blue/Purple Tint)
 export function UnreadNotificationsWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { notifications } = useNotifications();
   const latestNotification = (notifications || [])[0];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Notification
-      </div>
+    <SmallWidgetWrapper label="NOTIFICATION" bgTint="rgba(99, 102, 241, 0.08)" borderTint="rgba(99, 102, 241, 0.18)">
       {latestNotification ? (
         <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
           {latestNotification.message || latestNotification.title}
         </div>
       ) : (
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No new notifications</div>
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No notifications</div>
       )}
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 12. HABIT PROGRESS (S Mode: Habit Completion %)
+// 12. HABIT PROGRESS (S Mode: Completion % - Soft Teal/Green Tint)
 export function HabitTrackerWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { tasks } = useLuna();
@@ -373,36 +346,30 @@ export function HabitTrackerWidget({ widgetSize = 'S' }) {
   const completionPct = habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Habit Progress
-      </div>
-      <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent-primary)' }}>
+    <SmallWidgetWrapper label="HABIT PROGRESS" bgTint="rgba(16, 185, 129, 0.08)" borderTint="rgba(16, 185, 129, 0.18)">
+      <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent-success, #10B981)', textAlign: 'center' }}>
         {completionPct}%
       </div>
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 13. HABIT STREAK (S Mode: Continuous Streak Days)
+// 13. HABIT STREAK (S Mode: Streak Days - Soft Orange Tint)
 export function HabitStreakWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
 
-  const streakDays = parseInt(localStorage.getItem('daysync_habit_streak') || '3', 10);
+  const streakDays = parseInt(localStorage.getItem('daysync_habit_streak') || '10', 10);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Habit Streak
-      </div>
-      <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent-warning, #F59E0B)' }}>
+    <SmallWidgetWrapper label="HABIT STREAK" bgTint="rgba(249, 115, 22, 0.08)" borderTint="rgba(249, 115, 22, 0.18)">
+      <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--accent-warning, #F97316)', textAlign: 'center' }}>
         {streakDays} Days
       </div>
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 14. TODAY'S PROGRESS (S Mode: Overall Progress %)
+// 14. TODAY'S PROGRESS (S Mode: Progress % - Soft Indigo Tint)
 export function DailyProgressWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { tasks } = useLuna();
@@ -410,21 +377,18 @@ export function DailyProgressWidget({ widgetSize = 'S' }) {
 
   const todayTasks = (tasks || []).filter(t => t.dueDate === todayStr || !t.dueDate);
   const doneCount = todayTasks.filter(t => t.completed).length;
-  const progressPct = todayTasks.length > 0 ? Math.round((doneCount / todayTasks.length) * 100) : 100;
+  const progressPct = todayTasks.length > 0 ? Math.round((doneCount / todayTasks.length) * 100) : 75;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Today's Progress
-      </div>
-      <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent-success, #10B981)' }}>
+    <SmallWidgetWrapper label="TODAY'S PROGRESS" bgTint="rgba(99, 102, 241, 0.08)" borderTint="rgba(99, 102, 241, 0.18)">
+      <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent-primary, #6366F1)', textAlign: 'center' }}>
         {progressPct}%
       </div>
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 15. BIRTHDAYS (S Mode: Nearest Birthday)
+// 15. BIRTHDAYS (S Mode: Nearest Birthday - Soft Pink Tint)
 export function BirthdaysMeetingsWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { tasks } = useLuna();
@@ -433,27 +397,24 @@ export function BirthdaysMeetingsWidget({ widgetSize = 'S' }) {
   const nearestBirthday = birthdays[0];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Next Birthday
-      </div>
+    <SmallWidgetWrapper label="BIRTHDAY" bgTint="rgba(236, 72, 153, 0.08)" borderTint="rgba(236, 72, 153, 0.18)">
       {nearestBirthday ? (
         <>
           <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {nearestBirthday.title}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--accent-primary)', fontWeight: '600', marginTop: '2px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--accent-pink, #EC4899)', fontWeight: '700', marginTop: '2px' }}>
             {formatDate(nearestBirthday.dueDate)}
           </div>
         </>
       ) : (
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No upcoming birthdays</div>
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No birthday</div>
       )}
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 16. MEETINGS (S Mode: Nearest Meeting)
+// 16. MEETINGS (S Mode: Nearest Meeting - Soft Blue Tint)
 export function UpcomingMeetingsWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const { tasks } = useLuna();
@@ -462,27 +423,24 @@ export function UpcomingMeetingsWidget({ widgetSize = 'S' }) {
   const nearestMeeting = meetings[0];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Next Meeting
-      </div>
+    <SmallWidgetWrapper label="MEETING" bgTint="rgba(59, 130, 246, 0.08)" borderTint="rgba(59, 130, 246, 0.18)">
       {nearestMeeting ? (
         <>
           <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {nearestMeeting.title}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--accent-primary)', fontWeight: '600', marginTop: '2px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--accent-primary, #3B82F6)', fontWeight: '700', marginTop: '2px' }}>
             {nearestMeeting.dueTime || formatDate(nearestMeeting.dueDate)}
           </div>
         </>
       ) : (
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No upcoming meetings</div>
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No meeting</div>
       )}
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 17. TIME & DATE (S Mode: Live Time Large, Date Small)
+// 17. TIME & DATE (S Mode: Live Time Large, Date Small - Soft Indigo Tint)
 export function ClockDateWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   const [time, setTime] = useState(new Date());
@@ -493,90 +451,80 @@ export function ClockDateWidget({ widgetSize = 'S' }) {
   }, []);
 
   const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const dateStr = time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const dateStr = time.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.5px', lineHeight: 1.1 }}>
-        {timeStr}
+    <SmallWidgetWrapper label="TIME & DATE" bgTint="rgba(99, 102, 241, 0.08)" borderTint="rgba(99, 102, 241, 0.18)">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ fontSize: '21px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.5px', lineHeight: 1.1 }}>
+          {timeStr}
+        </div>
+        <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', marginTop: '2px' }}>
+          {dateStr}
+        </div>
       </div>
-      <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-muted)', marginTop: '4px' }}>
-        {dateStr}
-      </div>
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 18. SHORTCUTS (S Mode: One Action Shortcut)
+// 18. SHORTCUTS (S Mode: One Shortcut Action - Soft Purple Tint)
 export function QuickAddWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
-        Quick Action
-      </div>
-      <Link to="/app/task" className="btn-primary" style={{ fontSize: '11.5px', padding: '6px 10px', textDecoration: 'none', justifyContent: 'center', gap: '4px' }}>
+    <SmallWidgetWrapper label="SHORTCUT" bgTint="rgba(139, 92, 246, 0.08)" borderTint="rgba(139, 92, 246, 0.18)">
+      <Link to="/app/task" className="btn-primary" style={{ fontSize: '11.5px', padding: '6px 10px', textDecoration: 'none', justifyContent: 'center', gap: '4px', width: '100%', boxSizing: 'border-box' }}>
         <Plus size={13} /> Add Task
       </Link>
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 19. LUNA FOCUS (S Mode: One Concise Actionable Thought)
+// 19. LUNA FOCUS (S Mode: One Concise Actionable Thought - Soft Lavender Tint)
 export function LunaSuggestionWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <Sparkles size={12} /> Luna Insight
-      </div>
+    <SmallWidgetWrapper label="LUNA FOCUS" labelColor="var(--accent-primary)" bgTint="rgba(168, 85, 247, 0.08)" borderTint="rgba(168, 85, 247, 0.18)">
       <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-        Focus on your top priority task today.
+        Focus on your top priority today.
       </div>
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
-// 20. IMPORTANT PERSON SPLITS (S Mode: One Person Owed Amount)
+// 20. IMPORTANT PERSON SPLITS (S Mode: Person Owed Amount - Soft Teal Tint)
 export function NextImportantItemWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
 
   const importantPerson = JSON.parse(localStorage.getItem('daysync_important_person_split') || '{"name":"Alex","owedAmount":45.00}');
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-        Important Person
-      </div>
+    <SmallWidgetWrapper label="IMPORTANT PERSON" bgTint="rgba(20, 184, 166, 0.08)" borderTint="rgba(20, 184, 166, 0.18)">
       {importantPerson ? (
         <>
           <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {importantPerson.name}
           </div>
-          <div style={{ fontSize: '13.5px', fontWeight: '800', color: 'var(--accent-success, #10B981)', marginTop: '2px' }}>
+          <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--accent-success, #10B981)', marginTop: '2px' }}>
             Owes ${parseFloat(importantPerson.owedAmount).toFixed(2)}
           </div>
         </>
       ) : (
         <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No split balances</div>
       )}
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
 export function AskLunaWidget({ widgetSize = 'S' }) {
   if (widgetSize !== 'S') return null;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', padding: '6px 8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
-        Ask Luna AI
-      </div>
+    <SmallWidgetWrapper label="ASK LUNA AI" bgTint="rgba(168, 85, 247, 0.08)" borderTint="rgba(168, 85, 247, 0.18)">
       <Link to="/app/luna" className="btn-secondary" style={{ fontSize: '11px', padding: '4px 8px', textDecoration: 'none', justifyContent: 'center' }}>
         Open Luna Chat
       </Link>
-    </div>
+    </SmallWidgetWrapper>
   );
 }
 
