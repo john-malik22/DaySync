@@ -1024,209 +1024,88 @@ option {
   }
 }
 
-/* Dashboard 2.0 Web/Desktop Widget System (Restored Classic V2 Web Appearance) */
+/* Dashboard Unified 4-Column Grid System */
 .dashboard-widget-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: minmax(140px, auto);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-md);
-  align-items: start;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dashboard-widget-card {
-  padding: var(--space-md);
+  box-sizing: border-box;
+  width: 100%;
   border-radius: var(--radius-md);
-  align-self: start;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--glass-shadow);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
 }
 
-/* S = Small (2 cols x 2 rows) */
+/* S = Small (2 cols x 140px height) */
 .widget-size-S,
 .widget-size-small {
   grid-column: span 2;
-  grid-row: span 2;
-  min-height: 150px;
-  overflow: hidden;
+  height: 140px;
+  min-height: 140px;
+  max-height: 140px;
 }
 
-/* W = Wide (2 cols x 4 rows) */
+/* W = Wide (4 cols x 140px height) */
 .widget-size-W,
 .widget-size-wide {
-  grid-column: span 2;
-  grid-row: span 4;
-  min-height: 280px;
-  overflow: hidden;
+  grid-column: span 4;
+  height: 140px;
+  min-height: 140px;
+  max-height: 140px;
 }
 
-/* T = Tall / Full-Width (4 cols x 2 rows) */
+/* T = Tall (2 cols x 296px height) */
 .widget-size-T,
 .widget-size-tall {
-  grid-column: span 4;
-  grid-row: span 2;
-  min-height: 150px;
-  overflow: hidden;
+  grid-column: span 2;
+  height: 296px;
+  min-height: 296px;
+  max-height: 296px;
 }
 
-/* L = Large (4 cols x 4 rows) */
+/* L = Large (4 cols x 296px height) */
 .widget-size-L,
 .widget-size-large {
   grid-column: span 4;
-  grid-row: span 4;
-  min-height: 280px;
-  overflow: hidden;
+  height: 296px;
+  min-height: 296px;
+  max-height: 296px;
 }
 
-/* Mobile-Specific Responsive Overrides (Phone Screens < 641px) */
+/* Responsive Grid Overrides (< 640px Mobile) */
 @media (max-width: 640px) {
   .dashboard-widget-grid {
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: 68px;
-    gap: 8px;
-  }
-
-  .dashboard-widget-card {
-    padding: 10px 12px;
-  }
-
-  .widget-size-S,
-  .widget-size-small {
-    grid-column: span 2;
-    grid-row: span 2;
-    height: 144px;
-    max-height: 144px;
-    overflow: hidden;
-  }
-
-  .widget-size-W,
-  .widget-size-wide {
-    grid-column: span 2;
-    grid-row: span 4;
-    height: 296px;
-    max-height: 296px;
-    overflow: hidden;
-  }
-
-  .widget-size-T,
-  .widget-size-tall {
-    grid-column: span 4;
-    grid-row: span 2;
-    height: 144px;
-    max-height: 144px;
-    overflow: hidden;
-  }
-
-  .widget-size-L,
-  .widget-size-large {
-    grid-column: span 4;
-    grid-row: span 4;
-    height: 296px;
-    max-height: 296px;
-    overflow: hidden;
-  }
-}
-
-@keyframes widgetPulse {
-  0%, 100% { border-color: var(--accent-primary); }
-  50% { border-color: var(--color-secondary); }
-}
-
-/* 20-Container Dashboard Base Grid (5 Columns x 4 Rows) */
-.dashboard-base-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--space-md);
-  width: 100%;
-}
-
-.dashboard-base-slot {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 140px;
-  border-radius: var(--radius-md);
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--glass-shadow);
-  transition: border-color 0.2s ease, transform 0.2s ease;
-}
-
-@media (max-width: 1024px) {
-  .dashboard-base-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .dashboard-base-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-sm);
-  }
-}
-
-/* 20-Container Dashboard Wide Grid (2 Columns x 10 Rows) */
-.dashboard-wide-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-md);
-  width: 100%;
-}
-
-.dashboard-wide-slot {
-  box-sizing: border-box;
-  width: 100%;
-  height: 140px;
-  min-height: 140px;
-  border-radius: var(--radius-md);
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--glass-shadow);
-  transition: border-color 0.2s ease, transform 0.2s ease;
-}
-
-@media (max-width: 640px) {
-  .dashboard-wide-grid {
     grid-template-columns: 1fr;
     gap: var(--space-sm);
   }
-  .dashboard-wide-slot {
-    height: 120px;
-    min-height: 120px;
+
+  .widget-size-S,
+  .widget-size-small,
+  .widget-size-W,
+  .widget-size-wide {
+    grid-column: span 1;
+    height: 140px;
+    min-height: 140px;
+  }
+
+  .widget-size-T,
+  .widget-size-tall,
+  .widget-size-L,
+  .widget-size-large {
+    grid-column: span 1;
+    height: 280px;
+    min-height: 280px;
   }
 }
 
-
-/* 20-Container Dashboard Tall Grid (5 Columns x 4 Rows) */
-.dashboard-tall-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--space-md);
-  width: 100%;
-}
-
-.dashboard-tall-slot {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 280px;
-  border-radius: var(--radius-md);
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--glass-shadow);
-  transition: border-color 0.2s ease, transform 0.2s ease;
-}
-
-@media (max-width: 1024px) {
-  .dashboard-tall-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .dashboard-tall-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-sm);
-  }
-  .dashboard-tall-slot {
-    min-height: 240px;
-  }
-}
 
 
 
