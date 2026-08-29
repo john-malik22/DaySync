@@ -266,6 +266,8 @@ export const DEFAULT_WIDGET_LAYOUT = [
   { id: 'luna_suggestion', size: 'W', visible: true }
 ];
 
-// Centralized Switch: Set to false to completely clear the Dashboard grid canvas for widget redesign
-export const SHOW_DASHBOARD_WIDGETS = false;
+// Centralized Switches for Dashboard Grid Layout Phases
+export const SHOW_DASHBOARD_WIDGETS = true;
+export const SHOW_BASE_GRID_ONLY = true;
+
 

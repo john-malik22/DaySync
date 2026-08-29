@@ -1128,3 +1128,36 @@ option {
   0%, 100% { border-color: var(--accent-primary); }
   50% { border-color: var(--color-secondary); }
 }
+
+/* 20-Container Dashboard Base Grid (5 Columns x 4 Rows) */
+.dashboard-base-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-md);
+  width: 100%;
+}
+
+.dashboard-base-slot {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 140px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--glass-shadow);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-base-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-base-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-sm);
+  }
+}
+

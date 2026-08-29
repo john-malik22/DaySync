@@ -4,10 +4,21 @@ import { useToast } from '../../context/ToastContext';
 import { ConfirmationModal } from '../common/ConfirmationModal';
 import { DashboardWidgetWrapper } from './DashboardWidgetWrapper';
 import { WidgetPickerModal } from './WidgetPickerModal';
-import { DEFAULT_WIDGET_LAYOUT, WIDGET_CATALOG, SHOW_DASHBOARD_WIDGETS } from './widgetCatalog';
+import { DEFAULT_WIDGET_LAYOUT, WIDGET_CATALOG, SHOW_DASHBOARD_WIDGETS, SHOW_BASE_GRID_ONLY } from './widgetCatalog';
 import { Plus, Check, RotateCcw, Sliders } from 'lucide-react';
 
 export function DashboardGrid() {
+  if (SHOW_BASE_GRID_ONLY) {
+    const slots = Array.from({ length: 20 }, (_, i) => `slot-${String(i + 1).padStart(2, '0')}`);
+    return (
+      <div className="dashboard-base-grid">
+        {slots.map(slotId => (
+          <div key={slotId} className="glass-card dashboard-base-slot" />
+        ))}
+      </div>
+    );
+  }
+
   if (!SHOW_DASHBOARD_WIDGETS) {
     return null;
   }
