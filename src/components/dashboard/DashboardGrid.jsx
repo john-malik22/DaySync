@@ -182,6 +182,14 @@ export function DashboardGrid() {
 
   const activeWidgetIds = layout.map(w => w.id);
 
+  const gridClassMap = {
+    S: 'dashboard-base-grid',
+    W: 'dashboard-wide-grid',
+    T: 'dashboard-tall-grid',
+    L: 'dashboard-large-grid'
+  };
+  const activeGridClass = gridClassMap[devWidgetSize] || 'dashboard-wide-grid';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
       {/* Temporary Isolated Global Developer Size Switcher */}
