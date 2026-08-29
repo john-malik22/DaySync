@@ -266,13 +266,12 @@ export const DEFAULT_WIDGET_LAYOUT = [
   { id: 'luna_suggestion', size: 'W', visible: true }
 ];
 
+// Centralized Developer Switch for Dashboard Widget Size Content Design Stage
+// Options: "S" (Small), "W" (Wide), "T" (Tall), "L" (Large)
+export const ACTIVE_WIDGET_SIZE = "S";
+
 // Centralized Switches for Dashboard Grid Layout Phases
 export const SHOW_DASHBOARD_WIDGETS = true;
 export const SHOW_BASE_GRID_ONLY = false;
 export const SHOW_TALL_GRID_ONLY = false;
-export const SHOW_WIDE_GRID_ONLY = true;
-
-
-
-
-
+export const SHOW_WIDE_GRID_ONLY = false;

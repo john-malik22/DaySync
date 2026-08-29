@@ -1,12 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { renderWidgetById } from './WidgetComponents';
-import { WIDGET_CATALOG } from './widgetCatalog';
+import { WIDGET_CATALOG, ACTIVE_WIDGET_SIZE } from './widgetCatalog';
 import { GripVertical, X, Maximize2, ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from 'lucide-react';
 
 export function DashboardWidgetWrapper({
   widgetItem,
   isArrangeMode,
+  isEditActive,
   onEnterArrangeMode,
+  onCloseEdit,
   onRemoveWidget,
   onChangeWidgetSize,
   onMoveWidget,
@@ -23,10 +25,10 @@ export function DashboardWidgetWrapper({
 
   const catalogDef = WIDGET_CATALOG.find(w => w.id === widgetItem.id) || {
     supportedSizes: ['S', 'W', 'T', 'L'],
-    defaultSize: 'W'
+    defaultSize: 'S'
   };
 
-  const currentSize = widgetItem.size || catalogDef.defaultSize || 'W';
+  const currentSize = ACTIVE_WIDGET_SIZE || widgetItem.size || catalogDef.defaultSize || 'S';
 
   // Long-press handler (3.5 seconds)
   const handleTouchOrMouseDown = (e) => {
