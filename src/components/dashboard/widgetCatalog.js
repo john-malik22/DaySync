@@ -254,9 +254,7 @@ export const WIDGET_CATALOG = [
     defaultSize: 'S',
     requiredPlan: 'free'
   }
-];
-
-// First-time users get EXACTLY 6 priority widgets in deliberate product order
+];// First-time users get EXACTLY 6 priority widgets in deliberate product order
 export const DEFAULT_WIDGET_LAYOUT = [
   { id: 'spending_snapshot', size: 'W', visible: true },
   { id: 'upcoming_plans', size: 'T', visible: true },
@@ -266,12 +264,6 @@ export const DEFAULT_WIDGET_LAYOUT = [
   { id: 'luna_suggestion', size: 'W', visible: true }
 ];
 
-// Centralized Developer Switch for Dashboard Widget Size Content Design Stage
-// Options: "S" (Small), "W" (Wide), "T" (Tall), "L" (Large)
-export const ACTIVE_WIDGET_SIZE = "S";
-
-// Centralized Switches for Dashboard Grid Layout Phases
+// Centralized Switch for Dashboard Active Rendering
 export const SHOW_DASHBOARD_WIDGETS = true;
-export const SHOW_BASE_GRID_ONLY = false;
-export const SHOW_TALL_GRID_ONLY = false;
-export const SHOW_WIDE_GRID_ONLY = false;
+
