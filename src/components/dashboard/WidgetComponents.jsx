@@ -98,7 +98,7 @@ const SmallWidgetWrapper = ({ label, labelColor = 'var(--text-muted)', bgTint, b
   </div>
 );
 
-// 1. SPENDING SNAPSHOT (S, W, T, L - Premium Financial Panel)
+// 1. SPENDING SNAPSHOT (S, W, T, L)
 export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
   const { expenses } = useLuna();
   const totalSpent = (expenses || []).filter(e => e.type !== 'income').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
@@ -119,7 +119,7 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
 
   if (widgetSize === 'W') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
             SPENDING SNAPSHOT
@@ -128,23 +128,23 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
             TRACKING ACTIVE
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.03))', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          <div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>TOTAL SPENT</div>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--accent-danger)' }}>${totalSpent.toFixed(2)}</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-danger)' }}>${totalSpent.toFixed(2)}</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>RECEIVED</div>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--accent-success)' }}>${totalIncome.toFixed(2)}</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-success)' }}>${totalIncome.toFixed(2)}</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>NET POSITION</div>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: net >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${net.toFixed(2)}</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: net >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${net.toFixed(2)}</div>
           </div>
-          <div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>TODAY</div>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>${todaySpent.toFixed(2)}</div>
-          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
+          <span>Today: <strong>${todaySpent.toFixed(2)}</strong></span>
+          <span>This Week: <strong>${(totalSpent * 0.35).toFixed(2)}</strong></span>
         </div>
       </div>
     );
@@ -152,30 +152,30 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
 
   if (widgetSize === 'T') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           SPENDING BREAKDOWN
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.03))', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 'var(--radius-sm, 8px)', padding: '14px 12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Total Spent</span>
-            <strong style={{ color: 'var(--accent-danger)', fontSize: '15px' }}>${totalSpent.toFixed(2)}</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Total Spent</span>
+            <strong style={{ fontSize: '15px', color: 'var(--accent-danger)' }}>${totalSpent.toFixed(2)}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Total Received</span>
-            <strong style={{ color: 'var(--accent-success)' }}>${totalIncome.toFixed(2)}</strong>
+          <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Received</span>
+            <strong style={{ fontSize: '14px', color: 'var(--accent-success)' }}>${totalIncome.toFixed(2)}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Net Position</span>
-            <strong style={{ color: net >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${net.toFixed(2)}</strong>
+          <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Net Position</span>
+            <strong style={{ fontSize: '14px', color: net >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${net.toFixed(2)}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Today Spent</span>
-            <strong style={{ color: 'var(--text-primary)' }}>${todaySpent.toFixed(2)}</strong>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Today Spent</span>
+            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>${todaySpent.toFixed(2)}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>This Week</span>
-            <strong style={{ color: 'var(--text-primary)' }}>${(totalSpent * 0.3).toFixed(2)}</strong>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>This Week</span>
+            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>${(totalSpent * 0.35).toFixed(2)}</strong>
           </div>
         </div>
       </div>
@@ -184,51 +184,58 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
 
   // L Size: Complete Financial Overview
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           FINANCIAL OVERVIEW
         </div>
-        <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)' }}>
-          Updated Live
+        <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--accent-success)', background: 'rgba(16, 185, 129, 0.12)', padding: '2px 6px', borderRadius: '4px' }}>
+          LIVE OVERVIEW
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.02))', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: 'var(--radius-sm, 8px)', padding: '14px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-          <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '600' }}>TOTAL SPENT</div>
-            <div style={{ fontSize: '17px', fontWeight: '800', color: 'var(--accent-danger)' }}>${totalSpent.toFixed(2)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '600' }}>RECEIVED</div>
-            <div style={{ fontSize: '17px', fontWeight: '800', color: 'var(--accent-success)' }}>${totalIncome.toFixed(2)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '600' }}>NET POSITION</div>
-            <div style={{ fontSize: '17px', fontWeight: '800', color: net >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${net.toFixed(2)}</div>
-          </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', margin: '8px 0' }}>
+        <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>TOTAL SPENT</div>
+          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-danger)' }}>${totalSpent.toFixed(2)}</div>
         </div>
-        <div style={{ height: '1px', background: 'rgba(239, 68, 68, 0.15)', margin: '2px 0' }} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-          <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Today</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${todaySpent.toFixed(2)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>This Week</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${(totalSpent * 0.35).toFixed(2)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>This Month</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${totalSpent.toFixed(2)}</div>
-          </div>
+        <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>RECEIVED</div>
+          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-success)' }}>${totalIncome.toFixed(2)}</div>
+        </div>
+        <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>NET POSITION</div>
+          <div style={{ fontSize: '18px', fontWeight: '800', color: net >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${net.toFixed(2)}</div>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', margin: '4px 0' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Today</div>
+          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${todaySpent.toFixed(2)}</div>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>This Week</div>
+          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${(totalSpent * 0.35).toFixed(2)}</div>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>This Month</div>
+          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${totalSpent.toFixed(2)}</div>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '4px' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Top Category</span>
+          <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>General & Living</strong>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Largest Expense</span>
+          <strong style={{ fontSize: '12px', color: 'var(--accent-danger)' }}>$120.00</strong>
         </div>
       </div>
     </div>
   );
 }
 
-// 2. ACCOUNT BALANCE (S, W, T, L - Premium Card Panel UI)
+// 2. ACCOUNT BALANCE (S, W, T, L)
 export function AccountBalanceWidget({ widgetSize = 'S' }) {
   const { expenses } = useLuna();
   const startingBalance = parseFloat(localStorage.getItem('daysync_starting_balance') || 0);
@@ -248,28 +255,32 @@ export function AccountBalanceWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'W') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
             ACCOUNT BALANCE
           </div>
-          <div style={{ fontSize: '10.5px', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '1px' }}>
+          <div style={{ fontSize: '10.5px', fontWeight: '700', color: 'var(--accent-success)', letterSpacing: '1px' }}>
             •••• •••• •••• 2481
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.03))', border: '1px solid rgba(16, 185, 129, 0.22)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          <div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>NET BALANCE</div>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--accent-success)' }}>${totalBalance.toFixed(2)}</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-success)' }}>${totalBalance.toFixed(2)}</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>TOTAL INCOME</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent-success)' }}>+${totalIncome.toFixed(2)}</div>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--accent-success)' }}>+${totalIncome.toFixed(2)}</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>TOTAL SPENT</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent-danger)' }}>-${totalSpent.toFixed(2)}</div>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--accent-danger)' }}>-${totalSpent.toFixed(2)}</div>
           </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
+          <span>Primary Account: <strong>Active</strong></span>
+          <span>Starting: <strong>${startingBalance.toFixed(2)}</strong></span>
         </div>
       </div>
     );
@@ -277,7 +288,7 @@ export function AccountBalanceWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'T') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
             ACCOUNT CARD PANEL
@@ -286,23 +297,22 @@ export function AccountBalanceWidget({ widgetSize = 'S' }) {
             •••• 2481
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.03))', border: '1px solid rgba(16, 185, 129, 0.22)', borderRadius: 'var(--radius-sm, 8px)', padding: '14px 12px' }}>
-          <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '600' }}>TOTAL NET BALANCE</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.04))', border: '1px solid rgba(16, 185, 129, 0.22)', borderRadius: '6px', padding: '12px' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>TOTAL NET BALANCE</div>
             <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--accent-success)' }}>${totalBalance.toFixed(2)}</div>
           </div>
-          <div style={{ height: '1px', background: 'rgba(16, 185, 129, 0.18)' }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Main Account</span>
-            <strong style={{ color: 'var(--text-primary)' }}>${totalBalance.toFixed(2)}</strong>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Main Account</span>
+            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>${totalBalance.toFixed(2)}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Received (Income)</span>
-            <strong style={{ color: 'var(--accent-success)' }}>+${totalIncome.toFixed(2)}</strong>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Total Received</span>
+            <strong style={{ fontSize: '14px', color: 'var(--accent-success)' }}>+${totalIncome.toFixed(2)}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Total Spent</span>
-            <strong style={{ color: 'var(--accent-danger)' }}>-${totalSpent.toFixed(2)}</strong>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Total Spent</span>
+            <strong style={{ fontSize: '14px', color: 'var(--accent-danger)' }}>-${totalSpent.toFixed(2)}</strong>
           </div>
         </div>
       </div>
@@ -310,37 +320,41 @@ export function AccountBalanceWidget({ widgetSize = 'S' }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-          COMPLETE ACCOUNT CARD OVERVIEW
+          COMPLETE ACCOUNT OVERVIEW
         </div>
-        <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent-success)', letterSpacing: '1.5px' }}>
+        <div style={{ fontSize: '10.5px', fontWeight: '700', color: 'var(--accent-success)', letterSpacing: '1.5px' }}>
           •••• •••• •••• 2481
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.03))', border: '1px solid rgba(16, 185, 129, 0.22)', borderRadius: 'var(--radius-sm, 8px)', padding: '14px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '600' }}>TOTAL NET POSITION</div>
-            <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent-success)' }}>${totalBalance.toFixed(2)}</div>
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>PRIMARY DAYSYNC CARD</div>
+      <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.04))', border: '1px solid rgba(16, 185, 129, 0.22)', borderRadius: '6px', padding: '12px', margin: '8px 0' }}>
+        <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>TOTAL NET BALANCE</div>
+        <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--accent-success)' }}>${totalBalance.toFixed(2)}</div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', margin: '4px 0' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Starting Balance</div>
+          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${startingBalance.toFixed(2)}</div>
         </div>
-        <div style={{ height: '1px', background: 'rgba(16, 185, 129, 0.18)' }} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-          <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Starting Balance</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${startingBalance.toFixed(2)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Total Received</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent-success)' }}>+${totalIncome.toFixed(2)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Total Spent</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent-danger)' }}>-${totalSpent.toFixed(2)}</div>
-          </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Total Received</div>
+          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent-success)' }}>+${totalIncome.toFixed(2)}</div>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Total Spent</div>
+          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent-danger)' }}>-${totalSpent.toFixed(2)}</div>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '4px' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Account Type</span>
+          <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>DaySync Primary</strong>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Status</span>
+          <strong style={{ fontSize: '12px', color: 'var(--accent-success)' }}>Active & Verified</strong>
         </div>
       </div>
     </div>
@@ -372,23 +386,27 @@ export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'W') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           MONTHLY EXPENSES
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', background: 'rgba(139, 92, 246, 0.06)', border: '1px solid rgba(139, 92, 246, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          <div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          <div style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>THIS WEEK</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>${(monthlySpent * 0.25).toFixed(2)}</div>
+            <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>${(monthlySpent * 0.25).toFixed(2)}</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(139, 92, 246, 0.12)', border: '1px solid rgba(139, 92, 246, 0.22)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>THIS MONTH</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-purple)' }}>${monthlySpent.toFixed(2)}</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-purple)' }}>${monthlySpent.toFixed(2)}</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>THIS YEAR</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-muted)' }}>${(monthlySpent * 12).toFixed(2)}</div>
+            <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-muted)' }}>${(monthlySpent * 12).toFixed(2)}</div>
           </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
+          <span>Top Category: <strong>Food & Living</strong></span>
+          <span>Pacing: <strong>Normal</strong></span>
         </div>
       </div>
     );
@@ -396,22 +414,26 @@ export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'T') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           MONTHLY SPENDING BREAKDOWN
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(139, 92, 246, 0.06)', border: '1px solid rgba(139, 92, 246, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>This Month</span>
-            <strong style={{ color: 'var(--accent-purple)' }}>${monthlySpent.toFixed(2)}</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          <div style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>This Week</span>
+            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>${(monthlySpent * 0.25).toFixed(2)}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>This Week</span>
-            <strong>${(monthlySpent * 0.25).toFixed(2)}</strong>
+          <div style={{ background: 'rgba(139, 92, 246, 0.12)', border: '1px solid rgba(139, 92, 246, 0.22)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>This Month</span>
+            <strong style={{ fontSize: '15px', color: 'var(--accent-purple)' }}>${monthlySpent.toFixed(2)}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Top Category</span>
-            <strong>Food & Living</strong>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>This Year</span>
+            <strong style={{ fontSize: '14px', color: 'var(--text-muted)' }}>${(monthlySpent * 12).toFixed(2)}</strong>
+          </div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Top Category</span>
+            <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>Food & Living</strong>
           </div>
         </div>
       </div>
@@ -419,26 +441,36 @@ export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE MONTHLY EXPENSES PANEL
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', background: 'rgba(139, 92, 246, 0.06)', border: '1px solid rgba(139, 92, 246, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '14px' }}>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>This Month Total</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', margin: '8px 0' }}>
+        <div style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.18)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>This Week</div>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>${(monthlySpent * 0.25).toFixed(2)}</div>
+        </div>
+        <div style={{ background: 'rgba(139, 92, 246, 0.14)', border: '1px solid rgba(139, 92, 246, 0.24)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>This Month Total</div>
           <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-purple)' }}>${monthlySpent.toFixed(2)}</div>
         </div>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Weekly Average</div>
-          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>${(monthlySpent / 4).toFixed(2)}</div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>This Year Est.</div>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>${(monthlySpent * 12).toFixed(2)}</div>
         </div>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Top Category</div>
-          <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Food & Living</div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '4px' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Top Category</div>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>Food & Living</div>
         </div>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Period Status</div>
-          <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--accent-purple)' }}>Active</div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Weekly Average</div>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>${(monthlySpent / 4).toFixed(2)}</div>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Pacing</div>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-success)' }}>On Track</div>
         </div>
       </div>
     </div>
@@ -468,23 +500,27 @@ export function TodaySpendingWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'W') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           TODAY'S SPENDING
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', background: 'rgba(249, 115, 22, 0.06)', border: '1px solid rgba(249, 115, 22, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          <div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          <div style={{ background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>TODAY</div>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--accent-warning)' }}>${todaySpent.toFixed(2)}</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-warning)' }}>${todaySpent.toFixed(2)}</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>YESTERDAY</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>$0.00</div>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>$0.00</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>DAY BEFORE</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>$0.00</div>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>$0.00</div>
           </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
+          <span>Top Category: <strong>General</strong></span>
+          <span>Transactions: <strong>{(expenses || []).length}</strong></span>
         </div>
       </div>
     );
@@ -492,22 +528,26 @@ export function TodaySpendingWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'T') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           DAILY SPENDING LOG
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(249, 115, 22, 0.06)', border: '1px solid rgba(249, 115, 22, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Today</span>
-            <strong style={{ color: 'var(--accent-warning)' }}>${todaySpent.toFixed(2)}</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          <div style={{ background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Today</span>
+            <strong style={{ fontSize: '15px', color: 'var(--accent-warning)' }}>${todaySpent.toFixed(2)}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Yesterday</span>
-            <span>$0.00</span>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Yesterday</span>
+            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>$0.00</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Top Category</span>
-            <span>General</span>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Day Before</span>
+            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>$0.00</strong>
+          </div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Top Category</span>
+            <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>General & Living</strong>
           </div>
         </div>
       </div>
@@ -515,18 +555,32 @@ export function TodaySpendingWidget({ widgetSize = 'S' }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE DAILY SPENDING REPORT
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', background: 'rgba(249, 115, 22, 0.06)', border: '1px solid rgba(249, 115, 22, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '14px' }}>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Today Spent</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', margin: '8px 0' }}>
+        <div style={{ background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Today</div>
           <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-warning)' }}>${todaySpent.toFixed(2)}</div>
         </div>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Transaction Count</div>
-          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>{(expenses || []).length} logged</div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Yesterday</div>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>$0.00</div>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Day Before</div>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>$0.00</div>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '4px' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Top Category</span>
+          <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>General & Living</strong>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Logged Items</span>
+          <strong style={{ fontSize: '12px', color: 'var(--accent-warning)' }}>{(expenses || []).length} items</strong>
         </div>
       </div>
     </div>
@@ -564,21 +618,25 @@ export function RecentExpensesWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'W') {
     const items = recentList.slice(0, 3);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           RECENT EXPENSES
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.max(1, items.length)}, 1fr)`, gap: '8px', background: 'rgba(59, 130, 246, 0.06)', border: '1px solid rgba(59, 130, 246, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(exp => (
-            <div key={exp.id || exp.createdAt}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          {items.length > 0 ? items.map((exp, idx) => (
+            <div key={exp.id || idx} style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {exp.merchant || exp.category || 'Expense'}
               </div>
-              <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--accent-primary)' }}>
+              <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-primary)', marginTop: '2px' }}>
                 ${parseFloat(exp.amount).toFixed(2)}
               </div>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No recent transactions</div>}
+          )) : (
+            <div style={{ gridColumn: 'span 3', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No recent transactions logged
+            </div>
+          )}
         </div>
       </div>
     );
@@ -587,17 +645,24 @@ export function RecentExpensesWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'T') {
     const items = recentList.slice(0, 4);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           RECENT TRANSACTIONS
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(59, 130, 246, 0.06)', border: '1px solid rgba(59, 130, 246, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(exp => (
-            <div key={exp.id || exp.createdAt} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-primary)', fontWeight: '600', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{exp.merchant || exp.category || 'Expense'}</span>
-              <strong style={{ color: 'var(--accent-primary)' }}>${parseFloat(exp.amount).toFixed(2)}</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          {items.length > 0 ? items.map((exp, idx) => (
+            <div key={exp.id || idx} style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{exp.merchant || exp.category || 'Expense'}</div>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{formatDate(exp.date || exp.createdAt)}</div>
+              </div>
+              <strong style={{ fontSize: '14px', color: 'var(--accent-primary)' }}>${parseFloat(exp.amount).toFixed(2)}</strong>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No recent transactions</div>}
+          )) : (
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No recent transactions
+            </div>
+          )}
         </div>
       </div>
     );
@@ -605,20 +670,24 @@ export function RecentExpensesWidget({ widgetSize = 'S' }) {
 
   const items = recentList.slice(0, 5);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         TRANSACTION HISTORY
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(59, 130, 246, 0.06)', border: '1px solid rgba(59, 130, 246, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-        {items.length > 0 ? items.map(exp => (
-          <div key={exp.id || exp.createdAt} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+        {items.length > 0 ? items.map((exp, idx) => (
+          <div key={exp.id || idx} style={{ background: 'rgba(59, 130, 246, 0.06)', border: '1px solid rgba(59, 130, 246, 0.16)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{exp.merchant || exp.category || 'Expense'}</div>
-              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{formatDate(exp.date || exp.createdAt)}</div>
+              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{exp.merchant || exp.category || 'Expense'}</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{formatDate(exp.date || exp.createdAt)} • {exp.category || 'General'}</div>
             </div>
-            <strong style={{ color: 'var(--accent-primary)', fontSize: '13px' }}>${parseFloat(exp.amount).toFixed(2)}</strong>
+            <strong style={{ fontSize: '14px', color: 'var(--accent-primary)' }}>${parseFloat(exp.amount).toFixed(2)}</strong>
           </div>
-        )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No recent transactions</div>}
+        )) : (
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+            No recent transactions logged
+          </div>
+        )}
       </div>
     </div>
   );
@@ -660,21 +729,25 @@ export function UpcomingPlansWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'W') {
     const items = activePlans.slice(0, 3);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           UPCOMING PLANS
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.max(1, items.length)}, 1fr)`, gap: '8px', background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(plan => (
-            <div key={plan.id}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          {items.length > 0 ? items.map((plan, idx) => (
+            <div key={plan.id || idx} style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {plan.name || plan.title}
               </div>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)' }}>
-                {getDaysRemaining(plan.nextDueDate || plan.dueDate)} days left
+              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)', marginTop: '2px' }}>
+                {getDaysRemaining(plan.nextDueDate || plan.dueDate)}d left
               </div>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No active plans</div>}
+          )) : (
+            <div style={{ gridColumn: 'span 3', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No active plans
+            </div>
+          )}
         </div>
       </div>
     );
@@ -683,17 +756,24 @@ export function UpcomingPlansWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'T') {
     const items = activePlans.slice(0, 4);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           ACTIVE SUBSCRIPTIONS
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(plan => (
-            <div key={plan.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{plan.name || plan.title}</span>
-              <strong style={{ color: 'var(--accent-primary)' }}>${plan.amount || 0}/mo</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          {items.length > 0 ? items.map((plan, idx) => (
+            <div key={plan.id || idx} style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>{plan.name || plan.title}</div>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{getDaysRemaining(plan.nextDueDate)} days remaining</div>
+              </div>
+              <strong style={{ fontSize: '13px', color: 'var(--accent-primary)' }}>${plan.amount || 0}</strong>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No active plans</div>}
+          )) : (
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No active plans
+            </div>
+          )}
         </div>
       </div>
     );
@@ -701,20 +781,24 @@ export function UpcomingPlansWidget({ widgetSize = 'S' }) {
 
   const items = activePlans.slice(0, 5);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE PLANS OVERVIEW
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-        {items.length > 0 ? items.map(plan => (
-          <div key={plan.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+        {items.length > 0 ? items.map((plan, idx) => (
+          <div key={plan.id || idx} style={{ background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{plan.name || plan.title}</div>
-              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Next bill: {formatDate(plan.nextDueDate)}</div>
+              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{plan.name || plan.title}</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Next bill: {formatDate(plan.nextDueDate)} • {getDaysRemaining(plan.nextDueDate)} days left</div>
             </div>
-            <strong style={{ color: 'var(--accent-primary)', fontSize: '13px' }}>${plan.amount || 0}</strong>
+            <strong style={{ fontSize: '14px', color: 'var(--accent-primary)' }}>${plan.amount || 0}</strong>
           </div>
-        )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No active plans</div>}
+        )) : (
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+            No active plans
+          </div>
+        )}
       </div>
     </div>
   );
@@ -743,23 +827,27 @@ export function SplitBalancesWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'W') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           SPLIT BALANCES
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', background: 'rgba(20, 184, 166, 0.06)', border: '1px solid rgba(20, 184, 166, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          <div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>OWED</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-success)' }}>${owedAmount.toFixed(2)}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          <div style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>YOU ARE OWED</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-success)' }}>${owedAmount.toFixed(2)}</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>YOU PAY</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-danger)' }}>${payAmount.toFixed(2)}</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-danger)' }}>${payAmount.toFixed(2)}</div>
           </div>
-          <div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>NET</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: netSplit >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${netSplit.toFixed(2)}</div>
+          <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>NET POSITION</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: netSplit >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${netSplit.toFixed(2)}</div>
           </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
+          <span>Important Contact: <strong>Alex ($45.00)</strong></span>
+          <span>Settlement: <strong>Pending</strong></span>
         </div>
       </div>
     );
@@ -767,22 +855,26 @@ export function SplitBalancesWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'T') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           SPLIT SUMMARY
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(20, 184, 166, 0.06)', border: '1px solid rgba(20, 184, 166, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>You Are Owed</span>
-            <strong style={{ color: 'var(--accent-success)' }}>${owedAmount.toFixed(2)}</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          <div style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>You Are Owed</span>
+            <strong style={{ fontSize: '15px', color: 'var(--accent-success)' }}>${owedAmount.toFixed(2)}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>You Have To Pay</span>
-            <strong style={{ color: 'var(--accent-danger)' }}>${payAmount.toFixed(2)}</strong>
+          <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>You Have To Pay</span>
+            <strong style={{ fontSize: '15px', color: 'var(--accent-danger)' }}>${payAmount.toFixed(2)}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Net Balance</span>
-            <strong style={{ color: netSplit >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${netSplit.toFixed(2)}</strong>
+          <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Net Balance</span>
+            <strong style={{ fontSize: '15px', color: netSplit >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${netSplit.toFixed(2)}</strong>
+          </div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Important Contact</span>
+            <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>Alex</strong>
           </div>
         </div>
       </div>
@@ -790,26 +882,32 @@ export function SplitBalancesWidget({ widgetSize = 'S' }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE SPLITS OVERVIEW
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', background: 'rgba(20, 184, 166, 0.06)', border: '1px solid rgba(20, 184, 166, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '14px' }}>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Total Owed to You</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', margin: '8px 0' }}>
+        <div style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.18)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>You Are Owed</div>
           <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-success)' }}>${owedAmount.toFixed(2)}</div>
         </div>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Total You Owe</div>
+        <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>You Have To Pay</div>
           <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-danger)' }}>${payAmount.toFixed(2)}</div>
         </div>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Net Settlement</div>
-          <div style={{ fontSize: '16px', fontWeight: '800', color: netSplit >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${netSplit.toFixed(2)}</div>
+        <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Net Settlement</div>
+          <div style={{ fontSize: '18px', fontWeight: '800', color: netSplit >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${netSplit.toFixed(2)}</div>
         </div>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Status</div>
-          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Balanced</div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '4px' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Person Breakdown</span>
+          <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>Alex ($45.00)</strong>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Settlement Status</span>
+          <strong style={{ fontSize: '12px', color: 'var(--accent-success)' }}>Balanced</strong>
         </div>
       </div>
     </div>
@@ -843,17 +941,21 @@ export function TodayTasksWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'W') {
     const items = pendingToday.slice(0, 3);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           TODAY'S PENDING TASKS
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.max(1, items.length)}, 1fr)`, gap: '8px', background: 'rgba(168, 85, 247, 0.06)', border: '1px solid rgba(168, 85, 247, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(t => (
-            <div key={t.id}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          {items.length > 0 ? items.map((t, idx) => (
+            <div key={t.id || idx} style={{ background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
-              <div style={{ fontSize: '10.5px', color: 'var(--accent-purple)' }}>{t.priority || 'Normal'}</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--accent-purple)', marginTop: '2px' }}>{t.priority || 'Normal'}</div>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No tasks for today 🎉</div>}
+          )) : (
+            <div style={{ gridColumn: 'span 3', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No tasks for today 🎉
+            </div>
+          )}
         </div>
       </div>
     );
@@ -862,17 +964,21 @@ export function TodayTasksWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'T') {
     const items = pendingToday.slice(0, 4);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           TASK LIST BY PRIORITY
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(168, 85, 247, 0.06)', border: '1px solid rgba(168, 85, 247, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(t => (
-            <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{t.title}</span>
-              <strong style={{ color: 'var(--accent-purple)' }}>{t.priority || 'Normal'}</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          {items.length > 0 ? items.map((t, idx) => (
+            <div key={t.id || idx} style={{ background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{t.title}</span>
+              <strong style={{ fontSize: '11px', color: 'var(--accent-purple)' }}>{t.priority || 'Normal'}</strong>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No tasks for today 🎉</div>}
+          )) : (
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No tasks for today 🎉
+            </div>
+          )}
         </div>
       </div>
     );
@@ -880,20 +986,24 @@ export function TodayTasksWidget({ widgetSize = 'S' }) {
 
   const items = pendingToday.slice(0, 5);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE TASKS OVERVIEW
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(168, 85, 247, 0.06)', border: '1px solid rgba(168, 85, 247, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-        {items.length > 0 ? items.map(t => (
-          <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+        {items.length > 0 ? items.map((t, idx) => (
+          <div key={t.id || idx} style={{ background: 'rgba(168, 85, 247, 0.06)', border: '1px solid rgba(168, 85, 247, 0.16)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{t.title}</div>
+              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{t.title}</div>
               <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Due: {t.dueTime || 'Today'}</div>
             </div>
-            <strong style={{ color: 'var(--accent-purple)' }}>{t.priority || 'Normal'}</strong>
+            <strong style={{ fontSize: '12px', color: 'var(--accent-purple)' }}>{t.priority || 'Normal'}</strong>
           </div>
-        )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No tasks for today 🎉</div>}
+        )) : (
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+            No tasks for today 🎉
+          </div>
+        )}
       </div>
     </div>
   );
@@ -934,17 +1044,21 @@ export function OverdueTasksWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'W') {
     const items = overdueTasks.slice(0, 3);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent-danger)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           URGENT OVERDUE TASKS
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.max(1, items.length)}, 1fr)`, gap: '8px', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(t => (
-            <div key={t.id}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          {items.length > 0 ? items.map((t, idx) => (
+            <div key={t.id || idx} style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
-              <div style={{ fontSize: '10.5px', color: 'var(--accent-danger)', fontWeight: '700' }}>{getDaysOverdue(t.dueDate)}d overdue</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--accent-danger)', fontWeight: '700', marginTop: '2px' }}>{getDaysOverdue(t.dueDate)}d overdue</div>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No overdue tasks 👍</div>}
+          )) : (
+            <div style={{ gridColumn: 'span 3', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No overdue tasks 👍
+            </div>
+          )}
         </div>
       </div>
     );
@@ -953,17 +1067,21 @@ export function OverdueTasksWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'T') {
     const items = overdueTasks.slice(0, 4);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent-danger)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           OVERDUE TASKS LIST
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(t => (
-            <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{t.title}</span>
-              <strong style={{ color: 'var(--accent-danger)' }}>{getDaysOverdue(t.dueDate)}d late</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          {items.length > 0 ? items.map((t, idx) => (
+            <div key={t.id || idx} style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{t.title}</span>
+              <strong style={{ fontSize: '12px', color: 'var(--accent-danger)' }}>{getDaysOverdue(t.dueDate)}d late</strong>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No overdue tasks 👍</div>}
+          )) : (
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No overdue tasks 👍
+            </div>
+          )}
         </div>
       </div>
     );
@@ -971,20 +1089,24 @@ export function OverdueTasksWidget({ widgetSize = 'S' }) {
 
   const items = overdueTasks.slice(0, 5);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent-danger)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE OVERDUE OVERVIEW
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-        {items.length > 0 ? items.map(t => (
-          <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+        {items.length > 0 ? items.map((t, idx) => (
+          <div key={t.id || idx} style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{t.title}</div>
+              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{t.title}</div>
               <div style={{ fontSize: '10.5px', color: 'var(--accent-danger)' }}>Due: {formatDate(t.dueDate)}</div>
             </div>
-            <strong style={{ color: 'var(--accent-danger)' }}>{getDaysOverdue(t.dueDate)} days late</strong>
+            <strong style={{ fontSize: '12.5px', color: 'var(--accent-danger)' }}>{getDaysOverdue(t.dueDate)} days late</strong>
           </div>
-        )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No overdue tasks 👍</div>}
+        )) : (
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+            No overdue tasks 👍
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1014,17 +1136,21 @@ export function UpcomingRemindersWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'W') {
     const items = upcomingReminders.slice(0, 3);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           UPCOMING REMINDERS
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.max(1, items.length)}, 1fr)`, gap: '8px', background: 'rgba(245, 158, 11, 0.06)', border: '1px solid rgba(245, 158, 11, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(rem => (
-            <div key={rem.id}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          {items.length > 0 ? items.map((rem, idx) => (
+            <div key={rem.id || idx} style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rem.title}</div>
-              <div style={{ fontSize: '10.5px', color: 'var(--accent-warning)' }}>{formatDate(rem.dueDate)}</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--accent-warning)', marginTop: '2px' }}>{formatDate(rem.dueDate)}</div>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No reminders</div>}
+          )) : (
+            <div style={{ gridColumn: 'span 3', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No reminders scheduled
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1033,17 +1159,21 @@ export function UpcomingRemindersWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'T') {
     const items = upcomingReminders.slice(0, 4);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           REMINDER TIMELINE
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(245, 158, 11, 0.06)', border: '1px solid rgba(245, 158, 11, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(rem => (
-            <div key={rem.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{rem.title}</span>
-              <strong style={{ color: 'var(--accent-warning)' }}>{formatDate(rem.dueDate)}</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          {items.length > 0 ? items.map((rem, idx) => (
+            <div key={rem.id || idx} style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{rem.title}</span>
+              <strong style={{ fontSize: '12px', color: 'var(--accent-warning)' }}>{formatDate(rem.dueDate)}</strong>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No reminders</div>}
+          )) : (
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No reminders scheduled
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1051,20 +1181,24 @@ export function UpcomingRemindersWidget({ widgetSize = 'S' }) {
 
   const items = upcomingReminders.slice(0, 5);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE REMINDERS SCHEDULE
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(245, 158, 11, 0.06)', border: '1px solid rgba(245, 158, 11, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-        {items.length > 0 ? items.map(rem => (
-          <div key={rem.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+        {items.length > 0 ? items.map((rem, idx) => (
+          <div key={rem.id || idx} style={{ background: 'rgba(245, 158, 11, 0.06)', border: '1px solid rgba(245, 158, 11, 0.16)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{rem.title}</div>
+              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{rem.title}</div>
               <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Date: {formatDate(rem.dueDate)}</div>
             </div>
-            <strong style={{ color: 'var(--accent-warning)' }}>{rem.dueTime || 'All Day'}</strong>
+            <strong style={{ fontSize: '12px', color: 'var(--accent-warning)' }}>{rem.dueTime || 'All Day'}</strong>
           </div>
-        )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No reminders</div>}
+        )) : (
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+            No reminders scheduled
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1090,56 +1224,68 @@ export function UnreadNotificationsWidget({ widgetSize = 'S' }) {
   }
 
   if (widgetSize === 'W') {
-    const items = (notifications || []).slice(0, 2);
+    const items = (notifications || []).slice(0, 3);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           LATEST NOTIFICATIONS
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.max(1, items.length)}, 1fr)`, gap: '8px', background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(n => (
-            <div key={n.id || n.title}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          {items.length > 0 ? items.map((n, idx) => (
+            <div key={n.id || idx} style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title || 'Alert'}</div>
-              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.message}</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px' }}>{n.message}</div>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No notifications</div>}
+          )) : (
+            <div style={{ gridColumn: 'span 3', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No notifications
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
   if (widgetSize === 'T') {
-    const items = (notifications || []).slice(0, 3);
+    const items = (notifications || []).slice(0, 4);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           NOTIFICATIONS FEED
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(n => (
-            <div key={n.id || n.title} style={{ fontSize: '12px' }}>
-              <div style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{n.title || 'System Alert'}</div>
-              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{n.message}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          {items.length > 0 ? items.map((n, idx) => (
+            <div key={n.id || idx} style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 12px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{n.title || 'System Alert'}</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px' }}>{n.message}</div>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No notifications</div>}
+          )) : (
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No notifications
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  const items = (notifications || []).slice(0, 4);
+  const items = (notifications || []).slice(0, 5);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE NOTIFICATION CENTER
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-        {items.length > 0 ? items.map(n => (
-          <div key={n.id || n.title} style={{ fontSize: '12px' }}>
-            <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{n.title || 'System Alert'}</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{n.message}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+        {items.length > 0 ? items.map((n, idx) => (
+          <div key={n.id || idx} style={{ background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: '6px', padding: '8px 12px' }}>
+            <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{n.title || 'System Alert'}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{n.message}</div>
           </div>
-        )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No notifications</div>}
+        )) : (
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+            No notifications
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1165,17 +1311,21 @@ export function HabitTrackerWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'W') {
     const items = habits.slice(0, 3);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           ACTIVE HABIT PROGRESS
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.max(1, items.length)}, 1fr)`, gap: '8px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(h => (
-            <div key={h.id}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          {items.length > 0 ? items.map((h, idx) => (
+            <div key={h.id || idx} style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.title}</div>
-              <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--accent-success)' }}>{h.completed ? '100%' : '0%'}</div>
+              <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--accent-success)', marginTop: '2px' }}>{h.completed ? '100%' : '0%'}</div>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No active habits</div>}
+          )) : (
+            <div style={{ gridColumn: 'span 3', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No active habits
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1184,17 +1334,21 @@ export function HabitTrackerWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'T') {
     const items = habits.slice(0, 4);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           HABIT COMPLETION LIST
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(h => (
-            <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{h.title}</span>
-              <strong style={{ color: 'var(--accent-success)' }}>{h.completed ? 'Done' : 'Pending'}</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          {items.length > 0 ? items.map((h, idx) => (
+            <div key={h.id || idx} style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{h.title}</span>
+              <strong style={{ fontSize: '12px', color: 'var(--accent-success)' }}>{h.completed ? 'Done' : 'Pending'}</strong>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No active habits</div>}
+          )) : (
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No active habits
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1202,20 +1356,24 @@ export function HabitTrackerWidget({ widgetSize = 'S' }) {
 
   const items = habits.slice(0, 5);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE HABIT OVERVIEW
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-        {items.length > 0 ? items.map(h => (
-          <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+        {items.length > 0 ? items.map((h, idx) => (
+          <div key={h.id || idx} style={{ background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.16)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{h.title}</div>
+              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{h.title}</div>
               <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Status: {h.completed ? 'Completed Today' : 'Pending'}</div>
             </div>
-            <strong style={{ color: 'var(--accent-success)' }}>{h.completed ? '100%' : '0%'}</strong>
+            <strong style={{ fontSize: '13px', color: 'var(--accent-success)' }}>{h.completed ? '100%' : '0%'}</strong>
           </div>
-        )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No active habits</div>}
+        )) : (
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+            No active habits
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1237,22 +1395,22 @@ export function HabitStreakWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'W') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           TOP STREAKS
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', background: 'rgba(249, 115, 22, 0.06)', border: '1px solid rgba(249, 115, 22, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          <div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          <div style={{ background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>CURRENT</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-warning)' }}>{streakDays} Days</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-warning)' }}>{streakDays} Days</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>BEST STREAK</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>{streakDays + 4} Days</div>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>{streakDays + 4} Days</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>GOAL</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-muted)' }}>30 Days</div>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>30 Days</div>
           </div>
         </div>
       </div>
@@ -1261,22 +1419,22 @@ export function HabitStreakWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'T') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           STREAK BREAKDOWN
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(249, 115, 22, 0.06)', border: '1px solid rgba(249, 115, 22, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Current Active Streak</span>
-            <strong style={{ color: 'var(--accent-warning)' }}>{streakDays} Days</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          <div style={{ background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Current Active Streak</span>
+            <strong style={{ fontSize: '15px', color: 'var(--accent-warning)' }}>{streakDays} Days</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>All-Time Best</span>
-            <strong>{streakDays + 4} Days</strong>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>All-Time Best</span>
+            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>{streakDays + 4} Days</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Started Date</span>
-            <span>Aug 1, 2026</span>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Started Date</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Aug 1, 2026</span>
           </div>
         </div>
       </div>
@@ -1284,17 +1442,17 @@ export function HabitStreakWidget({ widgetSize = 'S' }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE STREAK OVERVIEW
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', background: 'rgba(249, 115, 22, 0.06)', border: '1px solid rgba(249, 115, 22, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '14px' }}>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Current Streak</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', margin: '8px 0' }}>
+        <div style={{ background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Current Streak</div>
           <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-warning)' }}>{streakDays} Days</div>
         </div>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Best Streak</div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Best Streak</div>
           <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>{streakDays + 4} Days</div>
         </div>
       </div>
@@ -1322,22 +1480,22 @@ export function DailyProgressWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'W') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           PROGRESS BREAKDOWN
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          <div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>OVERALL</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-primary)' }}>{progressPct}%</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-primary)' }}>{progressPct}%</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>TASKS</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>{doneCount}/{todayTasks.length || 1}</div>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>{doneCount}/{todayTasks.length || 1}</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>HABITS</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-success)' }}>100%</div>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--accent-success)' }}>100%</div>
           </div>
         </div>
       </div>
@@ -1346,22 +1504,22 @@ export function DailyProgressWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'T') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           DAILY PROGRESS STATS
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Overall Progress</span>
-            <strong style={{ color: 'var(--accent-primary)' }}>{progressPct}%</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Overall Progress</span>
+            <strong style={{ fontSize: '15px', color: 'var(--accent-primary)' }}>{progressPct}%</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Tasks Completed</span>
-            <strong>{doneCount} / {todayTasks.length}</strong>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Tasks Completed</span>
+            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>{doneCount} / {todayTasks.length}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Habits Completed</span>
-            <strong style={{ color: 'var(--accent-success)' }}>All Done</strong>
+          <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Habits Completed</span>
+            <strong style={{ fontSize: '14px', color: 'var(--accent-success)' }}>All Done</strong>
           </div>
         </div>
       </div>
@@ -1369,17 +1527,17 @@ export function DailyProgressWidget({ widgetSize = 'S' }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE DAILY PROGRESS PANEL
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '14px' }}>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Overall Completion</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', margin: '8px 0' }}>
+        <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Overall Completion</div>
           <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-primary)' }}>{progressPct}%</div>
         </div>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Tasks Count</div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Tasks Count</div>
           <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>{doneCount} / {todayTasks.length}</div>
         </div>
       </div>
@@ -1415,17 +1573,21 @@ export function BirthdaysMeetingsWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'W') {
     const items = birthdays.slice(0, 3);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           UPCOMING BIRTHDAYS
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.max(1, items.length)}, 1fr)`, gap: '8px', background: 'rgba(236, 72, 153, 0.06)', border: '1px solid rgba(236, 72, 153, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(b => (
-            <div key={b.id}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          {items.length > 0 ? items.map((b, idx) => (
+            <div key={b.id || idx} style={{ background: 'rgba(236, 72, 153, 0.08)', border: '1px solid rgba(236, 72, 153, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title}</div>
-              <div style={{ fontSize: '10.5px', color: 'var(--accent-pink)' }}>{formatDate(b.dueDate)}</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--accent-pink)', marginTop: '2px' }}>{formatDate(b.dueDate)}</div>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No birthdays</div>}
+          )) : (
+            <div style={{ gridColumn: 'span 3', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No birthdays upcoming
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1434,17 +1596,21 @@ export function BirthdaysMeetingsWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'T') {
     const items = birthdays.slice(0, 4);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           BIRTHDAYS LIST
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(236, 72, 153, 0.06)', border: '1px solid rgba(236, 72, 153, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(b => (
-            <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{b.title}</span>
-              <strong style={{ color: 'var(--accent-pink)' }}>{formatDate(b.dueDate)}</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          {items.length > 0 ? items.map((b, idx) => (
+            <div key={b.id || idx} style={{ background: 'rgba(236, 72, 153, 0.08)', border: '1px solid rgba(236, 72, 153, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{b.title}</span>
+              <strong style={{ fontSize: '12px', color: 'var(--accent-pink)' }}>{formatDate(b.dueDate)}</strong>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No birthdays</div>}
+          )) : (
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No birthdays upcoming
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1452,20 +1618,24 @@ export function BirthdaysMeetingsWidget({ widgetSize = 'S' }) {
 
   const items = birthdays.slice(0, 5);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE BIRTHDAY LIST
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(236, 72, 153, 0.06)', border: '1px solid rgba(236, 72, 153, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-        {items.length > 0 ? items.map(b => (
-          <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+        {items.length > 0 ? items.map((b, idx) => (
+          <div key={b.id || idx} style={{ background: 'rgba(236, 72, 153, 0.06)', border: '1px solid rgba(236, 72, 153, 0.16)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{b.title}</div>
+              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{b.title}</div>
               <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Date: {formatDate(b.dueDate)}</div>
             </div>
-            <strong style={{ color: 'var(--accent-pink)' }}>Upcoming</strong>
+            <strong style={{ fontSize: '12px', color: 'var(--accent-pink)' }}>Upcoming</strong>
           </div>
-        )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No birthdays</div>}
+        )) : (
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+            No birthdays upcoming
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1499,17 +1669,21 @@ export function UpcomingMeetingsWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'W') {
     const items = meetings.slice(0, 3);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           UPCOMING MEETINGS
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.max(1, items.length)}, 1fr)`, gap: '8px', background: 'rgba(59, 130, 246, 0.06)', border: '1px solid rgba(59, 130, 246, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(m => (
-            <div key={m.id}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          {items.length > 0 ? items.map((m, idx) => (
+            <div key={m.id || idx} style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</div>
-              <div style={{ fontSize: '10.5px', color: 'var(--accent-primary)' }}>{m.dueTime || 'Today'}</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--accent-primary)', marginTop: '2px' }}>{m.dueTime || 'Today'}</div>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No meetings</div>}
+          )) : (
+            <div style={{ gridColumn: 'span 3', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No meetings scheduled
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1518,17 +1692,21 @@ export function UpcomingMeetingsWidget({ widgetSize = 'S' }) {
   if (widgetSize === 'T') {
     const items = meetings.slice(0, 4);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           MEETING SCHEDULE
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(59, 130, 246, 0.06)', border: '1px solid rgba(59, 130, 246, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          {items.length > 0 ? items.map(m => (
-            <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{m.title}</span>
-              <strong style={{ color: 'var(--accent-primary)' }}>{m.dueTime || 'Today'}</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          {items.length > 0 ? items.map((m, idx) => (
+            <div key={m.id || idx} style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{m.title}</span>
+              <strong style={{ fontSize: '12px', color: 'var(--accent-primary)' }}>{m.dueTime || 'Today'}</strong>
             </div>
-          )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No meetings</div>}
+          )) : (
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+              No meetings scheduled
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1536,20 +1714,24 @@ export function UpcomingMeetingsWidget({ widgetSize = 'S' }) {
 
   const items = meetings.slice(0, 5);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE MEETINGS OVERVIEW
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(59, 130, 246, 0.06)', border: '1px solid rgba(59, 130, 246, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-        {items.length > 0 ? items.map(m => (
-          <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+        {items.length > 0 ? items.map((m, idx) => (
+          <div key={m.id || idx} style={{ background: 'rgba(59, 130, 246, 0.06)', border: '1px solid rgba(59, 130, 246, 0.16)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{m.title}</div>
+              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{m.title}</div>
               <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{formatDate(m.dueDate)}</div>
             </div>
-            <strong style={{ color: 'var(--accent-primary)' }}>{m.dueTime || 'Scheduled'}</strong>
+            <strong style={{ fontSize: '12px', color: 'var(--accent-primary)' }}>{m.dueTime || 'Scheduled'}</strong>
           </div>
-        )) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No meetings</div>}
+        )) : (
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+            No meetings scheduled
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1586,23 +1768,27 @@ export function ClockDateWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'W') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           CLOCK & TIMEZONE
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          <div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>TIME</div>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>{timeStr}</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>{timeStr}</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>DATE</div>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent-primary)' }}>{dateStr}</div>
+            <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--accent-primary)' }}>{dateStr}</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>DAY</div>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-muted)' }}>{dayStr}</div>
+            <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-muted)' }}>{dayStr}</div>
           </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
+          <span>Timezone: <strong>{timezoneStr}</strong></span>
+          <span>Status: <strong>Live Clock</strong></span>
         </div>
       </div>
     );
@@ -1610,19 +1796,25 @@ export function ClockDateWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'T') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           TIME DETAILS
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-          <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', textAlign: 'center' }}>{timeStr}</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Date</span>
-            <strong>{dateStr} ({dayStr})</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          <div style={{ background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)', borderRadius: '6px', padding: '12px', textAlign: 'center' }}>
+            <div style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text-primary)' }}>{timeStr}</div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Timezone</span>
-            <span>{timezoneStr}</span>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Date</span>
+            <strong style={{ fontSize: '13px', color: 'var(--accent-primary)' }}>{dateStr}</strong>
+          </div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Day</span>
+            <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{dayStr}</strong>
+          </div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Timezone</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{timezoneStr}</span>
           </div>
         </div>
       </div>
@@ -1630,26 +1822,22 @@ export function ClockDateWidget({ widgetSize = 'S' }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE TIME & CALENDAR PANEL
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '14px' }}>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Current Time</div>
-          <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>{timeStr}</div>
+      <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '14px', textAlign: 'center', margin: '8px 0' }}>
+        <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)' }}>{timeStr}</div>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent-primary)', marginTop: '4px' }}>{dateStr} • {dayStr}</div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '4px' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Timezone</span>
+          <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{timezoneStr}</strong>
         </div>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Calendar Date</div>
-          <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-primary)' }}>{dateStr}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Day of Week</div>
-          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>{dayStr}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Timezone</div>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)' }}>{timezoneStr}</div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>System</span>
+          <strong style={{ fontSize: '12px', color: 'var(--accent-success)' }}>Synchronized</strong>
         </div>
       </div>
     </div>
@@ -1670,15 +1858,15 @@ export function QuickAddWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'W') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           QUICK ACTION SHORTCUTS
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', background: 'rgba(139, 92, 246, 0.06)', border: '1px solid rgba(139, 92, 246, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 8px' }}>
-          <Link to="/app/task" className="btn-primary" style={{ fontSize: '11px', padding: '6px 4px', textDecoration: 'none', justifyContent: 'center' }}>+ Task</Link>
-          <Link to="/app/expenses" className="btn-secondary" style={{ fontSize: '11px', padding: '6px 4px', textDecoration: 'none', justifyContent: 'center' }}>+ Spend</Link>
-          <Link to="/app/plans" className="btn-secondary" style={{ fontSize: '11px', padding: '6px 4px', textDecoration: 'none', justifyContent: 'center' }}>+ Plan</Link>
-          <Link to="/app/splits" className="btn-secondary" style={{ fontSize: '11px', padding: '6px 4px', textDecoration: 'none', justifyContent: 'center' }}>+ Split</Link>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', flex: 1, alignItems: 'center', margin: '8px 0' }}>
+          <Link to="/app/task" className="btn-primary" style={{ fontSize: '11.5px', padding: '10px 4px', textDecoration: 'none', justifyContent: 'center' }}>+ Task</Link>
+          <Link to="/app/expenses" className="btn-secondary" style={{ fontSize: '11.5px', padding: '10px 4px', textDecoration: 'none', justifyContent: 'center' }}>+ Spend</Link>
+          <Link to="/app/plans" className="btn-secondary" style={{ fontSize: '11.5px', padding: '10px 4px', textDecoration: 'none', justifyContent: 'center' }}>+ Plan</Link>
+          <Link to="/app/splits" className="btn-secondary" style={{ fontSize: '11.5px', padding: '10px 4px', textDecoration: 'none', justifyContent: 'center' }}>+ Split</Link>
         </div>
       </div>
     );
@@ -1686,28 +1874,29 @@ export function QuickAddWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'T') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           ACTION SHORTCUTS
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(139, 92, 246, 0.06)', border: '1px solid rgba(139, 92, 246, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-          <Link to="/app/task" className="btn-primary" style={{ fontSize: '12px', padding: '8px 12px', textDecoration: 'none', justifyContent: 'center' }}>+ Add New Task</Link>
-          <Link to="/app/expenses" className="btn-secondary" style={{ fontSize: '12px', padding: '8px 12px', textDecoration: 'none', justifyContent: 'center' }}>+ Log New Expense</Link>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          <Link to="/app/task" className="btn-primary" style={{ fontSize: '12.5px', padding: '12px', textDecoration: 'none', justifyContent: 'center' }}>+ Add New Task</Link>
+          <Link to="/app/expenses" className="btn-secondary" style={{ fontSize: '12.5px', padding: '12px', textDecoration: 'none', justifyContent: 'center' }}>+ Log Expense</Link>
+          <Link to="/app/plans" className="btn-secondary" style={{ fontSize: '12.5px', padding: '12px', textDecoration: 'none', justifyContent: 'center' }}>+ Create Plan</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE SHORTCUT PANEL
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', background: 'rgba(139, 92, 246, 0.06)', border: '1px solid rgba(139, 92, 246, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '14px' }}>
-        <Link to="/app/task" className="btn-primary" style={{ fontSize: '12px', padding: '10px', textDecoration: 'none', justifyContent: 'center' }}>+ Add Task</Link>
-        <Link to="/app/expenses" className="btn-secondary" style={{ fontSize: '12px', padding: '10px', textDecoration: 'none', justifyContent: 'center' }}>+ Add Expense</Link>
-        <Link to="/app/plans" className="btn-secondary" style={{ fontSize: '12px', padding: '10px', textDecoration: 'none', justifyContent: 'center' }}>+ Add Plan</Link>
-        <Link to="/app/splits" className="btn-secondary" style={{ fontSize: '12px', padding: '10px', textDecoration: 'none', justifyContent: 'center' }}>+ Add Split</Link>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', flex: 1, alignItems: 'center', margin: '8px 0' }}>
+        <Link to="/app/task" className="btn-primary" style={{ fontSize: '13px', padding: '14px', textDecoration: 'none', justifyContent: 'center' }}>+ Add Task</Link>
+        <Link to="/app/expenses" className="btn-secondary" style={{ fontSize: '13px', padding: '14px', textDecoration: 'none', justifyContent: 'center' }}>+ Add Expense</Link>
+        <Link to="/app/plans" className="btn-secondary" style={{ fontSize: '13px', padding: '14px', textDecoration: 'none', justifyContent: 'center' }}>+ Add Plan</Link>
+        <Link to="/app/splits" className="btn-secondary" style={{ fontSize: '13px', padding: '14px', textDecoration: 'none', justifyContent: 'center' }}>+ Add Split</Link>
       </div>
     </div>
   );
@@ -1727,13 +1916,17 @@ export function LunaSuggestionWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'W') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           LUNA INSIGHT
         </div>
-        <div style={{ background: 'rgba(168, 85, 247, 0.06)', border: '1px solid rgba(168, 85, 247, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>Focus on your top priority task today.</div>
-          <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px' }}>Completing high priority items early keeps your day smooth.</div>
+        <div style={{ background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.18)', borderRadius: '6px', padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', margin: '8px 0' }}>
+          <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Focus on your top priority task today.</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Completing high priority items early keeps your day smooth.</div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
+          <span>AI Companion: <strong>Active</strong></span>
+          <span>Action: <strong>Review Tasks</strong></span>
         </div>
       </div>
     );
@@ -1741,26 +1934,46 @@ export function LunaSuggestionWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'T') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           LUNA DAILY FOCUS
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(168, 85, 247, 0.06)', border: '1px solid rgba(168, 85, 247, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-          <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>What to focus on</div>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Address pending high-priority tasks first before starting new expenses or plans.</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          <div style={{ background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.18)', borderRadius: '6px', padding: '10px 12px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--accent-primary)', fontWeight: '700' }}>MAIN SUGGESTION</div>
+            <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>Focus on top priority tasks</div>
+          </div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '10px 12px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>WHY IT MATTERS</div>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>Prevents task accumulation & boosts daily streak.</div>
+          </div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '10px 12px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--accent-success)', fontWeight: '700' }}>SUGGESTED ACTION</div>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-primary)', marginTop: '2px' }}>Complete High Priority Tasks</div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE LUNA AI CONTEXTUAL INSIGHT
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(168, 85, 247, 0.06)', border: '1px solid rgba(168, 85, 247, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '14px' }}>
+      <div style={{ background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.18)', borderRadius: '6px', padding: '12px', margin: '8px 0' }}>
         <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Daily Focus Recommendation</div>
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Focus on your top priority task today. Completing high-priority items keeps your DaySync progress high.</div>
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Focus on your top priority task today. Completing high-priority items keeps your DaySync progress high.</div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '4px' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Reason</div>
+          <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-primary)' }}>Streak Optimization</div>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Suggested Action</div>
+          <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--accent-success)' }}>Review Tasks</div>
+        </div>
       </div>
     </div>
   );
@@ -1791,23 +2004,27 @@ export function NextImportantItemWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'W') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           IMPORTANT PERSON SPLIT
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', background: 'rgba(20, 184, 166, 0.06)', border: '1px solid rgba(20, 184, 166, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '10px 12px' }}>
-          <div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+          <div style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>PERSON</div>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{importantPerson.name}</div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>{importantPerson.name}</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>OWED TO YOU</div>
-            <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--accent-success)' }}>${importantPerson.owedAmount.toFixed(2)}</div>
+            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-success)' }}>${parseFloat(importantPerson.owedAmount).toFixed(2)}</div>
           </div>
-          <div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>STATUS</div>
             <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-muted)' }}>Pending</div>
           </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
+          <span>Split: <strong>Lunch & Drinks</strong></span>
+          <span>Settlement: <strong>Unsettled</strong></span>
         </div>
       </div>
     );
@@ -1815,22 +2032,26 @@ export function NextImportantItemWidget({ widgetSize = 'S' }) {
 
   if (widgetSize === 'T') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           PERSON SPLIT DETAILS
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(20, 184, 166, 0.06)', border: '1px solid rgba(20, 184, 166, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Person Name</span>
-            <strong>{importantPerson.name}</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+          <div style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Person Name</span>
+            <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{importantPerson.name}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Amount Owed</span>
-            <strong style={{ color: 'var(--accent-success)' }}>${importantPerson.owedAmount.toFixed(2)}</strong>
+          <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Amount Owed</span>
+            <strong style={{ fontSize: '15px', color: 'var(--accent-success)' }}>${parseFloat(importantPerson.owedAmount).toFixed(2)}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Settlement Status</span>
-            <span>Unsettled</span>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Recent Split</span>
+            <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>Lunch & Drinks</strong>
+          </div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Settlement Status</span>
+            <strong style={{ fontSize: '12px', color: 'var(--accent-warning)' }}>Unsettled</strong>
           </div>
         </div>
       </div>
@@ -1838,18 +2059,18 @@ export function NextImportantItemWidget({ widgetSize = 'S' }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE PERSON SPLIT REPORT
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', background: 'rgba(20, 184, 166, 0.06)', border: '1px solid rgba(20, 184, 166, 0.16)', borderRadius: 'var(--radius-sm, 8px)', padding: '14px' }}>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Person</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', margin: '8px 0' }}>
+        <div style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.18)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Person</div>
           <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>{importantPerson.name}</div>
         </div>
-        <div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Total Owed to You</div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-success)' }}>${importantPerson.owedAmount.toFixed(2)}</div>
+        <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Total Owed to You</div>
+          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-success)' }}>${parseFloat(importantPerson.owedAmount).toFixed(2)}</div>
         </div>
       </div>
     </div>
