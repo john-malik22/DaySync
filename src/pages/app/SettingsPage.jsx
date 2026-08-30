@@ -786,7 +786,7 @@ export function SettingsPage() {
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-            {/* Theme Mode */}
+            {/* 1. Theme Mode */}
             <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
               <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Theme Mode</div>
               <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Current: <strong style={{ color: 'var(--text-primary)', textTransform: 'capitalize' }}>{theme} Mode</strong></div>
@@ -796,7 +796,7 @@ export function SettingsPage() {
               </button>
             </div>
 
-            {/* 1. Transaction Messages */}
+            {/* 2. Transaction Messages */}
             <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
               <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Transaction Messages</div>
               <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Control transaction-message read behavior</div>
@@ -811,7 +811,7 @@ export function SettingsPage() {
               </select>
             </div>
 
-            {/* 2. Clear Luna Chat */}
+            {/* 3. Clear Luna Chat */}
             <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
               <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Clear Luna Chat</div>
               <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Remove Luna conversation history</div>
@@ -825,7 +825,106 @@ export function SettingsPage() {
               </button>
             </div>
 
-            {/* 3. Auto Backup */}
+            {/* 4. Startup Page */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Open Page on Startup</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Choose default launch page</div>
+              <select
+                value={defaults.startupPage}
+                onChange={(e) => handleDefaultChange('startupPage', e.target.value)}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }}
+              >
+                <option value="dashboard">Dashboard</option>
+                <option value="tasks">Tasks</option>
+                <option value="expenses">Expenses</option>
+                <option value="plans">Plans</option>
+                <option value="splits">Shared Splits</option>
+                <option value="habits">Habits</option>
+                <option value="chat">Luna Chat</option>
+                <option value="settings">Settings</option>
+              </select>
+            </div>
+
+            {/* 5. Week Start Day */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Week Start Day</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Calendar & habit views start day</div>
+              <select
+                value={weekStartDay}
+                onChange={(e) => handleWeekStartChange(e.target.value)}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }}
+              >
+                <option value="monday">Monday</option>
+                <option value="sunday">Sunday</option>
+              </select>
+            </div>
+
+            {/* 6. Date Format */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Date Format</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Displayed date representation</div>
+              <select
+                value={dateFormat}
+                onChange={(e) => handleDateFormatChange(e.target.value)}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }}
+              >
+                <option value="DD MMM YYYY">23 Aug 2026</option>
+                <option value="DD/MM/YYYY">23/08/2026</option>
+                <option value="MM/DD/YYYY">08/23/2026</option>
+              </select>
+            </div>
+
+            {/* 7. Confirm Before Deleting */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Confirm Before Deleting</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Ask confirmation before deleting items</div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                <input
+                  type="checkbox"
+                  checked={confirmDelete}
+                  onChange={(e) => handleToggleConfirmDelete(e.target.checked)}
+                />
+                Enabled ({confirmDelete ? 'Prompt confirmation' : 'Direct deletion'})
+              </label>
+            </div>
+
+            {/* 8. Currency */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Currency</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Primary system currency</div>
+              <div style={{ padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: '700' }}>
+                ₹ INR (Indian Rupee)
+              </div>
+            </div>
+
+            {/* 9. Starting Account Balance */}
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Starting Account Balance</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Opening financial balance (e.g. ₹50,000)</div>
+              {isEditingBalance ? (
+                <form onSubmit={handleSaveStartingBalance} style={{ display: 'flex', gap: '6px' }}>
+                  <input
+                    type="number"
+                    value={balanceInput}
+                    onChange={(e) => setBalanceInput(e.target.value)}
+                    placeholder="50000"
+                    style={{ flex: 1, padding: '4px 8px', fontSize: '12px', minHeight: '32px' }}
+                    autoFocus
+                  />
+                  <button type="submit" className="btn-primary" style={{ padding: '4px 10px', fontSize: '12px', minHeight: '32px' }}>Save</button>
+                  <button type="button" onClick={() => setIsEditingBalance(false)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '12px', minHeight: '32px' }}>Cancel</button>
+                </form>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--accent-primary)' }}>
+                    ₹{startingBalance !== null ? startingBalance.toLocaleString() : '0'}
+                  </span>
+                  <button type="button" onClick={handleStartEditBalance} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '11.5px' }}>Edit</button>
+                </div>
+              )}
+            </div>
+
+            {/* 10. Auto Backup */}
             <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
               <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>Auto Backup</div>
               <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>Automatically back up DaySync user data</div>
