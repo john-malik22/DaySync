@@ -153,12 +153,12 @@ app.post('/api/payments/create-order', authenticate, (req, res) => {
   try {
     const keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_DaySyncLifetimeKey123';
     
-    // Amount: ₹499 one-time (49900 paise)
-    const amount = 49900;
+    // Amount: ₹9 one-time (900 paise)
+    const amount = 900;
     const currency = 'INR';
     const orderId = `order_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
-    console.log(`[PAYMENT] Order created for user ${req.user.id}: ${orderId} (₹499 One-Time Lifetime Access)`);
+    console.log(`[PAYMENT] Order created for user ${req.user.id}: ${orderId} (₹9 One-Time Lifetime Access)`);
 
     res.json({
       success: true,

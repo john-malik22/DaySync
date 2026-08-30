@@ -732,13 +732,16 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* 2. DAYSYNC LIFETIME PREMIUM SECTION */}
+        {/* 2. DAYSYNC V2 LIFETIME ACCESS SECTION */}
         <div ref={upgradeRef} className="glass-card" style={{ border: '1px solid var(--accent-primary)', background: 'linear-gradient(135deg, rgba(91, 80, 230, 0.08) 0%, var(--bg-card) 100%)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
             <div style={{ flex: 1, minWidth: '240px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Sparkles size={18} color="var(--accent-primary)" /> DaySync Lifetime Premium
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                <span style={{ background: 'var(--accent-primary)', color: '#FFFFFF', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', letterSpacing: '0.05em' }}>
+                  VERSION 2
+                </span>
+                <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1.1rem', fontWeight: '800' }}>
+                  LIFETIME ACCESS
                 </h3>
                 {user?.isPremium && (
                   <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-success)' }}>
@@ -746,18 +749,18 @@ export function SettingsPage() {
                   </span>
                 )}
               </div>
-              <p style={{ margin: '4px 0 12px 0', fontSize: '12.5px', color: 'var(--text-muted)' }}>
-                One-time payment for lifetime access. No subscriptions. No recurring charges.
+              <p style={{ margin: '4px 0 10px 0', fontSize: '12.5px', color: 'var(--text-muted)' }}>
+                One-time payment for complete V2 Lifetime Access. No monthly or yearly subscriptions.
               </p>
-              <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
-                <div>Membership: <strong style={{ color: user?.isPremium ? 'var(--accent-success)' : 'var(--text-primary)' }}>{user?.isPremium ? 'Lifetime Premium Member' : 'Free Plan'}</strong></div>
-                <div>Price: <strong style={{ color: 'var(--accent-primary)' }}>₹499 (One-Time Payment)</strong></div>
+              <div style={{ display: 'flex', gap: '16px', fontSize: '12.5px', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+                <div>Price: <strong style={{ color: 'var(--accent-primary)', fontSize: '1.15rem', fontWeight: '900' }}>₹9</strong></div>
+                <div>Membership: <strong style={{ color: user?.isPremium ? 'var(--accent-success)' : 'var(--text-primary)' }}>{user?.isPremium ? 'Lifetime Member' : 'Free User'}</strong></div>
               </div>
             </div>
 
             {user?.isPremium ? (
               <div style={{ padding: '8px 14px', borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: 'var(--accent-success)', fontSize: '12.5px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <CheckCircle size={15} /> Lifetime Premium Unlocked
+                <CheckCircle size={15} /> Lifetime Access Unlocked
               </div>
             ) : (
               <button
@@ -765,9 +768,9 @@ export function SettingsPage() {
                 onClick={() => setShowUpgradeModal(true)}
                 className="btn-primary"
                 style={{ fontSize: '12.5px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                aria-label="View Lifetime Premium plans"
+                aria-label="View Lifetime Access"
               >
-                <Zap size={14} /> Buy Lifetime Premium — ₹499
+                <Zap size={14} /> Buy Lifetime Access — ₹9
               </button>
             )}
           </div>
@@ -1467,14 +1470,19 @@ export function SettingsPage() {
       {showUpgradeModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)', zIndex: 1100,
+          background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(8px)', zIndex: 1100,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
         }}>
-          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '440px', padding: '24px', borderRadius: '16px', border: '1px solid var(--accent-primary)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={20} color="var(--accent-primary)" /> DaySync Lifetime Premium
-              </h3>
+          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '420px', padding: '24px', borderRadius: '16px', border: '1px solid var(--accent-primary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ background: 'var(--accent-primary)', color: '#FFFFFF', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', letterSpacing: '0.05em' }}>
+                  VERSION 2
+                </span>
+                <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--text-primary)', fontWeight: '800' }}>
+                  LIFETIME ACCESS
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowUpgradeModal(false)}
@@ -1485,39 +1493,74 @@ export function SettingsPage() {
               </button>
             </div>
 
-            <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Current Membership</div>
-              <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span>{user?.isPremium ? 'Lifetime Premium' : 'Free Plan'}</span>
-                <span style={{ fontSize: '11px', fontWeight: '700', color: user?.isPremium ? 'var(--accent-success)' : 'var(--text-muted)' }}>
-                  ({user?.isPremium ? '✨ Active' : 'Basic Access'})
-                </span>
+            {/* Price Header */}
+            <div style={{ textAlign: 'center', margin: '10px 0 14px 0', padding: '12px', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>
+                PRICE
               </div>
+              <div style={{ fontSize: '2.4rem', fontWeight: '900', color: 'var(--accent-primary)', lineHeight: '1.1', marginTop: '2px' }}>
+                ₹9
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '4px 0 0 0', fontWeight: '500' }}>
+                Lifetime Access for DaySync V2. Pay once, use forever.
+              </p>
             </div>
 
-            {user?.isPremium ? (
-              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid var(--accent-success)', marginBottom: '20px', textAlign: 'center' }}>
-                <CheckCircle size={28} color="var(--accent-success)" style={{ margin: '0 auto 8px auto', display: 'block' }} />
-                <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>✨ Premium Member</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>You have full Lifetime Premium Access across all your devices.</div>
+            {/* QR Code Placeholder Graphic */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '12px 0 16px 0', padding: '14px', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ background: '#FFFFFF', padding: '10px', borderRadius: '10px', border: '1px solid var(--border-color)', display: 'inline-flex' }}>
+                <svg width="130" height="130" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="100" height="100" fill="white" />
+                  <rect x="5" y="5" width="28" height="28" fill="#18181B" rx="3" />
+                  <rect x="9" y="9" width="20" height="20" fill="white" rx="2" />
+                  <rect x="13" y="13" width="12" height="12" fill="#5B50E6" rx="1.5" />
+
+                  <rect x="67" y="5" width="28" height="28" fill="#18181B" rx="3" />
+                  <rect x="71" y="9" width="20" height="20" fill="white" rx="2" />
+                  <rect x="75" y="13" width="12" height="12" fill="#5B50E6" rx="1.5" />
+
+                  <rect x="5" y="67" width="28" height="28" fill="#18181B" rx="3" />
+                  <rect x="9" y="71" width="20" height="20" fill="white" rx="2" />
+                  <rect x="13" y="75" width="12" height="12" fill="#5B50E6" rx="1.5" />
+
+                  <rect x="38" y="8" width="6" height="6" fill="#18181B" />
+                  <rect x="48" y="14" width="8" height="8" fill="#5B50E6" />
+                  <rect x="58" y="8" width="5" height="12" fill="#18181B" />
+
+                  <rect x="8" y="38" width="8" height="8" fill="#18181B" />
+                  <rect x="20" y="48" width="12" height="6" fill="#5B50E6" />
+                  <rect x="38" y="38" width="12" height="12" fill="#18181B" />
+                  <rect x="54" y="38" width="8" height="8" fill="#5B50E6" />
+                  <rect x="66" y="38" width="12" height="6" fill="#18181B" />
+                  <rect x="82" y="38" width="10" height="10" fill="#18181B" />
+
+                  <rect x="38" y="54" width="8" height="8" fill="#5B50E6" />
+                  <rect x="50" y="54" width="12" height="12" fill="#18181B" />
+                  <rect x="66" y="48" width="6" height="14" fill="#5B50E6" />
+                  <rect x="78" y="54" width="14" height="6" fill="#18181B" />
+
+                  <rect x="38" y="72" width="12" height="6" fill="#18181B" />
+                  <rect x="54" y="68" width="10" height="10" fill="#5B50E6" />
+                  <rect x="68" y="68" width="10" height="10" fill="#18181B" />
+                  <rect x="82" y="72" width="10" height="12" fill="#5B50E6" />
+
+                  <rect x="38" y="84" width="8" height="10" fill="#5B50E6" />
+                  <rect x="50" y="84" width="14" height="8" fill="#18181B" />
+                  <rect x="68" y="84" width="10" height="10" fill="#5B50E6" />
+                  <rect x="82" y="88" width="10" height="6" fill="#18181B" />
+                </svg>
               </div>
-            ) : (
-              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(91, 80, 230, 0.08)', border: '1px solid var(--accent-primary)', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>Lifetime Access</span>
-                  <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-primary)' }}>₹499 (One-Time)</span>
-                </div>
-                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
-                  Pay once, own forever. No subscriptions, no monthly charges, no recurring fees.
+
+              {/* PROMINENT DEMO WARNING BADGE */}
+              <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                <span style={{ fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.15)', color: 'var(--accent-danger)', border: '1px solid rgba(239, 68, 68, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px', letterSpacing: '0.04em' }}>
+                  ⚠️ DEMO / NOT A REAL PAYMENT QR
+                </span>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                  Visual placeholder for demonstration only.
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
-                  <div>✦ Executive 2D Dashboard & Catalog Widgets</div>
-                  <div>✦ Advanced Proactive Intelligence & Briefings</div>
-                  <div>✦ Unlimited Shared Splits & Debt Simplification</div>
-                  <div>✦ Verified Lifetime Access persisted across all devices</div>
-                </div>
               </div>
-            )}
+            </div>
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button type="button" onClick={() => setShowUpgradeModal(false)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 16px' }}>Close</button>
@@ -1529,7 +1572,7 @@ export function SettingsPage() {
                   className="btn-primary"
                   style={{ fontSize: '12px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  <Zap size={14} /> {isProcessingPayment ? 'Processing Order...' : 'Buy Lifetime Premium — ₹499'}
+                  <Zap size={14} /> {isProcessingPayment ? 'Processing Order...' : 'Buy Lifetime Access — ₹9'}
                 </button>
               )}
             </div>
