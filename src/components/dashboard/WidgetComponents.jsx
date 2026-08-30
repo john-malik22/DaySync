@@ -101,11 +101,20 @@ const SmallWidgetWrapper = ({ label, labelColor = 'var(--text-muted)', bgTint, b
 // 1. SPENDING SNAPSHOT (S, W, T, L)
 export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
   const { expenses } = useLuna();
-  const totalSpent = (expenses || []).filter(e => e.type !== 'income').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const nonIncomeExpenses = (expenses || []).filter(e => e.type !== 'income');
+  const totalSpent = nonIncomeExpenses.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
   const totalIncome = (expenses || []).filter(e => e.type === 'income').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
   const net = totalIncome - totalSpent;
+  
   const todayStr = new Date().toISOString().split('T')[0];
-  const todaySpent = (expenses || []).filter(e => e.type !== 'income' && (e.date || e.createdAt || '').startsWith(todayStr)).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const todaySpent = nonIncomeExpenses.filter(e => (e.date || e.createdAt || '').startsWith(todayStr)).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const thisWeekSpent = totalSpent * 0.35;
+  const thisMonthSpent = totalSpent;
+
+  const largestExp = nonIncomeExpenses.length > 0
+    ? nonIncomeExpenses.reduce((max, curr) => (parseFloat(curr.amount) || 0) > (parseFloat(max.amount) || 0) ? curr : max, nonIncomeExpenses[0])
+    : null;
+  const topCategoryName = (nonIncomeExpenses[0] && (nonIncomeExpenses[0].category || nonIncomeExpenses[0].merchant)) || 'General & Living';
 
   if (widgetSize === 'S') {
     return (
@@ -138,13 +147,13 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
             <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-success)' }}>${totalIncome.toFixed(2)}</div>
           </div>
           <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>NET POSITION</div>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>NET</div>
             <div style={{ fontSize: '16px', fontWeight: '800', color: net >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${net.toFixed(2)}</div>
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
           <span>Today: <strong>${todaySpent.toFixed(2)}</strong></span>
-          <span>This Week: <strong>${(totalSpent * 0.35).toFixed(2)}</strong></span>
+          <span>This Week: <strong>${thisWeekSpent.toFixed(2)}</strong></span>
         </div>
       </div>
     );
@@ -166,16 +175,16 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
             <strong style={{ fontSize: '14px', color: 'var(--accent-success)' }}>${totalIncome.toFixed(2)}</strong>
           </div>
           <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Net Position</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Net</span>
             <strong style={{ fontSize: '14px', color: net >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${net.toFixed(2)}</strong>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Today Spent</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Today</span>
             <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>${todaySpent.toFixed(2)}</strong>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>This Week</span>
-            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>${(totalSpent * 0.35).toFixed(2)}</strong>
+            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>${thisWeekSpent.toFixed(2)}</strong>
           </div>
         </div>
       </div>
@@ -203,7 +212,7 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
           <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-success)' }}>${totalIncome.toFixed(2)}</div>
         </div>
         <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '10px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>NET POSITION</div>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>NET</div>
           <div style={{ fontSize: '18px', fontWeight: '800', color: net >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${net.toFixed(2)}</div>
         </div>
       </div>
@@ -214,21 +223,23 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
         </div>
         <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px' }}>
           <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>This Week</div>
-          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${(totalSpent * 0.35).toFixed(2)}</div>
+          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${thisWeekSpent.toFixed(2)}</div>
         </div>
         <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px' }}>
           <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>This Month</div>
-          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${totalSpent.toFixed(2)}</div>
+          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${thisMonthSpent.toFixed(2)}</div>
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '4px' }}>
         <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Top Category</span>
-          <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>General & Living</strong>
+          <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{topCategoryName}</strong>
         </div>
         <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Largest Expense</span>
-          <strong style={{ fontSize: '12px', color: 'var(--accent-danger)' }}>$120.00</strong>
+          <strong style={{ fontSize: '12px', color: 'var(--accent-danger)' }}>
+            {largestExp ? `$${parseFloat(largestExp.amount).toFixed(2)}` : '$0.00'}
+          </strong>
         </div>
       </div>
     </div>
