@@ -301,25 +301,6 @@ export function TaskManager({ searchFilter }) {
                     </select>
                   </div>
                 </div>
-
-                {/* Row 3 → Recurring */}
-                <div>
-                  <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>RECURRING</label>
-                  <select
-                    value={recurring}
-                    onChange={(e) => setRecurring(e.target.value)}
-                    disabled={isSubmitting}
-                    style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
-                  >
-                    <option value="None">None</option>
-                    <option value="Daily">Daily</option>
-                    <option value="Every weekday">Every weekday</option>
-                    <option value="Weekly">Weekly</option>
-                    <option value="Every Monday">Every Monday</option>
-                    <option value="Every 2 weeks">Every 2 weeks</option>
-                    <option value="Monthly">Monthly</option>
-                  </select>
-                </div>
               </>
             )}
 
