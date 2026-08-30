@@ -79,6 +79,7 @@ app.post('/api/auth/signup', (req, res) => {
       id: newUser.id,
       name: newUser.name,
       email: newUser.email,
+      avatar: newUser.avatar || null,
       preferences: newUser.preferences,
       isPremium: false,
       premiumPurchasedAt: null
@@ -121,6 +122,7 @@ app.post('/api/auth/login', (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
+      avatar: user.avatar || null,
       preferences: user.preferences,
       isPremium: Boolean(user.isPremium),
       premiumPurchasedAt: user.premiumPurchasedAt || null
@@ -139,6 +141,7 @@ app.get('/api/auth/me', authenticate, (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
+      avatar: user.avatar || null,
       preferences: user.preferences,
       isPremium: Boolean(user.isPremium),
       premiumPurchasedAt: user.premiumPurchasedAt || null
@@ -250,31 +253,34 @@ app.get('/api/payments/status', authenticate, (req, res) => {
   });
 });
 
-// Update Profile Name
+// Update Profile (Name and/or Avatar)
 app.put('/api/auth/profile', authenticate, (req, res) => {
-  const { name } = req.body;
-  if (!name || !name.trim()) {
-    return res.status(400).json({ error: 'Name is required.' });
-  }
+  const { name, avatar } = req.body;
 
   const store = db.read();
   const user = store.users.find(u => u.id === req.user.id);
   if (!user) return res.status(404).json({ error: 'User not found.' });
 
-  user.name = name.trim();
+  if (name && name.trim()) {
+    user.name = name.trim();
+  }
+
+  if (avatar !== undefined) {
+    user.avatar = avatar;
+  }
+
   db.write(store);
 
   const updatedUser = {
     id: user.id,
     name: user.name,
     email: user.email,
+    avatar: user.avatar || null,
     preferences: user.preferences,
     isPremium: Boolean(user.isPremium),
     premiumPurchasedAt: user.premiumPurchasedAt || null
   };
-  res.json({ success: true, message: 'Profile name updated.', user: updatedUser });
-});
-  res.json({ success: true, message: 'Profile name updated.', user: updatedUser });
+  res.json({ success: true, message: 'Profile updated.', user: updatedUser });
 });
 
 // Change Password Route

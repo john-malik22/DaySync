@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLuna } from '../../context/LunaContext';
+import { UserAvatar } from './CartoonAvatars';
 
 export function Sidebar() {
   const { user } = useAuth();
@@ -151,21 +152,7 @@ export function Sidebar() {
           {/* User Profile Details (Desktop Expanded Only) */}
           {!sidebarCollapsed && (
             <div className="sidebar-profile-details" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-              <div style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '50%',
-                background: 'var(--accent-primary)',
-                color: '#FFFFFF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '700',
-                fontSize: '14px',
-                flexShrink: 0
-              }}>
-                {initial}
-              </div>
+              <UserAvatar avatarId={user?.avatar} name={user?.name} size={34} />
               <div className="sidebar-text" style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--sidebar-text)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                 {firstName}
               </div>

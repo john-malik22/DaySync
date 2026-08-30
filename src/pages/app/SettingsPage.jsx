@@ -9,6 +9,7 @@ import { ConfirmationModal } from '../../components/common/ConfirmationModal';
 import { WidgetPickerModal } from '../../components/dashboard/WidgetPickerModal';
 import { DEFAULT_WIDGET_LAYOUT } from '../../components/dashboard/widgetCatalog';
 import { api } from '../../services/api';
+import { AVATAR_LIST, CartoonAvatar, UserAvatar } from '../../components/common/CartoonAvatars';
 import {
   User,
   Bell,
@@ -197,6 +198,19 @@ export function SettingsPage() {
       if (showToast) showToast(err.message || 'Payment initialization failed.', 'error');
     } finally {
       setIsProcessingPayment(false);
+    }
+  };
+
+  const handleSelectAvatar = async (avatarId) => {
+    try {
+      const res = await api.updateProfile({ avatar: avatarId });
+      if (res && res.user) {
+        updateUser(res.user);
+        if (showToast) showToast(`Avatar set to ${avatarId.charAt(0).toUpperCase() + avatarId.slice(1)}!`, 'success');
+      }
+    } catch (err) {
+      console.error('Avatar update error:', err);
+      if (showToast) showToast('Failed to update avatar.', 'error');
     }
   };
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -674,10 +688,10 @@ export function SettingsPage() {
         {/* 1. ACCOUNT SECTION */}
         <div ref={accountRef} className="glass-card">
           <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <User size={18} color="var(--accent-primary)" /> Account
+            <User size={18} color="var(--accent-primary)" /> Account Profile
           </h3>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
-            Manage your personal profile, verified credentials, and active account security.
+            Manage your personal profile, verified credentials, and 2D cartoon avatar.
           </p>
 
           <div style={{
@@ -686,12 +700,7 @@ export function SettingsPage() {
             border: '1px solid var(--border-color)', marginBottom: 'var(--space-md)', flexWrap: 'wrap', gap: '12px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '44px', height: '44px', borderRadius: '50%', background: 'var(--accent-primary)',
-                color: '#FFFFFF', fontWeight: '700', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>
-                {(user?.name || 'U').charAt(0).toUpperCase()}
-              </div>
+              <UserAvatar avatarId={user?.avatar} name={user?.name} size={48} />
               <div>
                 <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   {user?.name || 'User'}
@@ -713,6 +722,54 @@ export function SettingsPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.12)', color: 'var(--accent-success)', fontSize: '11px', fontWeight: '700' }}>
                 <CheckCircle size={13} /> Verified
               </div>
+            </div>
+          </div>
+
+          {/* 2D CARTOON AVATAR SELECTION GRID */}
+          <div style={{ marginBottom: '16px', padding: '14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>
+              Cartoon Profile Avatar
+            </div>
+            <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
+              Select a 2D cartoon avatar to personalize your profile picture across DaySync.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(72px, 1fr))', gap: '10px' }}>
+              {AVATAR_LIST.map((av) => {
+                const isSelected = user?.avatar === av.id;
+                return (
+                  <button
+                    key={av.id}
+                    type="button"
+                    onClick={() => handleSelectAvatar(av.id)}
+                    style={{
+                      background: isSelected ? 'rgba(91, 80, 230, 0.14)' : 'var(--bg-card)',
+                      border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                      borderRadius: '12px',
+                      padding: '8px 4px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '6px',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'all 0.15s ease',
+                      outline: 'none'
+                    }}
+                    title={`Select ${av.name} Avatar`}
+                  >
+                    <CartoonAvatar id={av.id} size={44} />
+                    <span style={{ fontSize: '11px', fontWeight: isSelected ? '700' : '500', color: isSelected ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
+                      {av.name}
+                    </span>
+                    {isSelected && (
+                      <div style={{ position: 'absolute', top: '-4px', right: '-4px', background: 'var(--accent-primary)', color: '#FFFFFF', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                        <Check size={11} strokeWidth={3} />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
