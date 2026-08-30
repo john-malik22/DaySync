@@ -238,21 +238,33 @@ export function TaskManager({ searchFilter }) {
             {/* MODE 1: TASK MODE */}
             {taskType === 'task' && (
               <>
-                <div>
-                  <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>TASK NAME</label>
-                  <input
-                    type="text"
-                    placeholder="Add new task or reminder..."
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                {/* Row 1 → Task Name + Save */}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>TASK NAME</label>
+                    <input
+                      type="text"
+                      placeholder="Add new task or reminder..."
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
+                      required
+                      autoFocus
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn-primary"
                     disabled={isSubmitting}
-                    style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
-                    required
-                    autoFocus
-                  />
+                    style={{ minHeight: '36px', fontSize: '12.5px', padding: '0 16px', flexShrink: 0, justifyContent: 'center' }}
+                  >
+                    <Plus size={15} /> {isSubmitting ? 'Saving...' : 'Save Task'}
+                  </button>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', alignItems: 'center' }}>
+                {/* Row 2 → Due Date + Time + Priority */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px', alignItems: 'center' }}>
                   <div>
                     <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>DUE DATE</label>
                     <input
@@ -290,48 +302,23 @@ export function TaskManager({ searchFilter }) {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', alignItems: 'center' }}>
-                  <div>
-                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>RECURRING</label>
-                    <select
-                      value={recurring}
-                      onChange={(e) => setRecurring(e.target.value)}
-                      disabled={isSubmitting}
-                      style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
-                    >
-                      <option value="None">None</option>
-                      <option value="Daily">Daily</option>
-                      <option value="Every weekday">Every weekday</option>
-                      <option value="Weekly">Weekly</option>
-                      <option value="Every Monday">Every Monday</option>
-                      <option value="Every 2 weeks">Every 2 weeks</option>
-                      <option value="Monthly">Monthly</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>PERSON (OPTIONAL)</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Rahul"
-                      value={personName}
-                      onChange={(e) => setPersonName(e.target.value)}
-                      disabled={isSubmitting}
-                      style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>LOCATION (OPTIONAL)</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Office / Room 2"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      disabled={isSubmitting}
-                      style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
-                    />
-                  </div>
+                {/* Row 3 → Recurring */}
+                <div>
+                  <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>RECURRING</label>
+                  <select
+                    value={recurring}
+                    onChange={(e) => setRecurring(e.target.value)}
+                    disabled={isSubmitting}
+                    style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
+                  >
+                    <option value="None">None</option>
+                    <option value="Daily">Daily</option>
+                    <option value="Every weekday">Every weekday</option>
+                    <option value="Weekly">Weekly</option>
+                    <option value="Every Monday">Every Monday</option>
+                    <option value="Every 2 weeks">Every 2 weeks</option>
+                    <option value="Monthly">Monthly</option>
+                  </select>
                 </div>
               </>
             )}
@@ -339,24 +326,36 @@ export function TaskManager({ searchFilter }) {
             {/* MODE 2: BIRTHDAY MODE */}
             {taskType === 'birthday' && (
               <>
-                <div>
-                  <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>PERSON NAME</label>
-                  <input
-                    type="text"
-                    placeholder="Person Name (e.g. Rahul, Anjali)"
-                    value={personName}
-                    onChange={(e) => {
-                      setPersonName(e.target.value);
-                      setTitle(e.target.value ? `${e.target.value}'s Birthday` : '');
-                    }}
+                {/* Row 1 → Person + Save */}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>PERSON NAME</label>
+                    <input
+                      type="text"
+                      placeholder="Person Name (e.g. Rahul, Anjali)"
+                      value={personName}
+                      onChange={(e) => {
+                        setPersonName(e.target.value);
+                        setTitle(e.target.value ? `${e.target.value}'s Birthday` : '');
+                      }}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
+                      required
+                      autoFocus
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn-primary"
                     disabled={isSubmitting}
-                    style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
-                    required
-                    autoFocus
-                  />
+                    style={{ minHeight: '36px', fontSize: '12.5px', padding: '0 16px', flexShrink: 0, justifyContent: 'center' }}
+                  >
+                    <Plus size={15} /> {isSubmitting ? 'Saving...' : 'Save Birthday'}
+                  </button>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', alignItems: 'center' }}>
+                {/* Row 2 → Date + Reminder + Repeat Rule */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px', alignItems: 'center' }}>
                   <div>
                     <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>BIRTHDAY DATE</label>
                     <input
@@ -382,9 +381,9 @@ export function TaskManager({ searchFilter }) {
                   <div>
                     <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>REPEAT RULE</label>
                     <div style={{
-                      padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'rgba(236, 72, 153, 0.12)',
-                      border: '1px solid rgba(236, 72, 153, 0.25)', fontSize: '12px', fontWeight: '700', color: '#EC4899',
-                      minHeight: '34px', display: 'flex', alignItems: 'center', gap: '4px'
+                      padding: '6px 8px', borderRadius: 'var(--radius-sm)', background: 'rgba(236, 72, 153, 0.12)',
+                      border: '1px solid rgba(236, 72, 153, 0.25)', fontSize: '11.5px', fontWeight: '700', color: '#EC4899',
+                      minHeight: '34px', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                     }}>
                       <Cake size={13} /> Yearly Automatic
                     </div>
@@ -396,21 +395,33 @@ export function TaskManager({ searchFilter }) {
             {/* MODE 3: MEETING MODE */}
             {taskType === 'meeting' && (
               <>
-                <div>
-                  <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>MEETING TITLE</label>
-                  <input
-                    type="text"
-                    placeholder="Meeting Title (e.g. Sprint Review, Client Call)"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                {/* Row 1 → Meeting Title + Save */}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>MEETING TITLE</label>
+                    <input
+                      type="text"
+                      placeholder="Meeting Title (e.g. Sprint Review, Client Call)"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
+                      required
+                      autoFocus
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn-primary"
                     disabled={isSubmitting}
-                    style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
-                    required
-                    autoFocus
-                  />
+                    style={{ minHeight: '36px', fontSize: '12.5px', padding: '0 16px', flexShrink: 0, justifyContent: 'center' }}
+                  >
+                    <Plus size={15} /> {isSubmitting ? 'Saving...' : 'Save Meeting'}
+                  </button>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', alignItems: 'center' }}>
+                {/* Row 2 → Date + Time + Recurring */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px', alignItems: 'center' }}>
                   <div>
                     <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>DATE</label>
                     <input
@@ -449,7 +460,8 @@ export function TaskManager({ searchFilter }) {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', alignItems: 'center' }}>
+                {/* Row 3 → People + Location */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', alignItems: 'center' }}>
                   <div>
                     <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>PEOPLE / ATTENDEES</label>
                     <input
@@ -476,16 +488,6 @@ export function TaskManager({ searchFilter }) {
                 </div>
               </>
             )}
-
-            {/* Prominent Save Button */}
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={isSubmitting}
-              style={{ width: '100%', minHeight: '36px', fontSize: '13px', justifyContent: 'center', marginTop: '2px' }}
-            >
-              <Plus size={15} /> {isSubmitting ? 'Saving...' : taskType === 'birthday' ? 'Save Birthday' : taskType === 'meeting' ? 'Save Meeting' : 'Save Task'}
-            </button>
           </form>
         </div>
 
