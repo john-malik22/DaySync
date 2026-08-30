@@ -1156,49 +1156,46 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* 8. APP / PWA SECTION */}
+        {/* 8. APP & PWA STATUS SECTION */}
         <div ref={appRef} className="glass-card">
-          <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ marginBottom: '14px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Smartphone size={18} color="var(--accent-primary)" /> App & PWA Status
           </h3>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
-            Application build version and installation status.
-          </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
-            {/* Card 1 — Version */}
-            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '2px' }}>Version</div>
-              <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-primary)' }}>2.0.0</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px' }}>
+            {/* Version */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
+              <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Version</span>
+              <strong style={{ color: 'var(--text-primary)', fontWeight: '700' }}>2.0.0</strong>
             </div>
 
-            {/* Card 2 — Update */}
-            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '2px' }}>Update</div>
-              
-              {updateAvailable && (
-                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-warning)', marginBottom: '4px' }}>
-                  New version available
-                </div>
-              )}
-              {hasCheckedManually && !updateAvailable && !checking && !fetchError && (
-                <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-success)', marginBottom: '4px' }}>
-                  ✓ You're up to date
-                </div>
-              )}
-              {fetchError && (
-                <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--accent-danger)', marginBottom: '4px' }}>
-                  Unable to check
-                </div>
-              )}
-
+            {/* Update */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Update</span>
+                {updateAvailable && (
+                  <span style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-warning)', marginTop: '2px' }}>
+                    New version available
+                  </span>
+                )}
+                {hasCheckedManually && !updateAvailable && !checking && !fetchError && (
+                  <span style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-success)', marginTop: '2px' }}>
+                    ✓ You're up to date
+                  </span>
+                )}
+                {fetchError && (
+                  <span style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--accent-danger)', marginTop: '2px' }}>
+                    Unable to check
+                  </span>
+                )}
+              </div>
               <div>
                 {updateAvailable ? (
                   <button
                     type="button"
                     onClick={updateApp}
                     className="btn-primary"
-                    style={{ padding: '4px 10px', fontSize: '11.5px', fontWeight: '700', width: 'auto' }}
+                    style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '700' }}
                   >
                     Update to Latest Version ↻
                   </button>
@@ -1208,7 +1205,7 @@ export function SettingsPage() {
                     onClick={checkForUpdates}
                     disabled={checking}
                     className="btn-secondary"
-                    style={{ padding: '4px 10px', fontSize: '11.5px', fontWeight: '600', width: 'auto', opacity: checking ? 0.7 : 1 }}
+                    style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '600', opacity: checking ? 0.7 : 1 }}
                   >
                     {checking ? 'Checking...' : 'Check for Updates ↻'}
                   </button>
@@ -1216,12 +1213,16 @@ export function SettingsPage() {
               </div>
             </div>
 
-            {/* Card 3 — Installation */}
-            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '2px' }}>Installation</div>
-              <div style={{ fontSize: '13.5px', fontWeight: '700', color: isStandalone ? 'var(--accent-success)' : 'var(--text-primary)' }}>
-                {isStandalone ? 'Installed (PWA)' : 'Browser Mode'}
-              </div>
+            {/* Contact Developer */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Contact Developer</span>
+              <a
+                href="mailto:support@daysync.app?subject=DaySync%20Support"
+                className="btn-secondary"
+                style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '600', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Mail size={13} /> Contact Developer
+              </a>
             </div>
           </div>
         </div>
