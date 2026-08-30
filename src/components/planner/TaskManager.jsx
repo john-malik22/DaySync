@@ -183,30 +183,36 @@ export function TaskManager({ searchFilter }) {
         {/* LEFT CONTAINER — ADD TASK */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-            <h3 style={{ color: 'var(--accent-primary)', margin: 0, fontSize: '15px', fontWeight: '800' }}>Add Task</h3>
+            <h3 style={{ color: 'var(--accent-primary)', margin: 0, fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
+              {taskType === 'birthday' ? 'ADD BIRTHDAY' : taskType === 'meeting' ? 'ADD MEETING' : 'ADD TASK'}
+            </h3>
 
             {/* Type selector: Task, Birthday, Meeting */}
-            <div style={{ display: 'flex', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '2px', border: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '2px', border: '1px solid var(--border-color)', height: '34px' }}>
               <button
                 type="button"
                 onClick={() => setTaskType('task')}
+                disabled={isSubmitting}
                 style={{
-                  padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+                  padding: '0 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
                   background: taskType === 'task' ? 'var(--accent-primary)' : 'transparent',
                   color: taskType === 'task' ? '#FFFFFF' : 'var(--text-secondary)',
-                  fontSize: '12px', fontWeight: '600'
+                  fontWeight: taskType === 'task' ? '700' : '500', fontSize: '11.5px',
+                  display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s ease'
                 }}
               >
-                Task
+                <CheckCircle2 size={13} /> Task
               </button>
               <button
                 type="button"
                 onClick={() => setTaskType('birthday')}
+                disabled={isSubmitting}
                 style={{
-                  padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+                  padding: '0 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
                   background: taskType === 'birthday' ? 'var(--accent-primary)' : 'transparent',
                   color: taskType === 'birthday' ? '#FFFFFF' : 'var(--text-secondary)',
-                  fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px'
+                  fontWeight: taskType === 'birthday' ? '700' : '500', fontSize: '11.5px',
+                  display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s ease'
                 }}
               >
                 <Cake size={13} /> Birthday
@@ -214,11 +220,13 @@ export function TaskManager({ searchFilter }) {
               <button
                 type="button"
                 onClick={() => setTaskType('meeting')}
+                disabled={isSubmitting}
                 style={{
-                  padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+                  padding: '0 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
                   background: taskType === 'meeting' ? 'var(--accent-primary)' : 'transparent',
                   color: taskType === 'meeting' ? '#FFFFFF' : 'var(--text-secondary)',
-                  fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px'
+                  fontWeight: taskType === 'meeting' ? '700' : '500', fontSize: '11.5px',
+                  display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s ease'
                 }}
               >
                 <Users size={13} /> Meeting
@@ -227,101 +235,257 @@ export function TaskManager({ searchFilter }) {
           </div>
 
           <form onSubmit={handleAddTask} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {/* Task Title Input */}
-            <div>
-              {taskType === 'birthday' ? (
-                <input
-                  type="text"
-                  placeholder="Person Name (e.g. Rahul, Anjali)"
-                  value={personName}
-                  onChange={(e) => { setPersonName(e.target.value); setTitle(`${e.target.value}'s Birthday`); }}
-                  disabled={isSubmitting}
-                  style={{ width: '100%' }}
-                  required
-                />
-              ) : (
-                <input
-                  type="text"
-                  placeholder={taskType === 'meeting' ? "Meeting Title (e.g. Project Review)" : "Add new task or reminder..."}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  disabled={isSubmitting}
-                  style={{ width: '100%' }}
-                  required
-                />
-              )}
-            </div>
+            {/* MODE 1: TASK MODE */}
+            {taskType === 'task' && (
+              <>
+                <div>
+                  <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>TASK NAME</label>
+                  <input
+                    type="text"
+                    placeholder="Add new task or reminder..."
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    disabled={isSubmitting}
+                    style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
+                    required
+                    autoFocus
+                  />
+                </div>
 
-            {/* Row 2: Priority + Save Button */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                disabled={isSubmitting}
-                style={{ width: '100%', minHeight: '36px', fontSize: '12px' }}
-              >
-                <option value="High">High Priority</option>
-                <option value="Medium">Medium Priority</option>
-                <option value="Low">Low Priority</option>
-              </select>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', alignItems: 'center' }}>
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>DUE DATE</label>
+                    <input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
+                    />
+                  </div>
 
-              <button type="submit" className="btn-primary" disabled={isSubmitting} style={{ minHeight: '36px', fontSize: '12px', justifyContent: 'center' }}>
-                <Plus size={15} /> {isSubmitting ? 'Saving...' : 'Save'}
-              </button>
-            </div>
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>TIME</label>
+                    <input
+                      type="time"
+                      value={dueTime}
+                      onChange={(e) => setDueTime(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
+                    />
+                  </div>
 
-            {/* Row 3: Due Date + Time + Recurring IN ONE ROW */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 1.1fr', gap: '8px' }}>
-              <div>
-                <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '700' }}>DUE DATE</label>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
-                />
-              </div>
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>PRIORITY</label>
+                    <select
+                      value={priority}
+                      onChange={(e) => setPriority(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', minHeight: '34px', fontSize: '12px' }}
+                    >
+                      <option value="High">🔴 High Priority</option>
+                      <option value="Medium">🟡 Medium Priority</option>
+                      <option value="Low">🔵 Low Priority</option>
+                    </select>
+                  </div>
+                </div>
 
-              <div>
-                <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '700' }}>TIME</label>
-                <input
-                  type="time"
-                  value={dueTime}
-                  onChange={(e) => setDueTime(e.target.value)}
-                  style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
-                />
-              </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', alignItems: 'center' }}>
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>RECURRING</label>
+                    <select
+                      value={recurring}
+                      onChange={(e) => setRecurring(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
+                    >
+                      <option value="None">None</option>
+                      <option value="Daily">Daily</option>
+                      <option value="Every weekday">Every weekday</option>
+                      <option value="Weekly">Weekly</option>
+                      <option value="Every Monday">Every Monday</option>
+                      <option value="Every 2 weeks">Every 2 weeks</option>
+                      <option value="Monthly">Monthly</option>
+                    </select>
+                  </div>
 
-              <div>
-                <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '700' }}>RECURRING</label>
-                <select
-                  value={recurring}
-                  onChange={(e) => setRecurring(e.target.value)}
-                  style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
-                >
-                  <option value="None">None</option>
-                  <option value="Daily">Daily</option>
-                  <option value="Every weekday">Every weekday</option>
-                  <option value="Weekly">Weekly</option>
-                  <option value="Every Monday">Every Monday</option>
-                  <option value="Every 2 weeks">Every 2 weeks</option>
-                  <option value="Monthly">Monthly</option>
-                </select>
-              </div>
-            </div>
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>PERSON (OPTIONAL)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Rahul"
+                      value={personName}
+                      onChange={(e) => setPersonName(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
+                    />
+                  </div>
 
-            {taskType === 'meeting' && (
-              <div>
-                <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '700' }}>PEOPLE / LOCATION</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Rahul (Zoom)"
-                  value={meetingPeople}
-                  onChange={(e) => setMeetingPeople(e.target.value)}
-                  style={{ width: '100%', fontSize: '12px', padding: '4px 8px', minHeight: '34px' }}
-                />
-              </div>
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>LOCATION (OPTIONAL)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Office / Room 2"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
+                    />
+                  </div>
+                </div>
+              </>
             )}
+
+            {/* MODE 2: BIRTHDAY MODE */}
+            {taskType === 'birthday' && (
+              <>
+                <div>
+                  <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>PERSON NAME</label>
+                  <input
+                    type="text"
+                    placeholder="Person Name (e.g. Rahul, Anjali)"
+                    value={personName}
+                    onChange={(e) => {
+                      setPersonName(e.target.value);
+                      setTitle(e.target.value ? `${e.target.value}'s Birthday` : '');
+                    }}
+                    disabled={isSubmitting}
+                    style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', alignItems: 'center' }}>
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>BIRTHDAY DATE</label>
+                    <input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>REMINDER TIME</label>
+                    <input
+                      type="time"
+                      value={dueTime}
+                      onChange={(e) => setDueTime(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>REPEAT RULE</label>
+                    <div style={{
+                      padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'rgba(236, 72, 153, 0.12)',
+                      border: '1px solid rgba(236, 72, 153, 0.25)', fontSize: '12px', fontWeight: '700', color: '#EC4899',
+                      minHeight: '34px', display: 'flex', alignItems: 'center', gap: '4px'
+                    }}>
+                      <Cake size={13} /> Yearly Automatic
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* MODE 3: MEETING MODE */}
+            {taskType === 'meeting' && (
+              <>
+                <div>
+                  <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>MEETING TITLE</label>
+                  <input
+                    type="text"
+                    placeholder="Meeting Title (e.g. Sprint Review, Client Call)"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    disabled={isSubmitting}
+                    style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', alignItems: 'center' }}>
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>DATE</label>
+                    <input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>TIME</label>
+                    <input
+                      type="time"
+                      value={dueTime}
+                      onChange={(e) => setDueTime(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>RECURRING</label>
+                    <select
+                      value={recurring}
+                      onChange={(e) => setRecurring(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
+                    >
+                      <option value="None">None</option>
+                      <option value="Weekly">Weekly</option>
+                      <option value="Every 2 weeks">Bi-weekly</option>
+                      <option value="Monthly">Monthly</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', alignItems: 'center' }}>
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>PEOPLE / ATTENDEES</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. John, Sara, Alex"
+                      value={meetingPeople}
+                      onChange={(e) => setMeetingPeople(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', fontSize: '12px', padding: '4px 8px', minHeight: '34px' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>LOCATION / LINK</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Zoom / Room 4B"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{ width: '100%', fontSize: '12px', padding: '4px 8px', minHeight: '34px' }}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Prominent Save Button */}
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={isSubmitting}
+              style={{ width: '100%', minHeight: '36px', fontSize: '13px', justifyContent: 'center', marginTop: '2px' }}
+            >
+              <Plus size={15} /> {isSubmitting ? 'Saving...' : taskType === 'birthday' ? 'Save Birthday' : taskType === 'meeting' ? 'Save Meeting' : 'Save Task'}
+            </button>
           </form>
         </div>
 
