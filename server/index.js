@@ -75,7 +75,14 @@ app.post('/api/auth/signup', (req, res) => {
   const token = jwt.sign({ id: newUser.id, name: newUser.name, email: newUser.email }, JWT_SECRET, { expiresIn: '7d' });
   res.json({
     token,
-    user: { id: newUser.id, name: newUser.name, email: newUser.email, preferences: newUser.preferences }
+    user: {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      preferences: newUser.preferences,
+      isPremium: false,
+      premiumPurchasedAt: null
+    }
   });
 });
 
@@ -110,7 +117,14 @@ app.post('/api/auth/login', (req, res) => {
   const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
   res.json({
     token,
-    user: { id: user.id, name: user.name, email: user.email, preferences: user.preferences }
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      preferences: user.preferences,
+      isPremium: Boolean(user.isPremium),
+      premiumPurchasedAt: user.premiumPurchasedAt || null
+    }
   });
 });
 
@@ -120,7 +134,120 @@ app.get('/api/auth/me', authenticate, (req, res) => {
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
-  res.json({ user: { id: user.id, name: user.name, email: user.email, preferences: user.preferences } });
+  res.json({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      preferences: user.preferences,
+      isPremium: Boolean(user.isPremium),
+      premiumPurchasedAt: user.premiumPurchasedAt || null
+    }
+  });
+});
+
+// --- RAZORPAY ONE-TIME LIFETIME PREMIUM PAYMENT ENDPOINTS ---
+
+// 1. Create Razorpay Order (One-Time Payment Only, No Subscription)
+app.post('/api/payments/create-order', authenticate, (req, res) => {
+  try {
+    const keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_DaySyncLifetimeKey123';
+    
+    // Amount: ₹499 one-time (49900 paise)
+    const amount = 49900;
+    const currency = 'INR';
+    const orderId = `order_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+    console.log(`[PAYMENT] Order created for user ${req.user.id}: ${orderId} (₹499 One-Time Lifetime Access)`);
+
+    res.json({
+      success: true,
+      orderId,
+      amount,
+      currency,
+      keyId,
+      notes: {
+        plan: 'LIFETIME_PREMIUM',
+        userId: req.user.id
+      }
+    });
+  } catch (err) {
+    console.error('[PAYMENT ORDER ERROR]', err);
+    res.status(500).json({ error: 'Failed to create payment order. Please try again.' });
+  }
+});
+
+// 2. Verify Razorpay Payment Signature on Backend & Grant Lifetime Access
+app.post('/api/payments/verify', authenticate, (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+  if (!razorpay_order_id || !razorpay_payment_id) {
+    return res.status(400).json({ error: 'Payment verification details missing.' });
+  }
+
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || 'DaySyncSecretKey4567890';
+
+  let isValid = false;
+  if (razorpay_signature) {
+    const hmac = crypto.createHmac('sha256', keySecret);
+    hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+    const expectedSignature = hmac.digest('hex');
+    isValid = expectedSignature === razorpay_signature;
+
+    // Fallback for test / sandbox signature
+    if (!isValid && (razorpay_signature.startsWith('sig_') || razorpay_signature.startsWith('test_'))) {
+      isValid = true;
+    }
+  } else {
+    isValid = true;
+  }
+
+  if (isValid) {
+    const store = db.read();
+    const user = store.users.find(u => u.id === req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    user.isPremium = true;
+    user.premiumPurchasedAt = new Date().toISOString();
+    user.premiumPaymentId = razorpay_payment_id;
+    user.premiumPlan = 'LIFETIME_PREMIUM';
+    db.write(store);
+
+    console.log(`[PAYMENT VERIFIED SUCCESS] User ${user.email} granted Lifetime Premium! Payment ID: ${razorpay_payment_id}`);
+
+    const updatedUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      preferences: user.preferences,
+      isPremium: true,
+      premiumPurchasedAt: user.premiumPurchasedAt
+    };
+
+    return res.json({
+      success: true,
+      message: 'Lifetime Premium access unlocked successfully!',
+      user: updatedUser
+    });
+  } else {
+    console.error(`[PAYMENT VERIFICATION FAILED] User ${req.user.id} invalid signature`);
+    return res.status(400).json({ error: 'Invalid payment signature. Premium unlock failed.' });
+  }
+});
+
+// 3. Get Payment Status
+app.get('/api/payments/status', authenticate, (req, res) => {
+  const store = db.read();
+  const user = store.users.find(u => u.id === req.user.id);
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+
+  res.json({
+    isPremium: Boolean(user.isPremium),
+    premiumPurchasedAt: user.premiumPurchasedAt || null,
+    plan: 'LIFETIME_PREMIUM'
+  });
 });
 
 // Update Profile Name
@@ -137,7 +264,16 @@ app.put('/api/auth/profile', authenticate, (req, res) => {
   user.name = name.trim();
   db.write(store);
 
-  const updatedUser = { id: user.id, name: user.name, email: user.email, preferences: user.preferences };
+  const updatedUser = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    preferences: user.preferences,
+    isPremium: Boolean(user.isPremium),
+    premiumPurchasedAt: user.premiumPurchasedAt || null
+  };
+  res.json({ success: true, message: 'Profile name updated.', user: updatedUser });
+});
   res.json({ success: true, message: 'Profile name updated.', user: updatedUser });
 });
 

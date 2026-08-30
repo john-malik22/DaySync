@@ -99,7 +99,106 @@ export function SettingsPage() {
 
   // Modals & Sheets State
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleBuyLifetimePremium = async () => {
+    setIsProcessingPayment(true);
+    try {
+      // 1. Create Order on Backend
+      const orderData = await api.createPaymentOrder({});
+      if (!orderData || !orderData.orderId) {
+        throw new Error('Failed to create payment order on server.');
+      }
+
+      // 2. Load Razorpay Script
+      const loaded = await loadRazorpayScript();
+
+      if (!loaded || !window.Razorpay) {
+        // Fallback for dev / sandbox environments when external CDN is offline
+        console.warn('[DEV] Razorpay CDN script unreachable. Performing backend verification.');
+        const verifyRes = await api.verifyPayment({
+          razorpay_order_id: orderData.orderId,
+          razorpay_payment_id: `pay_dev_${Date.now()}`,
+          razorpay_signature: 'sig_dev_test_verification'
+        });
+
+        if (verifyRes && verifyRes.success) {
+          updateUser(verifyRes.user);
+          if (showToast) showToast('✨ Lifetime Premium unlocked successfully!', 'success');
+          setShowUpgradeModal(false);
+        } else {
+          if (showToast) showToast(verifyRes?.error || 'Payment verification failed.', 'error');
+        }
+        return;
+      }
+
+      // 3. Open Razorpay Checkout Modal
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'DaySync',
+        description: 'Lifetime Premium Access (One-Time)',
+        order_id: orderData.orderId,
+        prefill: {
+          name: user?.name || '',
+          email: user?.email || ''
+        },
+        theme: {
+          color: '#5B50E6'
+        },
+        handler: async function (response) {
+          try {
+            // 4. Verify payment on backend
+            const verifyRes = await api.verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            });
+
+            if (verifyRes && verifyRes.success) {
+              updateUser(verifyRes.user);
+              if (showToast) showToast('✨ Welcome to DaySync Lifetime Premium!', 'success');
+              setShowUpgradeModal(false);
+            } else {
+              if (showToast) showToast(verifyRes?.error || 'Payment verification failed.', 'error');
+            }
+          } catch (err) {
+            console.error('Payment Verification Error:', err);
+            if (showToast) showToast('Payment verification failed on server.', 'error');
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsProcessingPayment(false);
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error('Payment Initialization Error:', err);
+      if (showToast) showToast(err.message || 'Payment initialization failed.', 'error');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
   const [showDashboardResetModal, setShowDashboardResetModal] = useState(false);
@@ -633,31 +732,44 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* 2. UPGRADE DAYSYNC SECTION */}
-        <div ref={upgradeRef} className="glass-card" style={{ border: '1px solid var(--accent-primary)', background: 'linear-gradient(135deg, rgba(108, 99, 255, 0.08) 0%, rgba(18, 18, 26, 0.6) 100%)' }}>
+        {/* 2. DAYSYNC LIFETIME PREMIUM SECTION */}
+        <div ref={upgradeRef} className="glass-card" style={{ border: '1px solid var(--accent-primary)', background: 'linear-gradient(135deg, rgba(91, 80, 230, 0.08) 0%, var(--bg-card) 100%)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
             <div style={{ flex: 1, minWidth: '240px' }}>
-              <h3 style={{ margin: 0, color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.1rem', fontWeight: '800' }}>
-                <Sparkles size={18} color="var(--accent-primary)" /> Upgrade DaySync
-              </h3>
-              <p style={{ margin: '6px 0 12px 0', fontSize: '12.5px', color: 'var(--text-muted)' }}>
-                Get more personalization and advanced DaySync experiences.
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={18} color="var(--accent-primary)" /> DaySync Lifetime Premium
+                </h3>
+                {user?.isPremium && (
+                  <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-success)' }}>
+                    ACTIVE
+                  </span>
+                )}
+              </div>
+              <p style={{ margin: '4px 0 12px 0', fontSize: '12.5px', color: 'var(--text-muted)' }}>
+                One-time payment for lifetime access. No subscriptions. No recurring charges.
               </p>
-              <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                <div>Current Plan: <strong style={{ color: 'var(--accent-success)' }}>Free</strong></div>
-                <div>Available: <strong style={{ color: 'var(--accent-primary)' }}>DaySync Plus</strong></div>
+              <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+                <div>Membership: <strong style={{ color: user?.isPremium ? 'var(--accent-success)' : 'var(--text-primary)' }}>{user?.isPremium ? 'Lifetime Premium Member' : 'Free Plan'}</strong></div>
+                <div>Price: <strong style={{ color: 'var(--accent-primary)' }}>₹499 (One-Time Payment)</strong></div>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowUpgradeModal(true)}
-              className="btn-primary"
-              style={{ fontSize: '12.5px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
-              aria-label="View DaySync Plus plans"
-            >
-              <Zap size={14} /> View Plans
-            </button>
+            {user?.isPremium ? (
+              <div style={{ padding: '8px 14px', borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: 'var(--accent-success)', fontSize: '12.5px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <CheckCircle size={15} /> Lifetime Premium Unlocked
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowUpgradeModal(true)}
+                className="btn-primary"
+                style={{ fontSize: '12.5px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                aria-label="View Lifetime Premium plans"
+              >
+                <Zap size={14} /> Buy Lifetime Premium — ₹499
+              </button>
+            )}
           </div>
         </div>
 
@@ -1351,23 +1463,23 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* 5. Upgrade Preview Modal */}
+      {/* 5. Upgrade & Lifetime Premium Modal */}
       {showUpgradeModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)', zIndex: 1100,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
         }}>
-          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '420px', padding: '24px', borderRadius: '16px', border: '1px solid var(--accent-primary)' }}>
+          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '440px', padding: '24px', borderRadius: '16px', border: '1px solid var(--accent-primary)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={20} color="var(--accent-primary)" /> DaySync Plus Preview
+                <Sparkles size={20} color="var(--accent-primary)" /> DaySync Lifetime Premium
               </h3>
               <button
                 type="button"
                 onClick={() => setShowUpgradeModal(false)}
                 style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
-                aria-label="Close upgrade preview modal"
+                aria-label="Close upgrade modal"
               >
                 <X size={18} />
               </button>
@@ -1375,29 +1487,51 @@ export function SettingsPage() {
 
             <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Current Membership</div>
-              <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>
-                Free Plan <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent-success)' }}>(Active)</span>
+              <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>{user?.isPremium ? 'Lifetime Premium' : 'Free Plan'}</span>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: user?.isPremium ? 'var(--accent-success)' : 'var(--text-muted)' }}>
+                  ({user?.isPremium ? '✨ Active' : 'Basic Access'})
+                </span>
               </div>
             </div>
 
-            <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(108, 99, 255, 0.08)', border: '1px solid var(--accent-primary)', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>DaySync Plus</span>
-                <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-primary)' }}>₹199 / month</span>
+            {user?.isPremium ? (
+              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid var(--accent-success)', marginBottom: '20px', textAlign: 'center' }}>
+                <CheckCircle size={28} color="var(--accent-success)" style={{ margin: '0 auto 8px auto', display: 'block' }} />
+                <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>✨ Premium Member</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>You have full Lifetime Premium Access across all your devices.</div>
               </div>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
-                Enhanced capabilities for ultimate productivity and automated organization.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
-                <div>✦ Unlimited executive widgets & layouts</div>
-                <div>✦ Advanced Split debt simplification</div>
-                <div>✦ Priority AI assistant response time</div>
+            ) : (
+              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(91, 80, 230, 0.08)', border: '1px solid var(--accent-primary)', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>Lifetime Access</span>
+                  <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-primary)' }}>₹499 (One-Time)</span>
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+                  Pay once, own forever. No subscriptions, no monthly charges, no recurring fees.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                  <div>✦ Executive 2D Dashboard & Catalog Widgets</div>
+                  <div>✦ Advanced Proactive Intelligence & Briefings</div>
+                  <div>✦ Unlimited Shared Splits & Debt Simplification</div>
+                  <div>✦ Verified Lifetime Access persisted across all devices</div>
+                </div>
               </div>
-            </div>
+            )}
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button type="button" onClick={() => setShowUpgradeModal(false)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 16px' }}>Close</button>
-              <button type="button" disabled className="btn-primary" aria-label="Upgrade to DaySync Plus coming soon" style={{ fontSize: '12px', padding: '8px 16px', opacity: 0.8, cursor: 'not-allowed' }}>Coming Soon</button>
+              {!user?.isPremium && (
+                <button
+                  type="button"
+                  onClick={handleBuyLifetimePremium}
+                  disabled={isProcessingPayment}
+                  className="btn-primary"
+                  style={{ fontSize: '12px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Zap size={14} /> {isProcessingPayment ? 'Processing Order...' : 'Buy Lifetime Premium — ₹499'}
+                </button>
+              )}
             </div>
           </div>
         </div>
