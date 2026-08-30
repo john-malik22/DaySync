@@ -230,7 +230,7 @@ export function PlansPage() {
                   border: `1px solid ${isExpiringSoon ? 'var(--accent-warning)' : isExpired ? 'rgba(255, 75, 75, 0.4)' : 'var(--border-color)'}`,
                   display: 'flex', flexDirection: 'column', gap: '10px', alignSelf: 'start'
                 }}>
-                  {/* Top Line: Name & Category Badge */}
+                  {/* Top Row: Plan Name & Active Status Badge */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                     <div>
                       <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>
@@ -251,7 +251,7 @@ export function PlansPage() {
                     </span>
                   </div>
 
-                  {/* Pricing & Duration */}
+                  {/* Pricing & Current Period Badge */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
                       ₹{parseFloat(plan.amount || 0).toLocaleString('en-IN')}
@@ -261,19 +261,19 @@ export function PlansPage() {
                     </div>
                   </div>
 
-                  {/* Dates Row */}
+                  {/* Bottom Information Row: START DATE & NEXT PAYMENT / EXPIRY */}
                   <div style={{
-                    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px',
-                    paddingTop: '8px', borderTop: '1px dashed var(--border-color)', fontSize: '12px'
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px',
+                    paddingTop: '10px', borderTop: '1px dashed var(--border-color)', fontSize: '12px'
                   }}>
                     <div>
-                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px', fontWeight: '700' }}>START DATE</span>
-                      <strong style={{ color: 'var(--text-primary)' }}>{formatHumanDate(startDateIso)}</strong>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px', fontWeight: '700', letterSpacing: '0.04em', marginBottom: '2px' }}>START DATE</span>
+                      <strong style={{ color: 'var(--text-primary)', fontSize: '12.5px' }}>{formatHumanDate(startDateIso)}</strong>
                     </div>
 
-                    <div>
-                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px', fontWeight: '700' }}>NEXT PAYMENT / EXPIRY</span>
-                      <strong style={{ color: isExpiringSoon ? 'var(--accent-warning)' : isExpired ? 'var(--accent-danger)' : 'var(--text-primary)' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10.5px', fontWeight: '700', letterSpacing: '0.04em', marginBottom: '2px' }}>NEXT PAYMENT / EXPIRY</span>
+                      <strong style={{ color: isExpiringSoon ? 'var(--accent-warning)' : isExpired ? 'var(--accent-danger)' : 'var(--text-primary)', fontSize: '12.5px' }}>
                         {formatHumanDate(endDateIso)}
                       </strong>
                     </div>
