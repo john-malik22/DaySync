@@ -102,9 +102,6 @@ export function ExpensesPage() {
       <div className="expenses-top-grid">
         {/* LEFT CONTAINER — LOG TRANSACTION */}
         <div className="glass-card" style={{ padding: '16px' }}>
-          <h3 style={{ margin: '0 0 12px 0', color: 'var(--accent-primary)', fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
-            LOG TRANSACTION
-          </h3>
           <ExpenseForm />
         </div>
 
