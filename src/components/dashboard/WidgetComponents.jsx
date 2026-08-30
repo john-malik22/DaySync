@@ -193,52 +193,52 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
 
   // L Size: Complete Financial Overview
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-          FINANCIAL OVERVIEW
+        <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+          SPENDING SNAPSHOT
         </div>
-        <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--accent-success)', background: 'rgba(16, 185, 129, 0.12)', padding: '2px 6px', borderRadius: '4px' }}>
+        <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--accent-success)', background: 'rgba(16, 185, 129, 0.12)', padding: '2px 8px', borderRadius: '4px' }}>
           LIVE OVERVIEW
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', margin: '8px 0' }}>
-        <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: '6px', padding: '10px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>TOTAL SPENT</div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-danger)' }}>${totalSpent.toFixed(2)}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', margin: '8px 0' }}>
+        <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: '8px', padding: '12px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>TOTAL</div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--accent-danger)', marginTop: '2px' }}>${totalSpent.toFixed(2)}</div>
         </div>
-        <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '10px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>RECEIVED</div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-success)' }}>${totalIncome.toFixed(2)}</div>
+        <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '8px', padding: '12px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>RECEIVED</div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--accent-success)', marginTop: '2px' }}>${totalIncome.toFixed(2)}</div>
         </div>
-        <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '10px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>NET</div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: net >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>${net.toFixed(2)}</div>
-        </div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', margin: '4px 0' }}>
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Today</div>
-          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${todaySpent.toFixed(2)}</div>
-        </div>
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>This Week</div>
-          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${thisWeekSpent.toFixed(2)}</div>
-        </div>
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>This Month</div>
-          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>${thisMonthSpent.toFixed(2)}</div>
+        <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '8px', padding: '12px 10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>NET</div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: net >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)', marginTop: '2px' }}>${net.toFixed(2)}</div>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '4px' }}>
-        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Top Category</span>
-          <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{topCategoryName}</strong>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', margin: '4px 0' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '8px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>TODAY</div>
+          <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>${todaySpent.toFixed(2)}</div>
         </div>
-        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Largest Expense</span>
-          <strong style={{ fontSize: '12px', color: 'var(--accent-danger)' }}>
-            {largestExp ? `$${parseFloat(largestExp.amount).toFixed(2)}` : '$0.00'}
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '8px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>THIS WEEK</div>
+          <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>${thisWeekSpent.toFixed(2)}</div>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '8px', padding: '10px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>THIS MONTH</div>
+          <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>${thisMonthSpent.toFixed(2)}</div>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginTop: '4px' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '8px', padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>TOP CATEGORY</span>
+          <strong style={{ fontSize: '13px', color: 'var(--text-primary)', marginTop: '2px' }}>{topCategoryName}</strong>
+        </div>
+        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '8px', padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>LARGEST EXPENSE</span>
+          <strong style={{ fontSize: '13px', color: 'var(--accent-danger)', marginTop: '2px' }}>
+            {largestExp ? `${largestExp.merchant || largestExp.category || 'Expense'} $${parseFloat(largestExp.amount).toFixed(2)}` : 'None $0.00'}
           </strong>
         </div>
       </div>
