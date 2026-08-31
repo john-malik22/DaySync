@@ -137,114 +137,13 @@ export function SettingsPage() {
   const defaultsRef = useRef(null);
   const privacyRef = useRef(null);
   const appRef = useRef(null);
-  const upgradeRef = useRef(null);
   const aboutRef = useRef(null);
   const actionsRef = useRef(null);
 
   const [activeSection, setActiveSection] = useState('account');
 
   // Modals & Sheets State
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
-  const handleBuyLifetimePremium = async () => {
-    setIsProcessingPayment(true);
-    try {
-      // 1. Create Order on Backend
-      const orderData = await api.createPaymentOrder({});
-      if (!orderData || !orderData.orderId) {
-        throw new Error('Failed to create payment order on server.');
-      }
-
-      // 2. Load Razorpay Script
-      const loaded = await loadRazorpayScript();
-
-      if (!loaded || !window.Razorpay) {
-        // Fallback for dev / sandbox environments when external CDN is offline
-        console.warn('[DEV] Razorpay CDN script unreachable. Performing backend verification.');
-        const verifyRes = await api.verifyPayment({
-          razorpay_order_id: orderData.orderId,
-          razorpay_payment_id: `pay_dev_${Date.now()}`,
-          razorpay_signature: 'sig_dev_test_verification'
-        });
-
-        if (verifyRes && verifyRes.success) {
-          updateUser(verifyRes.user);
-          if (showToast) showToast('✨ Lifetime Premium unlocked successfully!', 'success');
-          setShowUpgradeModal(false);
-        } else {
-          if (showToast) showToast(verifyRes?.error || 'Payment verification failed.', 'error');
-        }
-        return;
-      }
-
-      // 3. Open Razorpay Checkout Modal
-      const options = {
-        key: orderData.keyId,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: 'DaySync',
-        description: 'Lifetime Premium Access (One-Time)',
-        order_id: orderData.orderId,
-        prefill: {
-          name: user?.name || '',
-          email: user?.email || ''
-        },
-        theme: {
-          color: '#5B50E6'
-        },
-        handler: async function (response) {
-          try {
-            // 4. Verify payment on backend
-            const verifyRes = await api.verifyPayment({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
-            });
-
-            if (verifyRes && verifyRes.success) {
-              updateUser(verifyRes.user);
-              if (showToast) showToast('✨ Welcome to DaySync Lifetime Premium!', 'success');
-              setShowUpgradeModal(false);
-            } else {
-              if (showToast) showToast(verifyRes?.error || 'Payment verification failed.', 'error');
-            }
-          } catch (err) {
-            console.error('Payment Verification Error:', err);
-            if (showToast) showToast('Payment verification failed on server.', 'error');
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            setIsProcessingPayment(false);
-          }
-        }
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (err) {
-      console.error('Payment Initialization Error:', err);
-      if (showToast) showToast(err.message || 'Payment initialization failed.', 'error');
-    } finally {
-      setIsProcessingPayment(false);
-    }
-  };
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
@@ -696,7 +595,6 @@ export function SettingsPage() {
 
   const sectionsNav = [
     { key: 'profile', label: 'Profile', icon: User, ref: accountRef },
-    { key: 'upgrade', label: 'Version 2', icon: Zap, ref: upgradeRef },
     { key: 'preferences', label: 'Preferences', icon: SlidersHorizontal, ref: preferencesRef },
     { key: 'dashboard', label: 'Dashboard', icon: Layout, ref: dashboardRef },
     { key: 'notifications', label: 'Notifications', icon: Bell, ref: notificationsRef },
@@ -816,93 +714,6 @@ export function SettingsPage() {
               </div>
             </div>
           )}
-        </div>
-
-          {/* INTERNAL DIVIDER */}
-          <div style={{ borderTop: '1px solid var(--border-color)', margin: '2px 0' }} />
-
-          {/* SECTION 2: VERSION 2 LIFETIME ACCESS */}
-          <div ref={upgradeRef} style={{ padding: '14px', borderRadius: '12px', border: '1px solid var(--accent-primary)', background: 'linear-gradient(135deg, rgba(91, 80, 230, 0.08) 0%, var(--bg-secondary) 100%)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
-              <div style={{ flex: 1, minWidth: '240px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                  <span style={{ background: 'var(--accent-primary)', color: '#FFFFFF', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', letterSpacing: '0.05em' }}>
-                    VERSION 2
-                  </span>
-                  <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1.1rem', fontWeight: '800' }}>
-                    LIFETIME ACCESS
-                  </h3>
-                  {user?.isPremium && (
-                    <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-success)' }}>
-                      ACTIVE
-                    </span>
-                  )}
-                </div>
-                <p style={{ margin: '4px 0 10px 0', fontSize: '12.5px', color: 'var(--text-muted)' }}>
-                  One-time payment for complete V2 Lifetime Access. No monthly or yearly subscriptions.
-                </p>
-                <div style={{ display: 'flex', gap: '16px', fontSize: '12.5px', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
-                  <div>Price: <strong style={{ color: 'var(--accent-primary)', fontSize: '1.15rem', fontWeight: '900' }}>₹9</strong></div>
-                  <div>Membership: <strong style={{ color: user?.isPremium ? 'var(--accent-success)' : 'var(--text-primary)' }}>{user?.isPremium ? 'Lifetime Member' : 'Free User'}</strong></div>
-                </div>
-              </div>
-
-              {user?.isPremium ? (
-                <div style={{ padding: '8px 14px', borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: 'var(--accent-success)', fontSize: '12.5px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <CheckCircle size={15} /> Lifetime Access Unlocked
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowUpgradeModal(true)}
-                  className="btn-primary"
-                  style={{ fontSize: '12.5px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                  aria-label="View Lifetime Access"
-                >
-                  <Zap size={14} /> Buy Lifetime Access — ₹9
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* INTERNAL DIVIDER */}
-          <div style={{ borderTop: '1px solid var(--border-color)', margin: '2px 0' }} />
-
-        {/* 2. VERSION 2 — LIFETIME ACCESS */}
-        <div ref={upgradeRef} style={{ padding: '16px', borderRadius: '12px', border: '1px solid var(--accent-primary)', background: 'linear-gradient(135deg, rgba(91, 80, 230, 0.08) 0%, var(--bg-secondary) 100%)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <span style={{ background: 'var(--accent-primary)', color: '#FFFFFF', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', letterSpacing: '0.05em' }}>
-                  VERSION 2
-                </span>
-                <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1.1rem', fontWeight: '800' }}>
-                  LIFETIME ACCESS
-                </h3>
-              </div>
-              <p style={{ margin: '2px 0 6px 0', fontSize: '12px', color: 'var(--text-muted)' }}>
-                One-time payment for complete V2 Lifetime Access.
-              </p>
-              <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                Price: <strong style={{ color: 'var(--accent-primary)', fontSize: '1.2rem', fontWeight: '900' }}>₹9</strong>
-              </div>
-            </div>
-
-            {user?.isPremium ? (
-              <div style={{ padding: '8px 14px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: 'var(--accent-success)', fontSize: '12.5px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <CheckCircle size={15} /> Lifetime Access Unlocked
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowUpgradeModal(true)}
-                className="btn-primary"
-                style={{ fontSize: '12.5px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <Zap size={14} /> Buy Lifetime Access — ₹9
-              </button>
-            )}
-          </div>
         </div>
 
         <div style={{ borderTop: '1px solid var(--border-color)' }} />
@@ -1519,119 +1330,7 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* 5. Upgrade & Lifetime Premium Modal */}
-      {showUpgradeModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(8px)', zIndex: 1100,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
-        }}>
-          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '420px', padding: '24px', borderRadius: '16px', border: '1px solid var(--accent-primary)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ background: 'var(--accent-primary)', color: '#FFFFFF', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', letterSpacing: '0.05em' }}>
-                  VERSION 2
-                </span>
-                <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--text-primary)', fontWeight: '800' }}>
-                  LIFETIME ACCESS
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowUpgradeModal(false)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
-                aria-label="Close upgrade modal"
-              >
-                <X size={18} />
-              </button>
-            </div>
 
-            {/* Price Header */}
-            <div style={{ textAlign: 'center', margin: '10px 0 14px 0', padding: '12px', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>
-                PRICE
-              </div>
-              <div style={{ fontSize: '2.4rem', fontWeight: '900', color: 'var(--accent-primary)', lineHeight: '1.1', marginTop: '2px' }}>
-                ₹9
-              </div>
-              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '4px 0 0 0', fontWeight: '500' }}>
-                Lifetime Access for DaySync V2. Pay once, use forever.
-              </p>
-            </div>
-
-            {/* QR Code Placeholder Graphic */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '12px 0 16px 0', padding: '14px', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-              <div style={{ background: '#FFFFFF', padding: '10px', borderRadius: '10px', border: '1px solid var(--border-color)', display: 'inline-flex' }}>
-                <svg width="130" height="130" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="100" height="100" fill="white" />
-                  <rect x="5" y="5" width="28" height="28" fill="#18181B" rx="3" />
-                  <rect x="9" y="9" width="20" height="20" fill="white" rx="2" />
-                  <rect x="13" y="13" width="12" height="12" fill="#5B50E6" rx="1.5" />
-
-                  <rect x="67" y="5" width="28" height="28" fill="#18181B" rx="3" />
-                  <rect x="71" y="9" width="20" height="20" fill="white" rx="2" />
-                  <rect x="75" y="13" width="12" height="12" fill="#5B50E6" rx="1.5" />
-
-                  <rect x="5" y="67" width="28" height="28" fill="#18181B" rx="3" />
-                  <rect x="9" y="71" width="20" height="20" fill="white" rx="2" />
-                  <rect x="13" y="75" width="12" height="12" fill="#5B50E6" rx="1.5" />
-
-                  <rect x="38" y="8" width="6" height="6" fill="#18181B" />
-                  <rect x="48" y="14" width="8" height="8" fill="#5B50E6" />
-                  <rect x="58" y="8" width="5" height="12" fill="#18181B" />
-
-                  <rect x="8" y="38" width="8" height="8" fill="#18181B" />
-                  <rect x="20" y="48" width="12" height="6" fill="#5B50E6" />
-                  <rect x="38" y="38" width="12" height="12" fill="#18181B" />
-                  <rect x="54" y="38" width="8" height="8" fill="#5B50E6" />
-                  <rect x="66" y="38" width="12" height="6" fill="#18181B" />
-                  <rect x="82" y="38" width="10" height="10" fill="#18181B" />
-
-                  <rect x="38" y="54" width="8" height="8" fill="#5B50E6" />
-                  <rect x="50" y="54" width="12" height="12" fill="#18181B" />
-                  <rect x="66" y="48" width="6" height="14" fill="#5B50E6" />
-                  <rect x="78" y="54" width="14" height="6" fill="#18181B" />
-
-                  <rect x="38" y="72" width="12" height="6" fill="#18181B" />
-                  <rect x="54" y="68" width="10" height="10" fill="#5B50E6" />
-                  <rect x="68" y="68" width="10" height="10" fill="#18181B" />
-                  <rect x="82" y="72" width="10" height="12" fill="#5B50E6" />
-
-                  <rect x="38" y="84" width="8" height="10" fill="#5B50E6" />
-                  <rect x="50" y="84" width="14" height="8" fill="#18181B" />
-                  <rect x="68" y="84" width="10" height="10" fill="#5B50E6" />
-                  <rect x="82" y="88" width="10" height="6" fill="#18181B" />
-                </svg>
-              </div>
-
-              {/* PROMINENT DEMO WARNING BADGE */}
-              <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                <span style={{ fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.15)', color: 'var(--accent-danger)', border: '1px solid rgba(239, 68, 68, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px', letterSpacing: '0.04em' }}>
-                  ⚠️ DEMO / NOT A REAL PAYMENT QR
-                </span>
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-                  Visual placeholder for demonstration only.
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={() => setShowUpgradeModal(false)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 16px' }}>Close</button>
-              {!user?.isPremium && (
-                <button
-                  type="button"
-                  onClick={handleBuyLifetimePremium}
-                  disabled={isProcessingPayment}
-                  className="btn-primary"
-                  style={{ fontSize: '12px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <Zap size={14} /> {isProcessingPayment ? 'Processing Order...' : 'Buy Lifetime Access — ₹9'}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Confirmation Modals */}
       <ConfirmationModal isOpen={showLogoutModal} title="Log out of DaySync?" message="Are you sure you want to log out of your session?" confirmText="Log Out" cancelText="Cancel" isDanger={false} isLoading={isLoggingOut} onConfirm={handleConfirmLogout} onCancel={() => setShowLogoutModal(false)} />

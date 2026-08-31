@@ -218,10 +218,5 @@ export const api = {
   updateSplitExpense: (splitId, expenseId, data) => request(`/splits/${splitId}/expenses/${expenseId}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteSplitExpense: (splitId, expenseId) => request(`/splits/${splitId}/expenses/${expenseId}`, { method: 'DELETE' }),
 
-  createSplitSettlement: (splitId, data) => request(`/splits/${splitId}/settlements`, { method: 'POST', body: JSON.stringify(data) }),
-
-  // One-time Lifetime Premium Payments
-  createPaymentOrder: (data) => request('/payments/create-order', { method: 'POST', body: JSON.stringify(data) }),
-  verifyPayment: (data) => request('/payments/verify', { method: 'POST', body: JSON.stringify(data) }),
-  getPaymentStatus: () => request('/payments/status')
+  createSplitSettlement: (splitId, data) => request(`/splits/${splitId}/settlements`, { method: 'POST', body: JSON.stringify(data) })
 };
