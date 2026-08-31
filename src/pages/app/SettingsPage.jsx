@@ -708,14 +708,41 @@ export function SettingsPage() {
               border: '1px solid var(--border-color)', marginBottom: '12px', flexWrap: 'wrap', gap: '12px'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <button
-                  type="button"
-                  onClick={() => { setIsEditingAvatar(false); setShowProfileModal(true); }}
-                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', outline: 'none' }}
-                  title="Click to View / Change Avatar"
-                >
-                  <UserAvatar avatarId={user?.avatar} name={user?.name} size={48} />
-                </button>
+                <div style={{ position: 'relative', display: 'inline-flex' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setIsEditingAvatar(false); setShowProfileModal(true); }}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', outline: 'none', display: 'block' }}
+                    title="Click to View / Change Avatar"
+                  >
+                    <UserAvatar avatarId={user?.avatar} name={user?.name} size={48} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setIsEditingAvatar(true); setShowProfileModal(true); }}
+                    style={{
+                      position: 'absolute',
+                      bottom: '-2px',
+                      right: '-2px',
+                      background: 'var(--accent-primary)',
+                      color: '#FFFFFF',
+                      border: '2px solid var(--bg-secondary)',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justify: 'center',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                      padding: 0,
+                      transition: 'transform 0.15s ease'
+                    }}
+                    title="Edit Avatar"
+                  >
+                    <Edit2 size={10} />
+                  </button>
+                </div>
 
                 <div>
                   <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
