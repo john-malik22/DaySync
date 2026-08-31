@@ -81,12 +81,22 @@ export function Login() {
     }
   };
 
+  const handleInputFocus = (e) => {
+    if (window.innerWidth <= 768) {
+      setTimeout(() => {
+        try {
+          e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (err) {}
+      }, 250);
+    }
+  };
+
   return (
-    <div style={{
+    <div className="login-page-wrapper" style={{
       minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex',
-      alignItems: 'center', justifyContent: 'center', padding: '24px'
+      alignItems: 'center', justifyContent: 'center', padding: '24px', boxSizing: 'border-box'
     }}>
-      <div className="glass-card animate-fade-in" style={{ width: '420px', padding: '36px' }}>
+      <div className="glass-card animate-fade-in login-card-container" style={{ width: '420px', padding: '36px' }}>
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <img
             src="/icons/icon-192.png"
@@ -127,6 +137,7 @@ export function Login() {
               type="email"
               value={email}
               onChange={handleEmailChange}
+              onFocus={handleInputFocus}
               placeholder="john@gmail.com"
               noValidate
               style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px' }}
@@ -140,6 +151,7 @@ export function Login() {
               type="password"
               value={password}
               onChange={handlePasswordChange}
+              onFocus={handleInputFocus}
               placeholder="••••••••"
               style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px' }}
             />
