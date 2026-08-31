@@ -42,9 +42,14 @@ export function ChatBubble({ msg }) {
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
-          boxShadow: '0 0 10px rgba(99, 102, 241, 0.2)'
+          boxShadow: '0 0 10px rgba(99, 102, 241, 0.2)',
+          overflow: 'hidden'
         }} title="Luna AI">
-          <Sparkles size={18} color="var(--accent-primary)" />
+          <img
+            src="/icons/icon-192.png"
+            alt="DaySync Logo"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
         </div>
       ) : (
         <UserAvatar
