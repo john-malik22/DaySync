@@ -102,12 +102,12 @@ export function ExpensesPage() {
       {/* UPPER TWO-COLUMN SECTION (Left: Log Transaction | Right: Financial Summary) */}
       <div className="expenses-top-grid">
         {/* LEFT CONTAINER — LOG TRANSACTION */}
-        <div className="glass-card" style={{ padding: '16px' }}>
+        <div className="glass-card expenses-log-container" style={{ padding: '16px' }}>
           <ExpenseForm />
         </div>
 
         {/* RIGHT CONTAINER — FINANCIAL SUMMARY */}
-        <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="glass-card expenses-summary-container" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
             <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '13.5px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Wallet size={16} color="var(--accent-primary)" /> FINANCIAL SUMMARY

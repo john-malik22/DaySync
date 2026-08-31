@@ -1165,6 +1165,23 @@ option {
   }
 }
 
+/* Mobile Expenses Page Layout & Reordering */
+@media (max-width: 768px) {
+  .expenses-top-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--space-md) !important;
+  }
+  .expenses-summary-container {
+    order: 1 !important;
+    padding: 12px 14px !important;
+    gap: 8px !important;
+  }
+  .expenses-log-container {
+    order: 2 !important;
+  }
+}
+
 
 
 
