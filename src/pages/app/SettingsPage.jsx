@@ -1104,11 +1104,11 @@ export function SettingsPage() {
             Manage your active session status or permanently delete your account.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
-            <button type="button" onClick={() => setShowLogoutModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center' }}>
+          <div className="account-actions-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+            <button type="button" onClick={() => setShowLogoutModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center', width: '100%' }}>
               <LogOut size={14} /> Log Out
             </button>
-            <button type="button" onClick={() => setShowDeleteModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center', color: 'var(--accent-danger)' }}>
+            <button type="button" onClick={() => setShowDeleteModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center', color: 'var(--accent-danger)', width: '100%' }}>
               <UserX size={14} /> Delete Account
             </button>
           </div>

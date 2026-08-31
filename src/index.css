@@ -1107,6 +1107,14 @@ option {
   }
 }
 
+/* Mobile Account Actions (Settings Page) */
+@media (max-width: 768px) {
+  .account-actions-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+
 
 
 
