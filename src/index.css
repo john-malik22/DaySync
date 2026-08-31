@@ -1229,6 +1229,25 @@ option {
   }
 }
 
+/* Landing Page Desktop vs Mobile Isolation */
+@media (min-width: 769px) {
+  .mobile-landing-view {
+    display: none !important;
+  }
+  .desktop-landing-view {
+    display: block !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-landing-view {
+    display: none !important;
+  }
+  .mobile-landing-view {
+    display: flex !important;
+  }
+}
+
 
 
 
