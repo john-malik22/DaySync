@@ -690,13 +690,11 @@ export function SettingsPage() {
         })}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* SINGLE UNIFIED SETTINGS CONTAINER FOR ALL SECTIONS */}
+      <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-        {/* COMBINED PRIMARY SETTINGS CONTAINER (Account Profile + Lifetime Access + App & System Preferences) */}
-        <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          
-          {/* SECTION 1: ACCOUNT PROFILE */}
-          <div ref={accountRef}>
+        {/* SECTION 1: ACCOUNT PROFILE */}
+        <div ref={accountRef}>
             <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <User size={18} color="var(--accent-primary)" /> Account Profile
             </h3>
@@ -971,324 +969,342 @@ export function SettingsPage() {
               </label>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* 4. DASHBOARD SECTION */}
-        <div ref={dashboardRef} className="glass-card">
-          <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Layout size={18} color="var(--accent-primary)" /> Dashboard Settings
-          </h3>
+          {/* INTERNAL DIVIDER */}
+          <div style={{ borderTop: '1px solid var(--border-color)' }} />
 
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
-            Arrange, resize, add, or remove widgets anytime to make DaySync fit the way you use it.
-          </p>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '12px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              Active Widgets: <strong style={{ color: 'var(--text-primary)' }}>{activeWidgetIds.length}</strong>
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              Layout: <strong style={{ color: 'var(--text-primary)' }}>Custom</strong>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-            <button
-              type="button"
-              onClick={() => setIsWidgetPickerOpen(true)}
-              className="btn-primary"
-              style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              <SlidersHorizontal size={14} /> Manage Widgets
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowDashboardResetModal(true)}
-              className="btn-secondary"
-              aria-label="Reset Dashboard Layout"
-              style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              <RefreshCw size={14} /> Reset Layout
-            </button>
-          </div>
-        </div>
-
-        {/* 5. NOTIFICATIONS SECTION */}
-        <div ref={notificationsRef} className="glass-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <h3 style={{ margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Bell size={18} color="var(--accent-primary)" /> Notification Settings
+          {/* 4. DASHBOARD SECTION */}
+          <div ref={dashboardRef}>
+            <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Layout size={18} color="var(--accent-primary)" /> Dashboard Settings
             </h3>
-            <button type="button" onClick={handleTestNotification} className="btn-secondary" style={{ fontSize: '11.5px', padding: '4px 10px' }}>
-              Test Notification
-            </button>
-          </div>
 
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
-            Control what DaySync can notify you about even when the app is closed.
-          </p>
-
-          <div style={{ padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Push Notifications</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Device WebPush availability</div>
-            </div>
-            <span style={{
-              fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '12px',
-              background: pushStatus === 'Enabled' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-              color: pushStatus === 'Enabled' ? 'var(--accent-success)' : 'var(--accent-danger)'
-            }}>
-              {pushStatus}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {[
-              { key: 'masterPush', label: 'Push Notifications (Master Toggle)' },
-              { key: 'taskDue', label: 'Tasks: Due and overdue task reminders' },
-              { key: 'planExpiry', label: 'Plans: Plan expiry and payment reminders' },
-              { key: 'habitReminders', label: 'Habits: Daily habit completion reminders' },
-              { key: 'splitUpdates', label: 'Splits: Shared expense and settlement updates' },
-              { key: 'lunaSuggestions', label: 'Luna: Daily briefing and proactive help' }
-            ].map(item => (
-              <label key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', cursor: 'pointer' }}>
-                <span style={{ fontSize: '12.5px', color: 'var(--text-primary)', fontWeight: '500' }}>{item.label}</span>
-                <input
-                  type="checkbox"
-                  checked={!!notifSettings[item.key]}
-                  onChange={() => handleToggleNotifSetting(item.key)}
-                />
-              </label>
-            ))}
-          </div>
-
-          {/* Quiet Hours Settings */}
-          <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border-color)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <div style={{ fontWeight: '700', fontSize: '13.5px', color: 'var(--text-primary)' }}>
-                Quiet Hours
-              </div>
-              <button
-                type="button"
-                onClick={handleOpenQuietHoursModal}
-                className="btn-secondary"
-                style={{ fontSize: '11.5px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}
-              >
-                <Edit2 size={12} /> Edit
-              </button>
-            </div>
-            <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
-              Silence normal notifications during your rest hours (local timezone).
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
+              Arrange, resize, add, or remove widgets anytime to make DaySync fit the way you use it.
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-              <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12.5px', fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                  <span>Quiet Hours ON/OFF</span>
-                  <input
-                    type="checkbox"
-                    checked={quietHoursEnabled}
-                    onChange={(e) => handleToggleQuietHours(e.target.checked)}
-                  />
-                </label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '12px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                Active Widgets: <strong style={{ color: 'var(--text-primary)' }}>{activeWidgetIds.length}</strong>
               </div>
-
-              <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Schedule</span>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: quietHoursEnabled ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
-                  {quietStart} – {quietEnd}
-                </span>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                Layout: <strong style={{ color: 'var(--text-primary)' }}>Custom</strong>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* 6. LUNA SETTINGS SECTION */}
-        <div ref={lunaRef} className="glass-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <h3 style={{ margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={18} color="var(--accent-primary)" /> Luna AI Settings
-            </h3>
-            <span style={{
-              fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px',
-              background: lunaSettings.enabled ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-              color: lunaSettings.enabled ? 'var(--accent-success)' : 'var(--accent-danger)'
-            }}>
-              Luna Status: {lunaSettings.enabled ? 'Active' : 'Disabled'}
-            </span>
-          </div>
-
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
-            Luna uses your DaySync activity to help you focus on tasks, plans, habits, and important moments.
-          </p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {[
-              { key: 'enabled', label: 'Luna AI Assistant (Master ON/OFF)' },
-              { key: 'suggestions', label: 'Daily Focus & Productivity Suggestions' },
-              { key: 'dailyBriefing', label: 'Morning Daily Briefing Summaries' },
-              { key: 'taskSuggestions', label: 'Automated Task Priority Suggestions' },
-              { key: 'planReminders', label: 'Proactive Plan Expiry Alerts' },
-              { key: 'splitAssistance', label: 'Split Debt Simplification Assistance' }
-            ].map(item => (
-              <label key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', cursor: 'pointer' }}>
-                <span style={{ fontSize: '12.5px', color: 'var(--text-primary)', fontWeight: '500' }}>{item.label}</span>
-                <input
-                  type="checkbox"
-                  checked={!!lunaSettings[item.key]}
-                  onChange={() => handleToggleLunaSetting(item.key)}
-                />
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* 7. PRIVACY & SECURITY SECTION */}
-        <div ref={privacyRef} className="glass-card">
-          <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Shield size={18} color="var(--accent-primary)" /> Privacy & Security
-          </h3>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
-            Keep your account credentials and conversation history protected.
-          </p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {/* Status Rows */}
-            <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--text-primary)' }}>Security Status</span>
-              <span style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <CheckCircle size={13} /> Protected
-              </span>
-            </div>
-
-            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Email</span>
-              <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Check size={12} /> Verified
-              </span>
-            </div>
-
-            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Password</span>
-              <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Check size={12} /> Protected
-              </span>
-            </div>
-
-            {/* Clear Chat History */}
-            <div style={{ marginTop: '6px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
               <button
                 type="button"
-                onClick={() => setShowClearHistoryModal(true)}
-                className="btn-secondary"
-                style={{ fontSize: '12px', color: 'var(--accent-danger)', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                onClick={() => setIsWidgetPickerOpen(true)}
+                className="btn-primary"
+                style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                <Trash2 size={13} /> Clear Chat History
+                <SlidersHorizontal size={14} /> Manage Widgets
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDashboardResetModal(true)}
+                className="btn-secondary"
+                aria-label="Reset Dashboard Layout"
+                style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <RefreshCw size={14} /> Reset Layout
               </button>
             </div>
           </div>
-        </div>
 
-        {/* 8. APP & PWA STATUS SECTION */}
-        <div ref={appRef} className="glass-card">
-          <h3 style={{ marginBottom: '14px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Smartphone size={18} color="var(--accent-primary)" /> App & PWA Status
-          </h3>
+          {/* INTERNAL DIVIDER */}
+          <div style={{ borderTop: '1px solid var(--border-color)' }} />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px' }}>
-            {/* Version */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
-              <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Version</span>
-              <strong style={{ color: 'var(--text-primary)', fontWeight: '700' }}>2.0.0</strong>
+          {/* 5. NOTIFICATIONS SECTION */}
+          <div ref={notificationsRef}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <h3 style={{ margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Bell size={18} color="var(--accent-primary)" /> Notification Settings
+              </h3>
+              <button type="button" onClick={handleTestNotification} className="btn-secondary" style={{ fontSize: '11.5px', padding: '4px 10px' }}>
+                Test Notification
+              </button>
             </div>
 
-            {/* Update */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Update</span>
-                {updateAvailable && (
-                  <span style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-warning)', marginTop: '2px' }}>
-                    New version available
-                  </span>
-                )}
-                {hasCheckedManually && !updateAvailable && !checking && !fetchError && (
-                  <span style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-success)', marginTop: '2px' }}>
-                    ✓ You're up to date
-                  </span>
-                )}
-                {fetchError && (
-                  <span style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--accent-danger)', marginTop: '2px' }}>
-                    Unable to check
-                  </span>
-                )}
-              </div>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
+              Control what DaySync can notify you about even when the app is closed.
+            </p>
+
+            <div style={{ padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                {updateAvailable ? (
-                  <button
-                    type="button"
-                    onClick={updateApp}
-                    className="btn-primary"
-                    style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '700' }}
-                  >
-                    Update to Latest Version ↻
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={checkForUpdates}
-                    disabled={checking}
-                    className="btn-secondary"
-                    style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '600', opacity: checking ? 0.7 : 1 }}
-                  >
-                    {checking ? 'Checking...' : 'Check for Updates ↻'}
-                  </button>
-                )}
+                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Push Notifications</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Device WebPush availability</div>
+              </div>
+              <span style={{
+                fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '12px',
+                background: pushStatus === 'Enabled' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                color: pushStatus === 'Enabled' ? 'var(--accent-success)' : 'var(--accent-danger)'
+              }}>
+                {pushStatus}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { key: 'masterPush', label: 'Push Notifications (Master Toggle)' },
+                { key: 'taskDue', label: 'Tasks: Due and overdue task reminders' },
+                { key: 'planExpiry', label: 'Plans: Plan expiry and payment reminders' },
+                { key: 'habitReminders', label: 'Habits: Daily habit completion reminders' },
+                { key: 'splitUpdates', label: 'Splits: Shared expense and settlement updates' },
+                { key: 'lunaSuggestions', label: 'Luna: Daily briefing and proactive help' }
+              ].map(item => (
+                <label key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', cursor: 'pointer' }}>
+                  <span style={{ fontSize: '12.5px', color: 'var(--text-primary)', fontWeight: '500' }}>{item.label}</span>
+                  <input
+                    type="checkbox"
+                    checked={!!notifSettings[item.key]}
+                    onChange={() => handleToggleNotifSetting(item.key)}
+                  />
+                </label>
+              ))}
+            </div>
+
+            {/* Quiet Hours Settings */}
+            <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <div style={{ fontWeight: '700', fontSize: '13.5px', color: 'var(--text-primary)' }}>
+                  Quiet Hours
+                </div>
+                <button
+                  type="button"
+                  onClick={handleOpenQuietHoursModal}
+                  className="btn-secondary"
+                  style={{ fontSize: '11.5px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <Edit2 size={12} /> Edit
+                </button>
+              </div>
+              <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+                Silence normal notifications during your rest hours (local timezone).
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12.5px', fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer' }}>
+                    <span>Quiet Hours ON/OFF</span>
+                    <input
+                      type="checkbox"
+                      checked={quietHoursEnabled}
+                      onChange={(e) => handleToggleQuietHours(e.target.checked)}
+                    />
+                  </label>
+                </div>
+
+                <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Schedule</span>
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: quietHoursEnabled ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
+                    {quietStart} – {quietEnd}
+                  </span>
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Contact Developer */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Contact Developer</span>
-              <a
-                href="mailto:support@daysync.app?subject=DaySync%20Support"
+          {/* INTERNAL DIVIDER */}
+          <div style={{ borderTop: '1px solid var(--border-color)' }} />
+
+          {/* 6. LUNA SETTINGS SECTION */}
+          <div ref={lunaRef}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <h3 style={{ margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={18} color="var(--accent-primary)" /> Luna AI Settings
+              </h3>
+              <span style={{
+                fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px',
+                background: lunaSettings.enabled ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                color: lunaSettings.enabled ? 'var(--accent-success)' : 'var(--accent-danger)'
+              }}>
+                Luna Status: {lunaSettings.enabled ? 'Active' : 'Disabled'}
+              </span>
+            </div>
+
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
+              Luna uses your DaySync activity to help you focus on tasks, plans, habits, and important moments.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { key: 'enabled', label: 'Luna AI Assistant (Master ON/OFF)' },
+                { key: 'suggestions', label: 'Daily Focus & Productivity Suggestions' },
+                { key: 'dailyBriefing', label: 'Morning Daily Briefing Summaries' },
+                { key: 'taskSuggestions', label: 'Automated Task Priority Suggestions' },
+                { key: 'planReminders', label: 'Proactive Plan Expiry Alerts' },
+                { key: 'splitAssistance', label: 'Split Debt Simplification Assistance' }
+              ].map(item => (
+                <label key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', cursor: 'pointer' }}>
+                  <span style={{ fontSize: '12.5px', color: 'var(--text-primary)', fontWeight: '500' }}>{item.label}</span>
+                  <input
+                    type="checkbox"
+                    checked={!!lunaSettings[item.key]}
+                    onChange={() => handleToggleLunaSetting(item.key)}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* INTERNAL DIVIDER */}
+          <div style={{ borderTop: '1px solid var(--border-color)' }} />
+
+          {/* 7. PRIVACY & SECURITY SECTION */}
+          <div ref={privacyRef}>
+            <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Shield size={18} color="var(--accent-primary)" /> Privacy & Security
+            </h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
+              Keep your account credentials and conversation history protected.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* Status Rows */}
+              <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--text-primary)' }}>Security Status</span>
+                <span style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <CheckCircle size={13} /> Protected
+                </span>
+              </div>
+
+              <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Email</span>
+                <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Check size={12} /> Verified
+                </span>
+              </div>
+
+              <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Password</span>
+                <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Check size={12} /> Protected
+                </span>
+              </div>
+
+              {/* Clear Chat History */}
+              <div style={{ marginTop: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowClearHistoryModal(true)}
+                  className="btn-secondary"
+                  style={{ fontSize: '12px', color: 'var(--accent-danger)', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Trash2 size={13} /> Clear Chat History
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* INTERNAL DIVIDER */}
+          <div style={{ borderTop: '1px solid var(--border-color)' }} />
+
+          {/* 8. APP & PWA STATUS SECTION */}
+          <div ref={appRef}>
+            <h3 style={{ marginBottom: '14px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Smartphone size={18} color="var(--accent-primary)" /> App & PWA Status
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px' }}>
+              {/* Version */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
+                <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Version</span>
+                <strong style={{ color: 'var(--text-primary)', fontWeight: '700' }}>2.0.0</strong>
+              </div>
+
+              {/* Update */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Update</span>
+                  {updateAvailable && (
+                    <span style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-warning)', marginTop: '2px' }}>
+                      New version available
+                    </span>
+                  )}
+                  {hasCheckedManually && !updateAvailable && !checking && !fetchError && (
+                    <span style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--accent-success)', marginTop: '2px' }}>
+                      ✓ You're up to date
+                    </span>
+                  )}
+                  {fetchError && (
+                    <span style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--accent-danger)', marginTop: '2px' }}>
+                      Unable to check
+                    </span>
+                  )}
+                </div>
+                <div>
+                  {updateAvailable ? (
+                    <button
+                      type="button"
+                      onClick={updateApp}
+                      className="btn-primary"
+                      style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '700' }}
+                    >
+                      Update to Latest Version ↻
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={checkForUpdates}
+                      disabled={checking}
+                      className="btn-secondary"
+                      style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '600', opacity: checking ? 0.7 : 1 }}
+                    >
+                      {checking ? 'Checking...' : 'Check for Updates ↻'}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Contact Developer */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Contact Developer</span>
+                <a
+                  href="mailto:support@daysync.app?subject=DaySync%20Support"
+                  className="btn-secondary"
+                  style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '600', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Mail size={13} /> Contact Developer
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* INTERNAL DIVIDER */}
+          <div style={{ borderTop: '1px solid var(--border-color)' }} />
+
+          {/* 9. ABOUT DAYSYNC & HELP SECTION */}
+          <div ref={aboutRef}>
+            <h3 style={{ marginBottom: '8px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Info size={18} color="var(--accent-primary)" /> About DaySync & Help
+            </h3>
+            <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', margin: '0 0 12px 0', lineHeight: '1.5' }}>
+              DaySync brings your tasks, expenses, plans, habits, reminders, shared splits, and Luna assistance together in one everyday workspace.
+            </p>
+            <div style={{ display: 'flex', gap: '16px', fontSize: '11.5px', color: 'var(--text-secondary)', flexWrap: 'wrap', marginBottom: '14px' }}>
+              <div>Version: <strong style={{ color: 'var(--text-primary)' }}>2.0.0</strong></div>
+              <div>Engine: <strong style={{ color: 'var(--text-primary)' }}>Antigravity Core</strong></div>
+              <div>Platform: <strong style={{ color: 'var(--text-primary)' }}>{isStandalone ? 'PWA' : 'Web Browser'}</strong></div>
+              <div>Network: <strong style={{ color: navigator.onLine ? 'var(--accent-success)' : 'var(--accent-warning)' }}>{navigator.onLine ? 'Online' : 'Offline'}</strong></div>
+            </div>
+
+            <div style={{ paddingTop: '12px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <HelpCircle size={14} color="var(--accent-primary)" /> Need help or have questions?
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/app/chat')}
                 className="btn-secondary"
-                style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '600', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                style={{ fontSize: '12px', padding: '5px 12px' }}
               >
-                <Mail size={13} /> Contact Developer
-              </a>
+                Ask Luna Assistant
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* 9. ABOUT DAYSYNC & HELP SECTION */}
-        <div ref={aboutRef} className="glass-card">
-          <h3 style={{ marginBottom: '8px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Info size={18} color="var(--accent-primary)" /> About DaySync & Help
-          </h3>
-          <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', margin: '0 0 12px 0', lineHeight: '1.5' }}>
-            DaySync brings your tasks, expenses, plans, habits, reminders, shared splits, and Luna assistance together in one everyday workspace.
-          </p>
-          <div style={{ display: 'flex', gap: '16px', fontSize: '11.5px', color: 'var(--text-secondary)', flexWrap: 'wrap', marginBottom: '14px' }}>
-            <div>Version: <strong style={{ color: 'var(--text-primary)' }}>2.0.0</strong></div>
-            <div>Engine: <strong style={{ color: 'var(--text-primary)' }}>Antigravity Core</strong></div>
-            <div>Platform: <strong style={{ color: 'var(--text-primary)' }}>{isStandalone ? 'PWA' : 'Web Browser'}</strong></div>
-            <div>Network: <strong style={{ color: navigator.onLine ? 'var(--accent-success)' : 'var(--accent-warning)' }}>{navigator.onLine ? 'Online' : 'Offline'}</strong></div>
-          </div>
-
-          <div style={{ paddingTop: '12px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <HelpCircle size={14} color="var(--accent-primary)" /> Need help or have questions?
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/app/chat')}
-              className="btn-secondary"
-              style={{ fontSize: '12px', padding: '5px 12px' }}
-            >
-              Ask Luna Assistant
-            </button>
-          </div>
         </div>
 
       </div>
