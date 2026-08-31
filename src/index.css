@@ -1143,6 +1143,28 @@ option {
   }
 }
 
+/* Mobile Add As Row (Log Transaction Form) */
+@media (max-width: 768px) {
+  .add-as-row-container {
+    padding: 6px 8px !important;
+    gap: 6px !important;
+  }
+  .add-as-label {
+    font-size: 10px !important;
+  }
+  .add-as-buttons-wrapper {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 3px !important;
+    flex-wrap: nowrap !important;
+  }
+  .add-as-btn {
+    padding: 5px 2px !important;
+    font-size: 10.5px !important;
+    letter-spacing: -0.2px !important;
+  }
+}
+
 
 
 

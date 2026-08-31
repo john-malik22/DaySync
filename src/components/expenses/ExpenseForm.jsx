@@ -214,12 +214,12 @@ export function ExpenseForm({ onSuccess }) {
 
       {/* Row 2: Add As Option Toggle (Only shown for Spent / Expense type) */}
       {txType === 'expense' && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', background: 'rgba(255,255,255,0.02)', padding: '8px 10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-          <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div className="add-as-row-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.02)', padding: '8px 10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+          <span className="add-as-label" style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0 }}>
             Add as
           </span>
 
-          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', flex: 1 }}>
+          <div className="add-as-buttons-wrapper" style={{ display: 'flex', gap: '4px', flex: 1, minWidth: 0 }}>
             {[
               { id: 'transaction', label: 'Transaction' },
               { id: 'plan', label: 'Plan' },
@@ -231,14 +231,21 @@ export function ExpenseForm({ onSuccess }) {
                 type="button"
                 onClick={() => handleAddAsChange(opt.id)}
                 disabled={isSubmitting}
+                className={`add-as-btn ${addAs === opt.id ? 'active' : ''}`}
                 style={{
-                  padding: '4px 10px',
+                  flex: 1,
+                  minWidth: 0,
+                  padding: '4px 6px',
+                  textAlign: 'center',
+                  whiteSpace: 'nowrap',
+                  textOverflow: 'ellipsis',
+                  overflow: 'hidden',
                   borderRadius: 'var(--radius-sm, 6px)',
                   border: addAs === opt.id ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
                   background: addAs === opt.id ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
                   color: addAs === opt.id ? '#FFFFFF' : 'var(--text-secondary)',
                   fontWeight: addAs === opt.id ? '700' : '500',
-                  fontSize: '11.5px',
+                  fontSize: '11px',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease'
                 }}
