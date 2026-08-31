@@ -665,15 +665,21 @@ export function SettingsPage() {
             {user?.email || 'user@daysync.app'}
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <button type="button" onClick={() => setIsEditingAvatar(!isEditingAvatar)} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px' }}>
-              <Sparkles size={13} /> {isEditingAvatar ? 'Close Avatar Editor' : 'Choose Cartoon Avatar'}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '440px', width: '100%' }}>
+            <button type="button" onClick={() => setIsEditingAvatar(!isEditingAvatar)} className="btn-secondary" style={{ fontSize: '12px', padding: '7px 12px', flex: '1 1 130px', justifyContent: 'center' }}>
+              <Sparkles size={13} /> {isEditingAvatar ? 'Close Avatar Editor' : 'Choose Character'}
             </button>
-            <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px' }}>
+            <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '12px', padding: '7px 12px', flex: '1 1 110px', justifyContent: 'center' }}>
               <Edit2 size={13} /> Edit Name
             </button>
-            <button type="button" onClick={handleOpenChangeEmail} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px' }}>
+            <button type="button" onClick={handleOpenChangeEmail} className="btn-secondary" style={{ fontSize: '12px', padding: '7px 12px', flex: '1 1 110px', justifyContent: 'center' }}>
               <Mail size={13} /> Edit Email
+            </button>
+          </div>
+
+          <div style={{ marginTop: '8px', maxWidth: '440px', width: '100%' }}>
+            <button type="button" onClick={handleOpenChangePassword} className="btn-secondary" style={{ fontSize: '12px', padding: '7px 12px', width: '100%', justifyContent: 'center' }}>
+              <Key size={13} /> Change Password
             </button>
           </div>
 
@@ -1095,19 +1101,10 @@ export function SettingsPage() {
             <Lock size={18} color="var(--accent-primary)" /> Account Actions
           </h3>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
-            Manage your credentials, security settings, and session status.
+            Manage your active session status or permanently delete your account.
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
-            <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center' }}>
-              <Edit2 size={14} /> Edit Name
-            </button>
-            <button type="button" onClick={handleOpenChangeEmail} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center' }}>
-              <Mail size={14} /> Edit Email
-            </button>
-            <button type="button" onClick={handleOpenChangePassword} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center' }}>
-              <Key size={14} /> Change Password
-            </button>
             <button type="button" onClick={() => setShowLogoutModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center' }}>
               <LogOut size={14} /> Log Out
             </button>
