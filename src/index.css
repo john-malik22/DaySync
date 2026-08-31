@@ -973,12 +973,20 @@ option {
   align-items: stretch;
 }
 
+.task-blank-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 220px;
+}
+
 @media (max-width: 768px) {
   .task-top-grid {
     grid-template-columns: 1fr;
   }
   .task-blank-panel {
-    display: none;
+    display: none !important;
   }
 }
 

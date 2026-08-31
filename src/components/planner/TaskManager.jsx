@@ -473,9 +473,7 @@ export function TaskManager({ searchFilter }) {
         </div>
 
         {/* RIGHT CONTAINER — PRIORITY TASKS PANEL */}
-        <div className="glass-card task-blank-panel" style={{
-          display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', minHeight: '220px'
-        }}>
+        <div className="glass-card task-blank-panel">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ color: priorityPanelData.color, margin: 0, fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
               {priorityPanelData.title}
