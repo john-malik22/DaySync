@@ -690,9 +690,9 @@ export function SettingsPage() {
         })}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-        {/* 1. ACCOUNT SECTION */}
+        {/* 1. ACCOUNT PROFILE SECTION */}
         <div ref={accountRef} className="glass-card">
           <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <User size={18} color="var(--accent-primary)" /> Account Profile
@@ -719,13 +719,13 @@ export function SettingsPage() {
               <div>
                 <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   {user?.name || 'User'}
-                  <button type="button" onClick={handleOpenChangeName} style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '2px' }} title="Change Name">
+                  <button type="button" onClick={handleOpenChangeName} style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '2px' }} title="Edit Name">
                     <Edit2 size={13} />
                   </button>
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                   {user?.email || 'user@daysync.app'}
-                  <button type="button" onClick={handleOpenChangeEmail} style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '2px' }} title="Change Email">
+                  <button type="button" onClick={handleOpenChangeEmail} style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '2px' }} title="Edit Email">
                     <Edit2 size={13} />
                   </button>
                 </div>
@@ -742,10 +742,10 @@ export function SettingsPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
             <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              <Edit2 size={14} style={{ flexShrink: 0 }} /> Change Name
+              <Edit2 size={14} style={{ flexShrink: 0 }} /> Edit Name
             </button>
             <button type="button" onClick={handleOpenChangeEmail} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              <Mail size={14} style={{ flexShrink: 0 }} /> Change Email
+              <Mail size={14} style={{ flexShrink: 0 }} /> Edit Email
             </button>
             <button type="button" onClick={handleOpenChangePassword} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               <Key size={14} style={{ flexShrink: 0 }} /> Change Password
