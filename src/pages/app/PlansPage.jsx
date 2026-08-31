@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useLuna } from '../../context/LunaContext';
 import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
+import { ReactionBadge } from '../../components/common/ReactionBadge';
 import { calculateEndDate, formatHumanDate, parseDateComponents, parseDuration } from '../../services/dateUtils';
 import { Repeat, ArrowRight, CheckCircle2, Clock, AlertCircle, Plus } from 'lucide-react';
 
@@ -183,10 +184,13 @@ export function PlansPage() {
 
       {/* Main Plans Display Container */}
       <div className="glass-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
-          <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '14px', fontWeight: '800', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Repeat size={16} color="var(--accent-primary)" /> RECURRING PLANS ({sortedAndFilteredPlans.length})
-          </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: 'var(--space-md)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '14px', fontWeight: '800', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Repeat size={16} color="var(--accent-primary)" /> RECURRING PLANS ({sortedAndFilteredPlans.length})
+            </h3>
+            <ReactionBadge category="PLANS" data={{ activePlansCount: plans.length, daysRemaining: endingSoonCount > 0 ? 3 : 10 }} seed={plans.length} />
+          </div>
           {isFromCache?.expenses && <StaleIndicator timestamp={lastSyncedAt?.expenses} />}
         </div>
 

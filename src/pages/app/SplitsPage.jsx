@@ -4,6 +4,7 @@ import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
+import { ReactionBadge } from '../../components/common/ReactionBadge';
 import {
   Users,
   Plus,
@@ -687,10 +688,11 @@ export function SplitsPage() {
               </div>
 
               {/* Status Badge */}
-              <div style={{ textAlign: 'right' }}>
+              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Your Net Status</span>
+                <ReactionBadge category="SPLITS" data={{ netAmount: myNetBalance, isSettled: Math.abs(myNetBalance) < 0.01 }} seed={Math.round(myNetBalance)} style={{ marginTop: '2px' }} />
                 <div style={{
-                  fontSize: '1.25rem', fontWeight: '800',
+                  fontSize: '1.25rem', fontWeight: '800', marginTop: '2px',
                   color: myNetBalance > 0.01 ? 'var(--accent-success)' : myNetBalance < -0.01 ? 'var(--accent-danger)' : 'var(--text-primary)'
                 }}>
                   {myNetBalance > 0.01

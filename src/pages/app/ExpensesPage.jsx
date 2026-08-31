@@ -4,6 +4,7 @@ import { ExpenseForm } from '../../components/expenses/ExpenseForm';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
 import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
+import { ReactionBadge } from '../../components/common/ReactionBadge';
 import { ArrowUpRight, ArrowDownRight, Wallet, Edit2, Trash2, Check, X, CreditCard } from 'lucide-react';
 
 const EXPENSE_CATEGORIES = [
@@ -107,9 +108,12 @@ export function ExpensesPage() {
 
         {/* RIGHT CONTAINER — FINANCIAL SUMMARY */}
         <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '13.5px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Wallet size={16} color="var(--accent-primary)" /> FINANCIAL SUMMARY
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+            <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '13.5px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Wallet size={16} color="var(--accent-primary)" /> FINANCIAL SUMMARY
+            </h3>
+            <ReactionBadge category="BALANCE" data={{ balance: currentBalance }} seed={Math.round(currentBalance)} />
+          </div>
 
           {/* Main Total Balance Box */}
           <div style={{ padding: '12px 14px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', textAlign: 'center' }}>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useLuna } from '../../context/LunaContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { ReactionBadge } from '../common/ReactionBadge';
 import {
   CheckSquare,
   Clock,
@@ -129,13 +130,11 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
   if (widgetSize === 'W') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
             SPENDING SNAPSHOT
           </div>
-          <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--accent-danger)', background: 'rgba(239, 68, 68, 0.12)', padding: '2px 6px', borderRadius: '4px' }}>
-            TRACKING ACTIVE
-          </div>
+          <ReactionBadge category="BALANCE" data={{ balance: net }} seed={Math.round(net)} />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
           <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
