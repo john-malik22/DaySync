@@ -690,8 +690,8 @@ export function SettingsPage() {
         })}
       </div>
 
-      {/* SINGLE UNIFIED SETTINGS CONTAINER FOR ALL SECTIONS */}
-      <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* SETTINGS CONTENT DIRECTLY ON MAIN PAGE BODY (NO CARD CONTAINERS) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
         {/* SECTION 1: ACCOUNT PROFILE */}
         <div ref={accountRef}>
