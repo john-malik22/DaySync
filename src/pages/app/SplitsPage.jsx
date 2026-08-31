@@ -634,8 +634,8 @@ export function SplitsPage() {
             </button>
           </div>
 
-          {/* Split Summary Header Card */}
-          <div className="glass-card" style={{ padding: '20px', border: '1px solid var(--accent-primary)' }}>
+          {/* DESKTOP SPLIT SUMMARY HEADER CARD (Visible on Desktop >=769px) */}
+          <div className="glass-card desktop-split-summary-card" style={{ padding: '20px', border: '1px solid var(--accent-primary)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--text-primary)', fontWeight: '800' }}>
@@ -737,16 +737,106 @@ export function SplitsPage() {
             </div>
           </div>
 
-          {/* Sub-Tabs: Expenses, Balances, Members */}
-          <div className="scroll-row" style={{ gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
+          {/* MOBILE SPLIT SUMMARY HEADER CARD (Visible on Mobile <=768px) */}
+          <div className="glass-card mobile-split-summary-card" style={{ padding: '16px', border: '1px solid var(--accent-primary)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* 2. Group Name & 3. Members */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-primary)', fontWeight: '800', lineHeight: '1.2' }}>
+                  {selectedSplit.name}
+                </h2>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                  Members: {(selectedSplit.members || []).map(m => getMemberName(m)).join(' • ')}
+                </div>
+              </div>
+
+              {/* Split Code Pill */}
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                padding: '2px 8px', borderRadius: 'var(--radius-full)',
+                background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', flexShrink: 0
+              }}>
+                <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                  <strong style={{ color: 'var(--accent-primary)', letterSpacing: '0.5px', userSelect: 'all', fontWeight: '700' }}>{selectedSplit.shareCode || 'GOA-7K4P2'}</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopyCode(selectedSplit.shareCode)}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '1px 3px', fontSize: '10px', display: 'inline-flex', alignItems: 'center' }}
+                  title="Copy Split Code"
+                >
+                  <Copy size={11} />
+                </button>
+              </div>
+            </div>
+
+            {/* 4. Your Net Status */}
+            <div style={{
+              background: 'var(--bg-secondary)', padding: '10px 12px', borderRadius: '10px',
+              border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px'
+            }}>
+              <div style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                YOUR NET STATUS
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                <ReactionBadge category="SPLITS" data={{ netAmount: myNetBalance, isSettled: Math.abs(myNetBalance) < 0.01 }} seed={Math.round(myNetBalance)} style={{ margin: 0 }} />
+                <div style={{
+                  fontSize: '1.15rem', fontWeight: '800',
+                  color: myNetBalance > 0.01 ? 'var(--accent-success)' : myNetBalance < -0.01 ? 'var(--accent-danger)' : 'var(--text-primary)'
+                }}>
+                  {myNetBalance > 0.01
+                    ? `You are owed ${selectedSplit.currency || '₹'}${myNetBalance.toFixed(2)}`
+                    : myNetBalance < -0.01
+                    ? `You have to pay ${selectedSplit.currency || '₹'}${Math.abs(myNetBalance).toFixed(2)}`
+                    : 'Settled ✓'}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ borderTop: '1px solid var(--border-color)', margin: '2px 0' }} />
+
+            {/* 5. Group Total */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                GROUP TOTAL
+              </span>
+              <span style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                {selectedSplit.currency || '₹'}{totalSpent.toLocaleString()}
+              </span>
+            </div>
+
+            {/* 6. Action buttons (Same row, equal width) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '2px' }}>
+              <button
+                type="button"
+                onClick={handleOpenAddExpense}
+                className="btn-primary"
+                style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center', width: '100%', whiteSpace: 'nowrap' }}
+              >
+                <Plus size={14} /> Add Expense
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowSettleModal(true)}
+                className="btn-secondary"
+                style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center', width: '100%', color: 'var(--accent-success)', whiteSpace: 'nowrap' }}
+              >
+                <DollarSign size={14} /> Settle Up
+              </button>
+            </div>
+          </div>
+
+          {/* 7. Sub-Tabs: Expenses, Balances, Members */}
+          <div className="scroll-row splits-detail-tabs-nav" style={{ gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
             <button
               type="button"
               onClick={() => setActiveTab('expenses')}
               style={{
-                padding: '6px 16px', borderRadius: 'var(--radius-full)', fontSize: '12px', fontWeight: '700',
+                padding: '6px 14px', borderRadius: 'var(--radius-full)', fontSize: '12px', fontWeight: '700',
                 border: activeTab === 'expenses' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
                 background: activeTab === 'expenses' ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                color: activeTab === 'expenses' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer'
+                color: activeTab === 'expenses' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer',
+                textAlign: 'center', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden'
               }}
             >
               Recent Expenses ({(selectedSplit.expenses || []).length})
@@ -755,10 +845,11 @@ export function SplitsPage() {
               type="button"
               onClick={() => setActiveTab('balances')}
               style={{
-                padding: '6px 16px', borderRadius: 'var(--radius-full)', fontSize: '12px', fontWeight: '700',
+                padding: '6px 14px', borderRadius: 'var(--radius-full)', fontSize: '12px', fontWeight: '700',
                 border: activeTab === 'balances' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
                 background: activeTab === 'balances' ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                color: activeTab === 'balances' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer'
+                color: activeTab === 'balances' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer',
+                textAlign: 'center', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden'
               }}
             >
               Balances ({suggestedSettlements.length})
@@ -767,10 +858,11 @@ export function SplitsPage() {
               type="button"
               onClick={() => setActiveTab('members')}
               style={{
-                padding: '6px 16px', borderRadius: 'var(--radius-full)', fontSize: '12px', fontWeight: '700',
+                padding: '6px 14px', borderRadius: 'var(--radius-full)', fontSize: '12px', fontWeight: '700',
                 border: activeTab === 'members' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
                 background: activeTab === 'members' ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                color: activeTab === 'members' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer'
+                color: activeTab === 'members' ? '#FFFFFF' : 'var(--text-secondary)', cursor: 'pointer',
+                textAlign: 'center', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden'
               }}
             >
               Members ({(selectedSplit.members || []).length})
@@ -797,10 +889,10 @@ export function SplitsPage() {
                     <div
                       key={exp.id}
                       className="glass-card animate-fade-in"
-                      style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}
+                      style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}
                     >
-                      <div>
-                        <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {exp.description || exp.title || 'Expense'}
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -808,7 +900,7 @@ export function SplitsPage() {
                         </div>
                       </div>
 
-                      <div style={{ textAlign: 'right' }}>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         {isPayer ? (
                           <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-success)' }}>
                             You lent {selectedSplit.currency || '₹'}{(exp.amount - owedAmount).toFixed(2)}
@@ -820,7 +912,7 @@ export function SplitsPage() {
                         ) : (
                           <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Not involved</div>
                         )}
-                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{formatDate(exp.date || exp.createdAt)}</div>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px' }}>{formatDate(exp.date || exp.createdAt)}</div>
                       </div>
                     </div>
                   );

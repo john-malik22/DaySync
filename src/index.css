@@ -1122,6 +1122,27 @@ option {
   }
 }
 
+/* Mobile Splits Detail View Responsiveness */
+@media (min-width: 769px) {
+  .mobile-split-summary-card {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-split-summary-card {
+    display: none !important;
+  }
+  .mobile-split-summary-card {
+    display: flex !important;
+  }
+  .splits-detail-tabs-nav {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+}
+
 
 
 
