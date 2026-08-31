@@ -1182,6 +1182,24 @@ option {
   }
 }
 
+/* Mobile Subtle Page Transition */
+@media (max-width: 768px) {
+  .main-content-area {
+    animation: mobilePageFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@keyframes mobilePageFadeIn {
+  from {
+    opacity: 0.88;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { LunaProvider } from './context/LunaContext';
@@ -25,7 +25,122 @@ import { TaskPage } from './pages/app/TaskPage';
 import { HabitsPage } from './pages/app/HabitsPage';
 import { SettingsPage } from './pages/app/SettingsPage';
 
+// Sequence of main mobile app pages for horizontal swipe navigation
+const MOBILE_NAV_SEQUENCE = [
+  '/app/dashboard',
+  '/app/task',
+  '/app/expenses',
+  '/app/plans',
+  '/app/splits',
+  '/app/habits',
+  '/app/chat',
+  '/app/settings'
+];
+
+function useMobileSwipeNavigation() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let isIgnored = false;
+
+    const handleTouchStart = (e) => {
+      // Apply ONLY to mobile screens (<=768px)
+      if (window.innerWidth > 768) return;
+      if (!e.touches || e.touches.length === 0) return;
+
+      const target = e.target;
+      if (!target) return;
+
+      // 1. Do not trigger while typing in inputs, textareas, selects, or contenteditable
+      if (target.closest('input, textarea, select, [contenteditable="true"]')) {
+        isIgnored = true;
+        return;
+      }
+
+      // 2. Do not trigger inside modals, overlays, or dialogs
+      if (target.closest('.modal-overlay, .modal-content, [role="dialog"], .dialog')) {
+        isIgnored = true;
+        return;
+      }
+
+      // 3. Do not trigger inside horizontal-scroll containers
+      let currentEl = target;
+      while (currentEl && currentEl !== document.body) {
+        if (currentEl.classList && (currentEl.classList.contains('scroll-row') || currentEl.classList.contains('overflow-x-auto') || currentEl.classList.contains('splits-detail-tabs-nav'))) {
+          isIgnored = true;
+          return;
+        }
+        try {
+          const style = window.getComputedStyle(currentEl);
+          if ((style.overflowX === 'auto' || style.overflowX === 'scroll') && currentEl.scrollWidth > currentEl.clientWidth + 5) {
+            isIgnored = true;
+            return;
+          }
+        } catch (err) {}
+        currentEl = currentEl.parentElement;
+      }
+
+      isIgnored = false;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+    };
+
+    const handleTouchEnd = (e) => {
+      if (isIgnored || window.innerWidth > 768) return;
+      if (!e.changedTouches || e.changedTouches.length === 0) return;
+
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchEndTime = Date.now();
+
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = touchEndY - touchStartY;
+      const elapsedTime = touchEndTime - touchStartTime;
+
+      // Reasonable threshold parameters to prevent accidental trigger
+      const minDistance = 65;       // Minimum horizontal px
+      const maxTime = 450;          // Maximum swipe duration (ms)
+      const maxVerticalDev = 60;    // Maximum vertical deviation (px)
+
+      if (elapsedTime <= maxTime && Math.abs(deltaX) >= minDistance && Math.abs(deltaY) <= maxVerticalDev && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+        const rawPath = location.pathname;
+        const currentPath = rawPath.startsWith('/app/splits') ? '/app/splits' : rawPath;
+        const currentIndex = MOBILE_NAV_SEQUENCE.indexOf(currentPath);
+
+        if (currentIndex !== -1) {
+          if (deltaX < 0) {
+            // Swipe LEFT → navigate to Next app page
+            if (currentIndex < MOBILE_NAV_SEQUENCE.length - 1) {
+              navigate(MOBILE_NAV_SEQUENCE[currentIndex + 1]);
+            }
+          } else {
+            // Swipe RIGHT → navigate to Previous app page
+            if (currentIndex > 0) {
+              navigate(MOBILE_NAV_SEQUENCE[currentIndex - 1]);
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [location.pathname, navigate]);
+}
+
 function AppLayout() {
+  useMobileSwipeNavigation();
+
   return (
     <div className="app-shell-layout">
       <Sidebar />
