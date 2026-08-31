@@ -692,116 +692,125 @@ export function SettingsPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-        {/* 1. ACCOUNT PROFILE SECTION */}
-        <div ref={accountRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <User size={18} color="var(--accent-primary)" /> Account Profile
-          </h3>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
-            Manage your personal profile, verified credentials, and account security.
-          </p>
+        {/* COMBINED PRIMARY SETTINGS CONTAINER (Account Profile + Lifetime Access + App & System Preferences) */}
+        <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          {/* SECTION 1: ACCOUNT PROFILE */}
+          <div ref={accountRef}>
+            <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <User size={18} color="var(--accent-primary)" /> Account Profile
+            </h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
+              Manage your personal profile, verified credentials, and account security.
+            </p>
 
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '14px 16px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-            border: '1px solid var(--border-color)', marginBottom: 'var(--space-md)', flexWrap: 'wrap', gap: '12px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <button
-                type="button"
-                onClick={() => { setIsEditingAvatar(false); setShowProfileModal(true); }}
-                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', outline: 'none' }}
-                title="Click to View / Change Avatar"
-              >
-                <UserAvatar avatarId={user?.avatar} name={user?.name} size={48} />
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 16px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-color)', marginBottom: '12px', flexWrap: 'wrap', gap: '12px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <button
+                  type="button"
+                  onClick={() => { setIsEditingAvatar(false); setShowProfileModal(true); }}
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', outline: 'none' }}
+                  title="Click to View / Change Avatar"
+                >
+                  <UserAvatar avatarId={user?.avatar} name={user?.name} size={48} />
+                </button>
+
+                <div>
+                  <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {user?.name || 'User'}
+                    <button type="button" onClick={handleOpenChangeName} style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '2px' }} title="Edit Name">
+                      <Edit2 size={13} />
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                    {user?.email || 'user@daysync.app'}
+                    <button type="button" onClick={handleOpenChangeEmail} style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '2px' }} title="Edit Email">
+                      <Edit2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Account Status: <strong style={{ color: 'var(--text-primary)' }}>Active</strong></span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.12)', color: 'var(--accent-success)', fontSize: '11px', fontWeight: '700' }}>
+                  <CheckCircle size={13} /> Verified
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+              <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <Edit2 size={14} style={{ flexShrink: 0 }} /> Edit Name
               </button>
-
-              <div>
-                <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {user?.name || 'User'}
-                  <button type="button" onClick={handleOpenChangeName} style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '2px' }} title="Edit Name">
-                    <Edit2 size={13} />
-                  </button>
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                  {user?.email || 'user@daysync.app'}
-                  <button type="button" onClick={handleOpenChangeEmail} style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '2px' }} title="Edit Email">
-                    <Edit2 size={13} />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Account Status: <strong style={{ color: 'var(--text-primary)' }}>Active</strong></span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.12)', color: 'var(--accent-success)', fontSize: '11px', fontWeight: '700' }}>
-                <CheckCircle size={13} /> Verified
-              </div>
+              <button type="button" onClick={handleOpenChangeEmail} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <Mail size={14} style={{ flexShrink: 0 }} /> Edit Email
+              </button>
+              <button type="button" onClick={handleOpenChangePassword} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <Key size={14} style={{ flexShrink: 0 }} /> Change Password
+              </button>
+              <button type="button" onClick={() => setShowLogoutModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <LogOut size={14} style={{ flexShrink: 0 }} /> Log Out
+              </button>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-            <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              <Edit2 size={14} style={{ flexShrink: 0 }} /> Edit Name
-            </button>
-            <button type="button" onClick={handleOpenChangeEmail} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              <Mail size={14} style={{ flexShrink: 0 }} /> Edit Email
-            </button>
-            <button type="button" onClick={handleOpenChangePassword} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              <Key size={14} style={{ flexShrink: 0 }} /> Change Password
-            </button>
-            <button type="button" onClick={() => setShowLogoutModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 10px', minHeight: '38px', justifyContent: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              <LogOut size={14} style={{ flexShrink: 0 }} /> Log Out
-            </button>
-          </div>
-        </div>
+          {/* INTERNAL DIVIDER */}
+          <div style={{ borderTop: '1px solid var(--border-color)', margin: '2px 0' }} />
 
-        {/* 2. DAYSYNC V2 LIFETIME ACCESS SECTION */}
-        <div ref={upgradeRef} className="glass-card" style={{ border: '1px solid var(--accent-primary)', background: 'linear-gradient(135deg, rgba(91, 80, 230, 0.08) 0%, var(--bg-card) 100%)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
-            <div style={{ flex: 1, minWidth: '240px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <span style={{ background: 'var(--accent-primary)', color: '#FFFFFF', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', letterSpacing: '0.05em' }}>
-                  VERSION 2
-                </span>
-                <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1.1rem', fontWeight: '800' }}>
-                  LIFETIME ACCESS
-                </h3>
-                {user?.isPremium && (
-                  <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-success)' }}>
-                    ACTIVE
+          {/* SECTION 2: VERSION 2 LIFETIME ACCESS */}
+          <div ref={upgradeRef} style={{ padding: '14px', borderRadius: '12px', border: '1px solid var(--accent-primary)', background: 'linear-gradient(135deg, rgba(91, 80, 230, 0.08) 0%, var(--bg-secondary) 100%)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
+              <div style={{ flex: 1, minWidth: '240px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <span style={{ background: 'var(--accent-primary)', color: '#FFFFFF', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', letterSpacing: '0.05em' }}>
+                    VERSION 2
                   </span>
-                )}
+                  <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1.1rem', fontWeight: '800' }}>
+                    LIFETIME ACCESS
+                  </h3>
+                  {user?.isPremium && (
+                    <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-success)' }}>
+                      ACTIVE
+                    </span>
+                  )}
+                </div>
+                <p style={{ margin: '4px 0 10px 0', fontSize: '12.5px', color: 'var(--text-muted)' }}>
+                  One-time payment for complete V2 Lifetime Access. No monthly or yearly subscriptions.
+                </p>
+                <div style={{ display: 'flex', gap: '16px', fontSize: '12.5px', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+                  <div>Price: <strong style={{ color: 'var(--accent-primary)', fontSize: '1.15rem', fontWeight: '900' }}>₹9</strong></div>
+                  <div>Membership: <strong style={{ color: user?.isPremium ? 'var(--accent-success)' : 'var(--text-primary)' }}>{user?.isPremium ? 'Lifetime Member' : 'Free User'}</strong></div>
+                </div>
               </div>
-              <p style={{ margin: '4px 0 10px 0', fontSize: '12.5px', color: 'var(--text-muted)' }}>
-                One-time payment for complete V2 Lifetime Access. No monthly or yearly subscriptions.
-              </p>
-              <div style={{ display: 'flex', gap: '16px', fontSize: '12.5px', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
-                <div>Price: <strong style={{ color: 'var(--accent-primary)', fontSize: '1.15rem', fontWeight: '900' }}>₹9</strong></div>
-                <div>Membership: <strong style={{ color: user?.isPremium ? 'var(--accent-success)' : 'var(--text-primary)' }}>{user?.isPremium ? 'Lifetime Member' : 'Free User'}</strong></div>
-              </div>
+
+              {user?.isPremium ? (
+                <div style={{ padding: '8px 14px', borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: 'var(--accent-success)', fontSize: '12.5px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <CheckCircle size={15} /> Lifetime Access Unlocked
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="btn-primary"
+                  style={{ fontSize: '12.5px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  aria-label="View Lifetime Access"
+                >
+                  <Zap size={14} /> Buy Lifetime Access — ₹9
+                </button>
+              )}
             </div>
-
-            {user?.isPremium ? (
-              <div style={{ padding: '8px 14px', borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: 'var(--accent-success)', fontSize: '12.5px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <CheckCircle size={15} /> Lifetime Access Unlocked
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowUpgradeModal(true)}
-                className="btn-primary"
-                style={{ fontSize: '12.5px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                aria-label="View Lifetime Access"
-              >
-                <Zap size={14} /> Buy Lifetime Access — ₹9
-              </button>
-            )}
           </div>
-        </div>
 
-        {/* 3. SYSTEM & FUNCTIONAL PREFERENCES */}
-        <div ref={preferencesRef} className="glass-card">
+          {/* INTERNAL DIVIDER */}
+          <div style={{ borderTop: '1px solid var(--border-color)', margin: '2px 0' }} />
+
+          {/* SECTION 3: APP & SYSTEM PREFERENCES */}
+          <div ref={preferencesRef}>
           <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <SlidersHorizontal size={18} color="var(--accent-primary)" /> App & System Preferences
           </h3>
@@ -963,8 +972,9 @@ export function SettingsPage() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* 4. DASHBOARD SECTION */}
+      {/* 4. DASHBOARD SECTION */}
         <div ref={dashboardRef} className="glass-card">
           <h3 style={{ marginBottom: '4px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Layout size={18} color="var(--accent-primary)" /> Dashboard Settings
