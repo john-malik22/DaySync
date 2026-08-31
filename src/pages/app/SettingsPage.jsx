@@ -201,16 +201,23 @@ export function SettingsPage() {
     }
   };
 
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isEditingAvatar, setIsEditingAvatar] = useState(false);
+
   const handleSelectAvatar = async (avatarId) => {
+    // Optimistic update so avatar changes immediately & persists in localStorage
+    updateUser({ avatar: avatarId });
+    if (showToast) showToast(`Avatar updated to ${avatarId.charAt(0).toUpperCase() + avatarId.slice(1)}!`, 'success');
+    setIsEditingAvatar(false);
+    setShowProfileModal(false);
+
     try {
       const res = await api.updateProfile({ avatar: avatarId });
       if (res && res.user) {
         updateUser(res.user);
-        if (showToast) showToast(`Avatar set to ${avatarId.charAt(0).toUpperCase() + avatarId.slice(1)}!`, 'success');
       }
     } catch (err) {
-      console.error('Avatar update error:', err);
-      if (showToast) showToast('Failed to update avatar.', 'error');
+      console.warn('Backend profile update notice:', err);
     }
   };
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -691,7 +698,7 @@ export function SettingsPage() {
             <User size={18} color="var(--accent-primary)" /> Account Profile
           </h3>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
-            Manage your personal profile, verified credentials, and 2D cartoon avatar.
+            Manage your personal profile, verified credentials, and account security.
           </p>
 
           <div style={{
@@ -699,8 +706,16 @@ export function SettingsPage() {
             padding: '14px 16px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
             border: '1px solid var(--border-color)', marginBottom: 'var(--space-md)', flexWrap: 'wrap', gap: '12px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <UserAvatar avatarId={user?.avatar} name={user?.name} size={48} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <button
+                type="button"
+                onClick={() => { setIsEditingAvatar(false); setShowProfileModal(true); }}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%', outline: 'none' }}
+                title="Click to View / Change Avatar"
+              >
+                <UserAvatar avatarId={user?.avatar} name={user?.name} size={48} />
+              </button>
+
               <div>
                 <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   {user?.name || 'User'}
@@ -722,54 +737,6 @@ export function SettingsPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.12)', color: 'var(--accent-success)', fontSize: '11px', fontWeight: '700' }}>
                 <CheckCircle size={13} /> Verified
               </div>
-            </div>
-          </div>
-
-          {/* 2D CARTOON AVATAR SELECTION GRID */}
-          <div style={{ marginBottom: '16px', padding: '14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>
-              Cartoon Profile Avatar
-            </div>
-            <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
-              Select a 2D cartoon avatar to personalize your profile picture across DaySync.
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(72px, 1fr))', gap: '10px' }}>
-              {AVATAR_LIST.map((av) => {
-                const isSelected = user?.avatar === av.id;
-                return (
-                  <button
-                    key={av.id}
-                    type="button"
-                    onClick={() => handleSelectAvatar(av.id)}
-                    style={{
-                      background: isSelected ? 'rgba(91, 80, 230, 0.14)' : 'var(--bg-card)',
-                      border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                      borderRadius: '12px',
-                      padding: '8px 4px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '6px',
-                      cursor: 'pointer',
-                      position: 'relative',
-                      transition: 'all 0.15s ease',
-                      outline: 'none'
-                    }}
-                    title={`Select ${av.name} Avatar`}
-                  >
-                    <CartoonAvatar id={av.id} size={44} />
-                    <span style={{ fontSize: '11px', fontWeight: isSelected ? '700' : '500', color: isSelected ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
-                      {av.name}
-                    </span>
-                    {isSelected && (
-                      <div style={{ position: 'absolute', top: '-4px', right: '-4px', background: 'var(--accent-primary)', color: '#FFFFFF', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                        <Check size={11} strokeWidth={3} />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
             </div>
           </div>
 
@@ -1654,6 +1621,114 @@ export function SettingsPage() {
         activeWidgetIds={activeWidgetIds}
         onAddWidget={handleAddWidget}
       />
+
+      {/* PROFILE PREVIEW & AVATAR EDITOR MODAL */}
+      {showProfileModal && (
+        <div className="modal-overlay" onClick={() => setShowProfileModal(false)}>
+          <div
+            className="modal-content glass-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '420px', width: '90%', padding: '24px', textAlign: 'center', position: 'relative' }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowProfileModal(false)}
+              style={{ position: 'absolute', top: '14px', right: '14px', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            >
+              <X size={18} />
+            </button>
+
+            {!isEditingAvatar ? (
+              /* VIEW 1: ENLARGED PROFILE PREVIEW */
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+                <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setIsEditingAvatar(true)} title="Click to edit avatar">
+                  <UserAvatar avatarId={user?.avatar} name={user?.name} size={96} />
+                  <div style={{
+                    position: 'absolute', bottom: '2px', right: '2px',
+                    background: 'var(--accent-primary)', color: '#FFFFFF',
+                    borderRadius: '50%', width: '28px', height: '28px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: '2px solid var(--bg-card)'
+                  }}>
+                    <Edit2 size={13} />
+                  </div>
+                </div>
+
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>
+                    {user?.name || 'User'}
+                  </h3>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {user?.email || 'user@daysync.app'}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsEditingAvatar(true)}
+                  className="btn-primary"
+                  style={{ width: '100%', padding: '10px', fontSize: '13px', fontWeight: '700', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <Edit2 size={15} /> Edit Cartoon Avatar
+                </button>
+              </div>
+            ) : (
+              /* VIEW 2: AVATAR SELECTOR GRID */
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '4px' }}>
+                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                    Choose Cartoon Avatar
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingAvatar(false)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                  >
+                    Back
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', width: '100%', maxHeight: '300px', overflowY: 'auto', padding: '4px' }}>
+                  {AVATAR_LIST.map((av) => {
+                    const isSelected = user?.avatar === av.id;
+                    return (
+                      <button
+                        key={av.id}
+                        type="button"
+                        onClick={() => handleSelectAvatar(av.id)}
+                        style={{
+                          background: isSelected ? 'rgba(91, 80, 230, 0.14)' : 'var(--bg-card)',
+                          border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                          borderRadius: '12px',
+                          padding: '10px 4px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '6px',
+                          cursor: 'pointer',
+                          position: 'relative',
+                          transition: 'all 0.15s ease',
+                          outline: 'none'
+                        }}
+                      >
+                        <CartoonAvatar id={av.id} size={48} />
+                        <span style={{ fontSize: '11px', fontWeight: isSelected ? '700' : '500', color: isSelected ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
+                          {av.name}
+                        </span>
+                        {isSelected && (
+                          <div style={{ position: 'absolute', top: '-4px', right: '-4px', background: 'var(--accent-primary)', color: '#FFFFFF', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                            <Check size={11} strokeWidth={3} />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

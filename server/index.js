@@ -224,6 +224,7 @@ app.post('/api/payments/verify', authenticate, (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
+      avatar: user.avatar || null,
       preferences: user.preferences,
       isPremium: true,
       premiumPurchasedAt: user.premiumPurchasedAt
@@ -363,7 +364,15 @@ app.post('/api/auth/verify-email-otp', authenticate, (req, res) => {
   db.write(store);
 
   const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-  const updatedUser = { id: user.id, name: user.name, email: user.email, preferences: user.preferences };
+  const updatedUser = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar || null,
+    preferences: user.preferences,
+    isPremium: Boolean(user.isPremium),
+    premiumPurchasedAt: user.premiumPurchasedAt || null
+  };
 
   res.json({ success: true, message: 'Email address verified and updated successfully!', token, user: updatedUser });
 });
