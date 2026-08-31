@@ -20,6 +20,26 @@ export function AuthProvider({ children }) {
       document.documentElement.classList.remove('dark');
     }
     localStorage.setItem('daysync_theme', theme);
+
+    // Dynamic Mobile & PWA Status Bar Color and Icon Appearance Sync
+    const isDark = theme === 'dark';
+    const statusBarColor = isDark ? '#0E0E10' : '#F6F3EC';
+
+    let themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (!themeMeta) {
+      themeMeta = document.createElement('meta');
+      themeMeta.name = 'theme-color';
+      document.head.appendChild(themeMeta);
+    }
+    themeMeta.setAttribute('content', statusBarColor);
+
+    let appleMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (!appleMeta) {
+      appleMeta = document.createElement('meta');
+      appleMeta.name = 'apple-mobile-web-app-status-bar-style';
+      document.head.appendChild(appleMeta);
+    }
+    appleMeta.setAttribute('content', isDark ? 'black-translucent' : 'default');
   }, [theme]);
 
   // Restore authenticated session safely
