@@ -747,7 +747,7 @@ export function SettingsPage() {
             </div>
 
             {/* Transaction Messages */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Transaction Messages</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Control transaction-message read behavior</div>
@@ -755,27 +755,27 @@ export function SettingsPage() {
               <select
                 value={transactionMsgBehavior}
                 onChange={(e) => handleTransactionMsgBehaviorChange(e.target.value)}
-                style={{ padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }}
+                style={{ width: '170px', padding: '6px 10px', borderRadius: '8px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', flexShrink: 0 }}
               >
                 <option value="automatic">Automatic</option>
-                <option value="prompt">Prompt before logging</option>
+                <option value="prompt">Prompt</option>
                 <option value="disabled">Disabled</option>
               </select>
             </div>
 
             {/* Clear Luna Chat */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Clear Luna Chat</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Remove stored conversation history</div>
               </div>
-              <button type="button" onClick={() => setShowClearHistoryModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px', color: 'var(--accent-danger)' }}>
+              <button type="button" onClick={() => setShowClearHistoryModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px', color: 'var(--accent-danger)', flexShrink: 0 }}>
                 <Trash2 size={14} /> Clear History
               </button>
             </div>
 
             {/* Open Page on Startup */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Open Page on Startup</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Default launch page</div>
@@ -783,7 +783,7 @@ export function SettingsPage() {
               <select
                 value={defaults.startupPage}
                 onChange={(e) => handleDefaultChange('startupPage', e.target.value)}
-                style={{ padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }}
+                style={{ width: '170px', padding: '6px 10px', borderRadius: '8px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', flexShrink: 0 }}
               >
                 <option value="dashboard">Dashboard</option>
                 <option value="tasks">Tasks</option>
@@ -794,7 +794,7 @@ export function SettingsPage() {
             </div>
 
             {/* Week Start Day */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Week Start Day</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>First day of calendar week</div>
@@ -802,7 +802,7 @@ export function SettingsPage() {
               <select
                 value={weekStartDay}
                 onChange={(e) => handleWeekStartChange(e.target.value)}
-                style={{ padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }}
+                style={{ width: '170px', padding: '6px 10px', borderRadius: '8px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', flexShrink: 0 }}
               >
                 <option value="monday">Monday</option>
                 <option value="sunday">Sunday</option>
@@ -810,7 +810,7 @@ export function SettingsPage() {
             </div>
 
             {/* Date Format */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Date Format</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Date display format</div>
@@ -818,11 +818,11 @@ export function SettingsPage() {
               <select
                 value={dateFormat}
                 onChange={(e) => handleDateFormatChange(e.target.value)}
-                style={{ padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px' }}
+                style={{ width: '170px', padding: '6px 10px', borderRadius: '8px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', flexShrink: 0 }}
               >
-                <option value="DD MMM YYYY">DD MMM YYYY (e.g. 12 Aug 2026)</option>
-                <option value="YYYY-MM-DD">YYYY-MM-DD (e.g. 2026-08-12)</option>
-                <option value="MM/DD/YYYY">MM/DD/YYYY (e.g. 08/12/2026)</option>
+                <option value="DD MMM YYYY">DD MMM YYYY</option>
+                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
               </select>
             </div>
 
