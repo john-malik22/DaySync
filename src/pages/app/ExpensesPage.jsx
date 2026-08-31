@@ -106,8 +106,8 @@ export function ExpensesPage() {
           <ExpenseForm />
         </div>
 
-        {/* RIGHT CONTAINER — FINANCIAL SUMMARY */}
-        <div className="glass-card expenses-summary-container" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {/* DESKTOP FINANCIAL SUMMARY CARD (Visible on Desktop >=769px) */}
+        <div className="glass-card desktop-financial-summary-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
             <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '13.5px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Wallet size={16} color="var(--accent-primary)" /> FINANCIAL SUMMARY
@@ -141,6 +141,61 @@ export function ExpensesPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* MOBILE FINANCIAL SUMMARY CARD (Visible on Mobile <=768px) */}
+        <div className="glass-card mobile-financial-summary-card" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+            <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: '800' }}>
+              <Wallet size={14} color="var(--accent-primary)" /> FINANCIAL SUMMARY
+            </h3>
+            <ReactionBadge category="BALANCE" data={{ balance: currentBalance }} seed={Math.round(currentBalance)} style={{ margin: 0 }} />
+          </div>
+
+          {/* 3 Metrics on ONE Row: TOTAL, SPENT, RECEIVED */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px', textAlign: 'center',
+            padding: '8px 6px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)'
+          }}>
+            {/* TOTAL */}
+            <div>
+              <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>TOTAL</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: '800', color: currentBalance >= 0 ? 'var(--text-primary)' : 'var(--accent-danger)', marginTop: '2px' }}>
+                {currentBalance >= 0 ? '+' : ''}₹{currentBalance.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+            </div>
+
+            {/* SPENT */}
+            <div>
+              <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>SPENT</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--accent-danger)', marginTop: '2px' }}>
+                -₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+            </div>
+
+            {/* RECEIVED */}
+            <div>
+              <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>RECEIVED</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--accent-success)', marginTop: '2px' }}>
+                +₹{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+            </div>
+          </div>
+
+          {/* Mini Bar / Progress Visualization */}
+          {(() => {
+            const totalActivity = totalSpent + totalIncome;
+            const spentRatio = totalActivity > 0 ? Math.min(100, Math.round((totalSpent / totalActivity) * 100)) : 50;
+            const incomeRatio = 100 - spentRatio;
+            return (
+              <div style={{ marginTop: '2px' }}>
+                <div style={{ height: '5px', width: '100%', borderRadius: '3px', background: 'var(--bg-tertiary)', overflow: 'hidden', display: 'flex' }}>
+                  <div style={{ width: `${incomeRatio}%`, background: 'var(--accent-success)', height: '100%', transition: 'width 0.3s ease' }} title={`Received ${incomeRatio}%`} />
+                  <div style={{ width: `${spentRatio}%`, background: 'var(--accent-danger)', height: '100%', transition: 'width 0.3s ease' }} title={`Spent ${spentRatio}%`} />
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 

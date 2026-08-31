@@ -1143,36 +1143,65 @@ option {
   }
 }
 
-/* Mobile Add As Row (Log Transaction Form) */
-@media (max-width: 768px) {
+/* Add As Row Desktop vs Mobile Layout */
+@media (min-width: 769px) {
   .add-as-row-container {
-    padding: 6px 8px !important;
-    gap: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
   }
   .add-as-label {
+    display: inline-block !important;
+    margin-bottom: 0 !important;
+  }
+  .add-as-buttons-wrapper {
+    display: flex !important;
+    gap: 4px !important;
+    flex: 1 !important;
+  }
+  .mobile-financial-summary-card {
+    display: none !important;
+  }
+  .desktop-financial-summary-card {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .add-as-row-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 8px 10px !important;
+    gap: 4px !important;
+  }
+  .add-as-label {
+    display: block !important;
     font-size: 10px !important;
+    margin-bottom: 4px !important;
   }
   .add-as-buttons-wrapper {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
     gap: 3px !important;
-    flex-wrap: nowrap !important;
+    width: 100% !important;
   }
   .add-as-btn {
     padding: 5px 2px !important;
     font-size: 10.5px !important;
     letter-spacing: -0.2px !important;
   }
-}
 
-/* Mobile Expenses Page Layout & Reordering */
-@media (max-width: 768px) {
   .expenses-top-grid {
     display: flex !important;
     flex-direction: column !important;
     gap: var(--space-md) !important;
   }
-  .expenses-summary-container {
+  .desktop-financial-summary-card {
+    display: none !important;
+  }
+  .mobile-financial-summary-card {
+    display: flex !important;
     order: 1 !important;
     padding: 12px 14px !important;
     gap: 8px !important;
