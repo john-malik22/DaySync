@@ -901,6 +901,30 @@ option {
     display: flex !important;
     flex-direction: column !important;
   }
+
+  /* Mobile Settings Top Spacing & Controls Visibility Polish */
+  .settings-page-container {
+    padding-top: 8px !important;
+    gap: 8px !important;
+  }
+
+  .settings-page-container .page-header-row {
+    margin-bottom: 2px !important;
+    padding-bottom: 4px !important;
+  }
+
+  .settings-nav-chips {
+    margin-top: 2px !important;
+    margin-bottom: 8px !important;
+    padding-top: 2px !important;
+    padding-bottom: 6px !important;
+    position: relative !important;
+    z-index: 5 !important;
+  }
+
+  .settings-sections-wrapper {
+    gap: 16px !important;
+  }
 }
 
 /* Horizontal Scroll Container */

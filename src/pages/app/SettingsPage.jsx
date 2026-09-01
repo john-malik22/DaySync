@@ -760,11 +760,11 @@ export function SettingsPage() {
   ];
 
   return (
-    <div className="page-container" style={{ maxWidth: '840px' }}>
+    <div className="page-container settings-page-container" style={{ maxWidth: '840px' }}>
       <PageHeaderRow title="Settings" />
 
       {/* Navigation Chips Bar */}
-      <div className="scroll-row" style={{ marginBottom: 'var(--space-md)', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+      <div className="scroll-row settings-nav-chips" style={{ marginBottom: 'var(--space-md)', paddingBottom: '4px', scrollbarWidth: 'none' }}>
         {sectionsNav.map(sec => {
           const IconComp = sec.icon;
           const isActive = activeSection === sec.key;
@@ -790,7 +790,7 @@ export function SettingsPage() {
 
       {/* SETTINGS CONTENT DIRECTLY ON MAIN PAGE BODY (NO CARD CONTAINERS) */}
       {/* REDESIGNED SINGLE-PAGE SETTINGS CONTAINER */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="settings-sections-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
         {/* 1. PROFILE SECTION */}
         <div ref={accountRef} className="profile-section-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '12px 0' }}>
