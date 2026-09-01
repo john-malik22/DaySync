@@ -46,7 +46,9 @@ import {
   Users,
   Calendar,
   Globe,
-  HelpCircle
+  HelpCircle,
+  Download,
+  Upload
 } from 'lucide-react';
 
 import { useLuna } from '../../context/LunaContext';
@@ -99,7 +101,7 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const { user, token, theme, toggleTheme, logout, deleteAccount, updateUser } = useAuth();
   const { preferences, updatePreferences } = useNotifications();
-  const { startingBalance, updateStartingBalance } = useLuna();
+  const { tasks, expenses, memories, startingBalance, updateStartingBalance, refreshData } = useLuna();
   const {
     currentVersion,
     updateAvailable,
@@ -114,6 +116,158 @@ export function SettingsPage() {
 
   const [isEditingBalance, setIsEditingBalance] = useState(false);
   const [balanceInput, setBalanceInput] = useState('');
+
+  // Data Export & Restore State
+  const [restorePayload, setRestorePayload] = useState(null);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const restoreFileInputRef = useRef(null);
+
+  // 1. Export Data Handler
+  const handleExportData = () => {
+    try {
+      const exportData = {
+        app: 'DaySync',
+        version: '2.0.0',
+        exportedAt: new Date().toISOString(),
+        userProfile: {
+          id: user?.id || 'user',
+          name: user?.name || 'DaySync User',
+          email: user?.email || '',
+          avatar: user?.avatar || 'dog'
+        },
+        tasks: tasks || [],
+        expenses: expenses || [],
+        memories: memories || [],
+        startingBalance: startingBalance !== null ? startingBalance : 0,
+        settings: {
+          theme,
+          transactionMsgBehavior: localStorage.getItem('daysync_transaction_msg_behavior') || 'automatic',
+          autoBackup: localStorage.getItem('daysync_auto_backup') !== 'false',
+          weekStartDay: localStorage.getItem('daysync_week_start') || 'monday',
+          dateFormat: localStorage.getItem('daysync_date_format') || 'DD MMM YYYY',
+          confirmDelete: localStorage.getItem('daysync_confirm_delete') !== 'false',
+          activeWidgetIds: (() => {
+            try {
+              const layoutKey = `daysync_dashboard_layout_${user?.id || 'guest'}`;
+              const saved = localStorage.getItem(layoutKey);
+              if (saved) return JSON.parse(saved);
+            } catch (e) {}
+            return [];
+          })()
+        }
+      };
+
+      const jsonStr = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `daysync-backup-${todayStr}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      if (showToast) showToast('DaySync data exported successfully!', 'success');
+    } catch (err) {
+      if (showToast) showToast('Failed to export data. Please try again.', 'error');
+    }
+  };
+
+  // 2. Select File for Restore
+  const handleFileSelectForRestore = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target.result;
+        const parsed = JSON.parse(text);
+
+        if (!parsed || typeof parsed !== 'object') {
+          throw new Error('Invalid JSON format');
+        }
+
+        if (parsed.app !== 'DaySync' && !parsed.tasks && !parsed.expenses && !parsed.settings) {
+          throw new Error('Unrecognized DaySync backup structure');
+        }
+
+        setRestorePayload(parsed);
+        setShowRestoreModal(true);
+      } catch (err) {
+        if (showToast) showToast('Invalid or corrupted DaySync backup file. Please select a valid JSON backup.', 'error');
+      }
+    };
+
+    reader.readAsText(file);
+    if (e.target) e.target.value = '';
+  };
+
+  // 3. Confirm Restore Handler
+  const handleConfirmRestore = async () => {
+    if (!restorePayload) return;
+
+    try {
+      const { settings, tasks: restoredTasks, expenses: restoredExpenses, memories: restoredMemories, startingBalance: restoredBal, userProfile } = restorePayload;
+
+      // 1. Restore User Profile Avatar
+      if (userProfile && userProfile.avatar) {
+        updateUser({ avatar: userProfile.avatar });
+      }
+
+      // 2. Restore Baseline Balance
+      if (restoredBal !== undefined) {
+        updateStartingBalance(restoredBal);
+      }
+
+      // 3. Restore Settings to localStorage
+      if (settings) {
+        if (settings.theme && settings.theme !== theme) {
+          toggleTheme();
+        }
+        if (settings.transactionMsgBehavior) {
+          localStorage.setItem('daysync_transaction_msg_behavior', settings.transactionMsgBehavior);
+        }
+        if (settings.autoBackup !== undefined) {
+          localStorage.setItem('daysync_auto_backup', String(settings.autoBackup));
+        }
+        if (settings.weekStartDay) {
+          localStorage.setItem('daysync_week_start', settings.weekStartDay);
+        }
+        if (settings.dateFormat) {
+          localStorage.setItem('daysync_date_format', settings.dateFormat);
+        }
+        if (settings.confirmDelete !== undefined) {
+          localStorage.setItem('daysync_confirm_delete', String(settings.confirmDelete));
+        }
+        if (settings.activeWidgetIds && user?.id) {
+          const layoutKey = `daysync_dashboard_layout_${user.id}`;
+          localStorage.setItem(layoutKey, JSON.stringify(settings.activeWidgetIds));
+        }
+      }
+
+      // 4. Restore Tasks, Expenses, Memories to clientCache
+      if (user?.id) {
+        if (Array.isArray(restoredTasks)) clientCache.save(user.id, 'tasks', restoredTasks);
+        if (Array.isArray(restoredExpenses)) clientCache.save(user.id, 'expenses', restoredExpenses);
+        if (Array.isArray(restoredMemories)) clientCache.save(user.id, 'memories', restoredMemories);
+      }
+
+      setShowRestoreModal(false);
+      setRestorePayload(null);
+
+      if (showToast) showToast('Data restored successfully! Refreshing app...', 'success');
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (err) {
+      if (showToast) showToast('Failed to restore data. Please check the backup file.', 'error');
+    }
+  };
 
   const handleSaveStartingBalance = (e) => {
     e.preventDefault();
@@ -1014,6 +1168,35 @@ export function SettingsPage() {
               </span>
             </div>
 
+            {/* DATA BACKUP & RESTORE */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap', gap: '10px' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Export & Restore Data</div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Backup or restore your tasks, expenses, plans, habits & settings</div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={handleExportData}
+                  className="btn-secondary"
+                  style={{ fontSize: '12px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Download size={13} /> Export My Data
+                </button>
+
+                <label className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0 }}>
+                  <Upload size={13} /> Restore Data
+                  <input
+                    type="file"
+                    accept=".json,application/json"
+                    onChange={handleFileSelectForRestore}
+                    style={{ display: 'none' }}
+                    ref={restoreFileInputRef}
+                  />
+                </label>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Conversation History</div>
@@ -1450,6 +1633,20 @@ export function SettingsPage() {
           </div>
         </div>
       )}
+
+      {/* RESTORE DATA CONFIRMATION MODAL */}
+      <ConfirmationModal
+        isOpen={showRestoreModal}
+        title="Restore DaySync Data?"
+        message="This will restore your tasks, expenses, plans, habits, memories, and settings from the backup file. Existing local data will be replaced/updated."
+        confirmText="Confirm Restore"
+        cancelText="Cancel"
+        onConfirm={handleConfirmRestore}
+        onCancel={() => {
+          setShowRestoreModal(false);
+          setRestorePayload(null);
+        }}
+      />
     </div>
   );
 }
