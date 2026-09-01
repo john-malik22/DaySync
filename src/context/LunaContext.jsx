@@ -3,6 +3,7 @@ import { api, classifyApiError } from '../services/api';
 import { voice } from '../services/voice';
 import { useAuth } from './AuthContext';
 import { clientCache } from '../services/clientCache';
+import { syncQueue } from '../services/syncQueue';
 
 const LunaContext = createContext();
 
@@ -18,6 +19,10 @@ export function LunaProvider({ children }) {
   const [summaries, setSummaries] = useState([]);
   const [suggestion, setSuggestion] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Sync state tracking: 'synced' | 'offline' | 'syncing' | 'pending' | 'failed'
+  const [syncState, setSyncState] = useState(() => (typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'synced'));
+  const [pendingQueue, setPendingQueue] = useState([]);
 
   // Stale cache tracking
   const [lastSyncedAt, setLastSyncedAt] = useState({
@@ -281,40 +286,278 @@ export function LunaProvider({ children }) {
     await fetchMemories();
   };
 
-  // Task Actions
+  // Process pending offline sync queue
+  const processPendingSyncQueue = useCallback(async () => {
+    if (!userId) return;
+    const items = syncQueue.getPending(userId);
+    setPendingQueue(items);
+
+    if (items.length === 0) {
+      if (navigator.onLine) setSyncState('synced');
+      return;
+    }
+
+    if (!navigator.onLine) {
+      setSyncState('offline');
+      return;
+    }
+
+    setSyncState('syncing');
+
+    const processedIds = [];
+    let hasError = false;
+
+    for (const item of items) {
+      try {
+        if (item.type === 'CREATE_TASK') {
+          await api.createTask(item.payload);
+        } else if (item.type === 'TOGGLE_TASK') {
+          await api.updateTask(item.targetId, { completed: item.completed });
+        } else if (item.type === 'DELETE_TASK') {
+          await api.deleteTask(item.targetId);
+        } else if (item.type === 'CREATE_EXPENSE') {
+          await api.createExpense(item.payload);
+        } else if (item.type === 'UPDATE_EXPENSE') {
+          await api.updateExpense(item.targetId, item.payload);
+        } else if (item.type === 'DELETE_EXPENSE') {
+          await api.deleteExpense(item.targetId);
+        }
+        processedIds.push(item.id);
+      } catch (err) {
+        console.warn('Sync attempt failed for item:', item, err);
+        hasError = true;
+        break;
+      }
+    }
+
+    if (processedIds.length > 0) {
+      syncQueue.removeItems(userId, processedIds);
+    }
+
+    const remaining = syncQueue.getPending(userId);
+    setPendingQueue(remaining);
+
+    if (remaining.length === 0) {
+      setSyncState('synced');
+      fetchTasks();
+      fetchExpenses();
+    } else if (hasError) {
+      setSyncState('failed');
+    }
+  }, [userId, fetchTasks, fetchExpenses]);
+
+  // Handle network status changes & auto-sync
+  useEffect(() => {
+    if (userId) {
+      const remaining = syncQueue.getPending(userId);
+      setPendingQueue(remaining);
+      if (remaining.length > 0) {
+        setSyncState(!navigator.onLine ? 'offline' : 'pending');
+      }
+    }
+
+    function handleOnline() {
+      processPendingSyncQueue();
+    }
+
+    function handleOffline() {
+      setSyncState('offline');
+    }
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [userId, processPendingSyncQueue]);
+
+  // Task Actions (Offline resilient)
   const addTask = async (taskData) => {
-    const newTask = await api.createTask(taskData);
-    await fetchTasks();
-    return newTask;
+    if (!navigator.onLine) {
+      const tempId = `local_task_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const newTask = {
+        id: tempId,
+        text: taskData.text,
+        completed: false,
+        type: taskData.type || 'task',
+        dueDate: taskData.dueDate || new Date().toISOString(),
+        isLocal: true,
+        createdAt: new Date().toISOString()
+      };
+
+      setTasks(prev => [newTask, ...prev]);
+      clientCache.save(userId, 'tasks', [newTask, ...tasks]);
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'CREATE_TASK', payload: taskData, tempId });
+      setPendingQueue(updatedQueue);
+      setSyncState('pending');
+      return newTask;
+    }
+
+    try {
+      const newTask = await api.createTask(taskData);
+      await fetchTasks();
+      return newTask;
+    } catch (err) {
+      const tempId = `local_task_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const newTask = {
+        id: tempId,
+        text: taskData.text,
+        completed: false,
+        type: taskData.type || 'task',
+        dueDate: taskData.dueDate || new Date().toISOString(),
+        isLocal: true,
+        createdAt: new Date().toISOString()
+      };
+
+      setTasks(prev => [newTask, ...prev]);
+      clientCache.save(userId, 'tasks', [newTask, ...tasks]);
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'CREATE_TASK', payload: taskData, tempId });
+      setPendingQueue(updatedQueue);
+      setSyncState('failed');
+      return newTask;
+    }
   };
 
   const toggleTask = async (id, currentCompleted) => {
-    const updated = await api.updateTask(id, { completed: !currentCompleted });
-    await fetchTasks();
-    return updated;
+    const newCompleted = !currentCompleted;
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: newCompleted } : t));
+    const updatedTasks = tasks.map(t => t.id === id ? { ...t, completed: newCompleted } : t);
+    clientCache.save(userId, 'tasks', updatedTasks);
+
+    if (!navigator.onLine || String(id).startsWith('local_')) {
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'TOGGLE_TASK', targetId: id, completed: newCompleted });
+      setPendingQueue(updatedQueue);
+      setSyncState('pending');
+      return { id, completed: newCompleted };
+    }
+
+    try {
+      const updated = await api.updateTask(id, { completed: newCompleted });
+      await fetchTasks();
+      return updated;
+    } catch (err) {
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'TOGGLE_TASK', targetId: id, completed: newCompleted });
+      setPendingQueue(updatedQueue);
+      setSyncState('failed');
+      return { id, completed: newCompleted };
+    }
   };
 
   const deleteTask = async (id) => {
-    await api.deleteTask(id);
-    await fetchTasks();
+    setTasks(prev => prev.filter(t => t.id !== id));
+    const remainingTasks = tasks.filter(t => t.id !== id);
+    clientCache.save(userId, 'tasks', remainingTasks);
+
+    if (!navigator.onLine || String(id).startsWith('local_')) {
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'DELETE_TASK', targetId: id });
+      setPendingQueue(updatedQueue);
+      setSyncState('pending');
+      return;
+    }
+
+    try {
+      await api.deleteTask(id);
+      await fetchTasks();
+    } catch (err) {
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'DELETE_TASK', targetId: id });
+      setPendingQueue(updatedQueue);
+      setSyncState('failed');
+    }
   };
 
-  // Expense Actions
+  // Expense Actions (Offline resilient)
   const addExpense = async (expData) => {
-    const newExp = await api.createExpense(expData);
-    await fetchExpenses();
-    return newExp;
+    if (!navigator.onLine) {
+      const tempId = `local_exp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const newExp = {
+        id: tempId,
+        amount: Number(expData.amount),
+        type: expData.type || 'EXPENSE',
+        category: expData.category || 'General',
+        note: expData.note || '',
+        date: expData.date || new Date().toISOString(),
+        isLocal: true
+      };
+
+      setExpenses(prev => [newExp, ...prev]);
+      clientCache.save(userId, 'expenses', [newExp, ...expenses]);
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'CREATE_EXPENSE', payload: expData, tempId });
+      setPendingQueue(updatedQueue);
+      setSyncState('pending');
+      return newExp;
+    }
+
+    try {
+      const newExp = await api.createExpense(expData);
+      await fetchExpenses();
+      return newExp;
+    } catch (err) {
+      const tempId = `local_exp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const newExp = {
+        id: tempId,
+        amount: Number(expData.amount),
+        type: expData.type || 'EXPENSE',
+        category: expData.category || 'General',
+        note: expData.note || '',
+        date: expData.date || new Date().toISOString(),
+        isLocal: true
+      };
+
+      setExpenses(prev => [newExp, ...prev]);
+      clientCache.save(userId, 'expenses', [newExp, ...expenses]);
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'CREATE_EXPENSE', payload: expData, tempId });
+      setPendingQueue(updatedQueue);
+      setSyncState('failed');
+      return newExp;
+    }
   };
 
   const updateExpense = async (id, expData) => {
-    const updated = await api.updateExpense(id, expData);
-    await fetchExpenses();
-    return updated;
+    setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...expData } : e));
+    const updatedExps = expenses.map(e => e.id === id ? { ...e, ...expData } : e);
+    clientCache.save(userId, 'expenses', updatedExps);
+
+    if (!navigator.onLine || String(id).startsWith('local_')) {
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'UPDATE_EXPENSE', targetId: id, payload: expData });
+      setPendingQueue(updatedQueue);
+      setSyncState('pending');
+      return { id, ...expData };
+    }
+
+    try {
+      const updated = await api.updateExpense(id, expData);
+      await fetchExpenses();
+      return updated;
+    } catch (err) {
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'UPDATE_EXPENSE', targetId: id, payload: expData });
+      setPendingQueue(updatedQueue);
+      setSyncState('failed');
+      return { id, ...expData };
+    }
   };
 
   const deleteExpense = async (id) => {
-    await api.deleteExpense(id);
-    await fetchExpenses();
+    setExpenses(prev => prev.filter(e => e.id !== id));
+    const remaining = expenses.filter(e => e.id !== id);
+    clientCache.save(userId, 'expenses', remaining);
+
+    if (!navigator.onLine || String(id).startsWith('local_')) {
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'DELETE_EXPENSE', targetId: id });
+      setPendingQueue(updatedQueue);
+      setSyncState('pending');
+      return;
+    }
+
+    try {
+      await api.deleteExpense(id);
+      await fetchExpenses();
+    } catch (err) {
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'DELETE_EXPENSE', targetId: id });
+      setPendingQueue(updatedQueue);
+      setSyncState('failed');
+    }
   };
 
   return (
@@ -348,6 +591,9 @@ export function LunaProvider({ children }) {
         addExpense,
         updateExpense,
         deleteExpense,
+        syncState,
+        pendingQueueCount: pendingQueue.length,
+        retrySync: processPendingSyncQueue,
         fetchTasks,
         fetchExpenses,
         fetchMemories,
