@@ -155,28 +155,6 @@ export const WIDGET_CATALOG = [
     defaultSize: 'S',
     requiredPlan: 'free'
   },
-  // 12. Habit Streak
-  {
-    id: 'habit_streak',
-    title: "Habit Streak",
-    description: "View your longest active habit completion streak.",
-    category: "HABITS",
-    icon: Flame,
-    supportedSizes: ['S', 'W', 'T', 'L'],
-    defaultSize: 'S',
-    requiredPlan: 'free'
-  },
-  // 13. Habits Progress
-  {
-    id: 'today_habits',
-    title: "Habits Progress",
-    description: "Track your active daily habits and streak.",
-    category: "HABITS",
-    icon: Activity,
-    supportedSizes: ['S', 'W', 'T', 'L'],
-    defaultSize: 'W',
-    requiredPlan: 'free'
-  },
   // 14. Upcoming Birthday
   {
     id: 'birthdays_meetings',
@@ -236,7 +214,7 @@ export const WIDGET_CATALOG = [
   {
     id: 'daily_progress',
     title: "Daily Progress",
-    description: "Overall completion progress for today's tasks & habits.",
+    description: "Overall completion progress for today's tasks.",
     category: "CORE",
     icon: Target,
     supportedSizes: ['S', 'W', 'T', 'L'],

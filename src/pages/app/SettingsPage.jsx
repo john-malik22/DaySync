@@ -1257,7 +1257,7 @@ export function SettingsPage() {
             <Info size={18} color="var(--accent-primary)" /> About DaySync & Help
           </h3>
           <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', margin: '0 0 10px 0', lineHeight: '1.5' }}>
-            DaySync brings your tasks, expenses, plans, habits, reminders, shared splits, and Luna assistance together in one everyday workspace.
+            DaySync brings your tasks, expenses, plans, reminders, shared splits, and Luna assistance together in one everyday workspace.
           </p>
           <div style={{ display: 'flex', gap: '16px', fontSize: '11.5px', color: 'var(--text-secondary)', flexWrap: 'wrap', marginBottom: '10px' }}>
             <div>Version: <strong style={{ color: 'var(--text-primary)' }}>2.0.0</strong></div>

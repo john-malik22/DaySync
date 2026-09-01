@@ -1245,7 +1245,7 @@ option {
 @media (max-width: 768px) {
   .mobile-bottom-nav {
     display: grid !important;
-    grid-template-columns: repeat(7, 1fr) !important;
+    grid-template-columns: repeat(6, 1fr) !important;
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;

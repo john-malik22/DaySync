@@ -1301,175 +1301,6 @@ export function UnreadNotificationsWidget({ widgetSize = 'S' }) {
   );
 }
 
-// 12. HABIT PROGRESS (S, W, T, L)
-export function HabitTrackerWidget({ widgetSize = 'S' }) {
-  const { tasks } = useLuna();
-  const habits = (tasks || []).filter(t => t.category === 'HABIT' || t.isHabit);
-  const completedCount = habits.filter(h => h.completed).length;
-  const completionPct = habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0;
-
-  if (widgetSize === 'S') {
-    return (
-      <SmallWidgetWrapper label="HABIT PROGRESS" bgTint="rgba(16, 185, 129, 0.08)" borderTint="rgba(16, 185, 129, 0.18)">
-        <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent-success, #10B981)', textAlign: 'center' }}>
-          {completionPct}%
-        </div>
-      </SmallWidgetWrapper>
-    );
-  }
-
-  if (widgetSize === 'W') {
-    const items = habits.slice(0, 3);
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-        <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-          ACTIVE HABIT PROGRESS
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
-          {items.length > 0 ? items.map((h, idx) => (
-            <div key={h.id || idx} style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.title}</div>
-              <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--accent-success)', marginTop: '2px' }}>{h.completed ? '100%' : '0%'}</div>
-            </div>
-          )) : (
-            <div style={{ gridColumn: 'span 3', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
-              No active habits
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  if (widgetSize === 'T') {
-    const items = habits.slice(0, 4);
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-        <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-          HABIT COMPLETION LIST
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
-          {items.length > 0 ? items.map((h, idx) => (
-            <div key={h.id || idx} style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '600' }}>{h.title}</span>
-              <strong style={{ fontSize: '12px', color: 'var(--accent-success)' }}>{h.completed ? 'Done' : 'Pending'}</strong>
-            </div>
-          )) : (
-            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
-              No active habits
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  const items = habits.slice(0, 5);
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-      <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-        COMPLETE HABIT OVERVIEW
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
-        {items.length > 0 ? items.map((h, idx) => (
-          <div key={h.id || idx} style={{ background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.16)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{h.title}</div>
-              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Status: {h.completed ? 'Completed Today' : 'Pending'}</div>
-            </div>
-            <strong style={{ fontSize: '13px', color: 'var(--accent-success)' }}>{h.completed ? '100%' : '0%'}</strong>
-          </div>
-        )) : (
-          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
-            No active habits
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// 13. HABIT STREAK (S, W, T, L)
-export function HabitStreakWidget({ widgetSize = 'S' }) {
-  const streakDays = parseInt(localStorage.getItem('daysync_habit_streak') || '10', 10);
-
-  if (widgetSize === 'S') {
-    return (
-      <SmallWidgetWrapper label="HABIT STREAK" bgTint="rgba(249, 115, 22, 0.08)" borderTint="rgba(249, 115, 22, 0.18)">
-        <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--accent-warning, #F97316)', textAlign: 'center' }}>
-          {streakDays} Days
-        </div>
-      </SmallWidgetWrapper>
-    );
-  }
-
-  if (widgetSize === 'W') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-        <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-          TOP STREAKS
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
-          <div style={{ background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>CURRENT</div>
-            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-warning)' }}>{streakDays} Days</div>
-          </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>BEST STREAK</div>
-            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>{streakDays + 4} Days</div>
-          </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>GOAL</div>
-            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>30 Days</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (widgetSize === 'T') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-        <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-          STREAK BREAKDOWN
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
-          <div style={{ background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Current Active Streak</span>
-            <strong style={{ fontSize: '15px', color: 'var(--accent-warning)' }}>{streakDays} Days</strong>
-          </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>All-Time Best</span>
-            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>{streakDays + 4} Days</strong>
-          </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Started Date</span>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Aug 1, 2026</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-      <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-        COMPLETE STREAK OVERVIEW
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', margin: '8px 0' }}>
-        <div style={{ background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)', borderRadius: '6px', padding: '10px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Current Streak</div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-warning)' }}>{streakDays} Days</div>
-        </div>
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '10px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Best Streak</div>
-          <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>{streakDays + 4} Days</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // 14. TODAY'S PROGRESS (S, W, T, L)
 export function DailyProgressWidget({ widgetSize = 'S' }) {
   const { tasks } = useLuna();
@@ -1494,7 +1325,7 @@ export function DailyProgressWidget({ widgetSize = 'S' }) {
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           PROGRESS BREAKDOWN
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
           <div style={{ background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>OVERALL</div>
             <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-primary)' }}>{progressPct}%</div>
@@ -1502,10 +1333,6 @@ export function DailyProgressWidget({ widgetSize = 'S' }) {
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>TASKS</div>
             <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>{doneCount}/{todayTasks.length || 1}</div>
-          </div>
-          <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>HABITS</div>
-            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--accent-success)' }}>100%</div>
           </div>
         </div>
       </div>
@@ -1526,10 +1353,6 @@ export function DailyProgressWidget({ widgetSize = 'S' }) {
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Tasks Completed</span>
             <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>{doneCount} / {todayTasks.length}</strong>
-          </div>
-          <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Habits Completed</span>
-            <strong style={{ fontSize: '14px', color: 'var(--accent-success)' }}>All Done</strong>
           </div>
         </div>
       </div>
@@ -2150,13 +1973,6 @@ export function renderWidgetById(id, widgetSize) {
     case 'unread_notifications':
     case 'notifications_widget':
       return <WidgetErrorBoundary title="Notifications"><UnreadNotificationsWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
-    case 'today_habits':
-    case 'weekly_habits':
-    case 'habit_tracker':
-      return <WidgetErrorBoundary title="Habit Progress"><HabitTrackerWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
-    case 'habit_streak':
-    case 'savings_goal':
-      return <WidgetErrorBoundary title="Habit Streak"><HabitStreakWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;
     case 'daily_progress':
     case 'weekly_activity':
       return <WidgetErrorBoundary title="Daily Progress"><DailyProgressWidget widgetSize={widgetSize} /></WidgetErrorBoundary>;

@@ -23,7 +23,6 @@ import { ExpensesPage } from './pages/app/ExpensesPage';
 import { PlansPage } from './pages/app/PlansPage';
 import { SplitsPage } from './pages/app/SplitsPage';
 import { TaskPage } from './pages/app/TaskPage';
-import { HabitsPage } from './pages/app/HabitsPage';
 import { SettingsPage } from './pages/app/SettingsPage';
 
 // Sequence of main mobile app pages for horizontal swipe navigation
@@ -33,7 +32,6 @@ const MOBILE_NAV_SEQUENCE = [
   '/app/expenses',
   '/app/plans',
   '/app/splits',
-  '/app/habits',
   '/app/chat',
   '/app/settings'
 ];
@@ -160,7 +158,6 @@ export const STARTUP_ROUTE_MAP = {
   expenses: '/app/expenses',
   plans: '/app/plans',
   splits: '/app/splits',
-  habits: '/app/habits',
   chat: '/app/chat',
   settings: '/app/settings'
 };
@@ -212,7 +209,6 @@ export function App() {
                       <Route path="plans" element={<PlansPage />} />
                       <Route path="splits" element={<SplitsPage />} />
                       <Route path="splits/:id" element={<SplitsPage />} />
-                      <Route path="habits" element={<HabitsPage />} />
                       <Route path="chat" element={<ChatPage />} />
                       <Route path="settings" element={<SettingsPage />} />
                       <Route path="*" element={<Navigate to="/app/dashboard" replace />} />

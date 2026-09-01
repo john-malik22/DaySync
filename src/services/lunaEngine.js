@@ -120,7 +120,7 @@ export function evaluateContextualLunaSuggestion({
     };
   }
 
-  // 7. Priority 7: PROGRESS / HABIT ENCOURAGEMENT
+  // 7. Priority 7: PROGRESS ENCOURAGEMENT
   const completedToday = (tasks || []).filter(t => t.completed && t.dueDate === todayStr).length;
   if (completedToday > 0) {
     return {

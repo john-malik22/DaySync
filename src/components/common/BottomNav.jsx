@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, CreditCard, Repeat, Users, Activity, User } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, CreditCard, Repeat, Users, User } from 'lucide-react';
 
 export function BottomNav() {
   const location = useLocation();
@@ -12,7 +12,6 @@ export function BottomNav() {
     { label: 'Expenses', path: '/app/expenses', icon: CreditCard },
     { label: 'Plans', path: '/app/plans', icon: Repeat },
     { label: 'Splits', path: '/app/splits', icon: Users },
-    { label: 'Habits', path: '/app/habits', icon: Activity },
     { label: 'Profile', path: '/app/settings', icon: User },
   ];
 
