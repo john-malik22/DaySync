@@ -793,9 +793,9 @@ export function SettingsPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
         {/* 1. PROFILE SECTION */}
-        <div ref={accountRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '16px 0' }}>
-          <div style={{ position: 'relative', marginBottom: '10px' }}>
-            <UserAvatar avatarId={user?.avatar} name={user?.name} size={84} />
+        <div ref={accountRef} className="profile-section-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '12px 0' }}>
+          <div style={{ position: 'relative', marginBottom: '8px' }}>
+            <UserAvatar avatarId={user?.avatar} name={user?.name} size={76} />
             <button
               type="button"
               onClick={() => setIsEditingAvatar(!isEditingAvatar)}
@@ -803,36 +803,34 @@ export function SettingsPage() {
                 position: 'absolute', bottom: 0, right: 0,
                 background: 'var(--accent-primary)', color: '#FFFFFF',
                 border: '2px solid var(--bg-primary, #18181B)', borderRadius: '50%',
-                width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', padding: 0
               }}
               title="Change Cartoon Avatar"
             >
-              <Edit2 size={12} />
+              <Edit2 size={11} />
             </button>
           </div>
 
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>
             {user?.name || 'User'}
           </h2>
-          <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px', marginBottom: '12px' }}>
+          <div style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginTop: '2px', marginBottom: '12px' }}>
             {user?.email || 'user@daysync.app'}
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '440px', width: '100%' }}>
-            <button type="button" onClick={() => setIsEditingAvatar(!isEditingAvatar)} className="btn-secondary" style={{ fontSize: '12px', padding: '7px 12px', flex: '1 1 130px', justifyContent: 'center' }}>
-              <Sparkles size={13} /> {isEditingAvatar ? 'Close Avatar Editor' : 'Choose Character'}
+          {/* 2x2 Action Buttons Grid */}
+          <div className="profile-actions-grid-2">
+            <button type="button" onClick={() => setIsEditingAvatar(!isEditingAvatar)} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
+              <Sparkles size={13} /> {isEditingAvatar ? 'Close Avatar' : 'Choose Character'}
             </button>
-            <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '12px', padding: '7px 12px', flex: '1 1 110px', justifyContent: 'center' }}>
+            <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
               <Edit2 size={13} /> Edit Name
             </button>
-            <button type="button" onClick={handleOpenChangeEmail} className="btn-secondary" style={{ fontSize: '12px', padding: '7px 12px', flex: '1 1 110px', justifyContent: 'center' }}>
+            <button type="button" onClick={handleOpenChangeEmail} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
               <Mail size={13} /> Edit Email
             </button>
-          </div>
-
-          <div style={{ marginTop: '8px', maxWidth: '440px', width: '100%' }}>
-            <button type="button" onClick={handleOpenChangePassword} className="btn-secondary" style={{ fontSize: '12px', padding: '7px 12px', width: '100%', justifyContent: 'center' }}>
+            <button type="button" onClick={handleOpenChangePassword} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
               <Key size={13} /> Change Password
             </button>
           </div>
