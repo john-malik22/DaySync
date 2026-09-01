@@ -12,6 +12,9 @@ export function ToastProvider({ children }) {
   }, []);
 
   const showToast = useCallback((message, type = 'info') => {
+    // Suppress temporary action/activity success popups ('success' / 'info') while preserving 'error' and 'meme' toasts
+    if (type === 'success' || type === 'info') return;
+
     const id = `toast_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     setToasts(prev => [...prev.slice(-4), { id, message, type }]);
 
