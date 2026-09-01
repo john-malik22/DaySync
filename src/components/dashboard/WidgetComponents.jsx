@@ -1914,11 +1914,19 @@ export function QuickAddWidget({ widgetSize = 'S' }) {
 
 // 19. LUNA FOCUS (S, W, T, L)
 export function LunaSuggestionWidget({ widgetSize = 'S' }) {
+  const { suggestion, tasks, expenses, startingBalance } = useLuna();
+  
+  const activeSuggestion = suggestion || evaluateContextualLunaSuggestion({ tasks, expenses, startingBalance });
+  const text = activeSuggestion.suggestion || 'Everything looks under control today. Keep the momentum going.';
+  const title = activeSuggestion.title || 'Luna Insight';
+  const actionText = activeSuggestion.actionText || 'Explore';
+  const actionUrl = activeSuggestion.actionUrl || '/app/dashboard';
+
   if (widgetSize === 'S') {
     return (
       <SmallWidgetWrapper label="LUNA FOCUS" labelColor="var(--accent-primary)" bgTint="rgba(168, 85, 247, 0.08)" borderTint="rgba(168, 85, 247, 0.18)">
         <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-          Focus on your top priority today.
+          {text}
         </div>
       </SmallWidgetWrapper>
     );
@@ -1931,12 +1939,14 @@ export function LunaSuggestionWidget({ widgetSize = 'S' }) {
           LUNA INSIGHT
         </div>
         <div style={{ background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.18)', borderRadius: '6px', padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', margin: '8px 0' }}>
-          <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Focus on your top priority task today.</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Completing high priority items early keeps your day smooth.</div>
+          <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{title}</div>
+          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px', lineHeight: '1.3' }}>{text}</div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
           <span>AI Companion: <strong>Active</strong></span>
-          <span>Action: <strong>Review Tasks</strong></span>
+          <Link to={actionUrl} style={{ color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: '700' }}>
+            {actionText} →
+          </Link>
         </div>
       </div>
     );
@@ -1951,16 +1961,15 @@ export function LunaSuggestionWidget({ widgetSize = 'S' }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
           <div style={{ background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.18)', borderRadius: '6px', padding: '10px 12px' }}>
             <div style={{ fontSize: '11px', color: 'var(--accent-primary)', fontWeight: '700' }}>MAIN SUGGESTION</div>
-            <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>Focus on top priority tasks</div>
+            <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>{title}</div>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '10px 12px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>WHY IT MATTERS</div>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>Prevents task accumulation & boosts daily streak.</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>LUNA RECOMMENDATION</div>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-primary)', marginTop: '2px' }}>{text}</div>
           </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '10px 12px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--accent-success)', fontWeight: '700' }}>SUGGESTED ACTION</div>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-primary)', marginTop: '2px' }}>Complete High Priority Tasks</div>
-          </div>
+          <Link to={actionUrl} className="btn-primary" style={{ fontSize: '11.5px', padding: '8px', textDecoration: 'none', justifyContent: 'center', borderRadius: '6px' }}>
+            {actionText}
+          </Link>
         </div>
       </div>
     );
@@ -1972,18 +1981,17 @@ export function LunaSuggestionWidget({ widgetSize = 'S' }) {
         COMPLETE LUNA AI CONTEXTUAL INSIGHT
       </div>
       <div style={{ background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.18)', borderRadius: '6px', padding: '12px', margin: '8px 0' }}>
-        <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Daily Focus Recommendation</div>
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Focus on your top priority task today. Completing high-priority items keeps your DaySync progress high.</div>
+        <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>{title}</div>
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', lineHeight: '1.4' }}>{text}</div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '4px' }}>
         <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Reason</div>
-          <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-primary)' }}>Streak Optimization</div>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Status</div>
+          <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--accent-success)' }}>Context Synchronized</div>
         </div>
-        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Suggested Action</div>
-          <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--accent-success)' }}>Review Tasks</div>
-        </div>
+        <Link to={actionUrl} className="btn-primary" style={{ fontSize: '11.5px', padding: '8px 10px', textDecoration: 'none', justifyContent: 'center', borderRadius: '6px', display: 'flex', alignItems: 'center' }}>
+          {actionText}
+        </Link>
       </div>
     </div>
   );

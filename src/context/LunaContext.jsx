@@ -4,6 +4,7 @@ import { voice } from '../services/voice';
 import { useAuth } from './AuthContext';
 import { clientCache } from '../services/clientCache';
 import { syncQueue } from '../services/syncQueue';
+import { evaluateContextualLunaSuggestion } from '../services/lunaEngine';
 
 const LunaContext = createContext();
 
@@ -208,15 +209,29 @@ export function LunaProvider({ children }) {
   const fetchSuggestion = useCallback(async () => {
     setResourceLoading(prev => ({ ...prev, suggestion: true }));
     try {
-      const data = await api.getCurrentSuggestion();
-      setSuggestion(data);
+      const computed = evaluateContextualLunaSuggestion({
+        tasks,
+        expenses,
+        startingBalance
+      });
+      setSuggestion(computed);
       setErrors(prev => ({ ...prev, suggestion: null }));
     } catch (err) {
-      setErrors(prev => ({ ...prev, suggestion: classifyApiError(err) }));
+      setErrors(prev => ({ ...prev, suggestion: null }));
     } finally {
       setResourceLoading(prev => ({ ...prev, suggestion: false }));
     }
-  }, []);
+  }, [tasks, expenses, startingBalance]);
+
+  // Dynamically re-evaluate Luna suggestion whenever context tasks or expenses update
+  useEffect(() => {
+    const computed = evaluateContextualLunaSuggestion({
+      tasks,
+      expenses,
+      startingBalance
+    });
+    setSuggestion(computed);
+  }, [tasks, expenses, startingBalance]);
 
   const fetchAllData = useCallback(async () => {
     setResourceLoading(prev => ({ ...prev, initial: true }));
