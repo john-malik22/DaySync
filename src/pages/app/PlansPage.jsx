@@ -156,7 +156,7 @@ export function PlansPage() {
 
           <div style={{ padding: '0 4px' }}>
             <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '700', textTransform: 'uppercase' }}>
-              ENDING
+              ENDING SOON
             </span>
             <strong className="plans-summary-value" style={{ fontSize: '1.25rem', fontWeight: '800', color: endingSoonCount > 0 ? 'var(--accent-warning)' : 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
               {endingSoonCount}
