@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { api, classifyApiError } from '../services/api';
 import { voice } from '../services/voice';
 import { useAuth } from './AuthContext';
