@@ -4,6 +4,7 @@ import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
 import { calculateEndDate, parseDuration, formatHumanDate } from '../../services/dateUtils';
 import { useFormDraft } from '../../hooks/useFormDraft';
+import { handleMobileInputFocus } from '../../utils/mobileKeyboard';
 
 const EXPENSE_CATEGORIES = [
   { value: 'Recharges', label: '📱 Recharge', ariaLabel: 'Recharge category' },
@@ -292,6 +293,7 @@ export function ExpenseForm({ onSuccess }) {
             placeholder="0.00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
+            onFocus={handleMobileInputFocus}
             disabled={isSubmitting}
             style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
             required
@@ -304,6 +306,7 @@ export function ExpenseForm({ onSuccess }) {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
+            onFocus={handleMobileInputFocus}
             disabled={isSubmitting}
             style={{ width: '100%', minHeight: '36px', fontSize: '12px' }}
           >
@@ -320,6 +323,7 @@ export function ExpenseForm({ onSuccess }) {
             placeholder="e.g. Jio recharge, Netflix"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            onFocus={handleMobileInputFocus}
             disabled={isSubmitting}
             style={{ width: '100%', minHeight: '36px', fontSize: '12px' }}
           />

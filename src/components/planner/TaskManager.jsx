@@ -6,6 +6,7 @@ import { ErrorState, StaleIndicator } from '../common/ErrorState';
 import { formatDate } from '../dashboard/WidgetComponents';
 import { useFormDraft } from '../../hooks/useFormDraft';
 import { EmptyState } from '../common/EmptyState';
+import { handleMobileInputFocus } from '../../utils/mobileKeyboard';
 
 export function TaskManager({ searchFilter }) {
   const { tasks, addTask, updateTask, toggleTask, deleteTask, errors, resourceLoading, fetchTasks, isFromCache, lastSyncedAt } = useLuna();
@@ -276,6 +277,7 @@ export function TaskManager({ searchFilter }) {
                       placeholder="Add new task or reminder..."
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
+                      onFocus={handleMobileInputFocus}
                       disabled={isSubmitting}
                       style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
                       required

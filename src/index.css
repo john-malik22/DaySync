@@ -1355,6 +1355,39 @@ option {
   }
 }
 
+/* Mobile Keyboard & Form Polish Rules (<=768px only) */
+@media (max-width: 768px) {
+  body, .page-container, .main-content-area, .glass-card, .modal-content {
+    overflow-x: hidden !important;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  input[type="time"],
+  select,
+  textarea {
+    font-size: 16px !important;
+    min-height: 42px !important;
+    scroll-margin-top: 70px !important;
+    scroll-margin-bottom: 90px !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button[type="submit"],
+  .btn-primary,
+  .btn-secondary {
+    min-height: 44px !important;
+    touch-action: manipulation;
+  }
+
+  form {
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+  }
+}
+
 
 
 
