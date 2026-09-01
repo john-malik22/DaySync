@@ -912,8 +912,22 @@ option {
   }
 
   .expenses-history-card {
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
     margin-bottom: calc(28px + env(safe-area-inset-bottom, 0px)) !important;
     overflow: visible !important;
+    overflow-y: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .expenses-history-list {
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
     display: flex !important;
     flex-direction: column !important;
   }

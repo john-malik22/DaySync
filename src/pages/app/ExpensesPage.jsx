@@ -228,7 +228,7 @@ export function ExpensesPage() {
             compact
           />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+          <div className="expenses-history-list" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
             {filteredExpenses.map((exp) => {
               const isEditing = editingId === exp.id;
               const isIncome = exp.type === 'income';
