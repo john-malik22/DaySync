@@ -134,31 +134,31 @@ export function PlansPage() {
       <PageHeaderRow title="PLANS & COMMITMENTS" onSearch={setSearch} />
 
       {/* Combined 3-Column Plan Summary Stat Card */}
-      <div className="glass-card" style={{ padding: '14px 16px', margin: '8px 0 16px 0' }}>
+      <div className="glass-card plans-summary-card" style={{ padding: '12px 14px', margin: '8px 0 16px 0' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', textAlign: 'center', alignItems: 'center' }}>
-          <div style={{ padding: '0 8px', borderRight: '1px solid var(--border-color)' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '700', textTransform: 'uppercase' }}>
-              Active
+          <div style={{ padding: '0 4px', borderRight: '1px solid var(--border-color)' }}>
+            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '700', textTransform: 'uppercase' }}>
+              ACTIVE
             </span>
-            <strong style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
+            <strong className="plans-summary-value" style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
               {plans.length}
             </strong>
           </div>
 
-          <div style={{ padding: '0 8px', borderRight: '1px solid var(--border-color)' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '700', textTransform: 'uppercase' }}>
-              Monthly
+          <div style={{ padding: '0 4px', borderRight: '1px solid var(--border-color)' }}>
+            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '700', textTransform: 'uppercase' }}>
+              MONTHLY
             </span>
-            <strong style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--accent-primary)', display: 'block', lineHeight: '1.2' }}>
+            <strong className="plans-summary-value" style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--accent-primary)', display: 'block', lineHeight: '1.2' }}>
               ₹{Math.round(totalMonthlyPlanCost).toLocaleString('en-IN')}
             </strong>
           </div>
 
-          <div style={{ padding: '0 8px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '700', textTransform: 'uppercase' }}>
-              Ending Soon
+          <div style={{ padding: '0 4px' }}>
+            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '700', textTransform: 'uppercase' }}>
+              ENDING
             </span>
-            <strong style={{ fontSize: '1.3rem', fontWeight: '800', color: endingSoonCount > 0 ? 'var(--accent-warning)' : 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
+            <strong className="plans-summary-value" style={{ fontSize: '1.25rem', fontWeight: '800', color: endingSoonCount > 0 ? 'var(--accent-warning)' : 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
               {endingSoonCount}
             </strong>
           </div>

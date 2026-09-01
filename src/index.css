@@ -846,6 +846,26 @@ option {
   }
 }
 
+/* Mobile Plans Page Summary Card Polish (<=768px only) */
+@media (max-width: 768px) {
+  .plans-summary-card {
+    padding: 8px 10px !important;
+    margin: 2px 0 10px 0 !important;
+    border-radius: 10px !important;
+  }
+
+  .plans-summary-label {
+    font-size: 9.5px !important;
+    margin-bottom: 2px !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .plans-summary-value {
+    font-size: 1rem !important;
+    line-height: 1.15 !important;
+  }
+}
+
 /* Horizontal Scroll Container */
 .scroll-row {
   display: flex;
