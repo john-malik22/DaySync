@@ -1,24 +1,24 @@
 import React from 'react';
-import { Menu } from 'lucide-react';
-import { useLuna } from '../../context/LunaContext';
+import { useNavigate } from 'react-router-dom';
+import { Sparkles } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 
 export function PageHeaderRow({ title, titleStyle }) {
-  const { toggleSidebar } = useLuna();
+  const navigate = useNavigate();
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 'var(--space-md)' }}>
       <div className="page-header-row">
-        {/* Left Side: Mobile Hamburger & Page Title */}
+        {/* Left Side: Mobile Luna Chat Button & Page Title */}
         <div className="page-header-left">
           <button
             type="button"
-            onClick={toggleSidebar}
-            className="mobile-hamburger-btn btn-secondary"
-            title="Open Navigation"
-            aria-label="Open Navigation"
+            onClick={() => navigate('/app/chat')}
+            className="mobile-luna-chat-btn btn-secondary"
+            title="Open Luna Chat"
+            aria-label="Open Luna Chat"
           >
-            <Menu size={18} />
+            <Sparkles size={18} color="var(--accent-primary)" />
           </button>
 
           <h1 className="page-header-title" style={titleStyle}>

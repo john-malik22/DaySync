@@ -577,7 +577,7 @@ option {
 
 /* Mobile Navigation Drawer & Icon Rail (< 768px) */
 @media (max-width: 767px) {
-  .mobile-hamburger-btn {
+  .mobile-luna-chat-btn, .mobile-hamburger-btn {
     display: inline-flex !important;
   }
 
@@ -585,46 +585,10 @@ option {
     display: none !important;
   }
 
-  .sidebar-container .sidebar-header {
-    display: none !important;
-  }
-
+  /* Completely remove mobile sidebar navigation */
+  .sidebar-container,
   .sidebar-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    z-index: 999;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 220ms ease;
-  }
-
-  .sidebar-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .sidebar-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    height: 100vh;
-    width: 68px !important;
-    padding: 16px 8px !important;
-    z-index: 1000;
-    transform: translateX(-100%);
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .sidebar-container.mobile-open {
-    transform: translateX(0);
+    display: none !important;
   }
 
   .sidebar-container .sidebar-text,
@@ -707,6 +671,7 @@ option {
     width: 100%;
   }
 
+  .mobile-luna-chat-btn,
   .mobile-hamburger-btn {
     display: inline-flex !important;
     flex-shrink: 0 !important;
@@ -1280,15 +1245,15 @@ option {
 @media (max-width: 768px) {
   .mobile-bottom-nav {
     display: grid !important;
-    grid-template-columns: repeat(5, 1fr) !important;
+    grid-template-columns: repeat(7, 1fr) !important;
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
-    height: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
-    padding-top: 6px !important;
-    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+    height: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-top: 4px !important;
+    padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)) !important;
     background: var(--bg-card) !important;
     border-top: 1px solid var(--border-color) !important;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08) !important;
@@ -1298,7 +1263,7 @@ option {
 
   /* Prevent bottom nav from hiding page content on mobile */
   .main-content-area {
-    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   /* Hide bottom nav when soft keyboard opens on mobile */
@@ -1329,16 +1294,20 @@ option {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 3px 12px !important;
+    padding: 2px 6px !important;
     border-radius: var(--radius-full) !important;
     transition: all 0.15s ease !important;
   }
 
   .bottom-nav-label {
-    font-size: 10.5px !important;
+    font-size: clamp(8px, 2.3vw, 10px) !important;
     font-weight: 600 !important;
-    margin-top: 2px !important;
-    letter-spacing: -0.1px !important;
+    margin-top: 1px !important;
+    letter-spacing: -0.2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
   }
 
   .bottom-nav-item.active {
