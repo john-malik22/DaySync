@@ -301,7 +301,10 @@ export function LunaProvider({ children }) {
     await fetchMemories();
   };
 
-  // Process pending offline sync queue
+  const retryCount = useRef(0);
+  const backoffTimeoutRef = useRef(null);
+
+  // Process pending offline sync queue with Exponential Backoff
   const processPendingSyncQueue = useCallback(async () => {
     if (!userId) return;
     const items = syncQueue.getPending(userId);
@@ -309,6 +312,7 @@ export function LunaProvider({ children }) {
 
     if (items.length === 0) {
       if (navigator.onLine) setSyncState('synced');
+      retryCount.current = 0;
       return;
     }
 
@@ -328,6 +332,8 @@ export function LunaProvider({ children }) {
           await api.createTask(item.payload);
         } else if (item.type === 'TOGGLE_TASK') {
           await api.updateTask(item.targetId, { completed: item.completed });
+        } else if (item.type === 'UPDATE_TASK') {
+          await api.updateTask(item.targetId, item.payload);
         } else if (item.type === 'DELETE_TASK') {
           await api.deleteTask(item.targetId);
         } else if (item.type === 'CREATE_EXPENSE') {
@@ -353,11 +359,22 @@ export function LunaProvider({ children }) {
     setPendingQueue(remaining);
 
     if (remaining.length === 0) {
+      retryCount.current = 0;
       setSyncState('synced');
       fetchTasks();
       fetchExpenses();
     } else if (hasError) {
       setSyncState('failed');
+      // Exponential Backoff Retry (3s -> 6s -> 12s -> 24s -> max 60s)
+      retryCount.current = Math.min(retryCount.current + 1, 5);
+      const delayMs = Math.min(3000 * Math.pow(2, retryCount.current - 1), 60000);
+      
+      if (backoffTimeoutRef.current) clearTimeout(backoffTimeoutRef.current);
+      backoffTimeoutRef.current = setTimeout(() => {
+        if (navigator.onLine) {
+          processPendingSyncQueue();
+        }
+      }, delayMs);
     }
   }, [userId, fetchTasks, fetchExpenses]);
 
