@@ -292,9 +292,10 @@ export function ExpenseForm({ onSuccess }) {
         </div>
       )}
 
-      {/* Row 3: Amount, Category, Description Main Fields */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', alignItems: 'center' }}>
-        <div>
+      {/* Row 3: Main Fields & Save Action Grid */}
+      <div className="expense-form-main-grid">
+        {/* Row 1 Left: AMOUNT */}
+        <div className="expense-field-amount">
           <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>AMOUNT (₹)</label>
           <input
             type="number"
@@ -309,7 +310,35 @@ export function ExpenseForm({ onSuccess }) {
           />
         </div>
 
-        <div>
+        {/* Row 1 Right: SAVE BUTTON */}
+        <div className="expense-action-save">
+          <label className="expense-save-label" style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>SAVE</label>
+          <button
+            type="submit"
+            className="btn-primary expense-save-btn"
+            disabled={isSubmitting}
+            style={{ width: '100%', minHeight: '36px', fontSize: '12px', justifyContent: 'center' }}
+          >
+            <Plus size={14} /> {isSubmitting ? 'Saving...' : addAs === 'plan' ? 'Save Plan' : addAs === 'subscription' ? 'Save Subscription' : addAs === 'recharge' ? 'Save Recharge' : 'Save Transaction'}
+          </button>
+        </div>
+
+        {/* Row 2 Left: DESCRIPTION */}
+        <div className="expense-field-description">
+          <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>DESCRIPTION</label>
+          <input
+            type="text"
+            placeholder="e.g. Jio recharge, Netflix"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onFocus={handleMobileInputFocus}
+            disabled={isSubmitting}
+            style={{ width: '100%', minHeight: '36px', fontSize: '12px' }}
+          />
+        </div>
+
+        {/* Row 2 Right: CATEGORY */}
+        <div className="expense-field-category">
           <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>CATEGORY</label>
           <select
             value={category}
@@ -322,19 +351,6 @@ export function ExpenseForm({ onSuccess }) {
               <option key={cat.value} value={cat.value}>{cat.label}</option>
             ))}
           </select>
-        </div>
-
-        <div>
-          <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>DESCRIPTION</label>
-          <input
-            type="text"
-            placeholder="e.g. Jio recharge, Netflix"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            onFocus={handleMobileInputFocus}
-            disabled={isSubmitting}
-            style={{ width: '100%', minHeight: '36px', fontSize: '12px' }}
-          />
         </div>
       </div>
 
@@ -488,16 +504,6 @@ export function ExpenseForm({ onSuccess }) {
           </div>
         </div>
       )}
-
-      {/* Save Action Button */}
-      <button
-        type="submit"
-        className="btn-primary"
-        disabled={isSubmitting}
-        style={{ width: '100%', minHeight: '36px', fontSize: '13px', justifyContent: 'center', marginTop: '2px' }}
-      >
-        <Plus size={15} /> {isSubmitting ? 'Saving...' : addAs === 'plan' ? 'Save Plan' : addAs === 'subscription' ? 'Save Subscription' : addAs === 'recharge' ? 'Save Recharge' : 'Save Transaction'}
-      </button>
     </form>
   );
 }
