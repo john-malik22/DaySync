@@ -96,7 +96,7 @@ export function ExpensesPage() {
   );
 
   return (
-    <div className="page-container">
+    <div className="page-container expenses-page-container">
       {/* Top Header Row: Page Title EXPENSES */}
       <PageHeaderRow title="EXPENSES" onSearch={setSearch} />
 
@@ -201,7 +201,7 @@ export function ExpensesPage() {
       </div>
 
       {/* HISTORY SECTION (Full-Width Transaction List) */}
-      <div className="glass-card">
+      <div className="glass-card expenses-history-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
           <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
             HISTORY ({filteredExpenses.length})

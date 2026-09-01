@@ -889,6 +889,18 @@ option {
     white-space: nowrap !important;
     box-sizing: border-box !important;
   }
+
+  /* Mobile Expenses History Visibility & Scroll Fix */
+  .expenses-page-container {
+    padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .expenses-history-card {
+    margin-bottom: calc(28px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
 }
 
 /* Horizontal Scroll Container */
