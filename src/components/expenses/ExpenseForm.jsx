@@ -31,7 +31,7 @@ const INCOME_CATEGORIES = [
 
 export function ExpenseForm({ onSuccess }) {
   const { addExpense } = useLuna();
-  const { showToast } = useToast();
+  const { showToast, showMemeReaction } = useToast();
 
   const [txType, setTxType] = useState('expense'); // 'expense' | 'income'
   const [addAs, setAddAs] = useState('transaction'); // 'transaction' | 'plan' | 'subscription' | 'recharge'
@@ -178,7 +178,15 @@ export function ExpenseForm({ onSuccess }) {
       setPhoneOrAccount('');
       setAddAs('transaction');
       clearDraft();
-      if (showToast) {
+      if (showMemeReaction) {
+        if (txType === 'income') {
+          showMemeReaction(category === 'Refunds' ? 'REFUND_RECEIVED' : 'MONEY_RECEIVED');
+        } else if (addAs !== 'transaction') {
+          showMemeReaction('PLAN_ADDED');
+        } else {
+          showMemeReaction('EXPENSE_ADDED');
+        }
+      } else if (showToast) {
         const labels = { transaction: 'Transaction', plan: 'Plan', subscription: 'Subscription', recharge: 'Recharge' };
         showToast(`${labels[addAs] || 'Item'} saved successfully.`, 'success');
       }

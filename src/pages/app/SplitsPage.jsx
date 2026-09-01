@@ -36,7 +36,7 @@ export function SplitsPage() {
   const navigate = useNavigate();
 
   const { user } = useAuth();
-  const { showToast } = useToast();
+  const { showToast, showMemeReaction } = useToast();
   const userId = user?.id;
 
   const [splits, setSplits] = useState([]);
@@ -203,7 +203,8 @@ export function SplitsPage() {
       setNewSplitName('');
       setNewSplitDesc('');
       clearSplitDraft();
-      if (showToast) showToast(`Split "${trimmedName}" created!`, 'success');
+      if (showMemeReaction) showMemeReaction('SPLIT_ADDED');
+      else if (showToast) showToast(`Split "${trimmedName}" created!`, 'success');
 
       setSplits(prev => [fullCreated, ...prev.filter(s => s.id !== fullCreated.id)]);
       handleOpenSplit(fullCreated);
@@ -294,7 +295,8 @@ export function SplitsPage() {
       setShowSettleModal(false);
       setSettleToUser('');
       setSettleAmount('');
-      if (showToast) showToast('Settlement marked as paid!', 'success');
+      if (showMemeReaction) showMemeReaction('SPLIT_SETTLED');
+      else if (showToast) showToast('Settlement marked as paid!', 'success');
       const refreshed = await api.getSplitById(selectedSplit.id).catch(() => null);
       if (refreshed) setSelectedSplit(refreshed);
       await fetchSplitsData();

@@ -10,7 +10,7 @@ import { handleMobileInputFocus } from '../../utils/mobileKeyboard';
 
 export function TaskManager({ searchFilter }) {
   const { tasks, addTask, updateTask, toggleTask, deleteTask, errors, resourceLoading, fetchTasks, isFromCache, lastSyncedAt } = useLuna();
-  const { showToast } = useToast();
+  const { showToast, showMemeReaction } = useToast();
 
   const [taskType, setTaskType] = useState('task'); // 'task' | 'birthday' | 'meeting'
   const [title, setTitle] = useState('');
@@ -84,7 +84,11 @@ export function TaskManager({ searchFilter }) {
       setRecurring('None');
       clearDraft();
 
-      if (showToast) showToast(`${taskType === 'birthday' ? 'Birthday reminder' : taskType === 'meeting' ? 'Meeting' : 'Task'} saved.`, 'success');
+      if (showMemeReaction) {
+        showMemeReaction(taskType === 'meeting' ? 'MEETING_ADDED' : taskType === 'birthday' ? 'BIRTHDAY_ADDED' : 'TASK_ADDED');
+      } else if (showToast) {
+        showToast(`${taskType === 'birthday' ? 'Birthday reminder' : taskType === 'meeting' ? 'Meeting' : 'Task'} saved.`, 'success');
+      }
     } catch (err) {
       if (showToast) showToast(err.message || 'Couldn\'t save task. Please try again.', 'error');
     } finally {
@@ -117,7 +121,16 @@ export function TaskManager({ searchFilter }) {
 
     try {
       await toggleTask(id, completed);
-      if (showToast) showToast(completed ? 'Task reopened.' : 'Task completed!', 'success');
+      const targetTask = tasks.find(t => t.id === id);
+      if (!completed) {
+        if (showMemeReaction) {
+          showMemeReaction(targetTask?.taskType === 'meeting' ? 'MEETING_COMPLETED' : 'TASK_COMPLETED');
+        } else if (showToast) {
+          showToast('Task completed!', 'success');
+        }
+      } else if (showToast) {
+        showToast('Task reopened.', 'info');
+      }
     } catch (err) {
       if (showToast) showToast('Could not update task status.', 'error');
     }
