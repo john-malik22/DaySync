@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { ErrorState, StaleIndicator } from '../common/ErrorState';
 import { formatDate } from '../dashboard/WidgetComponents';
 import { useFormDraft } from '../../hooks/useFormDraft';
+import { EmptyState } from '../common/EmptyState';
 
 export function TaskManager({ searchFilter }) {
   const { tasks, addTask, updateTask, toggleTask, deleteTask, errors, resourceLoading, fetchTasks, isFromCache, lastSyncedAt } = useLuna();
@@ -570,15 +571,12 @@ export function TaskManager({ searchFilter }) {
             Loading tasks...
           </div>
         ) : filteredTasks.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '24px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-            <CheckCircle2 size={28} color="var(--accent-primary)" style={{ opacity: 0.8 }} />
-            <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>
-              {searchFilter ? 'No matching tasks.' : 'No tasks yet.'}
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              {searchFilter ? 'Try searching with another query.' : 'Add your first task to get started.'}
-            </div>
-          </div>
+          <EmptyState
+            icon={CheckCircle2}
+            title={searchFilter ? 'No matching tasks' : 'No tasks yet'}
+            description={searchFilter ? 'Try searching with another term.' : 'Add your first task to get started.'}
+            compact
+          />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
             {filteredTasks.map((task) => {

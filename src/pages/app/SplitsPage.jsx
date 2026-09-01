@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
 import { ReactionBadge } from '../../components/common/ReactionBadge';
+import { EmptyState } from '../../components/common/EmptyState';
 import {
   Users,
   Plus,
@@ -554,33 +555,15 @@ export function SplitsPage() {
               Loading your Splits...
             </div>
           ) : splits.length === 0 ? (
-            <div className="glass-card" style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
-              <Users size={44} color="var(--accent-primary)" style={{ margin: '0 auto 12px auto', opacity: 0.7 }} />
-              <h4 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', margin: '0 0 6px 0' }}>
-                Split expenses with friends
-              </h4>
-              <p style={{ fontSize: '13px', maxWidth: '380px', margin: '0 auto 20px auto', lineHeight: '1.5' }}>
-                Create a shared Split for trips, rent, or dining out to track shared expenses and settle balances easily.
-              </p>
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateSplit(true)}
-                  className="btn-primary"
-                  style={{ padding: '10px 20px', fontSize: '13px' }}
-                >
-                  <Plus size={16} /> Create Split
-                </button>
-                <button
-                  type="button"
-                  onClick={handleOpenJoinModal}
-                  className="btn-secondary"
-                  style={{ padding: '10px 20px', fontSize: '13px' }}
-                >
-                  Join with Code
-                </button>
-              </div>
-            </div>
+            <EmptyState
+              icon={Users}
+              title="No shared splits yet"
+              description="Create a split when you share an expense."
+              actionLabel="Create Split"
+              onAction={() => setShowCreateSplit(true)}
+              actionIcon={Plus}
+              compact
+            />
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-md)' }}>
               {splits.map(split => {

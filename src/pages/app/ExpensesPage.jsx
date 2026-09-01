@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
 import { ReactionBadge } from '../../components/common/ReactionBadge';
 import { ArrowUpRight, ArrowDownRight, Wallet, Edit2, Trash2, Check, X, CreditCard } from 'lucide-react';
+import { EmptyState } from '../../components/common/EmptyState';
 
 const EXPENSE_CATEGORIES = [
   { value: 'Recharges', label: '📱 Recharge', ariaLabel: 'Recharge category' },
@@ -220,15 +221,12 @@ export function ExpensesPage() {
             Loading expenses...
           </div>
         ) : filteredExpenses.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '24px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-            <CreditCard size={28} color="var(--accent-primary)" style={{ opacity: 0.8 }} />
-            <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>
-              {search ? 'No matching transactions.' : 'No expenses recorded yet.'}
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              {search ? 'Try searching with another term.' : 'Your spending will appear here once you add an expense.'}
-            </div>
-          </div>
+          <EmptyState
+            icon={CreditCard}
+            title={search ? 'No matching transactions' : 'No expenses yet'}
+            description={search ? 'Try searching with another term.' : 'Your spending history will appear here.'}
+            compact
+          />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
             {filteredExpenses.map((exp) => {

@@ -16,6 +16,7 @@ import {
   Target
 } from 'lucide-react';
 import { useNotifications } from '../../context/NotificationContext';
+import { EmptyState } from './EmptyState';
 
 function formatRelativeTime(dateString) {
   if (!dateString) return '';
@@ -231,13 +232,12 @@ export function NotificationBell() {
                 Loading notifications...
               </div>
             ) : notifications.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--text-secondary)' }}>
-                <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'var(--color-primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px auto' }}>
-                  <Bell size={20} color="var(--color-primary)" />
-                </div>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: '600', margin: '0 0 4px 0', color: 'var(--text-primary)' }}>You're all caught up</h4>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>New notifications will appear here when something needs your attention.</p>
-              </div>
+              <EmptyState
+                icon={Bell}
+                title="You're all caught up"
+                description="New notifications will appear here."
+                compact
+              />
             ) : (
               <>
                 {/* Today Group */}

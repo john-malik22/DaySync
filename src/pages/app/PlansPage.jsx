@@ -7,6 +7,7 @@ import { ReactionBadge } from '../../components/common/ReactionBadge';
 import { calculateEndDate, formatHumanDate, parseDateComponents, parseDuration } from '../../services/dateUtils';
 import { Repeat, ArrowRight, CheckCircle2, Clock, AlertCircle, Plus } from 'lucide-react';
 import { RecurringManager } from '../../components/planner/RecurringManager';
+import { EmptyState } from '../../components/common/EmptyState';
 
 export function PlansPage() {
   const navigate = useNavigate();
@@ -207,18 +208,14 @@ export function PlansPage() {
             Loading plans...
           </div>
         ) : sortedAndFilteredPlans.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '36px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-            <Repeat size={32} color="var(--accent-primary)" style={{ opacity: 0.8 }} />
-            <div style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-primary)' }}>
-              {search || filter !== 'All' ? 'No matching plans found.' : 'No active plans recorded yet.'}
-            </div>
-            <div style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '360px' }}>
-              {search || filter !== 'All' ? 'Try adjusting your search or filters.' : 'Add your subscriptions, recharges, utilities, or warranties to track your plans.'}
-            </div>
-            <button type="button" onClick={() => navigate('/app/expenses')} className="btn-primary" style={{ marginTop: '6px', fontSize: '13px', padding: '8px 16px' }}>
-              Add a Plan
-            </button>
-          </div>
+          <EmptyState
+            icon={Repeat}
+            title={search || filter !== 'All' ? 'No matching plans' : 'No upcoming plans'}
+            description={search || filter !== 'All' ? 'Try adjusting your search or filters.' : 'Your active plans will appear here.'}
+            actionLabel={search || filter !== 'All' ? null : 'Add a Plan'}
+            onAction={search || filter !== 'All' ? null : () => navigate('/app/expenses')}
+            compact
+          />
         ) : (
           <div className="plans-desktop-grid">
             {sortedAndFilteredPlans.map(plan => {
