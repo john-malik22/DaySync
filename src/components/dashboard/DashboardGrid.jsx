@@ -143,137 +143,151 @@ export function DashboardGrid() {
   const activeWidgetIds = layout.map(w => w.id);
 
   const fullLayout = React.useMemo(() => {
-    const layoutMap = new Map((layout || []).map(item => [item.id, item]));
-    return WIDGET_CATALOG.map(catalogItem => {
-      const existing = layoutMap.get(catalogItem.id);
-      return existing ? { ...existing, size: devWidgetSize } : { id: catalogItem.id, size: devWidgetSize, visible: true };
+    const catalogMap = new Map(WIDGET_CATALOG.map(w => [w.id, w]));
+    
+    // Map user's saved layout items to include catalog definitions & devWidgetSize
+    const userItems = (layout || []).map(item => {
+      const catalogItem = catalogMap.get(item.id);
+      return {
+        ...catalogItem,
+        ...item,
+        size: devWidgetSize,
+        visible: item.visible !== false
+      };
+    }).filter(item => item.id && catalogMap.has(item.id));
+
+    // Also include any catalog widgets missing from user layout (appended at end)
+    const existingIds = new Set(userItems.map(i => i.id));
+    WIDGET_CATALOG.forEach(catalogItem => {
+      if (!existingIds.has(catalogItem.id)) {
+        userItems.push({
+          ...catalogItem,
+          id: catalogItem.id,
+          size: devWidgetSize,
+          visible: true
+        });
+      }
     });
+
+    // Filter ONLY visible widgets for the active Dashboard view
+    return userItems.filter(item => item.visible !== false);
   }, [layout, devWidgetSize]);
 
   return (
     <div className="dashboard-grid-container">
-      {/* Arrange Mode Toolbar */}
-      {isArrangeMode && (
-        <div className="glass-card animate-fade-in" style={{
-          padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexWrap: 'wrap', gap: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--accent-primary)',
-          marginBottom: '16px'
-        }}>
-          <div>
-            <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Sliders size={16} /> Arrange Dashboard
-            </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-              Drag or reorder widgets, resize cards, or add new widgets to customize your home screen.
-            </div>
+      {/* Top Controls Bar: Manage Widgets & Widget Size Switcher */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: '12px', marginBottom: '18px'
+      }}>
+        {/* Manage Widgets Button */}
+        <button
+          type="button"
+          onClick={() => setShowPicker(true)}
+          className="btn-primary"
+          style={{
+            fontSize: '12.5px', padding: '8px 16px', display: 'inline-flex',
+            alignItems: 'center', gap: '6px', fontWeight: '700', borderRadius: 'var(--radius-md)'
+          }}
+        >
+          <Sliders size={15} /> Manage Widgets ({fullLayout.length}/20)
+        </button>
+
+        {/* Global Development Size Switcher */}
+        <div
+          className="dev-widget-size-switcher"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '6px 12px',
+            background: 'var(--bg-card)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-color)',
+            boxShadow: 'var(--glass-shadow)'
+          }}
+        >
+          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+            Widget Size
+          </span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {['S', 'W', 'T', 'L'].map(sz => (
+              <button
+                key={sz}
+                type="button"
+                onClick={() => setDevWidgetSize(sz)}
+                aria-label={`Set all widgets to ${sz} size`}
+                style={{
+                  fontSize: '11.5px',
+                  fontWeight: '700',
+                  padding: '3px 9px',
+                  borderRadius: 'var(--radius-sm, 6px)',
+                  border: devWidgetSize === sz ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                  background: devWidgetSize === sz ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                  color: devWidgetSize === sz ? '#FFFFFF' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '2px'
+                }}
+              >
+                {sz}{devWidgetSize === sz ? '●' : ''}
+              </button>
+            ))}
           </div>
+        </div>
+      </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button
-              type="button"
-              onClick={() => setShowPicker(true)}
-              className="btn-primary"
-              style={{ fontSize: '12px', padding: '6px 12px' }}
-            >
-              <Plus size={14} /> Add Widget
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowResetModal(true)}
-              className="btn-secondary"
-              style={{ fontSize: '12px', padding: '6px 12px' }}
-            >
-              <RotateCcw size={14} /> Reset
-            </button>
-
-            <button
-              type="button"
-              onClick={handleDone}
-              className="btn-primary"
-              style={{ fontSize: '12px', padding: '6px 14px', background: 'var(--accent-success)', border: 'none' }}
-            >
-              <Check size={14} /> Done
-            </button>
-          </div>
+      {/* Grid of Visible Widgets */}
+      {fullLayout.length === 0 ? (
+        <div className="glass-card" style={{ padding: '40px 20px', textAlign: 'center', margin: '20px 0' }}>
+          <h4 style={{ fontSize: '1rem', color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
+            All Dashboard widgets are currently hidden
+          </h4>
+          <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+            Click Manage Widgets to enable the widgets you'd like to see.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowPicker(true)}
+            className="btn-primary"
+            style={{ fontSize: '13px', padding: '8px 18px' }}
+          >
+            <Sliders size={14} /> Manage Widgets
+          </button>
+        </div>
+      ) : (
+        <div className={`dashboard-widget-grid grid-mode-${devWidgetSize}`}>
+          {fullLayout.map((item, index) => (
+            <DashboardWidgetWrapper
+              key={item.id}
+              widgetItem={{ ...item, size: devWidgetSize }}
+              isArrangeMode={isArrangeMode}
+              isEditActive={false}
+              onEnterArrangeMode={() => {}}
+              onCloseEdit={() => {}}
+              onRemoveWidget={handleRemoveWidget}
+              onChangeWidgetSize={handleChangeWidgetSize}
+              onMoveWidget={handleMoveWidget}
+              isFirst={index === 0}
+              isLast={index === fullLayout.length - 1}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            />
+          ))}
         </div>
       )}
 
-      {/* Temporary Dashboard Development Size Switch */}
-      <div
-        className="dev-widget-size-switcher"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '12px',
-          marginBottom: '18px',
-          padding: '8px 14px',
-          background: 'var(--bg-card)',
-          borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--border-color)',
-          boxShadow: 'var(--glass-shadow)'
-        }}
-      >
-        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-          Widget Size
-        </span>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {['S', 'W', 'T', 'L'].map(sz => (
-            <button
-              key={sz}
-              type="button"
-              onClick={() => setDevWidgetSize(sz)}
-              aria-label={`Set all widgets to ${sz} size`}
-              style={{
-                fontSize: '12px',
-                fontWeight: '700',
-                padding: '4px 11px',
-                borderRadius: 'var(--radius-sm, 6px)',
-                border: devWidgetSize === sz ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                background: devWidgetSize === sz ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                color: devWidgetSize === sz ? '#FFFFFF' : 'var(--text-secondary)',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '2px'
-              }}
-            >
-              {sz}{devWidgetSize === sz ? '●' : ''}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Grid of All 20 Widgets */}
-      <div className={`dashboard-widget-grid grid-mode-${devWidgetSize}`}>
-        {fullLayout.map((item, index) => (
-          <DashboardWidgetWrapper
-            key={item.id}
-            widgetItem={{ ...item, size: devWidgetSize }}
-            isArrangeMode={isArrangeMode}
-            isEditActive={false}
-            onEnterArrangeMode={() => {}}
-            onCloseEdit={() => {}}
-            onRemoveWidget={handleRemoveWidget}
-            onChangeWidgetSize={handleChangeWidgetSize}
-            onMoveWidget={handleMoveWidget}
-            isFirst={index === 0}
-            isLast={index === fullLayout.length - 1}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          />
-        ))}
-      </div>
-
-      {/* Picker Modal */}
+      {/* Manage Widgets Modal */}
       <WidgetPickerModal
         isOpen={showPicker}
         onClose={() => setShowPicker(false)}
-        activeWidgetIds={activeWidgetIds}
-        onAddWidget={handleAddWidget}
+        layout={layout}
+        onSaveLayout={(newLayout) => saveLayoutToStorage(newLayout)}
+        onResetLayout={() => saveLayoutToStorage(DEFAULT_WIDGET_LAYOUT)}
       />
 
       {/* Reset Confirmation Modal */}
