@@ -420,6 +420,30 @@ export function LunaProvider({ children }) {
     }
   };
 
+  const updateTask = async (id, taskData) => {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...taskData } : t));
+    const updatedTasks = tasks.map(t => t.id === id ? { ...t, ...taskData } : t);
+    clientCache.save(userId, 'tasks', updatedTasks);
+
+    if (!navigator.onLine || String(id).startsWith('local_')) {
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'UPDATE_TASK', targetId: id, payload: taskData });
+      setPendingQueue(updatedQueue);
+      setSyncState('pending');
+      return { id, ...taskData };
+    }
+
+    try {
+      const updated = await api.updateTask(id, taskData);
+      await fetchTasks();
+      return updated;
+    } catch (err) {
+      const updatedQueue = syncQueue.enqueue(userId, { type: 'UPDATE_TASK', targetId: id, payload: taskData });
+      setPendingQueue(updatedQueue);
+      setSyncState('failed');
+      return { id, ...taskData };
+    }
+  };
+
   const toggleTask = async (id, currentCompleted) => {
     const newCompleted = !currentCompleted;
     setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: newCompleted } : t));
@@ -586,6 +610,7 @@ export function LunaProvider({ children }) {
         updateMemory,
         deleteMemory,
         addTask,
+        updateTask,
         toggleTask,
         deleteTask,
         addExpense,

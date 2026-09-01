@@ -6,6 +6,7 @@ import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
 import { ReactionBadge } from '../../components/common/ReactionBadge';
 import { calculateEndDate, formatHumanDate, parseDateComponents, parseDuration } from '../../services/dateUtils';
 import { Repeat, ArrowRight, CheckCircle2, Clock, AlertCircle, Plus } from 'lucide-react';
+import { RecurringManager } from '../../components/planner/RecurringManager';
 
 export function PlansPage() {
   const navigate = useNavigate();
@@ -287,6 +288,11 @@ export function PlansPage() {
             })}
           </div>
         )}
+      </div>
+
+      {/* RECURRING ITEM MANAGEMENT SECTION */}
+      <div style={{ marginTop: '20px' }}>
+        <RecurringManager />
       </div>
     </div>
   );
