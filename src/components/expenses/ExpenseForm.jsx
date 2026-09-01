@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Plus, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
 import { calculateEndDate, parseDuration, formatHumanDate } from '../../services/dateUtils';
+import { useFormDraft } from '../../hooks/useFormDraft';
 
 const EXPENSE_CATEGORIES = [
   { value: 'Recharges', label: '📱 Recharge', ariaLabel: 'Recharge category' },
@@ -55,6 +56,23 @@ export function ExpenseForm({ onSuccess }) {
   const [rechargeValidity, setRechargeValidity] = useState('28 days');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Auto-Save & Draft Recovery Hook
+  const handleRestoreDraft = useCallback((draftData) => {
+    if (draftData.amount !== undefined) setAmount(draftData.amount);
+    if (draftData.description !== undefined) setDescription(draftData.description);
+    if (draftData.category !== undefined) setCategory(draftData.category);
+    if (draftData.txType !== undefined) setTxType(draftData.txType);
+    if (draftData.addAs !== undefined) setAddAs(draftData.addAs);
+    if (draftData.phoneOrAccount !== undefined) setPhoneOrAccount(draftData.phoneOrAccount);
+    if (draftData.operator !== undefined) setOperator(draftData.operator);
+  }, []);
+
+  const { draftStatus, clearDraft } = useFormDraft(
+    'expense_form',
+    { amount, description, category, txType, addAs, phoneOrAccount, operator },
+    handleRestoreDraft
+  );
 
   // Compute active durationValue, durationUnit, and display string for Plan & Recharge
   const activeDurationInfo = useMemo(() => {
@@ -158,6 +176,7 @@ export function ExpenseForm({ onSuccess }) {
       setDescription('');
       setPhoneOrAccount('');
       setAddAs('transaction');
+      clearDraft();
       if (showToast) {
         const labels = { transaction: 'Transaction', plan: 'Plan', subscription: 'Subscription', recharge: 'Recharge' };
         showToast(`${labels[addAs] || 'Item'} saved successfully.`, 'success');
@@ -176,9 +195,16 @@ export function ExpenseForm({ onSuccess }) {
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       {/* Header Row: Title on Left + Spent/Received Toggle on Right */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-        <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
-          LOG TRANSACTION
-        </h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
+            LOG TRANSACTION
+          </h3>
+          {draftStatus && (
+            <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent-primary)', background: 'var(--accent-soft)', padding: '2px 8px', borderRadius: '99px' }}>
+              {draftStatus === 'restored' ? '⚡ Draft restored' : '✓ Draft saved'}
+            </span>
+          )}
+        </div>
 
         <div style={{ display: 'flex', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '2px', border: '1px solid var(--border-color)', height: '34px' }}>
           <button

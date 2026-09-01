@@ -55,6 +55,19 @@ export function SplitsPage() {
   const [newSplitDesc, setNewSplitDesc] = useState('');
   const [newSplitCurrency, setNewSplitCurrency] = useState('₹');
 
+  // Auto-Save & Draft Recovery Hook for Create Split
+  const handleRestoreSplitDraft = useCallback((draftData) => {
+    if (draftData.newSplitName !== undefined) setNewSplitName(draftData.newSplitName);
+    if (draftData.newSplitDesc !== undefined) setNewSplitDesc(draftData.newSplitDesc);
+    if (draftData.newSplitCurrency !== undefined) setNewSplitCurrency(draftData.newSplitCurrency);
+  }, []);
+
+  const { draftStatus: splitDraftStatus, clearDraft: clearSplitDraft } = useFormDraft(
+    'split_create',
+    { newSplitName, newSplitDesc, newSplitCurrency },
+    handleRestoreSplitDraft
+  );
+
   // Expense Form
   const [expDesc, setExpDesc] = useState('');
   const [expAmount, setExpAmount] = useState('');
@@ -187,6 +200,7 @@ export function SplitsPage() {
       setShowCreateSplit(false);
       setNewSplitName('');
       setNewSplitDesc('');
+      clearSplitDraft();
       if (showToast) showToast(`Split "${trimmedName}" created!`, 'success');
 
       setSplits(prev => [fullCreated, ...prev.filter(s => s.id !== fullCreated.id)]);

@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Plus, Check, Trash2, CheckCircle2, Calendar, Clock, Repeat, Cake, Users, ChevronDown, ChevronUp, Tag } from 'lucide-react';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
 import { ErrorState, StaleIndicator } from '../common/ErrorState';
 import { formatDate } from '../dashboard/WidgetComponents';
+import { useFormDraft } from '../../hooks/useFormDraft';
 
 export function TaskManager({ searchFilter }) {
   const { tasks, addTask, updateTask, toggleTask, deleteTask, errors, resourceLoading, fetchTasks, isFromCache, lastSyncedAt } = useLuna();
@@ -22,6 +23,25 @@ export function TaskManager({ searchFilter }) {
   const [expandedTaskId, setExpandedTaskId] = useState(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Auto-Save & Draft Recovery Hook
+  const handleRestoreTaskDraft = useCallback((draftData) => {
+    if (draftData.title !== undefined) setTitle(draftData.title);
+    if (draftData.taskType !== undefined) setTaskType(draftData.taskType);
+    if (draftData.priority !== undefined) setPriority(draftData.priority);
+    if (draftData.personName !== undefined) setPersonName(draftData.personName);
+    if (draftData.meetingPeople !== undefined) setMeetingPeople(draftData.meetingPeople);
+    if (draftData.location !== undefined) setLocation(draftData.location);
+    if (draftData.dueDate !== undefined) setDueDate(draftData.dueDate);
+    if (draftData.dueTime !== undefined) setDueTime(draftData.dueTime);
+    if (draftData.recurring !== undefined) setRecurring(draftData.recurring);
+  }, []);
+
+  const { draftStatus, clearDraft } = useFormDraft(
+    'task_form',
+    { title, taskType, priority, personName, meetingPeople, location, dueDate, dueTime, recurring },
+    handleRestoreTaskDraft
+  );
 
   const handleAddTask = async (e) => {
     e.preventDefault();
@@ -60,6 +80,7 @@ export function TaskManager({ searchFilter }) {
       setMeetingPeople('');
       setLocation('');
       setRecurring('None');
+      clearDraft();
 
       if (showToast) showToast(`${taskType === 'birthday' ? 'Birthday reminder' : taskType === 'meeting' ? 'Meeting' : 'Task'} saved.`, 'success');
     } catch (err) {
@@ -183,9 +204,16 @@ export function TaskManager({ searchFilter }) {
         {/* LEFT CONTAINER — ADD TASK */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-            <h3 style={{ color: 'var(--accent-primary)', margin: 0, fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
-              {taskType === 'birthday' ? 'ADD BIRTHDAY' : taskType === 'meeting' ? 'ADD MEETING' : 'ADD TASK'}
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 style={{ color: 'var(--accent-primary)', margin: 0, fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
+                {taskType === 'birthday' ? 'ADD BIRTHDAY' : taskType === 'meeting' ? 'ADD MEETING' : 'ADD TASK'}
+              </h3>
+              {draftStatus && (
+                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent-primary)', background: 'var(--accent-soft)', padding: '2px 8px', borderRadius: '99px' }}>
+                  {draftStatus === 'restored' ? '⚡ Draft restored' : '✓ Draft saved'}
+                </span>
+              )}
+            </div>
 
             {/* Type selector: Task, Birthday, Meeting */}
             <div style={{ display: 'flex', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '2px', border: '1px solid var(--border-color)', height: '34px' }}>
