@@ -15,6 +15,7 @@ import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { Onboarding } from './pages/Onboarding';
 import { Sidebar } from './components/common/Sidebar';
+import { BottomNav } from './components/common/BottomNav';
 
 import { DashboardPage } from './pages/app/DashboardPage';
 import { ChatPage } from './pages/app/ChatPage';
@@ -147,6 +148,7 @@ function AppLayout() {
       <div className="main-content-area">
         <Outlet />
       </div>
+      <BottomNav />
     </div>
   );
 }

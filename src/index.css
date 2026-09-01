@@ -1270,6 +1270,91 @@ option {
   }
 }
 
+/* Mobile Bottom Navigation Bar System */
+@media (min-width: 769px) {
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-top: 6px !important;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+    background: var(--bg-card) !important;
+    border-top: 1px solid var(--border-color) !important;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08) !important;
+    z-index: 9999 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Prevent bottom nav from hiding page content on mobile */
+  .main-content-area {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Hide bottom nav when soft keyboard opens on mobile */
+  @media (max-height: 480px) {
+    .mobile-bottom-nav {
+      display: none !important;
+    }
+  }
+
+  .bottom-nav-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    color: var(--text-muted) !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 2px 0 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    width: 100% !important;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bottom-nav-icon-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 3px 12px !important;
+    border-radius: var(--radius-full) !important;
+    transition: all 0.15s ease !important;
+  }
+
+  .bottom-nav-label {
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    margin-top: 2px !important;
+    letter-spacing: -0.1px !important;
+  }
+
+  .bottom-nav-item.active {
+    color: var(--accent-primary) !important;
+  }
+
+  .bottom-nav-item.active .bottom-nav-icon-wrapper {
+    background: var(--accent-soft) !important;
+    color: var(--accent-primary) !important;
+  }
+
+  .bottom-nav-item:active {
+    transform: scale(0.96);
+  }
+}
+
 
 
 
