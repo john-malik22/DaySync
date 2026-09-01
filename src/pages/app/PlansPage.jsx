@@ -129,7 +129,7 @@ export function PlansPage() {
   };
 
   return (
-    <div className="page-container">
+    <div className="page-container plans-page-container">
       {/* Top Header Row: Page Title PLANS & COMMITMENTS */}
       <PageHeaderRow title="PLANS & COMMITMENTS" onSearch={setSearch} />
 
@@ -166,7 +166,7 @@ export function PlansPage() {
       </div>
 
       {/* RECURRING ITEM MANAGEMENT SECTION */}
-      <div style={{ marginTop: '16px' }}>
+      <div className="plans-recurring-section" style={{ marginTop: '16px' }}>
         <RecurringManager />
       </div>
     </div>
