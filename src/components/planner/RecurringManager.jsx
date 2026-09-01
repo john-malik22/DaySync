@@ -320,146 +320,147 @@ export function RecurringManager() {
             <div
               key={`${item.kind}_${item.id}`}
               style={{
-                padding: '12px 14px',
+                padding: '14px 16px',
                 borderRadius: 'var(--radius-md)',
                 background: item.isPaused ? 'var(--bg-tertiary, rgba(255,255,255,0.03))' : 'var(--bg-secondary)',
                 border: `1px solid ${item.isPaused ? 'var(--border-color)' : 'var(--border-color)'}`,
-                opacity: item.isPaused ? 0.75 : 1,
+                opacity: item.isPaused ? 0.78 : 1,
                 display: 'flex',
-                justify: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '10px'
+                flexDirection: 'column',
+                gap: '12px'
               }}
             >
-              {/* Left Column: Icon + Name + Badges */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 240px' }}>
-                <div
+              {/* TOP ROW: [Icon]  Electricity Bill   [Active] */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                  <div
+                    style={{
+                      width: '34px',
+                      height: '34px',
+                      borderRadius: '8px',
+                      background: 'var(--bg-card)',
+                      border: '1px solid var(--border-color)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    {getTypeIcon(item.type)}
+                  </div>
+
+                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {item.name}
+                  </h4>
+                </div>
+
+                {/* Small status badge beside name on right */}
+                <span
                   style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '8px',
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border-color)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    background: item.isPaused ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                    color: item.isPaused ? 'var(--accent-warning)' : 'var(--accent-success)',
                     flexShrink: 0
                   }}
                 >
-                  {getTypeIcon(item.type)}
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                      {item.name}
-                    </span>
-
-                    {/* Status Badge */}
-                    <span
-                      style={{
-                        fontSize: '10px',
-                        fontWeight: '700',
-                        padding: '1px 6px',
-                        borderRadius: '4px',
-                        background: item.isPaused ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                        color: item.isPaused ? 'var(--accent-warning)' : 'var(--accent-success)'
-                      }}
-                    >
-                      {item.isPaused ? 'Paused' : 'Active'}
-                    </span>
-                  </div>
-
-                  <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <span>Type: <strong style={{ color: 'var(--text-secondary)' }}>{item.type}</strong></span>
-                    <span>•</span>
-                    <span>Repeat: <strong style={{ color: 'var(--text-secondary)' }}>{item.repeatRule}</strong></span>
-                    {item.amount !== null && (
-                      <>
-                        <span>•</span>
-                        <span style={{ fontWeight: '700', color: 'var(--accent-primary)' }}>₹{item.amount.toLocaleString('en-IN')}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
+                  {item.isPaused ? 'Paused' : 'Active'}
+                </span>
               </div>
 
-              {/* Right Column: Next Occurrence & Action Buttons */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ display: 'block', fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
-                    NEXT OCCURRENCE
-                  </span>
-                  <strong style={{ fontSize: '12px', color: item.isPaused ? 'var(--text-muted)' : 'var(--text-primary)' }}>
-                    {formatHumanDate(item.nextOccurrence)}
-                  </strong>
-                </div>
+              {/* SECOND ROW: Type: Plan • Repeat: Monthly • ₹1,248 */}
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span>Type: <strong style={{ color: 'var(--text-secondary)' }}>{item.type}</strong></span>
+                <span>•</span>
+                <span>Repeat: <strong style={{ color: 'var(--text-secondary)' }}>{item.repeatRule}</strong></span>
+                {item.amount !== null && (
+                  <>
+                    <span>•</span>
+                    <span style={{ fontWeight: '800', color: 'var(--accent-primary)', fontSize: '13px' }}>₹{item.amount.toLocaleString('en-IN')}</span>
+                  </>
+                )}
+              </div>
 
-                {/* Actions: Edit | Pause/Resume | Delete */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEdit(item)}
-                    title="Edit Item"
-                    style={{
-                      background: 'transparent',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '6px',
-                      padding: '5px 8px',
-                      color: 'var(--text-secondary)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      fontSize: '11px',
-                      gap: '4px'
-                    }}
-                  >
-                    <Edit2 size={12} /> Edit
-                  </button>
+              {/* MIDDLE: NEXT OCCURRENCE Block */}
+              <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
+                  NEXT OCCURRENCE
+                </span>
+                <strong style={{ fontSize: '13px', fontWeight: '700', color: item.isPaused ? 'var(--text-muted)' : 'var(--text-primary)' }}>
+                  {formatHumanDate(item.nextOccurrence)}
+                </strong>
+              </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleTogglePause(item)}
-                    title={item.isPaused ? 'Resume Item' : 'Pause Item'}
-                    style={{
-                      background: item.isPaused ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
-                      border: `1px solid ${item.isPaused ? 'var(--accent-success)' : 'var(--accent-warning)'}`,
-                      borderRadius: '6px',
-                      padding: '5px 8px',
-                      color: item.isPaused ? 'var(--accent-success)' : 'var(--accent-warning)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      fontSize: '11px',
-                      fontWeight: '700',
-                      gap: '4px'
-                    }}
-                  >
-                    {item.isPaused ? <Play size={12} /> : <Pause size={12} />}
-                    {item.isPaused ? 'Resume' : 'Pause'}
-                  </button>
+              {/* BOTTOM ROW: [ Edit ] [ Pause ] [ Delete ] (Aligned 3 action buttons) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', paddingTop: '4px', borderTop: '1px solid var(--border-color)' }}>
+                <button
+                  type="button"
+                  onClick={() => handleOpenEdit(item)}
+                  style={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '6px',
+                    padding: '7px 8px',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '11.5px',
+                    fontWeight: '600',
+                    gap: '4px',
+                    width: '100%'
+                  }}
+                >
+                  <Edit2 size={13} /> Edit
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteItem(item)}
-                    title="Delete Item"
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.1)',
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
-                      borderRadius: '6px',
-                      padding: '5px 8px',
-                      color: 'var(--accent-danger)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      fontSize: '11px',
-                      gap: '4px'
-                    }}
-                  >
-                    <Trash2 size={12} /> Delete
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => handleTogglePause(item)}
+                  style={{
+                    background: item.isPaused ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+                    border: `1px solid ${item.isPaused ? 'var(--accent-success)' : 'var(--accent-warning)'}`,
+                    borderRadius: '6px',
+                    padding: '7px 8px',
+                    color: item.isPaused ? 'var(--accent-success)' : 'var(--accent-warning)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '11.5px',
+                    fontWeight: '700',
+                    gap: '4px',
+                    width: '100%'
+                  }}
+                >
+                  {item.isPaused ? <Play size={13} /> : <Pause size={13} />}
+                  {item.isPaused ? 'Resume' : 'Pause'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDeleteItem(item)}
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '6px',
+                    padding: '7px 8px',
+                    color: 'var(--accent-danger)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '11.5px',
+                    fontWeight: '600',
+                    gap: '4px',
+                    width: '100%'
+                  }}
+                >
+                  <Trash2 size={13} /> Delete
+                </button>
               </div>
             </div>
           ))}
