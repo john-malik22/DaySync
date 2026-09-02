@@ -294,7 +294,7 @@ export function TaskManager({ searchFilter }) {
                       disabled={isSubmitting}
                       style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
                       required
-                      autoFocus
+                      autoFocus={typeof window !== 'undefined' && window.innerWidth > 768}
                     />
                   </div>
                   <button
@@ -366,7 +366,7 @@ export function TaskManager({ searchFilter }) {
                       disabled={isSubmitting}
                       style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
                       required
-                      autoFocus
+                      autoFocus={typeof window !== 'undefined' && window.innerWidth > 768}
                     />
                   </div>
                   <button
@@ -432,7 +432,7 @@ export function TaskManager({ searchFilter }) {
                       disabled={isSubmitting}
                       style={{ width: '100%', minHeight: '36px', fontSize: '13px' }}
                       required
-                      autoFocus
+                      autoFocus={typeof window !== 'undefined' && window.innerWidth > 768}
                     />
                   </div>
                   <button
