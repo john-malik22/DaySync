@@ -1427,14 +1427,18 @@ option {
     box-sizing: border-box !important;
   }
 
-  /* Compact Centered Mobile Add Widget Dialog Rules (<=768px) */
-  .widget-picker-dialog {
-    width: 92vw !important;
-    max-width: 420px !important;
-    max-height: 78vh !important;
-    margin: auto !important;
-    border-radius: 16px !important;
-    box-sizing: border-box !important;
+  /* Mobile Remove Category Filter Bar (<=768px) */
+  .widget-category-chips-row {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
 }
 

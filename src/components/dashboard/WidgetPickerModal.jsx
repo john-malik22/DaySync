@@ -211,7 +211,7 @@ export function WidgetPickerModal({
             </div>
 
             {/* Category Scroll Row */}
-            <div className="scroll-row" style={{
+            <div className="scroll-row widget-category-chips-row" style={{
               display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap', gap: '4px',
               marginBottom: '10px', paddingBottom: '4px'
             }}>
