@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, UserPlus, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { syncMobileStatusBarTheme } from '../utils/statusBarTheme';
 
 const validateEmail = (email) => {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,6 +18,10 @@ export function Login() {
   const [error, setError] = useState('');
   const [userNotFound, setUserNotFound] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    syncMobileStatusBarTheme();
+  }, []);
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
