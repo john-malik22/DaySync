@@ -164,11 +164,11 @@ export function DashboardGrid() {
     <div className="dashboard-grid-container" style={{ position: 'relative' }}>
       {/* Top Banner when in Edit Mode */}
       {isArrangeMode && (
-        <div style={{
+        <div className="dashboard-edit-actions-bar" style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           flexWrap: 'wrap', gap: '8px', padding: '10px 14px', background: 'var(--bg-card)',
           border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)',
-          marginBottom: '16px', boxShadow: 'var(--glass-shadow)', position: 'sticky', top: '10px', zIndex: 30
+          marginBottom: '16px', boxShadow: 'var(--glass-shadow)', position: 'sticky', top: '10px', zIndex: 50
         }}>
           <button
             type="button"

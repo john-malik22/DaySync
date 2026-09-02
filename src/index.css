@@ -1398,6 +1398,34 @@ option {
     min-height: 240px;
     max-height: 240px;
   }
+
+  /* Mobile Dashboard Edit Mode Actions Bar (<=768px) */
+  .dashboard-edit-actions-bar {
+    position: sticky !important;
+    top: 4px !important;
+    z-index: 50 !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 8px 10px !important;
+    margin-top: 4px !important;
+    margin-bottom: 16px !important;
+    box-shadow: var(--shadow-md) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .dashboard-edit-actions-bar button {
+    min-height: 36px !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+  }
 }
 
 /* Mobile Account Actions (Settings Page) */
