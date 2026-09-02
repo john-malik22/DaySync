@@ -77,6 +77,71 @@ export class WidgetErrorBoundary extends React.Component {
   }
 }
 
+// Realtime Data Refresh Listener Hook
+export function useRealtimeDataRefresh() {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const handleUpdate = () => setTick(t => t + 1);
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('daysync_data_changed', handleUpdate);
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('daysync_data_changed', handleUpdate);
+    };
+  }, []);
+}
+
+export function getRealSplitsData() {
+  try {
+    const userId = localStorage.getItem('daysync_user_id') || 'guest';
+    const savedSplits = localStorage.getItem(`daysync_splits_${userId}`) || localStorage.getItem('daysync_splits') || localStorage.getItem('luna_splits');
+    if (savedSplits) {
+      const parsed = JSON.parse(savedSplits);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        let owed = 0;
+        let pay = 0;
+        let personMap = {};
+        parsed.forEach(s => {
+          if (s.settled || s.status === 'SETTLED') return;
+          const userShare = parseFloat(s.userShare || s.yourShare || 0);
+          const totalAmount = parseFloat(s.totalAmount || s.amount || 0);
+          const isUserPayer = s.paidByYou || s.paidBy === userId;
+          
+          if (isUserPayer) {
+            const someoneOwes = totalAmount - userShare;
+            owed += Math.max(0, someoneOwes);
+            const person = s.otherPerson || s.members?.[0]?.name || 'Alex';
+            personMap[person] = (personMap[person] || 0) + Math.max(0, someoneOwes);
+          } else {
+            pay += userShare;
+            const person = s.paidByName || s.paidBy || 'Alex';
+            personMap[person] = (personMap[person] || 0) - userShare;
+          }
+        });
+        return { owed, pay, personMap, rawSplits: parsed };
+      }
+    }
+  } catch (e) {}
+  const fallbackOwed = parseFloat(localStorage.getItem('daysync_splits_owed') || 0);
+  const fallbackPay = parseFloat(localStorage.getItem('daysync_splits_pay') || 0);
+  return { owed: fallbackOwed, pay: fallbackPay, personMap: {}, rawSplits: [] };
+}
+
+export function getRealPlansData(contextPlans) {
+  if (Array.isArray(contextPlans) && contextPlans.length > 0) {
+    return contextPlans;
+  }
+  try {
+    const userId = localStorage.getItem('daysync_user_id') || 'guest';
+    const savedPlans = localStorage.getItem(`daysync_plans_${userId}`) || localStorage.getItem('daysync_plans') || localStorage.getItem('luna_plans');
+    if (savedPlans) {
+      const parsed = JSON.parse(savedPlans);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {}
+  return [];
+}
+
 // Common S Inner Surface Wrapper (UNTOUCHED S DESIGN)
 const SmallWidgetWrapper = ({ label, labelColor = 'var(--text-muted)', bgTint, borderTint, children }) => (
   <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '2px 0' }}>
@@ -101,6 +166,7 @@ const SmallWidgetWrapper = ({ label, labelColor = 'var(--text-muted)', bgTint, b
 
 // 1. SPENDING SNAPSHOT (S, W, T, L)
 export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
+  useRealtimeDataRefresh();
   const { expenses } = useLuna();
   const nonIncomeExpenses = (expenses || []).filter(e => e.type !== 'income');
   const totalSpent = nonIncomeExpenses.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
@@ -198,7 +264,7 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
           FINANCIAL OVERVIEW
         </div>
         <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--accent-success)', background: 'rgba(16, 185, 129, 0.12)', padding: '2px 6px', borderRadius: '4px' }}>
-          LIVE OVERVIEW
+          FINANCIAL OVERVIEW
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', margin: '8px 0' }}>
@@ -1621,7 +1687,7 @@ export function ClockDateWidget({ widgetSize = 'S' }) {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
           <span>Timezone: <strong>{timezoneStr}</strong></span>
-          <span>Status: <strong>Live Clock</strong></span>
+          <span>Status: <strong>Standard Time</strong></span>
         </div>
       </div>
     );
