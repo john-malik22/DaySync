@@ -250,7 +250,7 @@ export function RecurringManager() {
   };
 
   return (
-    <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div className="glass-card recurring-manager-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       {/* Header Row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -315,7 +315,7 @@ export function RecurringManager() {
           No recurring items match your filters.
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="recurring-items-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {filteredItems.map((item) => (
             <div
               key={`${item.kind}_${item.id}`}

@@ -943,8 +943,50 @@ option {
     overflow: visible !important;
   }
 
+  /* Mobile Recurring Items Natural Auto-Height Expansion Fix */
   .plans-recurring-section {
     margin-top: 4px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
+    flex: none !important;
+    flex-shrink: 0 !important;
+  }
+
+  .recurring-manager-card {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    scrollbar-width: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: none !important;
+    flex-shrink: 0 !important;
+    margin-bottom: calc(36px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .recurring-items-list {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    scrollbar-width: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: none !important;
+    flex-shrink: 0 !important;
+  }
+
+  .recurring-items-list::-webkit-scrollbar,
+  .recurring-manager-card::-webkit-scrollbar {
+    display: none !important;
   }
 
   .profile-section-container {
