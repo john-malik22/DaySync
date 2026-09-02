@@ -234,7 +234,7 @@ export function WidgetPickerModal({
             </div>
 
             {/* Widgets List with ON/OFF Toggle Switches */}
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '2px' }}>
+            <div className="widget-picker-dialog-list" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '2px' }}>
               {filteredCatalog.map(widget => {
                 const layoutItem = localLayout.find(l => l.id === widget.id);
                 const isVisible = layoutItem ? (layoutItem.visible !== false) : true;
@@ -305,7 +305,7 @@ export function WidgetPickerModal({
 
         {/* TAB 2: REORDER LAYOUT */}
         {activeTab === 'REORDER' && (
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '2px' }}>
+          <div className="widget-picker-dialog-list" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '2px' }}>
             <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '4px' }}>
               Use ▲ and ▼ to reorder visible widgets on your Dashboard.
             </div>

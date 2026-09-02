@@ -1484,6 +1484,26 @@ option {
     align-items: center !important;
     justify-content: center !important;
   }
+
+  /* Compact Mobile Add Dashboard Widgets Dialog Rules (<=768px) */
+  .widget-picker-dialog {
+    width: 92vw !important;
+    max-width: 420px !important;
+    max-height: calc(100dvh - 120px) !important;
+    height: auto !important;
+    margin: auto !important;
+    padding: 12px 14px !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
+    margin-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 1200 !important;
+  }
+
+  .widget-picker-dialog-list {
+    max-height: 44vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
 }
 
 /* Mobile Account Actions (Settings Page) */
