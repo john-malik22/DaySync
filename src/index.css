@@ -1387,9 +1387,10 @@ option {
   max-height: 280px;
 }
 
-/* Responsive Overrides (<= 768px Mobile Dashboard Small Widget 2-Column Grid) */
+/* Responsive Overrides (<= 768px Mobile Dashboard Small & Tall Widget 2-Column Grid) */
 @media (max-width: 768px) {
-  .dashboard-widget-grid.grid-mode-S {
+  .dashboard-widget-grid.grid-mode-S,
+  .dashboard-widget-grid.grid-mode-T {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
@@ -1400,13 +1401,13 @@ option {
 
 @media (max-width: 640px) {
   .dashboard-widget-grid.grid-mode-W,
-  .dashboard-widget-grid.grid-mode-T,
   .dashboard-widget-grid.grid-mode-L {
     grid-template-columns: 1fr;
     gap: var(--space-sm);
   }
 
-  .dashboard-widget-grid.grid-mode-S {
+  .dashboard-widget-grid.grid-mode-S,
+  .dashboard-widget-grid.grid-mode-T {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
