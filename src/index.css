@@ -1318,10 +1318,11 @@ option {
   }
 }
 
-/* Dashboard Unified Grid System (Supports Mixed Widget Sizes in Same Row) */
+/* Dashboard Unified Grid System (True Free-Flowing Masonry Layout) */
 .dashboard-widget-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 130px;
   grid-auto-flow: dense;
   align-items: start;
   gap: var(--space-md);
@@ -1341,44 +1342,49 @@ option {
   align-self: start;
 }
 
-/* Physical Per-Widget Size Geometries */
+/* Physical Per-Widget Size Geometries & Masonry Row Spans */
 .widget-size-S,
 .widget-size-small {
   grid-column: span 1 !important;
-  height: 140px;
-  min-height: 140px;
-  max-height: 140px;
+  grid-row: span 1 !important;
+  height: 130px;
+  min-height: 130px;
+  max-height: 130px;
 }
 
 .widget-size-W,
 .widget-size-wide {
   grid-column: span 2 !important;
-  height: 140px;
-  min-height: 140px;
-  max-height: 140px;
+  grid-row: span 1 !important;
+  height: 130px;
+  min-height: 130px;
+  max-height: 130px;
 }
 
 .widget-size-T,
 .widget-size-tall {
   grid-column: span 1 !important;
-  height: 280px;
-  min-height: 280px;
-  max-height: 280px;
+  grid-row: span 2 !important;
+  height: 276px;
+  min-height: 276px;
+  max-height: 276px;
 }
 
 .widget-size-L,
 .widget-size-large {
   grid-column: span 2 !important;
-  height: 280px;
-  min-height: 280px;
-  max-height: 280px;
+  grid-row: span 2 !important;
+  height: 276px;
+  min-height: 276px;
+  max-height: 276px;
 }
 
-/* Responsive Overrides (<= 768px Mobile Dashboard) */
+/* Responsive Overrides (<= 768px Mobile Dashboard Masonry) */
 @media (max-width: 768px) {
   .dashboard-widget-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-rows: 115px !important;
     grid-auto-flow: dense !important;
     align-items: start !important;
     gap: 10px !important;
@@ -1387,18 +1393,36 @@ option {
   }
 
   .widget-size-S,
-  .widget-size-small,
+  .widget-size-small {
+    grid-column: span 1 !important;
+    grid-row: span 1 !important;
+    height: 115px;
+    min-height: 115px;
+    max-height: 115px;
+  }
+
   .widget-size-W,
   .widget-size-wide {
-    height: 120px;
-    min-height: 120px;
-    max-height: 120px;
+    grid-column: span 2 !important;
+    grid-row: span 1 !important;
+    height: 115px;
+    min-height: 115px;
+    max-height: 115px;
   }
 
   .widget-size-T,
-  .widget-size-tall,
+  .widget-size-tall {
+    grid-column: span 1 !important;
+    grid-row: span 2 !important;
+    height: 240px;
+    min-height: 240px;
+    max-height: 240px;
+  }
+
   .widget-size-L,
   .widget-size-large {
+    grid-column: span 2 !important;
+    grid-row: span 2 !important;
     height: 240px;
     min-height: 240px;
     max-height: 240px;
