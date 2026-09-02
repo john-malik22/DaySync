@@ -319,25 +319,26 @@ export function RecurringManager() {
           {filteredItems.map((item) => (
             <div
               key={`${item.kind}_${item.id}`}
+              className="recurring-item-card"
               style={{
-                padding: '14px 16px',
+                padding: '10px 12px',
                 borderRadius: 'var(--radius-md)',
                 background: item.isPaused ? 'var(--bg-tertiary, rgba(255,255,255,0.03))' : 'var(--bg-secondary)',
-                border: `1px solid ${item.isPaused ? 'var(--border-color)' : 'var(--border-color)'}`,
+                border: '1px solid var(--border-color)',
                 opacity: item.isPaused ? 0.78 : 1,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '12px'
+                gap: '8px'
               }}
             >
-              {/* TOP ROW: [Icon]  Electricity Bill   [Active] */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+              {/* TOP: Name & Active Badge */}
+              <div className="recurring-card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                   <div
                     style={{
-                      width: '34px',
-                      height: '34px',
-                      borderRadius: '8px',
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '6px',
                       background: 'var(--bg-card)',
                       border: '1px solid var(--border-color)',
                       display: 'flex',
@@ -349,17 +350,17 @@ export function RecurringManager() {
                     {getTypeIcon(item.type)}
                   </div>
 
-                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <h4 className="recurring-card-title" style={{ margin: 0, fontSize: '13.5px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {item.name}
                   </h4>
                 </div>
 
-                {/* Small status badge beside name on right */}
                 <span
+                  className="recurring-card-status-badge"
                   style={{
-                    fontSize: '11px',
+                    fontSize: '10.5px',
                     fontWeight: '700',
-                    padding: '2px 8px',
+                    padding: '2px 7px',
                     borderRadius: '4px',
                     background: item.isPaused ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
                     color: item.isPaused ? 'var(--accent-warning)' : 'var(--accent-success)',
@@ -370,31 +371,41 @@ export function RecurringManager() {
                 </span>
               </div>
 
-              {/* SECOND ROW: Type: Plan • Repeat: Monthly • ₹1,248 */}
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {/* DETAILS: Type: Plan • Duration: Monthly • ₹1,248 */}
+              <div className="recurring-card-details" style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                 <span>Type: <strong style={{ color: 'var(--text-secondary)' }}>{item.type}</strong></span>
                 <span>•</span>
-                <span>Repeat: <strong style={{ color: 'var(--text-secondary)' }}>{item.repeatRule}</strong></span>
+                <span>Duration: <strong style={{ color: 'var(--text-secondary)' }}>{item.repeatRule}</strong></span>
                 {item.amount !== null && (
                   <>
                     <span>•</span>
-                    <span style={{ fontWeight: '800', color: 'var(--accent-primary)', fontSize: '13px' }}>₹{item.amount.toLocaleString('en-IN')}</span>
+                    <span style={{ fontWeight: '800', color: 'var(--accent-primary)', fontSize: '12.5px' }}>₹{item.amount.toLocaleString('en-IN')}</span>
                   </>
                 )}
               </div>
 
-              {/* MIDDLE: NEXT OCCURRENCE Block */}
-              <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
-                  NEXT OCCURRENCE
-                </span>
-                <strong style={{ fontSize: '13px', fontWeight: '700', color: item.isPaused ? 'var(--text-muted)' : 'var(--text-primary)' }}>
-                  {formatHumanDate(item.nextOccurrence)}
-                </strong>
+              {/* DATES: Start Date & Next Payment / Expiry */}
+              <div className="recurring-card-dates-grid" style={{ background: 'var(--bg-card)', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', alignItems: 'center' }}>
+                <div>
+                  <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>
+                    Start Date
+                  </span>
+                  <strong style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                    {item.raw?.startDate ? formatHumanDate(item.raw.startDate) : item.raw?.date ? formatHumanDate(item.raw.date) : formatHumanDate(item.nextOccurrence)}
+                  </strong>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>
+                    Next Payment / Expiry
+                  </span>
+                  <strong style={{ fontSize: '11.5px', fontWeight: '700', color: item.isPaused ? 'var(--text-muted)' : 'var(--text-primary)' }}>
+                    {formatHumanDate(item.nextOccurrence)}
+                  </strong>
+                </div>
               </div>
 
-              {/* BOTTOM ROW: [ Edit ] [ Pause ] [ Delete ] (Aligned 3 action buttons) */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', paddingTop: '4px', borderTop: '1px solid var(--border-color)' }}>
+              {/* BOTTOM: Action Buttons in 1 Row */}
+              <div className="recurring-card-actions" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', paddingTop: '2px' }}>
                 <button
                   type="button"
                   onClick={() => handleOpenEdit(item)}
@@ -402,19 +413,19 @@ export function RecurringManager() {
                     background: 'var(--bg-card)',
                     border: '1px solid var(--border-color)',
                     borderRadius: '6px',
-                    padding: '7px 8px',
+                    padding: '5px 6px',
                     color: 'var(--text-secondary)',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '11.5px',
+                    fontSize: '11px',
                     fontWeight: '600',
                     gap: '4px',
                     width: '100%'
                   }}
                 >
-                  <Edit2 size={13} /> Edit
+                  <Edit2 size={12} /> Edit
                 </button>
 
                 <button
@@ -424,19 +435,19 @@ export function RecurringManager() {
                     background: item.isPaused ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
                     border: `1px solid ${item.isPaused ? 'var(--accent-success)' : 'var(--accent-warning)'}`,
                     borderRadius: '6px',
-                    padding: '7px 8px',
+                    padding: '5px 6px',
                     color: item.isPaused ? 'var(--accent-success)' : 'var(--accent-warning)',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '11.5px',
+                    fontSize: '11px',
                     fontWeight: '700',
                     gap: '4px',
                     width: '100%'
                   }}
                 >
-                  {item.isPaused ? <Play size={13} /> : <Pause size={13} />}
+                  {item.isPaused ? <Play size={12} /> : <Pause size={12} />}
                   {item.isPaused ? 'Resume' : 'Pause'}
                 </button>
 
@@ -447,19 +458,19 @@ export function RecurringManager() {
                     background: 'rgba(239, 68, 68, 0.1)',
                     border: '1px solid rgba(239, 68, 68, 0.3)',
                     borderRadius: '6px',
-                    padding: '7px 8px',
+                    padding: '5px 6px',
                     color: 'var(--accent-danger)',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '11.5px',
+                    fontSize: '11px',
                     fontWeight: '600',
                     gap: '4px',
                     width: '100%'
                   }}
                 >
-                  <Trash2 size={13} /> Delete
+                  <Trash2 size={12} /> Delete
                 </button>
               </div>
             </div>
