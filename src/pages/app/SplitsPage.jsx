@@ -7,6 +7,7 @@ import { api } from '../../services/api';
 import { ReactionBadge } from '../../components/common/ReactionBadge';
 import { EmptyState } from '../../components/common/EmptyState';
 import { useFormDraft } from '../../hooks/useFormDraft';
+import { ConfirmationModal } from '../../components/common/ConfirmationModal';
 import {
   Users,
   Plus,
@@ -37,14 +38,29 @@ export function SplitsPage() {
 
   const { user } = useAuth();
   const { showToast, showMemeReaction } = useToast();
-  const userId = user?.id;
+  const userId = user?.id || 'guest';
 
-  const [splits, setSplits] = useState([]);
+  // Immediate Cache Hydration for 0ms initial load time
+  const [splits, setSplits] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`daysync_splits_${userId}`) || localStorage.getItem('daysync_splits') || localStorage.getItem('luna_splits');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
   const [selectedSplit, setSelectedSplit] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => splits.length === 0);
   const [splitDetailLoading, setSplitDetailLoading] = useState(false);
   const [splitNotFound, setSplitNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState('expenses'); // 'expenses', 'balances', 'members'
+
+  // Delete Split Modals & State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [splitToDelete, setSplitToDelete] = useState(null);
+  const [isDeletingSplit, setIsDeletingSplit] = useState(false);
 
   // Modals
   const [showCreateSplit, setShowCreateSplit] = useState(false);
@@ -91,27 +107,53 @@ export function SplitsPage() {
 
   const [regeneratingCode, setRegeneratingCode] = useState(false);
 
-  // Fetch all user splits
+  // Fetch all user splits (Non-blocking background refresh & caching)
   const fetchSplitsData = useCallback(async () => {
     if (!userId) return;
     try {
       const splitList = await api.getSplits().catch(() => []);
       const list = Array.isArray(splitList) ? splitList : [];
       setSplits(list);
-
-      // Refresh selected split if currently open
-      if (selectedSplit?.id) {
-        const refreshed = await api.getSplitById(selectedSplit.id).catch(() => null);
-        if (refreshed) {
-          setSelectedSplit(refreshed);
-        }
-      }
+      try {
+        localStorage.setItem(`daysync_splits_${userId}`, JSON.stringify(list));
+        localStorage.setItem('daysync_splits', JSON.stringify(list));
+      } catch (e) {}
     } catch (e) {
       console.warn('Error loading splits data:', e);
     } finally {
       setLoading(false);
     }
-  }, [userId, selectedSplit?.id]);
+  }, [userId]);
+
+  // Handle Confirm Delete Split
+  const handleConfirmDeleteSplit = async () => {
+    if (!splitToDelete?.id) return;
+    setIsDeletingSplit(true);
+    try {
+      await api.deleteSplit(splitToDelete.id);
+      const updated = splits.filter(s => s.id !== splitToDelete.id);
+      setSplits(updated);
+      try {
+        localStorage.setItem(`daysync_splits_${userId}`, JSON.stringify(updated));
+        localStorage.setItem('daysync_splits', JSON.stringify(updated));
+      } catch (e) {}
+      window.dispatchEvent(new Event('daysync_data_changed'));
+
+      if (selectedSplit?.id === splitToDelete.id) {
+        setSelectedSplit(null);
+        navigate('/app/splits');
+      }
+
+      if (showToast) showToast(`Split "${splitToDelete.name || ''}" deleted successfully.`, 'success');
+    } catch (err) {
+      console.error('Error deleting split:', err);
+      if (showToast) showToast(err?.message || 'Failed to delete split. Please try again.', 'error');
+    } finally {
+      setIsDeletingSplit(false);
+      setSplitToDelete(null);
+      setShowDeleteModal(false);
+    }
+  };
 
   // Sync route param with backend fetch (Restores Split on page refresh)
   useEffect(() => {
@@ -149,14 +191,14 @@ export function SplitsPage() {
     return () => { isMounted = false; };
   }, [routeSplitId, userId]);
 
-  // Polling interval (every 5 seconds when active)
+  // Polling interval (every 10 seconds when active, non-blocking)
   useEffect(() => {
     fetchSplitsData();
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible' && navigator.onLine) {
         fetchSplitsData();
       }
-    }, 5000);
+    }, 10000);
     return () => clearInterval(interval);
   }, [fetchSplitsData]);
 
@@ -593,9 +635,29 @@ export function SplitsPage() {
                           </p>
                         )}
                       </div>
-                      <span className="badge" style={{ fontSize: '11px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
-                        {memberCount} member{memberCount === 1 ? '' : 's'}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className="badge" style={{ fontSize: '11px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
+                          {memberCount} member{memberCount === 1 ? '' : 's'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSplitToDelete(split);
+                            setShowDeleteModal(true);
+                          }}
+                          className="btn-danger-icon"
+                          title="Delete Split"
+                          aria-label="Delete Split"
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)',
+                            color: 'var(--accent-danger)', padding: '5px 7px', borderRadius: '6px', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </div>
 
                     <div style={{
@@ -622,7 +684,7 @@ export function SplitsPage() {
       ) : (
         /* VIEW C: SELECTED SPLIT DETAIL VIEW */
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-          {/* Back Header */}
+          {/* Back Header & Delete Split */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
             <button
               type="button"
@@ -631,6 +693,22 @@ export function SplitsPage() {
               style={{ fontSize: '12px', padding: '6px 12px' }}
             >
               <ArrowLeft size={14} /> Back to All Splits
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSplitToDelete(selectedSplit);
+                setShowDeleteModal(true);
+              }}
+              style={{
+                fontSize: '12px', padding: '6px 12px', background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid var(--accent-danger)', color: 'var(--accent-danger)',
+                borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: '600'
+              }}
+              title="Delete this Split"
+            >
+              <Trash2 size={14} /> Delete Split
             </button>
           </div>
 
@@ -1395,6 +1473,22 @@ export function SplitsPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL 5: DELETE SPLIT CONFIRMATION MODAL */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        title={`Delete "${splitToDelete?.name || 'Split'}"?`}
+        message="Are you sure you want to delete this split? All expenses and settlement records belonging to this split will be deleted."
+        confirmText="Delete Split"
+        cancelText="Cancel"
+        isDanger={true}
+        loading={isDeletingSplit}
+        onConfirm={handleConfirmDeleteSplit}
+        onCancel={() => {
+          setShowDeleteModal(false);
+          setSplitToDelete(null);
+        }}
+      />
     </div>
   );
 }
