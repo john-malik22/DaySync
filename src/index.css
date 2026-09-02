@@ -1318,10 +1318,12 @@ option {
   }
 }
 
-/* Dashboard Unified Grid System */
+/* Dashboard Unified Grid System (Supports Mixed Widget Sizes in Same Row) */
 .dashboard-widget-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  align-items: start;
   gap: var(--space-md);
   width: 100%;
   box-sizing: border-box;
@@ -1336,6 +1338,7 @@ option {
   box-shadow: var(--glass-shadow);
   transition: border-color 0.2s ease, transform 0.2s ease;
   overflow: hidden;
+  align-self: start;
 }
 
 /* Physical Per-Widget Size Geometries */
@@ -1376,6 +1379,8 @@ option {
   .dashboard-widget-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-flow: dense !important;
+    align-items: start !important;
     gap: 10px !important;
     width: 100% !important;
     box-sizing: border-box !important;
