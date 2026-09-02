@@ -616,6 +616,17 @@ option {
   .glass-card {
     padding: 14px 16px;
     width: 100%;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    scrollbar-width: none !important;
+  }
+
+  .glass-card::-webkit-scrollbar {
+    display: none !important;
   }
 
   .grid-2, .grid-3, .expenses-layout {
