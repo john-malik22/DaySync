@@ -134,31 +134,31 @@ export function PlansPage() {
       <PageHeaderRow title="PLANS & COMMITMENTS" onSearch={setSearch} />
 
       {/* Combined 3-Column Plan Summary Stat Card */}
-      <div className="plans-summary-card" style={{ padding: '4px 0', margin: '4px 0 12px 0' }}>
+      <div className="plans-summary-card" style={{ padding: '8px 0', margin: '4px 0 12px 0' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', textAlign: 'center', alignItems: 'center' }}>
           <div style={{ padding: '0 4px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', fontWeight: '700', textTransform: 'uppercase' }}>
+            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '3px', whiteSpace: 'nowrap', fontWeight: '700', textTransform: 'uppercase' }}>
               ACTIVE
             </span>
-            <strong className="plans-summary-value" style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
+            <strong className="plans-summary-value" style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)', display: 'block', lineHeight: '1.3' }}>
               {plans.length}
             </strong>
           </div>
 
           <div style={{ padding: '0 4px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', fontWeight: '700', textTransform: 'uppercase' }}>
+            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '3px', whiteSpace: 'nowrap', fontWeight: '700', textTransform: 'uppercase' }}>
               MONTHLY
             </span>
-            <strong className="plans-summary-value" style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--accent-primary)', display: 'block', lineHeight: '1.2' }}>
+            <strong className="plans-summary-value" style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-primary)', display: 'block', lineHeight: '1.3' }}>
               ₹{Math.round(totalMonthlyPlanCost).toLocaleString('en-IN')}
             </strong>
           </div>
 
           <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', fontWeight: '700', textTransform: 'uppercase' }}>
+            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '3px', whiteSpace: 'nowrap', fontWeight: '700', textTransform: 'uppercase' }}>
               ENDING SOON
             </span>
-            <strong className="plans-summary-value" style={{ fontSize: '1.25rem', fontWeight: '800', color: endingSoonCount > 0 ? 'var(--accent-warning)' : 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
+            <strong className="plans-summary-value" style={{ fontSize: '1.2rem', fontWeight: '800', color: endingSoonCount > 0 ? 'var(--accent-warning)' : 'var(--text-primary)', display: 'block', lineHeight: '1.3' }}>
               {endingSoonCount}
             </strong>
           </div>
