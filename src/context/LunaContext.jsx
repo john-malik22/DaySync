@@ -231,6 +231,9 @@ export function LunaProvider({ children }) {
       startingBalance
     });
     setSuggestion(computed);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('daysync_data_changed'));
+    }
   }, [tasks, expenses, startingBalance]);
 
   const fetchAllData = useCallback(async () => {

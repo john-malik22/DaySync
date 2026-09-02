@@ -38,6 +38,12 @@ export function NotificationProvider({ children }) {
     }
   });
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('daysync_data_changed'));
+    }
+  }, [notifications]);
+
   const updatePreferences = (newPrefs) => {
     setPreferences(prev => {
       const updated = { ...prev, ...newPrefs };
