@@ -886,8 +886,8 @@ option {
   .plans-summary-card {
     padding: 10px 8px !important;
     margin: 4px 0 8px 0 !important;
-    min-height: auto !important;
     height: auto !important;
+    min-height: 0 !important;
     max-height: none !important;
     overflow: visible !important;
     overflow-x: visible !important;
@@ -906,10 +906,12 @@ option {
     grid-template-columns: repeat(3, 1fr) !important;
     align-items: center !important;
     justify-content: center !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     overflow: visible !important;
     overflow-x: visible !important;
     overflow-y: visible !important;
-    height: auto !important;
   }
 
   .plans-summary-label {
