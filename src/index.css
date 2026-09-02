@@ -418,6 +418,7 @@ input[type="email"],
 input[type="password"],
 input[type="number"],
 input[type="date"],
+input[type="time"],
 select,
 textarea {
   width: 100%;
@@ -432,12 +433,25 @@ textarea {
   font-family: var(--font-body);
   font-size: 14px;
   outline: none;
+  box-sizing: border-box;
   transition: border-color 180ms ease, box-shadow 180ms ease;
 }
 
 input:focus, select:focus, textarea:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 10px var(--focus-ring);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8) sepia(1) saturate(5) hue-rotate(200deg);
 }
 
 option {

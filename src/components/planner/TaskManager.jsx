@@ -326,6 +326,7 @@ export function TaskManager({ searchFilter }) {
                       type="time"
                       value={dueTime}
                       onChange={(e) => setDueTime(e.target.value)}
+                      onFocus={handleMobileInputFocus}
                       disabled={isSubmitting}
                       style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
                     />
@@ -398,6 +399,7 @@ export function TaskManager({ searchFilter }) {
                       type="time"
                       value={dueTime}
                       onChange={(e) => setDueTime(e.target.value)}
+                      onFocus={handleMobileInputFocus}
                       disabled={isSubmitting}
                       style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
                     />
@@ -464,6 +466,7 @@ export function TaskManager({ searchFilter }) {
                       type="time"
                       value={dueTime}
                       onChange={(e) => setDueTime(e.target.value)}
+                      onFocus={handleMobileInputFocus}
                       disabled={isSubmitting}
                       style={{ width: '100%', fontSize: '12px', padding: '4px 6px', minHeight: '34px' }}
                     />
