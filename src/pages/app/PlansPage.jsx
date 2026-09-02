@@ -136,8 +136,8 @@ export function PlansPage() {
       {/* Combined 3-Column Plan Summary Stat Card */}
       <div className="glass-card plans-summary-card" style={{ padding: '12px 14px', margin: '8px 0 16px 0' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', textAlign: 'center', alignItems: 'center' }}>
-          <div style={{ padding: '0 4px', borderRight: '1px solid var(--border-color)' }}>
-            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '700', textTransform: 'uppercase' }}>
+          <div style={{ padding: '0 4px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', fontWeight: '700', textTransform: 'uppercase' }}>
               ACTIVE
             </span>
             <strong className="plans-summary-value" style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
@@ -145,8 +145,8 @@ export function PlansPage() {
             </strong>
           </div>
 
-          <div style={{ padding: '0 4px', borderRight: '1px solid var(--border-color)' }}>
-            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '700', textTransform: 'uppercase' }}>
+          <div style={{ padding: '0 4px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', fontWeight: '700', textTransform: 'uppercase' }}>
               MONTHLY
             </span>
             <strong className="plans-summary-value" style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--accent-primary)', display: 'block', lineHeight: '1.2' }}>
@@ -154,8 +154,8 @@ export function PlansPage() {
             </strong>
           </div>
 
-          <div style={{ padding: '0 4px' }}>
-            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '700', textTransform: 'uppercase' }}>
+          <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', fontWeight: '700', textTransform: 'uppercase' }}>
               ENDING SOON
             </span>
             <strong className="plans-summary-value" style={{ fontSize: '1.25rem', fontWeight: '800', color: endingSoonCount > 0 ? 'var(--accent-warning)' : 'var(--text-primary)', display: 'block', lineHeight: '1.2' }}>
