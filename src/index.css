@@ -1478,12 +1478,7 @@ option {
     border-radius: var(--radius-lg, 16px) !important;
   }
 
-  /* Mobile Header Account Avatar Button (<=768px) */
-  .mobile-header-account-avatar-btn {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
+
 
   /* Compact Mobile Add Dashboard Widgets Dialog Rules (<=768px) */
   .widget-picker-dialog {
