@@ -950,7 +950,7 @@ option {
 
   /* Mobile Recurring Items Natural Auto-Height Expansion Fix */
   .plans-recurring-section {
-    margin-top: 4px !important;
+    margin-top: 6px !important;
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;

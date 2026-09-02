@@ -134,7 +134,7 @@ export function PlansPage() {
       <PageHeaderRow title="PLANS & COMMITMENTS" onSearch={setSearch} />
 
       {/* Combined 3-Column Plan Summary Stat Card */}
-      <div className="glass-card plans-summary-card" style={{ padding: '12px 14px', margin: '8px 0 16px 0' }}>
+      <div className="plans-summary-card" style={{ padding: '4px 0', margin: '4px 0 12px 0' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', textAlign: 'center', alignItems: 'center' }}>
           <div style={{ padding: '0 4px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <span className="plans-summary-label" style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', whiteSpace: 'nowrap', fontWeight: '700', textTransform: 'uppercase' }}>
@@ -166,7 +166,7 @@ export function PlansPage() {
       </div>
 
       {/* RECURRING ITEM MANAGEMENT SECTION */}
-      <div className="plans-recurring-section" style={{ marginTop: '16px' }}>
+      <div className="plans-recurring-section" style={{ marginTop: '12px' }}>
         <RecurringManager />
       </div>
     </div>
