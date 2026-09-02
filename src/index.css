@@ -575,20 +575,30 @@ option {
   }
 }
 
-/* Mobile Navigation Drawer & Icon Rail (< 768px) */
-@media (max-width: 767px) {
-  .mobile-luna-chat-btn, .mobile-hamburger-btn {
+/* Mobile Navigation Drawer & Sidebar Removal (<= 768px) */
+@media (max-width: 768px) {
+  .mobile-luna-chat-btn {
     display: inline-flex !important;
   }
 
+  .mobile-hamburger-btn,
   .desktop-toggle-btn {
     display: none !important;
   }
 
-  /* Completely remove mobile sidebar navigation */
+  /* Completely remove mobile sidebar navigation and overlays across all open/route states */
   .sidebar-container,
-  .sidebar-overlay {
+  .sidebar-overlay,
+  .sidebar-container.mobile-open,
+  .sidebar-container.open,
+  aside.sidebar-container {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
   .sidebar-container .sidebar-text,
@@ -654,8 +664,8 @@ option {
   display: none !important;
 }
 
-/* Mobile Responsiveness Improvements (< 767px) */
-@media (max-width: 767px) {
+/* Mobile Responsiveness Improvements (<= 768px) */
+@media (max-width: 768px) {
   html, body {
     overflow-x: hidden !important;
   }
