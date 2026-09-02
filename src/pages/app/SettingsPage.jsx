@@ -764,7 +764,7 @@ export function SettingsPage() {
       <PageHeaderRow title="Settings" />
 
       {/* Navigation Chips Bar */}
-      <div className="scroll-row settings-nav-chips" style={{ marginBottom: 'var(--space-md)', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+      <div className="settings-nav-chips" style={{ marginBottom: 'var(--space-md)', paddingBottom: '4px', scrollbarWidth: 'none' }}>
         {sectionsNav.map(sec => {
           const IconComp = sec.icon;
           const isActive = activeSection === sec.key;
