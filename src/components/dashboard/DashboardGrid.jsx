@@ -19,6 +19,8 @@ export function DashboardGrid() {
 
   const [isArrangeMode, setIsArrangeMode] = useState(false);
   const [draggedWidgetId, setDraggedWidgetId] = useState(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   const [layout, setLayout] = useState(() => {
     try {
@@ -60,6 +62,12 @@ export function DashboardGrid() {
     setIsArrangeMode(false);
     saveLayoutToStorage(layout);
     if (showToast) showToast('Dashboard layout saved.', 'success');
+  };
+
+  const handleConfirmReset = () => {
+    setShowResetModal(false);
+    saveLayoutToStorage(DEFAULT_WIDGET_LAYOUT);
+    if (showToast) showToast('Dashboard layout reset to default.', 'info');
   };
 
   // Size change handler for individual widget
@@ -158,24 +166,49 @@ export function DashboardGrid() {
       {isArrangeMode && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '10px 16px', background: 'var(--accent-primary)', color: '#FFFFFF',
-          borderRadius: 'var(--radius-md)', marginBottom: '16px', boxShadow: 'var(--glass-shadow)',
-          position: 'sticky', top: '10px', zIndex: 30
+          flexWrap: 'wrap', gap: '8px', padding: '10px 14px', background: 'var(--bg-card)',
+          border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)',
+          marginBottom: '16px', boxShadow: 'var(--glass-shadow)', position: 'sticky', top: '10px', zIndex: 30
         }}>
-          <span style={{ fontSize: '13px', fontWeight: '700' }}>
-            Dashboard Edit Mode — Press & drag to reorder, use S/W/T/L to resize
-          </span>
           <button
             type="button"
-            onClick={handleDone}
+            onClick={() => setShowPicker(true)}
+            className="btn-primary"
             style={{
-              background: '#FFFFFF', color: 'var(--accent-primary)', border: 'none',
-              padding: '6px 16px', fontSize: '12.5px', fontWeight: '800', borderRadius: 'var(--radius-sm, 6px)',
-              cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px'
+              fontSize: '12px', padding: '6px 14px', display: 'inline-flex',
+              alignItems: 'center', gap: '5px', fontWeight: '700', borderRadius: 'var(--radius-sm, 6px)'
             }}
           >
-            <Check size={14} /> Done
+            <Plus size={14} /> Add Widget
           </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={() => setShowResetModal(true)}
+              style={{
+                fontSize: '12px', padding: '6px 14px', display: 'inline-flex',
+                alignItems: 'center', gap: '5px', fontWeight: '600', borderRadius: 'var(--radius-sm, 6px)',
+                background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)',
+                cursor: 'pointer'
+              }}
+            >
+              <RotateCcw size={13} /> Reset
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDone}
+              style={{
+                fontSize: '12px', padding: '6px 16px', display: 'inline-flex',
+                alignItems: 'center', gap: '5px', fontWeight: '800', borderRadius: 'var(--radius-sm, 6px)',
+                background: 'var(--accent-primary)', color: '#FFFFFF', border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <Check size={14} /> Done
+            </button>
+          </div>
         </div>
       )}
 
@@ -206,6 +239,27 @@ export function DashboardGrid() {
           ))}
         </div>
       )}
+
+      {/* Widget Picker Modal */}
+      <WidgetPickerModal
+        isOpen={showPicker}
+        onClose={() => setShowPicker(false)}
+        layout={layout}
+        onSaveLayout={(newLayout) => saveLayoutToStorage(newLayout)}
+        onResetLayout={() => saveLayoutToStorage(DEFAULT_WIDGET_LAYOUT)}
+      />
+
+      {/* Reset Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showResetModal}
+        title="Reset your Dashboard layout?"
+        message="This will restore the default DaySync Dashboard layout positions and sizes."
+        confirmText="Reset Layout"
+        cancelText="Cancel"
+        isDanger={true}
+        onConfirm={handleConfirmReset}
+        onCancel={() => setShowResetModal(false)}
+      />
     </div>
   );
 }
