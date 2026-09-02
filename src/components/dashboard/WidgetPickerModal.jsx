@@ -44,6 +44,18 @@ export function WidgetPickerModal({
     }
   }, [isOpen, layout]);
 
+  // Escape key listener to close modal on desktop
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const categories = ['ALL', 'CORE', 'FINANCE', 'PLANS', 'HABITS', 'LUNA', 'LIFE', 'UTILITY', 'SPLITS'];
@@ -106,24 +118,32 @@ export function WidgetPickerModal({
   const visibleCount = localLayout.filter(l => l.visible !== false).length;
 
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)',
-      zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px'
-    }}>
-      <div className="glass-card animate-fade-in" style={{
-        width: '100%', maxWidth: '520px', maxHeight: '85vh', display: 'flex', flexDirection: 'column',
-        padding: '16px', borderRadius: '16px', background: 'var(--bg-card)', border: '1px solid var(--border-color)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)'
-      }}>
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(6px)',
+        zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px', boxSizing: 'border-box'
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="glass-card animate-fade-in widget-picker-dialog"
+        style={{
+          width: '94vw', maxWidth: '480px', maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+          padding: '16px', borderRadius: '16px', background: 'var(--bg-card)', border: '1px solid var(--border-color)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)', margin: 'auto', boxSizing: 'border-box', overflow: 'hidden'
+        }}
+      >
         {/* Modal Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <SlidersHorizontal size={18} color="var(--accent-primary)" /> Manage Dashboard Widgets
+            <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <SlidersHorizontal size={18} color="var(--accent-primary)" /> Add Dashboard Widgets
             </h3>
             <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-              Visible: <strong style={{ color: 'var(--accent-primary)' }}>{visibleCount}</strong> of 20 widgets
+              Added: <strong style={{ color: 'var(--accent-primary)' }}>{visibleCount}</strong> of 20 widgets
             </span>
           </div>
 
@@ -131,12 +151,12 @@ export function WidgetPickerModal({
             type="button"
             onClick={onClose}
             style={{
-              background: 'transparent', border: 'none', color: 'var(--text-secondary)',
-              cursor: 'pointer', padding: '4px', borderRadius: '50%', display: 'flex', alignItems: 'center'
+              background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)',
+              cursor: 'pointer', padding: '5px', borderRadius: '50%', display: 'flex', alignItems: 'center'
             }}
             title="Close"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 

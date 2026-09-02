@@ -1426,6 +1426,16 @@ option {
     white-space: nowrap !important;
     box-sizing: border-box !important;
   }
+
+  /* Compact Centered Mobile Add Widget Dialog Rules (<=768px) */
+  .widget-picker-dialog {
+    width: 92vw !important;
+    max-width: 420px !important;
+    max-height: 78vh !important;
+    margin: auto !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
+  }
 }
 
 /* Mobile Account Actions (Settings Page) */
