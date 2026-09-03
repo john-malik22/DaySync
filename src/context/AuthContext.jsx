@@ -72,6 +72,21 @@ export function AuthProvider({ children }) {
     };
 
     initAuth();
+
+    function handleAuthExpired() {
+      setToken(null);
+      setUser(null);
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('daysync_auth_expired', handleAuthExpired);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('daysync_auth_expired', handleAuthExpired);
+      }
+    };
   }, []);
 
   const verifySessionInBackground = async (storedToken, cachedUser) => {

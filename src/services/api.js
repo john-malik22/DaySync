@@ -130,7 +130,16 @@ async function request(url, options = {}) {
       const rawMsg = errorData.error || errorData.message;
 
       let errorType = 'UNKNOWN';
-      if (res.status === 401) errorType = 'UNAUTHORIZED';
+      if (res.status === 401) {
+        errorType = 'UNAUTHORIZED';
+        try {
+          localStorage.removeItem('luna_token');
+          localStorage.removeItem('daysync_user_profile');
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('daysync_auth_expired'));
+          }
+        } catch (e) {}
+      }
       else if (res.status === 404) errorType = 'NOT_FOUND';
       else if (res.status >= 500) errorType = 'SERVER_UNAVAILABLE';
       else if (rawMsg) errorType = 'VALIDATION';
