@@ -97,11 +97,8 @@ export function Login() {
   };
 
   return (
-    <div className="login-page-wrapper" style={{
-      minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex',
-      alignItems: 'center', justifyContent: 'center', padding: '24px', boxSizing: 'border-box'
-    }}>
-      <div className="glass-card animate-fade-in login-card-container" style={{ width: '420px', padding: '36px' }}>
+    <div className="login-page-wrapper">
+      <div className="glass-card animate-fade-in login-card-container">
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <img
             src="/icons/icon-192.png"
