@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { App as CapacitorApp } from '@capacitor/app';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { LunaProvider } from './context/LunaContext';
@@ -137,8 +138,51 @@ function useMobileSwipeNavigation() {
   }, [location.pathname, navigate]);
 }
 
+function useAndroidBackButton() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.Capacitor?.isNativePlatform()) {
+      return;
+    }
+
+    let backListener = null;
+
+    const setupListener = async () => {
+      backListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        const currentPath = location.pathname;
+
+        const isRootExitPath = (
+          currentPath === '/app/dashboard' ||
+          currentPath === '/login' ||
+          currentPath === '/' ||
+          currentPath === '/onboarding'
+        );
+
+        if (isRootExitPath) {
+          CapacitorApp.exitApp();
+        } else if (canGoBack) {
+          navigate(-1);
+        } else {
+          navigate('/app/dashboard');
+        }
+      });
+    };
+
+    setupListener();
+
+    return () => {
+      if (backListener && typeof backListener.remove === 'function') {
+        backListener.remove();
+      }
+    };
+  }, [location.pathname, navigate]);
+}
+
 function AppLayout() {
   useMobileSwipeNavigation();
+  useAndroidBackButton();
 
   return (
     <div className="app-shell-layout">
