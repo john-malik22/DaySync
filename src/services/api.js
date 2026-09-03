@@ -3,15 +3,31 @@
  * Global Error Classification & Timeout Control
  */
 
-const envApiBase = typeof import.meta !== 'undefined' && import.meta.env ? (import.meta.env.VITE_API_URL || '') : '';
-const configuredApiBase = envApiBase.replace(/\/+$/, '');
+const DEFAULT_REMOTE_BACKEND = 'https://daysync-backend.onrender.com';
 
-const API_BASE =
-  configuredApiBase === ''
-    ? '/api'
-    : configuredApiBase.endsWith('/api')
-      ? configuredApiBase
-      : `${configuredApiBase}/api`;
+export function getApiBase() {
+  const envApiBase = typeof import.meta !== 'undefined' && import.meta.env ? (import.meta.env.VITE_API_URL || import.meta.env.VITE_RENDER_URL || '') : '';
+  const configuredApiBase = envApiBase.replace(/\/+$/, '');
+
+  // Detect if running inside Capacitor Android / native platform
+  const isCapacitorNative = typeof window !== 'undefined' && (
+    (window.Capacitor && (window.Capacitor.isNativePlatform() || window.Capacitor.platform !== 'web')) ||
+    window.location.protocol === 'capacitor:' ||
+    (window.location.hostname === 'localhost' && typeof window.Capacitor !== 'undefined')
+  );
+
+  if (configuredApiBase !== '') {
+    return configuredApiBase.endsWith('/api') ? configuredApiBase : `${configuredApiBase}/api`;
+  }
+
+  if (isCapacitorNative) {
+    const cleanRemote = DEFAULT_REMOTE_BACKEND.replace(/\/+$/, '');
+    return cleanRemote.endsWith('/api') ? cleanRemote : `${cleanRemote}/api`;
+  }
+
+  // Web / PWA / Vercel relative path
+  return '/api';
+}
 
 function getAuthHeader() {
   const token = localStorage.getItem('luna_token');
@@ -104,7 +120,8 @@ async function request(url, options = {}) {
   };
 
   try {
-    const res = await fetch(`${API_BASE}${url}`, config);
+    const apiBase = getApiBase();
+    const res = await fetch(`${apiBase}${url}`, config);
     clearTimeout(timeoutId);
 
     if (!res.ok) {

@@ -12,6 +12,9 @@
     "start": "concurrently \"npm run server\" \"npm run dev\""
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/cli": "^8.5.1",
+    "@capacitor/core": "^8.5.1",
     "bcryptjs": "^2.4.3",
     "canvas-confetti": "^1.9.4",
     "cors": "^2.8.5",
