@@ -21,3 +21,6 @@ Thumbs.db
 server/data_store.json
 .vercel
 .env*
+*.keystore
+*.jks
+key.properties
