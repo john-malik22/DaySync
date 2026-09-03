@@ -49,10 +49,7 @@ import {
   Globe,
   HelpCircle,
   Download,
-  Upload,
-  MessageSquare,
-  Wrench,
-  DollarSign
+  Upload
 } from 'lucide-react';
 
 function ToggleSwitch({ checked, onChange, label, description }) {
@@ -138,7 +135,7 @@ export function SettingsPage() {
     try {
       const exportData = {
         app: 'DaySync',
-        version: currentVersion,
+        version: '2.0.0',
         exportedAt: new Date().toISOString(),
         userProfile: {
           id: user?.id || 'user',
@@ -157,7 +154,6 @@ export function SettingsPage() {
           weekStartDay: localStorage.getItem('daysync_week_start') || 'monday',
           dateFormat: localStorage.getItem('daysync_date_format') || 'DD MMM YYYY',
           confirmDelete: localStorage.getItem('daysync_confirm_delete') !== 'false',
-          currency: localStorage.getItem('daysync_currency') || 'INR (₹)',
           activeWidgetIds: (() => {
             try {
               const layoutKey = `daysync_dashboard_layout_${user?.id || 'guest'}`;
@@ -255,9 +251,6 @@ export function SettingsPage() {
         if (settings.confirmDelete !== undefined) {
           localStorage.setItem('daysync_confirm_delete', String(settings.confirmDelete));
         }
-        if (settings.currency) {
-          localStorage.setItem('daysync_currency', settings.currency);
-        }
         if (settings.activeWidgetIds && user?.id) {
           const layoutKey = `daysync_dashboard_layout_${user.id}`;
           localStorage.setItem(layoutKey, JSON.stringify(settings.activeWidgetIds));
@@ -285,17 +278,31 @@ export function SettingsPage() {
   };
 
   const handleSaveStartingBalance = (e) => {
-    e?.preventDefault();
+    e.preventDefault();
     if (!balanceInput) return;
     updateStartingBalance(balanceInput);
     setIsEditingBalance(false);
-    if (showToast) showToast('Starting account balance updated.', 'success');
+    if (showToast) showToast('Starting balance updated.', 'success');
   };
 
   const handleStartEditBalance = () => {
-    setBalanceInput(startingBalance !== null ? startingBalance.toString() : '0');
+    setBalanceInput(startingBalance !== null ? startingBalance.toString() : '');
     setIsEditingBalance(true);
   };
+
+  // Section Scroll Refs
+  const accountRef = useRef(null);
+  const preferencesRef = useRef(null);
+  const dashboardRef = useRef(null);
+  const notificationsRef = useRef(null);
+  const lunaRef = useRef(null);
+  const defaultsRef = useRef(null);
+  const privacyRef = useRef(null);
+  const appRef = useRef(null);
+  const aboutRef = useRef(null);
+  const actionsRef = useRef(null);
+
+  const [activeSection, setActiveSection] = useState('account');
 
   // Modals & Sheets State
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -360,9 +367,6 @@ export function SettingsPage() {
   const [confirmDelete, setConfirmDelete] = useState(() => {
     return localStorage.getItem('daysync_confirm_delete') !== 'false';
   });
-  const [currency, setCurrency] = useState(() => {
-    return localStorage.getItem('daysync_currency') || 'INR (₹)';
-  });
 
   // Quiet Hours Preferences
   const [quietHoursEnabled, setQuietHoursEnabled] = useState(() => {
@@ -400,9 +404,12 @@ export function SettingsPage() {
     return {
       masterPush: true,
       taskDue: true,
+      taskOverdue: true,
       planExpiry: true,
+      planPayment: true,
+      habitReminders: true,
       splitUpdates: true,
-      quietHours: false
+      lunaSuggestions: true
     };
   });
 
@@ -414,11 +421,12 @@ export function SettingsPage() {
     } catch (e) {}
     return {
       enabled: true,
-      dailyFocus: true,
-      morningBriefing: true,
+      suggestions: true,
+      dailyBriefing: true,
       taskSuggestions: true,
       planReminders: true,
-      splitAssistance: true
+      splitAssistance: true,
+      proactiveHelp: true
     };
   });
 
@@ -432,6 +440,20 @@ export function SettingsPage() {
       }
     } catch (e) {}
     return 'dashboard';
+  });
+
+  // Defaults Settings
+  const [defaults, setDefaults] = useState(() => {
+    try {
+      const saved = localStorage.getItem('daysync_app_defaults');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      transactionType: 'spent',
+      taskDuration: '30',
+      expenseCategory: 'General',
+      startupPage: localStorage.getItem('daysync_startup_page') || 'dashboard'
+    };
   });
 
   // Loading States
@@ -479,12 +501,6 @@ export function SettingsPage() {
     setTransactionMsgBehavior(mode);
     localStorage.setItem('daysync_transaction_msg_behavior', mode);
     if (showToast) showToast(`Transaction message behavior set to ${mode}.`, 'success');
-  };
-
-  const handleCurrencyChange = (val) => {
-    setCurrency(val);
-    localStorage.setItem('daysync_currency', val);
-    if (showToast) showToast(`Currency updated to ${val}.`, 'success');
   };
 
   const handleToggleAutoBackup = (val) => {
@@ -549,35 +565,16 @@ export function SettingsPage() {
     });
   };
 
-  const handleTestNotification = async () => {
-    if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
-      if (showToast) showToast('Test native alert scheduled.', 'success');
-      return;
-    }
-
-    if (!('Notification' in window)) {
-      if (showToast) showToast("Push notifications aren't available on this device.", 'error');
-      return;
-    }
-
-    try {
-      let perm = Notification.permission;
-      if (perm === 'default') {
-        perm = await Notification.requestPermission();
+  const handleDefaultChange = (key, val) => {
+    setDefaults(prev => {
+      const updated = { ...prev, [key]: val };
+      localStorage.setItem('daysync_app_defaults', JSON.stringify(updated));
+      if (key === 'startupPage') {
+        localStorage.setItem('daysync_startup_page', val);
       }
-
-      if (perm === 'granted') {
-        new Notification('DaySync Alert', {
-          body: 'This is a test notification from DaySync!',
-          icon: '/icons/icon-192.png'
-        });
-        if (showToast) showToast('Test notification sent.', 'success');
-      } else {
-        if (showToast) showToast("Push notification permission not granted.", 'error');
-      }
-    } catch (err) {
-      if (showToast) showToast("Push notifications aren't available right now.", 'error');
-    }
+      return updated;
+    });
+    if (showToast) showToast('Default preference updated.', 'success');
   };
 
   // Account Handlers
@@ -703,6 +700,11 @@ export function SettingsPage() {
     if (showToast) showToast(`Added ${widget.title} widget to Dashboard.`, 'success');
   };
 
+  const scrollToSection = (ref, sectionKey) => {
+    setActiveSection(sectionKey);
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const handleConfirmClearHistory = async () => {
     if (isClearingHistory) return;
     setIsClearingHistory(true);
@@ -745,34 +747,20 @@ export function SettingsPage() {
 
   return (
     <div className="page-container settings-page-container">
-      {/* Top Header Row */}
+      {/* Top Header Row: Title SETTINGS */}
       <PageHeaderRow title="SETTINGS" />
 
       {/* COMPACT SINGLE-PAGE SETTINGS CONTAINER */}
       <div className="settings-compact-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-        
-        {/* 1. PROFILE SECTION */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <User size={18} color="var(--accent-primary)" /> Profile & Account Information
-          </h3>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
-            <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setShowProfileModal(true)} title="Click to edit cartoon avatar">
-              <UserAvatar avatarId={user?.avatar} name={user?.name} size={72} />
-              <div style={{
-                position: 'absolute', bottom: '0', right: '0',
-                background: 'var(--accent-primary)', color: '#FFFFFF',
-                borderRadius: '50%', width: '24px', height: '24px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: '2px solid var(--bg-card)'
-              }}>
-                <Edit2 size={12} />
-              </div>
+        {/* 1. USER PROFILE SECTION */}
+        <div ref={accountRef} className="glass-card settings-compact-card">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
+            <div style={{ cursor: 'pointer' }} onClick={() => setShowProfileModal(true)} title="Click to view/edit cartoon avatar">
+              <UserAvatar avatarId={user?.avatar} name={user?.name} size={64} />
             </div>
-
-            <div style={{ flex: 1, minWidth: '180px' }}>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)' }}>
                 {user?.name || 'DaySync User'}
               </h3>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -781,9 +769,9 @@ export function SettingsPage() {
             </div>
           </div>
 
-          <div className="profile-actions-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+          <div className="profile-actions-grid-2">
             <button type="button" onClick={() => setShowProfileModal(true)} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
-              <Sparkles size={13} /> Edit Avatar
+              <Sparkles size={13} /> Avatar & Profile
             </button>
             <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
               <Edit2 size={13} /> Edit Name
@@ -798,12 +786,12 @@ export function SettingsPage() {
         </div>
 
         {/* 2. APP & SYSTEM PREFERENCES */}
-        <div className="glass-card settings-compact-card">
+        <div ref={preferencesRef} className="glass-card settings-compact-card">
           <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <SlidersHorizontal size={18} color="var(--accent-primary)" /> App & System Preferences
           </h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {/* Theme Mode */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
               <div>
@@ -816,38 +804,30 @@ export function SettingsPage() {
               </button>
             </div>
 
-            {/* Transaction Messages */}
+            {/* Push Notifications Toggle */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Transaction Message Behavior</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Handling for expense and payment messages</div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Push Notifications</div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Receive system and device alerts</div>
               </div>
-              <select
-                value={transactionMsgBehavior}
-                onChange={(e) => handleTransactionMsgBehaviorChange(e.target.value)}
-                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
-              >
-                <option value="automatic">Automatic Log</option>
-                <option value="confirm">Confirm Before Sending</option>
-              </select>
+              {pushSupported && pushPermission !== 'denied' && (
+                <button
+                  type="button"
+                  onClick={handleTogglePush}
+                  disabled={pushLoading}
+                  className={pushEnabled ? 'btn-secondary' : 'btn-primary'}
+                  style={{ fontSize: '12px', padding: '6px 14px' }}
+                >
+                  {pushLoading ? 'Processing...' : pushEnabled ? 'Disable' : 'Enable'}
+                </button>
+              )}
             </div>
 
-            {/* Clear Luna Chat */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Clear Luna Chat</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Remove all stored conversations with Luna</div>
-              </div>
-              <button type="button" onClick={() => setShowClearHistoryModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px', color: 'var(--accent-warning)' }}>
-                <Trash2 size={13} /> Clear Chat
-              </button>
-            </div>
-
-            {/* Open Page on Startup */}
+            {/* Startup Page Selection */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Open Page on Startup</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Initial landing screen when launching app</div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Initial landing screen on app launch</div>
               </div>
               <select
                 value={startupPage}
@@ -863,321 +843,26 @@ export function SettingsPage() {
                 <option value="settings">Settings</option>
               </select>
             </div>
-
-            {/* Week Start Day */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Week Start Day</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Calendar & analytics start day</div>
-              </div>
-              <select
-                value={weekStartDay}
-                onChange={(e) => handleWeekStartChange(e.target.value)}
-                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
-              >
-                <option value="monday">Monday</option>
-                <option value="sunday">Sunday</option>
-              </select>
-            </div>
-
-            {/* Date Format */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Date Format</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Display format across dates</div>
-              </div>
-              <select
-                value={dateFormat}
-                onChange={(e) => handleDateFormatChange(e.target.value)}
-                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
-              >
-                <option value="DD MMM YYYY">DD MMM YYYY (e.g. 04 Sep 2026)</option>
-                <option value="MM/DD/YYYY">MM/DD/YYYY (e.g. 09/04/2026)</option>
-                <option value="YYYY-MM-DD">YYYY-MM-DD (e.g. 2026-09-04)</option>
-              </select>
-            </div>
-
-            {/* Confirm Before Deleting */}
-            <ToggleSwitch
-              checked={confirmDelete}
-              onChange={handleToggleConfirmDelete}
-              label="Confirm Before Deleting"
-              description="Show confirmation modal before deleting tasks or expenses"
-            />
-
-            {/* Currency */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Primary Currency</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Symbol used in expense snapshots</div>
-              </div>
-              <select
-                value={currency}
-                onChange={(e) => handleCurrencyChange(e.target.value)}
-                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
-              >
-                <option value="INR (₹)">INR (₹)</option>
-                <option value="USD ($)">USD ($)</option>
-                <option value="EUR (€)">EUR (€)</option>
-                <option value="GBP (£)">GBP (£)</option>
-              </select>
-            </div>
-
-            {/* Starting Account Balance */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Starting Account Balance</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-                  Current Baseline: <strong>₹{(startingBalance !== null ? startingBalance : 0).toLocaleString()}</strong>
-                </div>
-              </div>
-
-              {!isEditingBalance ? (
-                <button type="button" onClick={handleStartEditBalance} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px' }}>
-                  <Edit2 size={13} /> Edit Balance
-                </button>
-              ) : (
-                <form onSubmit={handleSaveStartingBalance} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <input
-                    type="number"
-                    value={balanceInput}
-                    onChange={(e) => setBalanceInput(e.target.value)}
-                    style={{ width: '90px', padding: '4px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
-                    placeholder="0"
-                    autoFocus
-                  />
-                  <button type="submit" className="btn-primary" style={{ padding: '4px 8px', fontSize: '12px' }}><Check size={13} /></button>
-                  <button type="button" onClick={() => setIsEditingBalance(false)} className="btn-secondary" style={{ padding: '4px 8px', fontSize: '12px' }}><X size={13} /></button>
-                </form>
-              )}
-            </div>
-
-            {/* Auto Backup */}
-            <ToggleSwitch
-              checked={autoBackup}
-              onChange={handleToggleAutoBackup}
-              label="Auto Data Backup"
-              description="Keep local user-scoped cache synchronized with cloud profile"
-            />
           </div>
         </div>
 
-        {/* 3. DASHBOARD SETTINGS */}
+        {/* 3. DATA BACKUP & RESTORE SECTION */}
         <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <Layout size={18} color="var(--accent-primary)" /> Dashboard & Widgets
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Database size={18} color="var(--accent-primary)" /> Backup & Restore Data
           </h3>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Active Widgets Count</div>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-                <strong>{activeWidgetIds.length}</strong> widget{activeWidgetIds.length !== 1 ? 's' : ''} visible on your dashboard
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button type="button" onClick={() => setIsWidgetPickerOpen(true)} className="btn-primary" style={{ fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Plus size={13} /> Manage Widgets
-              </button>
-              <button type="button" onClick={() => setShowDashboardResetModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px' }}>
-                Reset Layout
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* 4. NOTIFICATION SETTINGS */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <Bell size={18} color="var(--accent-primary)" /> Notification Settings
-          </h3>
-
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {/* Master Push */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Push Notifications</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Device and system push alerts</div>
-              </div>
-              {pushSupported && pushPermission !== 'denied' && (
-                <button
-                  type="button"
-                  onClick={handleTogglePush}
-                  disabled={pushLoading}
-                  className={pushEnabled ? 'btn-secondary' : 'btn-primary'}
-                  style={{ fontSize: '12px', padding: '6px 14px' }}
-                >
-                  {pushLoading ? 'Processing...' : pushEnabled ? 'Disable' : 'Enable'}
-                </button>
-              )}
-            </div>
-
-            {/* Task Alerts */}
-            <ToggleSwitch
-              checked={notifSettings.taskDue}
-              onChange={() => handleToggleNotifSetting('taskDue')}
-              label="Tasks & Reminders"
-              description="Alerts for due dates, overdue items, and meetings"
-            />
-
-            {/* Plan Expiry */}
-            <ToggleSwitch
-              checked={notifSettings.planExpiry}
-              onChange={() => handleToggleNotifSetting('planExpiry')}
-              label="Plans & Subscriptions"
-              description="Notifications for plan renewals and upcoming bills"
-            />
-
-            {/* Split Updates */}
-            <ToggleSwitch
-              checked={notifSettings.splitUpdates}
-              onChange={() => handleToggleNotifSetting('splitUpdates')}
-              label="Splits & Group Expenses"
-              description="Alerts when new split expenses or settlements occur"
-            />
-
-            {/* Quiet Hours */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Quiet Hours</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-                  Silence non-critical alerts ({quietStart} – {quietEnd})
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <button type="button" onClick={handleOpenQuietHoursModal} className="btn-secondary" style={{ fontSize: '12px', padding: '4px 10px' }}>
-                  Schedule
-                </button>
-                <div
-                  onClick={() => handleToggleQuietHours(!quietHoursEnabled)}
-                  style={{
-                    width: '44px', height: '24px', borderRadius: '12px',
-                    background: quietHoursEnabled ? 'var(--accent-primary)' : 'var(--bg-tertiary, rgba(255,255,255,0.15))',
-                    border: '1px solid var(--border-color)', padding: '2px', display: 'flex', alignItems: 'center',
-                    cursor: 'pointer', flexShrink: 0
-                  }}
-                >
-                  <div style={{
-                    width: '18px', height: '18px', borderRadius: '50%', background: '#FFFFFF',
-                    transform: quietHoursEnabled ? 'translateX(20px)' : 'translateX(0px)', transition: 'transform 0.2s ease'
-                  }} />
-                </div>
-              </div>
-            </div>
-
-            {/* Test Notification Button */}
-            <div style={{ paddingTop: '12px' }}>
-              <button type="button" onClick={handleTestNotification} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <Bell size={14} /> Send Test Notification
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* 5. LUNA AI SETTINGS */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <Sparkles size={18} color="var(--accent-primary)" /> Luna AI Companion Settings
-          </h3>
-
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {/* Luna AI Master Toggle */}
-            <ToggleSwitch
-              checked={lunaSettings.enabled}
-              onChange={() => handleToggleLunaSetting('enabled')}
-              label="Luna AI Master Companion"
-              description="Enable or disable Luna AI contextual insights across the app"
-            />
-
-            {/* Daily Focus & Productivity */}
-            <ToggleSwitch
-              checked={lunaSettings.dailyFocus}
-              onChange={() => handleToggleLunaSetting('dailyFocus')}
-              label="Daily Focus & Productivity Suggestions"
-              description="Contextual suggestions on task prioritization"
-            />
-
-            {/* Morning Daily Briefing */}
-            <ToggleSwitch
-              checked={lunaSettings.morningBriefing}
-              onChange={() => handleToggleLunaSetting('morningBriefing')}
-              label="Morning Daily Briefing"
-              description="Proactive morning summary of scheduled items"
-            />
-
-            {/* Automated Task Priority */}
-            <ToggleSwitch
-              checked={lunaSettings.taskSuggestions}
-              onChange={() => handleToggleLunaSetting('taskSuggestions')}
-              label="Automated Task Priority Assistance"
-              description="Smart detection of high priority deadlines"
-            />
-
-            {/* Proactive Plan Expiry Alerts */}
-            <ToggleSwitch
-              checked={lunaSettings.planReminders}
-              onChange={() => handleToggleLunaSetting('planReminders')}
-              label="Proactive Plan Expiry Alerts"
-              description="Automatic renewal reminders for utility plans"
-            />
-
-            {/* Split Debt Simplification */}
-            <ToggleSwitch
-              checked={lunaSettings.splitAssistance}
-              onChange={() => handleToggleLunaSetting('splitAssistance')}
-              label="Split Debt Simplification Assistance"
-              description="Smart calculation of minimum transaction settlements"
-            />
-          </div>
-        </div>
-
-        {/* 6. PRIVACY & SECURITY */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <Shield size={18} color="var(--accent-primary)" /> Privacy & Security
-          </h3>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Security Status</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>JWT Authenticated • Encrypted TLS Session</div>
-              </div>
-              <span style={{ fontSize: '11px', background: 'rgba(47, 111, 115, 0.15)', color: 'var(--accent-primary)', padding: '3px 8px', borderRadius: '6px', fontWeight: '700' }}>
-                Protected ✓
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Email Verification</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Status for {user?.email || 'account'}</div>
-              </div>
-              <span style={{ fontSize: '11px', background: 'rgba(47, 111, 115, 0.15)', color: 'var(--accent-primary)', padding: '3px 8px', borderRadius: '6px', fontWeight: '700' }}>
-                Verified ✓
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* 7. DATA BACKUP & RESTORE */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <Database size={18} color="var(--accent-primary)" /> Data & Backup Management
-          </h3>
-
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
+          <p className="settings-compact-subtitle" style={{ color: 'var(--text-muted)' }}>
             Export or restore your DaySync tasks, expenses, plans, and preferences to a JSON backup file.
           </p>
 
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '12px', flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={handleExportData}
               className="btn-primary"
               style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              <Download size={14} /> Export My Data (.json)
+              <Download size={14} /> Export Backup (.json)
             </button>
 
             <button
@@ -1186,7 +871,7 @@ export function SettingsPage() {
               className="btn-secondary"
               style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              <Upload size={14} /> Restore Data File
+              <Upload size={14} /> Restore from File
             </button>
 
             <input
@@ -1197,127 +882,29 @@ export function SettingsPage() {
               style={{ display: 'none' }}
             />
           </div>
+        </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Conversation History</div>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Stored chat logs with Luna AI</div>
-            </div>
+        {/* 4. PRIVACY & ACCOUNT ACTIONS */}
+        <div ref={privacyRef} className="glass-card settings-compact-card">
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Shield size={18} color="var(--accent-primary)" /> Privacy & Account Actions
+          </h3>
+
+          <div style={{ display: 'flex', gap: '10px', marginTop: '12px', flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={() => setShowClearHistoryModal(true)}
               className="btn-secondary"
-              style={{ color: 'var(--accent-warning)', fontSize: '12px', padding: '6px 12px' }}
+              style={{ color: 'var(--accent-warning)', fontSize: '12px', padding: '8px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              <Trash2 size={13} /> Clear Chat History
+              <Trash2 size={14} /> Clear Chat History
             </button>
-          </div>
-        </div>
 
-        {/* 8. APP & PWA STATUS */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <Smartphone size={18} color="var(--accent-primary)" /> App & PWA Status
-          </h3>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>App Version</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>DaySync Release {currentVersion}</div>
-              </div>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>v{currentVersion}</span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Update Status</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-                  {updateAvailable ? 'New release available!' : 'App is up to date'}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={checkForUpdates}
-                disabled={checking}
-                className="btn-secondary"
-                style={{ fontSize: '12px', padding: '6px 12px' }}
-              >
-                {checking ? 'Checking...' : 'Check Updates'}
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Developer Support</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Need help or found a bug?</div>
-              </div>
-              <a
-                href="mailto:support@daysync.ai"
-                className="btn-secondary"
-                style={{ fontSize: '12px', padding: '6px 12px', textDecoration: 'none' }}
-              >
-                <Mail size={13} /> Contact Developer
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* 9. ABOUT DAYSYNC & HELP */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <Info size={18} color="var(--accent-primary)" /> About DaySync & Help
-          </h3>
-
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 12px 0', lineHeight: '1.5' }}>
-            DaySync 2.0 is your intelligent life, expense, subscription, and split-sharing companion powered by Luna AI.
-          </p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', padding: '12px', borderRadius: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '14px' }}>
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>VERSION</div>
-              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{currentVersion}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>ENGINE</div>
-              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Luna 2.0</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>PLATFORM</div>
-              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                {typeof window !== 'undefined' && window.Capacitor?.isNativePlatform() ? 'Android Native' : 'Web PWA'}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>NETWORK</div>
-              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--accent-success)' }}>
-                {typeof navigator !== 'undefined' && navigator.onLine ? 'Online' : 'Offline'}
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => navigate('/app/chat')}
-            className="btn-primary"
-            style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-          >
-            <MessageSquare size={14} /> Ask Luna Assistant
-          </button>
-        </div>
-
-        {/* 10. ACCOUNT ACTIONS */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <Lock size={18} color="var(--accent-primary)" /> Account Actions
-          </h3>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <button
               type="button"
               onClick={() => setShowLogoutModal(true)}
               className="btn-secondary"
-              style={{ fontSize: '12.5px', padding: '10px', justifyContent: 'center', fontWeight: '700' }}
+              style={{ fontSize: '12px', padding: '8px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
               <LogOut size={14} /> Log Out
             </button>
@@ -1326,13 +913,12 @@ export function SettingsPage() {
               type="button"
               onClick={() => setShowDeleteModal(true)}
               className="btn-secondary"
-              style={{ color: 'var(--accent-danger)', fontSize: '12.5px', padding: '10px', justifyContent: 'center', fontWeight: '700' }}
+              style={{ color: 'var(--accent-danger)', fontSize: '12px', padding: '8px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
               <UserX size={14} /> Delete Account
             </button>
           </div>
         </div>
-
       </div>
 
       {/* Account Modals */}
@@ -1469,156 +1055,10 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* Quiet Hours Schedule Edit Modal */}
-      {showQuietHoursModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '360px', padding: '20px', borderRadius: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Quiet Hours Schedule</h3>
-              <button type="button" onClick={() => setShowQuietHoursModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={18} /></button>
-            </div>
-            <form onSubmit={handleSaveQuietHoursModal}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Start Time</label>
-                  <input
-                    type="time"
-                    value={tempQuietStart}
-                    onChange={(e) => setTempQuietStart(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px', fontSize: '13px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>End Time</label>
-                  <input
-                    type="time"
-                    value={tempQuietEnd}
-                    onChange={(e) => setTempQuietEnd(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px', fontSize: '13px' }}
-                  />
-                </div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                <button type="button" onClick={() => setShowQuietHoursModal(false)} className="btn-secondary" style={{ fontSize: '12px' }}>Cancel</button>
-                <button type="submit" className="btn-primary" style={{ fontSize: '12px' }}>Save Schedule</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Profile & Avatar Preview Modal */}
-      {showProfileModal && (
-        <div className="modal-overlay" onClick={() => setShowProfileModal(false)}>
-          <div
-            className="modal-content glass-card"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '420px', width: '90%', padding: '24px', textAlign: 'center', position: 'relative' }}
-          >
-            <button
-              type="button"
-              onClick={() => setShowProfileModal(false)}
-              style={{ position: 'absolute', top: '14px', right: '14px', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-            >
-              <X size={18} />
-            </button>
-
-            {!isEditingAvatar ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-                <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setIsEditingAvatar(true)} title="Click to edit avatar">
-                  <UserAvatar avatarId={user?.avatar} name={user?.name} size={96} />
-                  <div style={{
-                    position: 'absolute', bottom: '2px', right: '2px',
-                    background: 'var(--accent-primary)', color: '#FFFFFF',
-                    borderRadius: '50%', width: '28px', height: '28px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: '2px solid var(--bg-card)'
-                  }}>
-                    <Edit2 size={13} />
-                  </div>
-                </div>
-
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>
-                    {user?.name || 'User'}
-                  </h3>
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    {user?.email || 'user@daysync.app'}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsEditingAvatar(true)}
-                  className="btn-primary"
-                  style={{ width: '100%', padding: '10px', fontSize: '13px', fontWeight: '700', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                >
-                  <Edit2 size={15} /> Edit Cartoon Avatar
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '4px' }}>
-                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                    Choose Cartoon Avatar
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingAvatar(false)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                  >
-                    Back
-                  </button>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', width: '100%', maxHeight: '300px', overflowY: 'auto', padding: '4px' }}>
-                  {AVATAR_LIST.map((av) => {
-                    const currentAvatar = user?.avatar || (typeof window !== 'undefined' ? localStorage.getItem('daysync_user_avatar') : null) || 'dog';
-                    const isSelected = currentAvatar === av.id;
-                    return (
-                      <button
-                        key={av.id}
-                        type="button"
-                        onClick={() => handleSelectAvatar(av.id)}
-                        style={{
-                          background: isSelected ? 'rgba(91, 80, 230, 0.14)' : 'var(--bg-card)',
-                          border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                          borderRadius: '12px',
-                          padding: '10px 4px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '6px',
-                          cursor: 'pointer',
-                          position: 'relative',
-                          transition: 'all 0.15s ease',
-                          outline: 'none'
-                        }}
-                      >
-                        <CartoonAvatar id={av.id} size={48} />
-                        <span style={{ fontSize: '11px', fontWeight: isSelected ? '700' : '500', color: isSelected ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
-                          {av.name}
-                        </span>
-                        {isSelected && (
-                          <div style={{ position: 'absolute', top: '-4px', right: '-4px', background: 'var(--accent-primary)', color: '#FFFFFF', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                            <Check size={11} strokeWidth={3} />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Confirmation Modals */}
       <ConfirmationModal isOpen={showLogoutModal} title="Log out of DaySync?" message="Are you sure you want to log out of your session?" confirmText="Log Out" cancelText="Cancel" isDanger={false} isLoading={isLoggingOut} onConfirm={handleConfirmLogout} onCancel={() => setShowLogoutModal(false)} />
       <ConfirmationModal isOpen={showDeleteModal} title="Delete your DaySync account?" message="Your account and associated data will be permanently deleted. This action cannot be undone." confirmText="Delete Account" cancelText="Cancel" isDanger={true} isLoading={isDeletingAccount} onConfirm={handleConfirmDeleteAccount} onCancel={() => setShowDeleteModal(false)} />
       <ConfirmationModal isOpen={showClearHistoryModal} title="Clear your conversation history?" message="Are you sure you want to clear your stored chat messages? This action cannot be undone." confirmText="Clear History" cancelText="Cancel" isDanger={true} isLoading={isClearingHistory} onConfirm={handleConfirmClearHistory} onCancel={() => setShowClearHistoryModal(false)} />
-      <ConfirmationModal isOpen={showDashboardResetModal} title="Reset Dashboard Layout?" message="This will restore the default widget arrangement and sizes. Your tasks, expenses, and data will not be affected." confirmText="Reset Layout" cancelText="Cancel" isDanger={true} onConfirm={handleConfirmResetDashboard} onCancel={() => setShowDashboardResetModal(false)} />
 
       {/* RESTORE DATA CONFIRMATION MODAL */}
       <ConfirmationModal
@@ -1633,14 +1073,6 @@ export function SettingsPage() {
           setShowRestoreModal(false);
           setRestorePayload(null);
         }}
-      />
-
-      {/* Widget Picker Modal */}
-      <WidgetPickerModal
-        isOpen={isWidgetPickerOpen}
-        onClose={() => setIsWidgetPickerOpen(false)}
-        activeWidgetIds={activeWidgetIds}
-        onAddWidget={handleAddWidget}
       />
     </div>
   );

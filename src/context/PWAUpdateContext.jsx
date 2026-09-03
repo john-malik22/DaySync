@@ -24,7 +24,7 @@ const DEFAULT_HIGHLIGHTS = [
 ];
 
 export function PWAUpdateProvider({ children }) {
-  const currentVersion = pkg.version || '2.0.1';
+  const currentVersion = pkg.version || '2.0.0';
 
   const [checking, setChecking] = useState(false);
   const [hasCheckedManually, setHasCheckedManually] = useState(false);
@@ -376,8 +376,8 @@ export function usePWAUpdate() {
   const context = useContext(PWAUpdateContext);
   if (!context) {
     return {
-      currentVersion: pkg.version || '2.0.1',
-      latestVersion: pkg.version || '2.0.1',
+      currentVersion: pkg.version || '1.1.2',
+      latestVersion: pkg.version || '1.1.2',
       updateAvailable: false,
       showUpdatePrompt: false,
       dismissedVersion: null,

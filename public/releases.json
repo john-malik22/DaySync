@@ -1,12 +1,4 @@
 {
-  "2.0.1": {
-    "title": "DaySync 2.0.1",
-    "highlights": [
-      "Bug fixes and performance improvements.",
-      "Profile avatar persistence and synchronization enhancements.",
-      "Version display consistency across all UI components."
-    ]
-  },
   "2.0.0": {
     "title": "DaySync 2.0.0",
     "highlights": [

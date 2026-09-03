@@ -6,23 +6,23 @@ export function SummaryCards() {
   const { tasks, expenses, memories } = useLuna();
 
   const savedTarget = localStorage.getItem('luna_monthly_budget_target');
-  const budgetTarget = savedTarget ? parseFloat(savedTarget) : 0;
+  const budgetTarget = savedTarget ? parseFloat(savedTarget) : 20000;
 
-  const pendingTasks = (tasks || []).filter(t => !t.completed).length;
-  const totalSpent = (expenses || []).filter(e => e.type !== 'income').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const pendingTasks = tasks.filter(t => !t.completed).length;
+  const totalSpent = expenses.filter(e => e.type !== 'income').reduce((acc, curr) => acc + curr.amount, 0);
 
   const cards = [
     {
       title: 'Pending Tasks',
       value: pendingTasks,
-      subtitle: `${(tasks || []).length} total assigned`,
+      subtitle: `${tasks.length} total assigned`,
       icon: CheckSquare,
       color: 'var(--accent-primary)'
     },
     {
       title: 'Monthly Expenses',
-      value: `$${totalSpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      subtitle: budgetTarget > 0 ? `Target $${budgetTarget.toLocaleString()}` : 'No budget target set',
+      value: `₹${totalSpent.toLocaleString()}`,
+      subtitle: `Target ₹${budgetTarget.toLocaleString()}`,
       icon: CreditCard,
       color: 'var(--accent-warning)'
     },
