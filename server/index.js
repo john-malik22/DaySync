@@ -1,15 +1,14 @@
-import crypto from 'crypto';
 import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
-import webpush from 'web-push';
+import crypto from 'crypto';
 import { db } from './db.js';
 import { classifyIntent } from './intentEngine.js';
 import { detectPotentialMemory } from './memoryEngine.js';
 import { generatePersonalizedSuggestion } from './suggestionEngine.js';
-import { sendVerificationEmail, sendPasswordResetEmail } from './emailService.js';
+import { calculateEndDate, parseDuration, formatHumanDate } from '../src/services/dateUtils.js';
 
 dotenv.config();
 
@@ -17,24 +16,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'daysync_companion_super_secret_jwt_key_2026';
 
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@daysync.app';
-
-if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
-  try {
-    webpush.setVapidDetails(
-      VAPID_SUBJECT,
-      VAPID_PUBLIC_KEY,
-      VAPID_PRIVATE_KEY
-    );
-    console.log('[WebPush] VAPID credentials configured successfully.');
-  } catch (err) {
-    console.warn('[WebPush] VAPID setup error:', err.message);
-  }
-}
-
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
 app.use(express.json());
 
 // --- Authentication Middleware ---
@@ -53,79 +39,10 @@ function authenticate(req, res, next) {
   }
 }
 
-// --- OTP & SECURITY HELPERS ---
-function generate6DigitOtp() {
-  return crypto.randomInt(100000, 999999).toString();
-}
+// --- AUTHENTICATION ENDPOINTS (PASSWORD-BASED) ---
 
-function hashOtp(otp) {
-  return crypto.createHash('sha256').update(otp).digest('hex');
-}
-
-function createAndStoreOtp(email, type = 'VERIFICATION') {
-  const store = db.read();
-  store.otps = store.otps || [];
-
-  const normalizedEmail = email.toLowerCase().trim();
-  const now = Date.now();
-
-  // Rate Limiting: Check 45s cooldown
-  const recentOtp = store.otps.find(o =>
-    o.email === normalizedEmail &&
-    o.type === type &&
-    !o.used &&
-    (new Date(o.createdAt).getTime() + 45000) > now
-  );
-
-  if (recentOtp) {
-    const remainingSeconds = Math.ceil(((new Date(recentOtp.createdAt).getTime() + 45000) - now) / 1000);
-    throw new Error(`Please wait ${remainingSeconds}s before requesting a new code.`);
-  }
-
-  // Rate Limiting: Max 5 sends per hour per email
-  const oneHourAgo = now - 3600000;
-  const hourlyCount = store.otps.filter(o =>
-    o.email === normalizedEmail &&
-    o.type === type &&
-    new Date(o.createdAt).getTime() > oneHourAgo
-  ).length;
-
-  if (hourlyCount >= 5) {
-    throw new Error('Too many verification requests. Please try again in an hour.');
-  }
-
-  // Invalidate old unused OTPs of the same type for this email
-  store.otps.forEach(o => {
-    if (o.email === normalizedEmail && o.type === type) {
-      o.used = true;
-    }
-  });
-
-  const rawOtp = generate6DigitOtp();
-  const otpHash = hashOtp(rawOtp);
-
-  const otpRecord = {
-    id: `otp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-    email: normalizedEmail,
-    otpHash,
-    type,
-    expiresAt: new Date(now + 10 * 60 * 1000).toISOString(),
-    attempts: 0,
-    maxAttempts: 5,
-    used: false,
-    createdAt: new Date(now).toISOString()
-  };
-
-  store.otps.push(otpRecord);
-  db.write(store);
-
-  return { rawOtp, otpRecord };
-}
-
-// --- AUTHENTICATION & OTP ENDPOINTS ---
-
-// 1. Signup Route: Pending Signup Creation (NO ACTIVE USER UNTIL OTP VERIFIED)
-app.post('/api/auth/signup', async (req, res) => {
+// 1. Strict Password Signup Route
+app.post('/api/auth/signup', (req, res) => {
   const { name, email, password } = req.body;
   if (!email || !password || !name) {
     return res.status(400).json({ error: 'Name, Email, and Password are all required.' });
@@ -133,14 +50,11 @@ app.post('/api/auth/signup', async (req, res) => {
 
   const normalizedEmail = email.toLowerCase().trim();
   const store = db.read();
-  store.users = store.users || [];
-  store.pendingSignups = store.pendingSignups || [];
 
-  // Check if email ALREADY EXISTS in active users
   const existingUser = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
   if (existingUser) {
     return res.status(400).json({
-      error: 'An account with this email address already exists.',
+      error: 'An account with this email address already exists. Please Log In.',
       code: 'USER_EXISTS'
     });
   }
@@ -148,149 +62,34 @@ app.post('/api/auth/signup', async (req, res) => {
   const salt = bcrypt.genSaltSync(10);
   const passwordHash = bcrypt.hashSync(password, salt);
 
-  // Clean up any stale pending signups for this email
-  store.pendingSignups = store.pendingSignups.filter(p => p.email !== normalizedEmail);
-
-  const pendingRecord = {
-    id: `pending_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+  const newUser = {
+    id: `usr_${Date.now()}`,
     name: name.trim(),
     email: normalizedEmail,
     passwordHash: passwordHash,
+    preferences: { theme: 'dark', currency: '₹' },
     createdAt: new Date().toISOString()
   };
 
-  store.pendingSignups.push(pendingRecord);
+  store.users.push(newUser);
   db.write(store);
 
-  try {
-    const { rawOtp } = createAndStoreOtp(normalizedEmail, 'SIGNUP_VERIFICATION');
-    await sendVerificationEmail({ to: normalizedEmail, otp: rawOtp });
-  } catch (err) {
-    return res.status(400).json({ error: err.message || 'Could not send verification email.' });
-  }
+  console.log(`[SIGNUP SUCCESS] Created new user: ${normalizedEmail}`);
 
-  console.log(`[SIGNUP OTP SENT] Pending signup verification code sent to: ${normalizedEmail}`);
-
+  const token = jwt.sign({ id: newUser.id, name: newUser.name, email: newUser.email }, JWT_SECRET, { expiresIn: '7d' });
   res.json({
-    requiresVerification: true,
-    email: normalizedEmail,
-    message: 'Account signup pending. We sent a 6-digit verification code to your email.'
-  });
-});
-
-// 2. Resend Signup Verification OTP
-app.post('/api/auth/send-verification-otp', async (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ error: 'Email address is required.' });
-  }
-
-  const normalizedEmail = email.toLowerCase().trim();
-  const store = db.read();
-  const existingUser = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
-  const pending = (store.pendingSignups || []).find(p => p.email === normalizedEmail);
-
-  if (existingUser && existingUser.emailVerified !== false) {
-    return res.status(400).json({ error: 'An account with this email address already exists.' });
-  }
-
-  if (!pending && !existingUser) {
-    return res.status(404).json({ error: 'No pending signup found for this email address.' });
-  }
-
-  try {
-    const { rawOtp } = createAndStoreOtp(normalizedEmail, 'SIGNUP_VERIFICATION');
-    await sendVerificationEmail({ to: normalizedEmail, otp: rawOtp });
-  } catch (err) {
-    return res.status(400).json({ error: err.message || 'Could not send verification code.' });
-  }
-
-  res.json({
-    success: true,
-    message: `Verification code sent to ${normalizedEmail}.`
-  });
-});
-
-// 3. Verify Signup OTP & Create Active User Account
-app.post('/api/auth/verify-verification-otp', (req, res) => {
-  const { email, otp } = req.body;
-  if (!email || !otp) {
-    return res.status(400).json({ error: 'Email and verification code are required.' });
-  }
-
-  const normalizedEmail = email.toLowerCase().trim();
-  const store = db.read();
-  store.otps = store.otps || [];
-  store.pendingSignups = store.pendingSignups || [];
-  store.users = store.users || [];
-
-  const now = new Date().toISOString();
-  const otpRecord = store.otps.find(o =>
-    o.email === normalizedEmail &&
-    (o.type === 'SIGNUP_VERIFICATION' || o.type === 'VERIFICATION') &&
-    !o.used &&
-    o.expiresAt > now
-  );
-
-  if (!otpRecord) {
-    return res.status(400).json({ error: 'This code has expired. Please request a new code.' });
-  }
-
-  if (otpRecord.attempts >= otpRecord.maxAttempts) {
-    otpRecord.used = true;
-    db.write(store);
-    return res.status(400).json({ error: 'Too many invalid attempts. Please request a new code.' });
-  }
-
-  const inputHash = hashOtp(otp.trim());
-  if (inputHash !== otpRecord.otpHash) {
-    otpRecord.attempts += 1;
-    db.write(store);
-    return res.status(400).json({ error: 'That code is incorrect.' });
-  }
-
-  otpRecord.used = true;
-
-  const pendingIndex = store.pendingSignups.findIndex(p => p.email === normalizedEmail);
-  const pending = pendingIndex !== -1 ? store.pendingSignups[pendingIndex] : null;
-  let user = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
-
-  if (!user && !pending) {
-    return res.status(400).json({ error: 'No pending signup found for this email address.' });
-  }
-
-  if (!user && pending) {
-    user = {
-      id: `usr_${Date.now()}`,
-      name: pending.name,
-      email: pending.email,
-      passwordHash: pending.passwordHash,
-      emailVerified: true,
-      preferences: { theme: 'dark', currency: '₹' },
-      createdAt: new Date().toISOString()
-    };
-    store.users.push(user);
-    store.pendingSignups.splice(pendingIndex, 1);
-  } else if (user) {
-    user.emailVerified = true;
-    if (pendingIndex !== -1) {
-      store.pendingSignups.splice(pendingIndex, 1);
-    }
-  }
-
-  db.write(store);
-
-  console.log(`[SIGNUP COMPLETED] User account created and verified for: ${normalizedEmail}`);
-
-  const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-  res.json({
-    success: true,
     token,
-    user: { id: user.id, name: user.name, email: user.email, preferences: user.preferences }
+    user: {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      avatar: newUser.avatar || null,
+      preferences: newUser.preferences
+    }
   });
 });
 
-// 4. Strict Password Login Route with Verification Enforcement
+// 2. Strict Password Login Route
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -316,159 +115,18 @@ app.post('/api/auth/login', (req, res) => {
     });
   }
 
-  if (user.emailVerified === false) {
-    return res.status(403).json({
-      error: 'Please verify your email before continuing.',
-      code: 'EMAIL_NOT_VERIFIED',
-      requiresVerification: true,
-      email: normalizedEmail
-    });
-  }
-
   console.log(`[LOGIN SUCCESS] User authenticated: ${normalizedEmail}`);
 
   const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
   res.json({
     token,
-    user: { id: user.id, name: user.name, email: user.email, preferences: user.preferences }
-  });
-});
-
-// 5. Forgot Password: Request OTP (ONLY DISPATCH IF USER EXISTS)
-app.post('/api/auth/forgot-password', async (req, res) => {
-  const { email } = req.body;
-  if (!email || !email.trim()) {
-    return res.status(400).json({ error: 'Email address is required.' });
-  }
-
-  const normalizedEmail = email.toLowerCase().trim();
-  const store = db.read();
-  const user = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
-
-  const genericResponse = {
-    success: true,
-    message: 'If an account exists with that email address, a password reset code has been sent.'
-  };
-
-  // SECURITY RULE: If account DOES NOT exist, return generic response without sending OTP
-  if (!user) {
-    console.log(`[FORGOT PASSWORD] Account ${normalizedEmail} does not exist. Skipping Brevo dispatch.`);
-    return res.json(genericResponse);
-  }
-
-  try {
-    const { rawOtp } = createAndStoreOtp(normalizedEmail, 'RESET');
-    const result = await sendPasswordResetEmail({ to: normalizedEmail, otp: rawOtp });
-    if (!result.success) {
-      console.error(`[FORGOT PASSWORD BREVO ERROR] Delivery failed for ${normalizedEmail}:`, result.error);
-    } else {
-      console.log(`[FORGOT PASSWORD BREVO SUCCESS] Reset OTP delivered to ${normalizedEmail}`);
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar || null,
+      preferences: user.preferences
     }
-  } catch (err) {
-    console.error(`[FORGOT PASSWORD OTP ERROR] Request error for ${normalizedEmail}:`, err.message);
-  }
-
-  res.json(genericResponse);
-});
-
-// 6. Verify Reset OTP
-app.post('/api/auth/verify-reset-otp', (req, res) => {
-  const { email, otp } = req.body;
-  if (!email || !otp) {
-    return res.status(400).json({ error: 'Email and reset code are required.' });
-  }
-
-  const normalizedEmail = email.toLowerCase().trim();
-  const store = db.read();
-  store.otps = store.otps || [];
-  store.resetTokens = store.resetTokens || [];
-
-  const now = new Date().toISOString();
-  const otpRecord = store.otps.find(o =>
-    o.email === normalizedEmail &&
-    o.type === 'RESET' &&
-    !o.used &&
-    o.expiresAt > now
-  );
-
-  if (!otpRecord) {
-    return res.status(400).json({ error: 'Invalid or expired reset code. Please request a new code.' });
-  }
-
-  if (otpRecord.attempts >= otpRecord.maxAttempts) {
-    otpRecord.used = true;
-    db.write(store);
-    return res.status(400).json({ error: 'Too many invalid attempts. Please request a new reset code.' });
-  }
-
-  const inputHash = hashOtp(otp.trim());
-  if (inputHash !== otpRecord.otpHash) {
-    otpRecord.attempts += 1;
-    db.write(store);
-    const remaining = otpRecord.maxAttempts - otpRecord.attempts;
-    return res.status(400).json({
-      error: `Invalid reset code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`
-    });
-  }
-
-  otpRecord.used = true;
-  const resetToken = `rst_${Date.now()}_${crypto.randomBytes(16).toString('hex')}`;
-  const resetTokenRecord = {
-    token: resetToken,
-    email: normalizedEmail,
-    expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
-    used: false
-  };
-
-  store.resetTokens.push(resetTokenRecord);
-  db.write(store);
-
-  res.json({
-    success: true,
-    resetToken
-  });
-});
-
-// 7. Reset Password with Reset Token
-app.post('/api/auth/reset-password', (req, res) => {
-  const { email, resetToken, newPassword } = req.body;
-  if (!email || !resetToken || !newPassword) {
-    return res.status(400).json({ error: 'Email, reset token, and new password are required.' });
-  }
-
-  if (newPassword.length < 6) {
-    return res.status(400).json({ error: 'New password must be at least 6 characters long.' });
-  }
-
-  const normalizedEmail = email.toLowerCase().trim();
-  const store = db.read();
-  store.resetTokens = store.resetTokens || [];
-
-  const now = new Date().toISOString();
-  const tokenRecord = store.resetTokens.find(r =>
-    r.token === resetToken &&
-    r.email === normalizedEmail &&
-    !r.used &&
-    r.expiresAt > now
-  );
-
-  if (!tokenRecord) {
-    return res.status(400).json({ error: 'Invalid or expired password reset session. Please request a new reset code.' });
-  }
-
-  const user = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
-  if (!user) {
-    return res.status(404).json({ error: 'Account not found.' });
-  }
-
-  const salt = bcrypt.genSaltSync(10);
-  user.passwordHash = bcrypt.hashSync(newPassword, salt);
-  tokenRecord.used = true;
-
-  db.write(store);
-  res.json({
-    success: true,
-    message: 'Password reset successfully. You can now log in with your new password.'
   });
 });
 
@@ -478,7 +136,136 @@ app.get('/api/auth/me', authenticate, (req, res) => {
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
-  res.json({ user: { id: user.id, name: user.name, email: user.email, preferences: user.preferences } });
+  res.json({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar || null,
+      preferences: user.preferences
+    }
+  });
+});
+
+
+
+// Update Profile (Name and/or Avatar)
+app.put('/api/auth/profile', authenticate, (req, res) => {
+  const { name, avatar } = req.body;
+
+  const store = db.read();
+  const user = store.users.find(u => u.id === req.user.id);
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+
+  if (name && name.trim()) {
+    user.name = name.trim();
+  }
+
+  if (avatar !== undefined) {
+    user.avatar = avatar;
+  }
+
+  db.write(store);
+
+  const updatedUser = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar || null,
+    preferences: user.preferences
+  };
+  res.json({ success: true, message: 'Profile updated.', user: updatedUser });
+});
+
+// Change Password Route
+app.post('/api/auth/change-password', authenticate, (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current password and new password are required.' });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters.' });
+  }
+
+  const store = db.read();
+  const user = store.users.find(u => u.id === req.user.id);
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+
+  const isMatch = bcrypt.compareSync(currentPassword, user.passwordHash);
+  if (!isMatch) {
+    return res.status(400).json({ error: 'Current password is incorrect.' });
+  }
+
+  const salt = bcrypt.genSaltSync(10);
+  user.passwordHash = bcrypt.hashSync(newPassword, salt);
+  db.write(store);
+
+  res.json({ success: true, message: 'Password changed successfully.' });
+});
+
+// Send Email Change OTP
+app.post('/api/auth/send-email-otp', authenticate, (req, res) => {
+  const { newEmail } = req.body;
+  if (!newEmail || !newEmail.includes('@')) {
+    return res.status(400).json({ error: 'Valid new email address is required.' });
+  }
+
+  const normalized = newEmail.toLowerCase().trim();
+  const store = db.read();
+
+  const exists = store.users.find(u => u.email.toLowerCase() === normalized && u.id !== req.user.id);
+  if (exists) {
+    return res.status(400).json({ error: 'An account with this email already exists.' });
+  }
+
+  store.emailOTPs = store.emailOTPs || {};
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  store.emailOTPs[req.user.id] = {
+    newEmail: normalized,
+    otp,
+    expiresAt: Date.now() + 10 * 60 * 1000
+  };
+  db.write(store);
+
+  res.json({ success: true, message: `Verification code sent to ${normalized}.`, demoOtp: otp });
+});
+
+// Verify Email Change OTP
+app.post('/api/auth/verify-email-otp', authenticate, (req, res) => {
+  const { newEmail, otp } = req.body;
+  if (!newEmail || !otp) {
+    return res.status(400).json({ error: 'New email and OTP code are required.' });
+  }
+
+  const store = db.read();
+  const record = (store.emailOTPs || {})[req.user.id];
+
+  if (!record || record.newEmail !== newEmail.toLowerCase().trim() || record.otp !== otp.trim()) {
+    return res.status(400).json({ error: 'Invalid or expired verification code.' });
+  }
+
+  if (Date.now() > record.expiresAt) {
+    return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
+  }
+
+  const user = store.users.find(u => u.id === req.user.id);
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+
+  user.email = record.newEmail;
+  delete store.emailOTPs[req.user.id];
+  db.write(store);
+
+  const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+  const updatedUser = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar || null,
+    preferences: user.preferences
+  };
+
+  res.json({ success: true, message: 'Email address verified and updated successfully!', token, user: updatedUser });
 });
 
 // 3. Permanent Account Deletion Route
@@ -604,6 +391,75 @@ app.post('/api/chat', authenticate, (req, res) => {
           replyText = `Here are your tasks for today:\n${listText}`;
         }
         toolData = { type: 'TODAYS_TASKS', tasks: todayTasks };
+        break;
+      }
+
+      case 'READ_PLANS': {
+        const userPlans = store.expenses.filter(e => e.userId === userId && (e.isPlan || e.isRecurring || e.frequency || ['Recharges', 'Subscriptions', 'Electricity Bill'].includes(e.category)));
+        if (userPlans.length === 0) {
+          replyText = "You have no active plans or recurring payments recorded.";
+        } else {
+          const listText = userPlans.map((p, i) => `${i + 1}. ${p.description || p.category} — ₹${p.amount}/${p.frequency || 'month'} (Ends: ${p.endDate || 'N/A'})`).join('\n');
+          replyText = `Here are your active plans & recurring commitments:\n${listText}`;
+        }
+        toolData = { type: 'PLANS_LIST', plans: userPlans };
+        break;
+      }
+
+      case 'CREATE_PLAN': {
+        const { title, amount, frequency, duration, startDate } = intentResult.entities;
+        const start = startDate || new Date().toISOString().split('T')[0];
+        const freq = frequency || 'Monthly';
+        const parsedDur = parseDuration(duration, freq);
+        const endDate = calculateEndDate(start, parsedDur, freq);
+
+        const newPlanExp = {
+          id: `exp_${Date.now()}`,
+          userId,
+          type: 'expense',
+          isPlan: true,
+          isRecurring: true,
+          amount: amount || 199,
+          category: 'Subscriptions',
+          description: title || 'Recurring Plan',
+          frequency: freq,
+          duration: `${parsedDur.durationValue} ${parsedDur.durationUnit}`,
+          durationValue: parsedDur.durationValue,
+          durationUnit: parsedDur.durationUnit,
+          startDate: start,
+          endDate: endDate,
+          nextDueDate: endDate,
+          date: start,
+          createdAt: new Date().toISOString()
+        };
+
+        store.expenses.push(newPlanExp);
+        replyText = `Done — I added "${newPlanExp.description}" (₹${newPlanExp.amount}/${freq}) starting ${start} through ${endDate}.`;
+        toolData = { type: 'PLAN_CREATED', plan: newPlanExp };
+        break;
+      }
+
+      case 'READ_BIRTHDAYS': {
+        const birthdays = store.tasks.filter(t => t.userId === userId && (t.taskType === 'birthday' || t.isBirthday || (t.title && t.title.toLowerCase().includes('birthday'))));
+        if (birthdays.length === 0) {
+          replyText = "You have no upcoming birthday reminders saved.";
+        } else {
+          const listText = birthdays.map((b, i) => `${i + 1}. 🎂 ${b.personName || b.title} (Date: ${b.dueDate || b.date || 'Upcoming'})`).join('\n');
+          replyText = `Here are your upcoming birthdays:\n${listText}`;
+        }
+        toolData = { type: 'BIRTHDAYS_LIST', birthdays };
+        break;
+      }
+
+      case 'READ_MEETINGS': {
+        const meetings = store.tasks.filter(t => t.userId === userId && (t.taskType === 'meeting' || t.isMeeting || (t.title && t.title.toLowerCase().includes('meeting'))));
+        if (meetings.length === 0) {
+          replyText = "You have no upcoming meetings scheduled.";
+        } else {
+          const listText = meetings.map((m, i) => `${i + 1}. 📅 ${m.title} (Date: ${m.dueDate || m.date || 'Upcoming'})`).join('\n');
+          replyText = `Here are your upcoming meetings:\n${listText}`;
+        }
+        toolData = { type: 'MEETINGS_LIST', meetings };
         break;
       }
 
@@ -1118,12 +974,53 @@ app.delete('/api/tasks/:id', authenticate, (req, res) => {
 // --- EXPENSES & INCOME ENDPOINTS ---
 app.get('/api/expenses', authenticate, (req, res) => {
   const store = db.read();
-  res.json(store.expenses.filter(e => e.userId === req.user.id));
+  let modified = false;
+  const userExps = (store.expenses || []).filter(e => e.userId === req.user.id);
+
+  // Auto-migration & fallback for existing plan records lacking or having incorrect endDate
+  userExps.forEach(e => {
+    if (e.isPlan || e.isRecurring || e.frequency) {
+      const startDate = e.startDate || e.date || new Date().toISOString().split('T')[0];
+      const parsedDur = parseDuration(
+        (e.durationValue && e.durationUnit) ? { durationValue: e.durationValue, durationUnit: e.durationUnit } : e.duration,
+        e.frequency
+      );
+      const expectedEnd = calculateEndDate(startDate, parsedDur, e.frequency);
+
+      if (!e.endDate || (e.durationValue && e.durationUnit && e.endDate !== expectedEnd)) {
+        e.durationValue = parsedDur.durationValue;
+        e.durationUnit = parsedDur.durationUnit;
+        e.endDate = expectedEnd;
+        e.nextDueDate = expectedEnd;
+        modified = true;
+      }
+    }
+  });
+
+  if (modified) db.write(store);
+  res.json(userExps);
 });
 
 app.post('/api/expenses', authenticate, (req, res) => {
   const store = db.read();
   const txType = req.body.type === 'income' ? 'income' : 'expense';
+  const isPlan = Boolean(req.body.isPlan || req.body.isRecurring || req.body.frequency);
+  const startDate = req.body.startDate || req.body.date || new Date().toISOString().split('T')[0];
+
+  let durationVal = req.body.durationValue;
+  let durationUnit = req.body.durationUnit;
+  let endDate = req.body.endDate;
+
+  if (isPlan) {
+    const parsedDur = parseDuration(
+      req.body.durationValue ? { value: req.body.durationValue, unit: req.body.durationUnit } : req.body.duration,
+      req.body.frequency
+    );
+    durationVal = parsedDur.durationValue;
+    durationUnit = parsedDur.durationUnit;
+    endDate = calculateEndDate(startDate, parsedDur, req.body.frequency);
+  }
+
   const newExp = {
     id: `exp_${Date.now()}`,
     userId: req.user.id,
@@ -1131,7 +1028,16 @@ app.post('/api/expenses', authenticate, (req, res) => {
     amount: parseFloat(req.body.amount),
     category: req.body.category || (txType === 'income' ? 'Other Income' : 'Other'),
     description: req.body.description || (txType === 'income' ? 'Income Received' : 'Expense'),
-    date: req.body.date || new Date().toISOString().split('T')[0],
+    date: startDate,
+    startDate: isPlan ? startDate : null,
+    isPlan,
+    isRecurring: isPlan,
+    frequency: isPlan ? (req.body.frequency || 'Monthly') : null,
+    duration: isPlan ? (req.body.duration || `${durationVal} ${durationUnit}`) : null,
+    durationValue: isPlan ? durationVal : null,
+    durationUnit: isPlan ? durationUnit : null,
+    endDate: isPlan ? endDate : null,
+    nextDueDate: isPlan ? endDate : null,
     createdAt: new Date().toISOString()
   };
   store.expenses.push(newExp);
@@ -1143,11 +1049,38 @@ app.put('/api/expenses/:id', authenticate, (req, res) => {
   const store = db.read();
   const index = store.expenses.findIndex(e => e.id === req.params.id && e.userId === req.user.id);
   if (index !== -1) {
+    const existing = store.expenses[index];
+    const isPlan = Boolean(req.body.isPlan ?? existing.isPlan ?? existing.isRecurring ?? existing.frequency);
+    const startDate = req.body.startDate || req.body.date || existing.startDate || existing.date || new Date().toISOString().split('T')[0];
+    const freq = req.body.frequency || existing.frequency || 'Monthly';
+
+    let durationVal = req.body.durationValue || existing.durationValue;
+    let durationUnit = req.body.durationUnit || existing.durationUnit;
+    let endDate = req.body.endDate;
+
+    if (isPlan) {
+      const parsedDur = parseDuration(
+        req.body.durationValue ? { value: req.body.durationValue, unit: req.body.durationUnit } : (req.body.duration || existing.duration),
+        freq
+      );
+      durationVal = parsedDur.durationValue;
+      durationUnit = parsedDur.durationUnit;
+      endDate = calculateEndDate(startDate, parsedDur, freq);
+    }
+
     store.expenses[index] = {
-      ...store.expenses[index],
+      ...existing,
       ...req.body,
-      type: req.body.type || store.expenses[index].type || 'expense',
-      amount: req.body.amount !== undefined ? parseFloat(req.body.amount) : store.expenses[index].amount
+      type: req.body.type || existing.type || 'expense',
+      amount: req.body.amount !== undefined ? parseFloat(req.body.amount) : existing.amount,
+      startDate: isPlan ? startDate : null,
+      isPlan,
+      isRecurring: isPlan,
+      frequency: isPlan ? freq : null,
+      durationValue: isPlan ? durationVal : null,
+      durationUnit: isPlan ? durationUnit : null,
+      endDate: isPlan ? endDate : null,
+      nextDueDate: isPlan ? endDate : null
     };
     db.write(store);
     return res.json(store.expenses[index]);
@@ -1163,49 +1096,6 @@ app.delete('/api/expenses/:id', authenticate, (req, res) => {
 });
 
 // --- NOTIFICATION SYSTEM BACKEND ---
-async function sendWebPushToUser(userId, notifPayload, store) {
-  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
-  const userSubs = (store.pushSubscriptions || []).filter(s => s.userId === userId);
-  if (userSubs.length === 0) return;
-
-  const pushPayload = JSON.stringify({
-    title: 'DaySync',
-    message: notifPayload.message || '',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/badge-72.png',
-    actionUrl: notifPayload.actionUrl || '/app/dashboard',
-    id: notifPayload.id,
-    eventKey: notifPayload.eventKey
-  });
-
-  const subsToRemove = [];
-
-  for (const sub of userSubs) {
-    try {
-      const pushSubscriptionFormat = {
-        endpoint: sub.endpoint,
-        keys: sub.keys
-      };
-      const options = {
-        TTL: 86400, // 24h delivery window for closed PWA / sleeping device
-        urgency: 'high' // High urgency for immediate FCM background wakeup on Android
-      };
-      await webpush.sendNotification(pushSubscriptionFormat, pushPayload, options);
-      console.log(`[WebPush] Push notification delivered to user ${userId} (${sub.endpoint.slice(0, 30)}...).`);
-    } catch (err) {
-      console.warn(`[WebPush] Error sending push to user ${userId}:`, err.statusCode || err.message);
-      if (err.statusCode === 404 || err.statusCode === 410 || (err.message && (err.message.includes('expired') || err.message.includes('invalid')))) {
-        subsToRemove.push(sub.endpoint);
-      }
-    }
-  }
-
-  if (subsToRemove.length > 0) {
-    store.pushSubscriptions = (store.pushSubscriptions || []).filter(s => !subsToRemove.includes(s.endpoint));
-    console.log(`[WebPush] Cleaned up ${subsToRemove.length} expired push subscriptions for user ${userId}.`);
-  }
-}
-
 function generateUserNotifications(userId, store) {
   store.notifications = store.notifications || [];
   const todayStr = new Date().toISOString().split('T')[0];
@@ -1215,15 +1105,13 @@ function generateUserNotifications(userId, store) {
   const addIfNew = (notif) => {
     const exists = store.notifications.some(n => n.userId === userId && n.eventKey === notif.eventKey);
     if (!exists) {
-      const newNotifRecord = {
+      store.notifications.push({
         id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
         userId,
         read: false,
         createdAt: new Date().toISOString(),
         ...notif
-      };
-      store.notifications.push(newNotifRecord);
-      sendWebPushToUser(userId, newNotifRecord, store);
+      });
     }
   };
 
@@ -1298,7 +1186,57 @@ function generateUserNotifications(userId, store) {
     });
   }
 
-  // 4. DAILY BASELINE FALLBACK NOTIFICATION (Category 9: DAILY)
+  // 4. PLAN NOTIFICATIONS (Category PLAN — 5 days prior notification)
+  const userPlans = userExpenses.filter(e => e.isPlan || e.isRecurring || e.frequency || ['Recharges', 'Subscriptions', 'Electricity Bill'].includes(e.category));
+  userPlans.forEach(plan => {
+    const targetDateStr = plan.endDate || plan.nextDueDate || calculateEndDate(plan.startDate || plan.date, plan.durationValue || plan.duration, plan.frequency);
+    if (targetDateStr) {
+      try {
+        const targetTime = new Date(targetDateStr).getTime();
+        const todayTime = new Date(todayStr).getTime();
+        const diffDays = Math.ceil((targetTime - todayTime) / (1000 * 60 * 60 * 24));
+        if (diffDays <= 5 && diffDays >= 0) {
+          addIfNew({
+            type: 'PLAN',
+            title: `Plan Ending Soon`,
+            message: `Your ${plan.description || plan.category || 'Plan'} plan ends in ${diffDays} day${diffDays === 1 ? '' : 's'}.`,
+            priority: 'NORMAL',
+            relatedType: 'expense',
+            relatedId: plan.id,
+            actionUrl: '/app/plans',
+            eventKey: `plan:${plan.id}:${targetDateStr}:5day`
+          });
+        }
+      } catch(e) {}
+    }
+  });
+
+  // 5. BIRTHDAY NOTIFICATIONS (5 days prior notification)
+  const userBirthdays = userTasks.filter(t => t.taskType === 'birthday' || t.isBirthday || (t.title && t.title.toLowerCase().includes('birthday')));
+  userBirthdays.forEach(bday => {
+    const targetDateStr = bday.dueDate || bday.date;
+    if (targetDateStr) {
+      try {
+        const targetTime = new Date(targetDateStr).getTime();
+        const todayTime = new Date(todayStr).getTime();
+        const diffDays = Math.ceil((targetTime - todayTime) / (1000 * 60 * 60 * 24));
+        if (diffDays <= 5 && diffDays >= 0) {
+          addIfNew({
+            type: 'TASK',
+            title: '🎂 Upcoming Birthday',
+            message: `🎂 ${bday.personName || bday.title}'s birthday is in ${diffDays} day${diffDays === 1 ? '' : 's'}.`,
+            priority: 'NORMAL',
+            relatedType: 'task',
+            relatedId: bday.id,
+            actionUrl: '/app/task',
+            eventKey: `birthday:${bday.id}:${targetDateStr}:5day`
+          });
+        }
+      } catch(e) {}
+    }
+  });
+
+  // 6. DAILY BASELINE FALLBACK NOTIFICATION (Category 9: DAILY)
   const dbUser = (store.users || []).find(u => u.id === userId);
   const isDailyEnabled = dbUser?.preferences?.daily !== false && dbUser?.preferences?.dailyNotification !== false;
 
@@ -1379,70 +1317,7 @@ app.post('/api/notifications', authenticate, (req, res) => {
 
   store.notifications.push(newNotif);
   db.write(store);
-  sendWebPushToUser(userId, newNotif, store);
   res.json(newNotif);
-});
-
-// --- WEB PUSH SUBSCRIPTION ENDPOINTS ---
-app.get('/api/notifications/push/vapid-public-key', (req, res) => {
-  res.json({ vapidPublicKey: VAPID_PUBLIC_KEY });
-});
-
-app.get('/api/notifications/push/status', authenticate, (req, res) => {
-  const store = db.read();
-  const userId = req.user.id;
-  const userSubs = (store.pushSubscriptions || []).filter(s => s.userId === userId);
-  res.json({
-    enabled: userSubs.length > 0,
-    subscriptionsCount: userSubs.length,
-    vapidPublicKey: VAPID_PUBLIC_KEY
-  });
-});
-
-app.post('/api/notifications/push/subscribe', authenticate, (req, res) => {
-  const store = db.read();
-  store.pushSubscriptions = store.pushSubscriptions || [];
-  const userId = req.user.id;
-  const subscription = req.body;
-
-  if (!subscription || !subscription.endpoint) {
-    return res.status(400).json({ error: 'Valid push subscription required.' });
-  }
-
-  const existingIdx = store.pushSubscriptions.findIndex(s => s.endpoint === subscription.endpoint);
-  const newSub = {
-    id: `push_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-    userId,
-    endpoint: subscription.endpoint,
-    keys: subscription.keys || {},
-    createdAt: new Date().toISOString()
-  };
-
-  if (existingIdx !== -1) {
-    store.pushSubscriptions[existingIdx] = newSub;
-  } else {
-    store.pushSubscriptions.push(newSub);
-  }
-
-  db.write(store);
-  console.log(`[WebPush] Saved push subscription for user ${userId}. Total user devices: ${(store.pushSubscriptions || []).filter(s => s.userId === userId).length}`);
-  res.json({ success: true, message: 'Push subscription saved.' });
-});
-
-app.delete('/api/notifications/push/subscribe', authenticate, (req, res) => {
-  const store = db.read();
-  store.pushSubscriptions = store.pushSubscriptions || [];
-  const userId = req.user.id;
-  const { endpoint } = req.body || {};
-
-  if (endpoint) {
-    store.pushSubscriptions = store.pushSubscriptions.filter(s => !(s.userId === userId && s.endpoint === endpoint));
-  } else {
-    store.pushSubscriptions = store.pushSubscriptions.filter(s => s.userId !== userId);
-  }
-
-  db.write(store);
-  res.json({ success: true, message: 'Push subscription removed.' });
 });
 
 app.put('/api/notifications/:id/read', authenticate, (req, res) => {
@@ -1555,10 +1430,421 @@ app.post('/api/privacy/clear-history', authenticate, (req, res) => {
   res.json({ success: true, message: 'Chat history cleared successfully.' });
 });
 
+// Helper to generate secure random Split Share Codes (e.g. GOA-7K4P2)
+function generateSplitShareCode(name) {
+  const cleanPrefix = (name || 'SPLIT')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, 3) || 'SPL';
+  const rand = crypto.randomBytes(3).toString('hex').toUpperCase().slice(0, 5);
+  return `${cleanPrefix}-${rand}`;
+}
+
+// 1. GET /api/splits - Get all splits user belongs to
+app.get('/api/splits', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  store.splits = store.splits || [];
+
+  let modified = false;
+  store.splits.forEach(s => {
+    if (!s.shareCode) {
+      s.shareCode = generateSplitShareCode(s.name);
+      s.codeActive = true;
+      modified = true;
+    }
+  });
+  if (modified) db.write(store);
+
+  const userSplits = store.splits
+    .filter(s =>
+      (s.members || []).some(m => (m.userId === userId || m.id === userId)) ||
+      s.ownerId === userId
+    )
+    .map(s => {
+      const storeExp = (store.splitExpenses || []).filter(e => e.splitId === s.id);
+      const storeSettlements = (store.splitSettlements || []).filter(set => set.splitId === s.id);
+      const mergedExpenses = storeExp.length > 0 ? storeExp : (s.expenses || []);
+      const mergedSettlements = storeSettlements.length > 0 ? storeSettlements : (s.settlements || []);
+
+      return {
+        ...s,
+        expenses: mergedExpenses,
+        settlements: mergedSettlements
+      };
+    });
+
+  res.json(userSplits);
+});
+
+// 2. POST /api/splits - Create a new split
+app.post('/api/splits', authenticate, (req, res) => {
+  const store = db.read();
+  store.splits = store.splits || [];
+  const userId = req.user.id;
+  const userObj = (store.users || []).find(u => u.id === userId);
+
+  const { name, description, currency } = req.body;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Split name is required.' });
+  }
+
+  let shareCode = generateSplitShareCode(name.trim());
+  while (store.splits.some(s => s.shareCode === shareCode)) {
+    shareCode = generateSplitShareCode(name.trim());
+  }
+
+  const newSplit = {
+    id: `split_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    name: name.trim(),
+    description: description ? description.trim() : '',
+    currency: currency || '₹',
+    shareCode,
+    codeActive: true,
+    ownerId: userId,
+    members: [
+      {
+        userId,
+        id: userId,
+        role: 'owner',
+        userName: userObj?.name || 'Owner',
+        name: userObj?.name || 'Owner',
+        userEmail: userObj?.email || '',
+        email: userObj?.email || '',
+        joinedAt: new Date().toISOString()
+      }
+    ],
+    expenses: [],
+    settlements: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  store.splits.push(newSplit);
+  db.write(store);
+  res.json(newSplit);
+});
+
+// 3. GET /api/splits/:id - Get detailed split with expenses & settlements
+app.get('/api/splits/:id', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) {
+    return res.status(404).json({ error: 'Split not found.' });
+  }
+
+  if (!split.shareCode) {
+    split.shareCode = generateSplitShareCode(split.name);
+    split.codeActive = true;
+    db.write(store);
+  }
+
+  // Verify server-side membership
+  const isMember = (split.members || []).some(m => (m.userId === userId || m.id === userId)) || split.ownerId === userId;
+  if (!isMember) {
+    return res.status(403).json({ error: 'Access denied. You are not a member of this Split.' });
+  }
+
+  const storeExp = (store.splitExpenses || []).filter(e => e.splitId === split.id);
+  const storeSettlements = (store.splitSettlements || []).filter(s => s.splitId === split.id);
+
+  const mergedExpenses = storeExp.length > 0 ? storeExp : (split.expenses || []);
+  const mergedSettlements = storeSettlements.length > 0 ? storeSettlements : (split.settlements || []);
+
+  res.json({
+    ...split,
+    expenses: mergedExpenses,
+    settlements: mergedSettlements
+  });
+});
+
+// 4. PUT /api/splits/:id - Update split info (Owner only)
+app.put('/api/splits/:id', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) return res.status(404).json({ error: 'Split not found.' });
+  if (split.ownerId !== userId) return res.status(403).json({ error: 'Only the split owner can update split details.' });
+
+  const { name, description, currency } = req.body;
+  if (name) split.name = name.trim();
+  if (description !== undefined) split.description = description.trim();
+  if (currency) split.currency = currency;
+  split.updatedAt = new Date().toISOString();
+
+  db.write(store);
+  res.json(split);
+});
+
+// 5. DELETE /api/splits/:id - Delete split (Owner only)
+app.delete('/api/splits/:id', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) return res.status(404).json({ error: 'Split not found.' });
+  if (split.ownerId !== userId) return res.status(403).json({ error: 'Only the split owner can delete a split.' });
+
+  store.splits = store.splits.filter(s => s.id !== req.params.id);
+  store.splitExpenses = (store.splitExpenses || []).filter(e => e.splitId !== req.params.id);
+  store.splitSettlements = (store.splitSettlements || []).filter(s => s.splitId !== req.params.id);
+
+  db.write(store);
+  res.json({ success: true, message: 'Split deleted successfully.' });
+});
+
+// 6. POST /api/splits/:id/invitations - Invite a member by email or name
+app.post('/api/splits/:id/invitations', authenticate, (req, res) => {
+  const store = db.read();
+  store.splitInvitations = store.splitInvitations || [];
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) return res.status(404).json({ error: 'Split not found.' });
+  const isMember = (split.members || []).some(m => m.userId === userId);
+  if (!isMember) return res.status(403).json({ error: 'Access denied.' });
+
+  const { targetUser } = req.body;
+  if (!targetUser || !targetUser.trim()) {
+    return res.status(400).json({ error: 'Target user email or name is required.' });
+  }
+
+  const query = targetUser.trim().toLowerCase();
+  const targetUserObj = (store.users || []).find(u =>
+    u.email.toLowerCase() === query || u.name.toLowerCase() === query
+  );
+
+  if (!targetUserObj) {
+    return res.status(404).json({ error: `No DaySync user found matching "${targetUser}".` });
+  }
+
+  if ((split.members || []).some(m => m.userId === targetUserObj.id)) {
+    return res.status(400).json({ error: `${targetUserObj.name} is already a member of this Split.` });
+  }
+
+  const token = `inv_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  const inviterObj = (store.users || []).find(u => u.id === userId);
+
+  const newInvitation = {
+    id: `invite_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    splitId: split.id,
+    splitName: split.name,
+    token,
+    invitedUserId: targetUserObj.id,
+    invitedBy: userId,
+    inviterName: inviterObj?.name || 'A DaySync user',
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  };
+
+  store.splitInvitations.push(newInvitation);
+
+  store.notifications = store.notifications || [];
+  store.notifications.push({
+    id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    userId: targetUserObj.id,
+    type: 'SYSTEM',
+    title: 'Shared Split Invitation',
+    message: `${inviterObj?.name || 'Someone'} invited you to join "${split.name}".`,
+    read: false,
+    createdAt: new Date().toISOString(),
+    priority: 'NORMAL',
+    actionUrl: '/app/splits'
+  });
+
+  db.write(store);
+  res.json({ success: true, message: `Invitation sent to ${targetUserObj.name}!`, token });
+});
+
+// 7. GET /api/split-invites/my-invites - Pending invites for current user
+app.get('/api/split-invites/my-invites', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const myInvites = (store.splitInvitations || []).filter(i =>
+    i.invitedUserId === userId && i.status === 'pending'
+  );
+  res.json(myInvites);
+});
+
+// 8. POST /api/split-invites/:token/accept - Accept invitation
+app.post('/api/split-invites/:token/accept', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const userObj = (store.users || []).find(u => u.id === userId);
+  const invite = (store.splitInvitations || []).find(i => i.token === req.params.token);
+
+  if (!invite) return res.status(404).json({ error: 'Invitation token invalid or expired.' });
+  if (invite.invitedUserId && invite.invitedUserId !== userId) {
+    return res.status(403).json({ error: 'This invitation was issued to another user.' });
+  }
+
+  const split = (store.splits || []).find(s => s.id === invite.splitId);
+  if (!split) return res.status(404).json({ error: 'Split no longer exists.' });
+
+  if (!split.members.some(m => m.userId === userId)) {
+    split.members.push({
+      userId,
+      role: 'member',
+      userName: userObj?.name || 'Member',
+      userEmail: userObj?.email || '',
+      joinedAt: new Date().toISOString()
+    });
+  }
+
+  invite.status = 'accepted';
+  split.updatedAt = new Date().toISOString();
+  db.write(store);
+
+  res.json({ success: true, message: `You are now a member of ${split.name}!`, split });
+});
+
+// 9. POST /api/split-invites/:token/decline - Decline invitation
+app.post('/api/split-invites/:token/decline', authenticate, (req, res) => {
+  const store = db.read();
+  const invite = (store.splitInvitations || []).find(i => i.token === req.params.token);
+  if (invite) {
+    invite.status = 'declined';
+    db.write(store);
+  }
+  res.json({ success: true, message: 'Invitation declined.' });
+});
+
+// 10. POST /api/splits/:id/expenses - Add shared expense to split
+app.post('/api/splits/:id/expenses', authenticate, (req, res) => {
+  const store = db.read();
+  store.splitExpenses = store.splitExpenses || [];
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) return res.status(404).json({ error: 'Split not found.' });
+  const isMember = (split.members || []).some(m => m.userId === userId);
+  if (!isMember) return res.status(403).json({ error: 'Access denied.' });
+
+  const { description, amount, paidByUserId, splitMethod, participants } = req.body;
+
+  if (!description || !amount || parseFloat(amount) <= 0) {
+    return res.status(400).json({ error: 'Description and a positive amount are required.' });
+  }
+
+  const numAmt = parseFloat(amount);
+  const payerId = paidByUserId || userId;
+
+  const newExpense = {
+    id: `se_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    splitId: split.id,
+    description: description.trim(),
+    amount: numAmt,
+    paidByUserId: payerId,
+    splitMethod: splitMethod || 'EQUAL',
+    participants: participants || [],
+    createdBy: userId,
+    date: new Date().toISOString().split('T')[0],
+    createdAt: new Date().toISOString()
+  };
+
+  store.splitExpenses.push(newExpense);
+  split.updatedAt = new Date().toISOString();
+
+  const payerObj = (store.users || []).find(u => u.id === payerId);
+  (split.members || []).forEach(m => {
+    if (m.userId !== userId) {
+      store.notifications = store.notifications || [];
+      store.notifications.push({
+        id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        userId: m.userId,
+        type: 'EXPENSE',
+        title: `Shared Expense Added`,
+        message: `${payerObj?.name || 'A member'} added "${description}" (₹${numAmt}) to "${split.name}".`,
+        read: false,
+        createdAt: new Date().toISOString(),
+        priority: 'NORMAL',
+        actionUrl: '/app/splits'
+      });
+    }
+  });
+
+  db.write(store);
+  res.json(newExpense);
+});
+
+// 11. POST /api/splits/:id/settlements - Record a settlement payment
+app.post('/api/splits/:id/settlements', authenticate, (req, res) => {
+  const store = db.read();
+  store.splitSettlements = store.splitSettlements || [];
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) return res.status(404).json({ error: 'Split not found.' });
+  const isMember = (split.members || []).some(m => m.userId === userId);
+  if (!isMember) return res.status(403).json({ error: 'Access denied.' });
+
+  const { toUserId, amount } = req.body;
+  if (!toUserId || !amount || parseFloat(amount) <= 0) {
+    return res.status(400).json({ error: 'Recipient user and valid amount required for settlement.' });
+  }
+
+  const numAmt = parseFloat(amount);
+
+  const newSettlement = {
+    id: `settle_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    splitId: split.id,
+    fromUserId: userId,
+    toUserId,
+    amount: numAmt,
+    date: new Date().toISOString().split('T')[0],
+    status: 'completed',
+    createdBy: userId,
+    createdAt: new Date().toISOString()
+  };
+
+  store.splitSettlements.push(newSettlement);
+  split.updatedAt = new Date().toISOString();
+
+  const senderObj = (store.users || []).find(u => u.id === userId);
+  store.notifications = store.notifications || [];
+  store.notifications.push({
+    id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    userId: toUserId,
+    type: 'EXPENSE',
+    title: 'Settlement Payment Recorded',
+    message: `${senderObj?.name || 'A member'} paid ₹${numAmt} towards "${split.name}".`,
+    read: false,
+    createdAt: new Date().toISOString(),
+    priority: 'NORMAL',
+    actionUrl: '/app/splits'
+  });
+
+  db.write(store);
+  res.json(newSettlement);
+});
+
+// 12. DELETE /api/splits/:id/expenses/:expenseId - Delete split expense
+app.delete('/api/splits/:id/expenses/:expenseId', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) return res.status(404).json({ error: 'Split not found.' });
+  const isMember = (split.members || []).some(m => (m.userId === userId || m.id === userId)) || split.ownerId === userId;
+  if (!isMember) return res.status(403).json({ error: 'Access denied.' });
+
+  store.splitExpenses = (store.splitExpenses || []).filter(e => !(e.id === req.params.expenseId && e.splitId === req.params.id));
+  if (Array.isArray(split.expenses)) {
+    split.expenses = split.expenses.filter(e => e.id !== req.params.expenseId);
+  }
+  split.updatedAt = new Date().toISOString();
+
+  db.write(store);
+  res.json({ success: true, message: 'Expense deleted successfully.' });
+});
+
 db.ready
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Luna Engine Server running on port ${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Luna Engine Server running on port ${PORT} (0.0.0.0)`);
     });
   })
   .catch((error) => {

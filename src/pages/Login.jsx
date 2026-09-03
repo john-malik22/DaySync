@@ -4,6 +4,7 @@ import { ArrowRight, UserPlus, AlertCircle, Eye, EyeOff, CheckCircle2, KeyRound 
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { getStartupRoute } from '../App';
+import { syncMobileStatusBarTheme } from '../utils/statusBarTheme';
 
 const validateEmail = (email) => {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,6 +40,10 @@ export function Login() {
   const [requiresVerification, setRequiresVerification] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    syncMobileStatusBarTheme();
+  }, []);
+
   // Resend Timer Countdown Effect
   useEffect(() => {
     let interval = null;
@@ -68,6 +73,16 @@ export function Login() {
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
     if (error) setError('');
+  };
+
+  const handleInputFocus = (e) => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setTimeout(() => {
+        try {
+          e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (err) {}
+      }, 250);
+    }
   };
 
   // Submit Login
@@ -112,8 +127,6 @@ export function Login() {
         setUserNotFound(true);
       } else if (err.status === 401 || (err.message && (err.message.includes('Incorrect password') || err.message.includes('Invalid password')))) {
         setError('Incorrect password. Please check your password and try again.');
-      } else if (err.status === 429) {
-        setError('Too many failed login attempts. Please try again later.');
       } else if (err.status >= 500) {
         setError('Something went wrong on our side. Please try again.');
       } else {
@@ -243,11 +256,8 @@ export function Login() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex',
-      alignItems: 'center', justifyContent: 'center', padding: '24px'
-    }}>
-      <div className="glass-card animate-fade-in" style={{ width: '420px', padding: '36px' }}>
+    <div className="login-page-wrapper">
+      <div className="glass-card animate-fade-in login-card-container">
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <img
             src="/icons/icon-192.png"
@@ -325,6 +335,7 @@ export function Login() {
                 type="email"
                 value={email}
                 onChange={handleEmailChange}
+                onFocus={handleInputFocus}
                 placeholder="john@gmail.com"
                 noValidate
                 style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px' }}
@@ -336,7 +347,7 @@ export function Login() {
                 <label style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Password</label>
                 <button
                   type="button"
-                  onClick={() => navigate('/forgot-password')}
+                  onClick={() => setMode('FORGOT_EMAIL')}
                   style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '500' }}
                 >
                   Forgot Password?
@@ -348,6 +359,7 @@ export function Login() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={handlePasswordChange}
+                  onFocus={handleInputFocus}
                   placeholder="••••••••"
                   style={{ width: '100%', padding: '11px 40px 11px 11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                 />
@@ -389,6 +401,7 @@ export function Login() {
                   setOtp(e.target.value.replace(/\D/g, ''));
                   if (error) setError('');
                 }}
+                onFocus={handleInputFocus}
                 placeholder="123456"
                 style={{
                   width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-color)',
@@ -445,6 +458,7 @@ export function Login() {
                 type="email"
                 value={email}
                 onChange={handleEmailChange}
+                onFocus={handleInputFocus}
                 placeholder="john@gmail.com"
                 noValidate
                 style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginTop: '4px' }}
@@ -488,6 +502,7 @@ export function Login() {
                   setOtp(e.target.value.replace(/\D/g, ''));
                   if (error) setError('');
                 }}
+                onFocus={handleInputFocus}
                 placeholder="123456"
                 style={{
                   width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-color)',
@@ -548,6 +563,7 @@ export function Login() {
                     setNewPassword(e.target.value);
                     if (error) setError('');
                   }}
+                  onFocus={handleInputFocus}
                   placeholder="••••••••"
                   style={{ width: '100%', padding: '11px 40px 11px 11px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                   autoFocus

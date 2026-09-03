@@ -1,23 +1,19 @@
 {
-  "1.1.2": {
-    "title": "DaySync 1.1.2",
+  "2.0.0": {
+    "title": "DaySync 2.0.0",
     "highlights": [
-      "Smarter Luna understands natural language better",
-      "Luna now asks before taking uncertain actions",
-      "Improved follow-up conversations with Luna",
-      "Added notifications and unread notification count",
-      "Improved login and signup error messages",
-      "Added better error and retry handling",
-      "Improved offline and PWA reliability",
-      "Improved app update experience",
-      "Redesigned the interface with liquid glass styling",
-      "Improved light and dark themes",
-      "Smoother hover effects and animations",
-      "Improved Settings and account controls",
-      "Updated Contact Developer information",
-      "Fixed Habits page crash",
-      "Fixed login redirect and authentication issues",
-      "Improved overall app stability"
+      "Introduced Plans for recurring payments, subscriptions, warranties and service schedules",
+      "Added automatic end-date calculation from plan duration",
+      "Added 5-day notifications for upcoming plan dates",
+      "Added birthday reminders",
+      "Added meeting reminders",
+      "Made the Dashboard more focused and compact",
+      "Added more efficient two-column layouts",
+      "Improved recurring tasks",
+      "Improved Luna support for daily-life management",
+      "Removed the separate Memory page from navigation",
+      "Improved mobile responsiveness",
+      "Improved overall stability and user experience"
     ]
   }
 }

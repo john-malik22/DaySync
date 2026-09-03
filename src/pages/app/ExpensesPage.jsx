@@ -4,29 +4,31 @@ import { ExpenseForm } from '../../components/expenses/ExpenseForm';
 import { useLuna } from '../../context/LunaContext';
 import { useToast } from '../../context/ToastContext';
 import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
+import { ReactionBadge } from '../../components/common/ReactionBadge';
 import { ArrowUpRight, ArrowDownRight, Wallet, Edit2, Trash2, Check, X, CreditCard } from 'lucide-react';
+import { EmptyState } from '../../components/common/EmptyState';
 
 const EXPENSE_CATEGORIES = [
-  { value: 'Recharges', label: '📱 Recharges' },
-  { value: 'Electricity Bill', label: '⚡ Electricity' },
-  { value: 'Daily Travelling', label: '🚗 Transport' },
-  { value: 'Subscriptions', label: '🍿 Subscriptions' },
-  { value: 'Groceries', label: '🛒 Groceries' },
-  { value: 'Food', label: '🍔 Dining' },
-  { value: 'Shopping', label: '🛍️ Shopping' },
-  { value: 'Healthcare', label: '🏥 Healthcare' },
-  { value: 'Entertainment', label: '🎟️ Entertainment' },
-  { value: 'Other', label: '🏷️ Other' }
+  { value: 'Recharges', label: '📱 Recharge', ariaLabel: 'Recharge category' },
+  { value: 'Electricity Bill', label: '💡 Bills', ariaLabel: 'Bills category' },
+  { value: 'Food', label: '🍔 Food', ariaLabel: 'Food category' },
+  { value: 'Groceries', label: '🛒 Groceries', ariaLabel: 'Groceries category' },
+  { value: 'Shopping', label: '🛍️ Shopping', ariaLabel: 'Shopping category' },
+  { value: 'Daily Travelling', label: '🚗 Travel', ariaLabel: 'Travel category' },
+  { value: 'Subscriptions', label: '🎬 Subscriptions', ariaLabel: 'Subscriptions category' },
+  { value: 'Healthcare', label: '❤️ Health', ariaLabel: 'Health category' },
+  { value: 'Entertainment', label: '🎟️ Entertainment', ariaLabel: 'Entertainment category' },
+  { value: 'Other', label: '📦 Other', ariaLabel: 'Other category' }
 ];
 
 const INCOME_CATEGORIES = [
-  { value: 'Salary', label: '💼 Salary' },
-  { value: 'Freelance', label: '💻 Freelance' },
-  { value: 'Pocket Money', label: '🎁 Allowance' },
-  { value: 'Cashback & Rewards', label: '💰 Cashback' },
-  { value: 'Refunds', label: '🔄 Refunds' },
-  { value: 'Investments', label: '📈 Investments' },
-  { value: 'Other Income', label: '💵 Other' }
+  { value: 'Salary', label: '💼 Salary', ariaLabel: 'Salary category' },
+  { value: 'Freelance', label: '💻 Freelance', ariaLabel: 'Freelance category' },
+  { value: 'Pocket Money', label: '🎁 Allowance', ariaLabel: 'Allowance category' },
+  { value: 'Cashback & Rewards', label: '💰 Cashback', ariaLabel: 'Cashback category' },
+  { value: 'Refunds', label: '🔄 Refunds', ariaLabel: 'Refunds category' },
+  { value: 'Investments', label: '📈 Investments', ariaLabel: 'Investments category' },
+  { value: 'Other Income', label: '💵 Other', ariaLabel: 'Other Income category' }
 ];
 
 export function ExpensesPage() {
@@ -40,38 +42,23 @@ export function ExpensesPage() {
   const [editCategory, setEditCategory] = useState('Recharges');
   const [editDescription, setEditDescription] = useState('');
 
-  const [isEditingBalance, setIsEditingBalance] = useState(false);
-  const [balanceInput, setBalanceInput] = useState('');
+  const totalIncome = (expenses || [])
+    .filter(e => e && e.type === 'income')
+    .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
-  const totalIncome = expenses
-    .filter(e => e.type === 'income')
-    .reduce((acc, curr) => acc + curr.amount, 0);
-
-  const totalSpent = expenses
-    .filter(e => e.type !== 'income')
-    .reduce((acc, curr) => acc + curr.amount, 0);
+  const totalSpent = (expenses || [])
+    .filter(e => e && e.type !== 'income')
+    .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   const currentBalance = (startingBalance !== null ? startingBalance : 0) + totalIncome - totalSpent;
 
-  const handleSaveStartingBalance = (e) => {
-    e.preventDefault();
-    if (!balanceInput) return;
-    updateStartingBalance(balanceInput);
-    setIsEditingBalance(false);
-    if (showToast) showToast('Starting balance updated.', 'success');
-  };
-
-  const handleStartEditBalance = () => {
-    setBalanceInput(startingBalance !== null ? startingBalance.toString() : '');
-    setIsEditingBalance(true);
-  };
-
   const startEdit = (exp) => {
+    if (!exp) return;
     setEditingId(exp.id);
     setEditTxType(exp.type || 'expense');
-    setEditAmount(exp.amount.toString());
-    setEditCategory(exp.category);
-    setEditDescription(exp.description);
+    setEditAmount((exp.amount || 0).toString());
+    setEditCategory(exp.category || 'Recharges');
+    setEditDescription(exp.description || '');
   };
 
   const handleSaveEdit = async (id) => {
@@ -91,7 +78,8 @@ export function ExpensesPage() {
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this expense transaction?')) {
+    const needsConfirm = localStorage.getItem('daysync_confirm_delete') !== 'false';
+    if (!needsConfirm || confirm('Are you sure you want to delete this expense transaction?')) {
       try {
         await deleteExpense(id);
         if (showToast) showToast('Expense transaction deleted.', 'info');
@@ -101,105 +89,126 @@ export function ExpensesPage() {
     }
   };
 
-  const filteredExpenses = expenses.filter(exp => 
-    !search || 
-    exp.description.toLowerCase().includes(search.toLowerCase()) || 
-    exp.category.toLowerCase().includes(search.toLowerCase())
+  const filteredExpenses = (expenses || []).filter(exp =>
+    exp && (!search ||
+    (exp.description && exp.description.toLowerCase().includes(search.toLowerCase())) ||
+    (exp.category && exp.category.toLowerCase().includes(search.toLowerCase())))
   );
 
   return (
-    <div className="page-container">
-      {/* Top Header Row */}
-      <PageHeaderRow title="Expenses" onSearch={setSearch} />
+    <div className="page-container expenses-page-container">
+      {/* Top Header Row: Page Title EXPENSES */}
+      <PageHeaderRow title="EXPENSES" onSearch={setSearch} />
 
-      {/* Row 1: LOG TRANSACTION (Left) | TOTAL BALANCE + SPENT/RECEIVED SUMMARY (Right) */}
-      <div className="expenses-top-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 'var(--space-lg)', alignItems: 'start' }}>
-        {/* LOG TRANSACTION Card */}
-        <ExpenseForm />
+      {/* UPPER TWO-COLUMN SECTION (Left: Log Transaction | Right: Financial Summary) */}
+      <div className="expenses-top-grid">
+        {/* LEFT CONTAINER — LOG TRANSACTION */}
+        <div className="glass-card expenses-log-container" style={{ padding: '16px' }}>
+          <ExpenseForm />
+        </div>
 
-        {/* TOTAL BALANCE Card with Compact Spent & Received Summary Blocks */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-          <div>
-            <h3 style={{ marginBottom: '8px', color: 'var(--accent-primary)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Wallet size={16} color="var(--accent-primary)" /> TOTAL BALANCE
+        {/* DESKTOP FINANCIAL SUMMARY CARD (Visible on Desktop >=769px) */}
+        <div className="glass-card desktop-financial-summary-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+            <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '13.5px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Wallet size={16} color="var(--accent-primary)" /> FINANCIAL SUMMARY
             </h3>
-
-            {startingBalance === null || isEditingBalance ? (
-              <div style={{ marginTop: '4px' }}>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>
-                  {startingBalance === null ? 'Starting Account Balance not set' : 'Starting Account Balance'}
-                </div>
-                <form onSubmit={handleSaveStartingBalance} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <input
-                    type="number"
-                    placeholder="Enter amount (e.g. 50000)"
-                    min="0"
-                    step="any"
-                    value={balanceInput}
-                    onChange={(e) => setBalanceInput(e.target.value)}
-                    required
-                    style={{ flex: 1, minHeight: '34px', fontSize: '12px', padding: '4px 8px' }}
-                  />
-                  <button type="submit" className="btn-primary" style={{ minHeight: '34px', padding: '0 10px', fontSize: '12px', flexShrink: 0 }}>
-                    <Check size={14} /> Save
-                  </button>
-                  {isEditingBalance && startingBalance !== null && (
-                    <button type="button" onClick={() => setIsEditingBalance(false)} className="btn-secondary" style={{ minHeight: '34px', padding: '0 6px', fontSize: '12px', flexShrink: 0 }}>
-                      <X size={14} />
-                    </button>
-                  )}
-                </form>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{
-                    fontSize: '1.8rem',
-                    fontWeight: '800',
-                    color: currentBalance >= 0 ? 'var(--text-primary)' : 'var(--accent-danger)'
-                  }}>
-                    {currentBalance >= 0 ? '+' : ''}₹{currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleStartEditBalance}
-                  title="Edit Starting Balance"
-                  style={{
-                    padding: '4px', width: '28px', height: '28px',
-                    borderRadius: 'var(--radius-sm)', background: 'transparent',
-                    border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                  }}
-                >
-                  <Edit2 size={14} />
-                </button>
-              </div>
-            )}
+            <ReactionBadge category="BALANCE" data={{ balance: currentBalance }} seed={Math.round(currentBalance)} />
           </div>
 
-          {/* Compact Spent & Received Summary Blocks */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-xs)', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
-            <div style={{ padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Spent</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--accent-danger)' }}>-₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-            </div>
-            <div style={{ padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Received</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--accent-primary)' }}>+₹{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+          {/* Main Total Balance Box */}
+          <div style={{ padding: '12px 14px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', marginBottom: '2px' }}>Total Balance</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: '800', color: currentBalance >= 0 ? 'var(--text-primary)' : 'var(--accent-danger)' }}>
+              {currentBalance >= 0 ? '+' : ''}₹{currentBalance.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </div>
           </div>
+
+          {/* Spent & Received 2-Column Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', textAlign: 'center' }}>
+            {/* Spent */}
+            <div style={{ padding: '10px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', marginBottom: '2px' }}>Spent</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent-danger)' }}>
+                -₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+            </div>
+
+            {/* Received */}
+            <div style={{ padding: '10px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', marginBottom: '2px' }}>Received</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent-success)' }}>
+                +₹{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* MOBILE FINANCIAL SUMMARY CARD (Visible on Mobile <=768px) */}
+        <div className="glass-card mobile-financial-summary-card" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+            <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: '800' }}>
+              <Wallet size={14} color="var(--accent-primary)" /> FINANCIAL SUMMARY
+            </h3>
+            <ReactionBadge category="BALANCE" data={{ balance: currentBalance }} seed={Math.round(currentBalance)} style={{ margin: 0 }} />
+          </div>
+
+          {/* 3 Metrics on ONE Row: TOTAL, SPENT, RECEIVED */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px', textAlign: 'center',
+            padding: '8px 6px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)'
+          }}>
+            {/* TOTAL */}
+            <div>
+              <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>TOTAL</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: '800', color: currentBalance >= 0 ? 'var(--text-primary)' : 'var(--accent-danger)', marginTop: '2px' }}>
+                {currentBalance >= 0 ? '+' : ''}₹{currentBalance.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+            </div>
+
+            {/* SPENT */}
+            <div>
+              <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>SPENT</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--accent-danger)', marginTop: '2px' }}>
+                -₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+            </div>
+
+            {/* RECEIVED */}
+            <div>
+              <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>RECEIVED</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--accent-success)', marginTop: '2px' }}>
+                +₹{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+            </div>
+          </div>
+
+          {/* Mini Bar / Progress Visualization */}
+          {(() => {
+            const totalActivity = totalSpent + totalIncome;
+            const spentRatio = totalActivity > 0 ? Math.min(100, Math.round((totalSpent / totalActivity) * 100)) : 50;
+            const incomeRatio = 100 - spentRatio;
+            return (
+              <div style={{ marginTop: '2px' }}>
+                <div style={{ height: '5px', width: '100%', borderRadius: '3px', background: 'var(--bg-tertiary)', overflow: 'hidden', display: 'flex' }}>
+                  <div style={{ width: `${incomeRatio}%`, background: 'var(--accent-success)', height: '100%', transition: 'width 0.3s ease' }} title={`Received ${incomeRatio}%`} />
+                  <div style={{ width: `${spentRatio}%`, background: 'var(--accent-danger)', height: '100%', transition: 'width 0.3s ease' }} title={`Spent ${spentRatio}%`} />
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
-      {/* Row 2: SINGLE RECENT ACTIVITY SECTION WITH COMPACT EDIT/DELETE ICON BUTTONS */}
-      <div className="glass-card">
+      {/* HISTORY SECTION (Full-Width Transaction List) */}
+      <div className="glass-card expenses-history-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
-          <h3 style={{ margin: 0, color: 'var(--accent-primary)' }}>RECENT ACTIVITY</h3>
+          <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '13.5px', fontWeight: '800', letterSpacing: '0.05em' }}>
+            HISTORY ({filteredExpenses.length})
+          </h3>
           {isFromCache?.expenses && <StaleIndicator timestamp={lastSyncedAt?.expenses} />}
         </div>
-        
+
         {errors?.expenses && !isFromCache?.expenses ? (
           <ErrorState
             title={errors.expenses.title}
@@ -212,17 +221,14 @@ export function ExpensesPage() {
             Loading expenses...
           </div>
         ) : filteredExpenses.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '24px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-            <CreditCard size={28} color="var(--accent-primary)" style={{ opacity: 0.8 }} />
-            <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>
-              {search ? 'No matching transactions.' : 'No expenses recorded yet.'}
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              {search ? 'Try searching with another term.' : 'Your spending will appear here once you add an expense.'}
-            </div>
-          </div>
+          <EmptyState
+            icon={CreditCard}
+            title={search ? 'No matching transactions' : 'No expenses yet'}
+            description={search ? 'Try searching with another term.' : 'Your spending history will appear here.'}
+            compact
+          />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+          <div className="expenses-history-list" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
             {filteredExpenses.map((exp) => {
               const isEditing = editingId === exp.id;
               const isIncome = exp.type === 'income';
@@ -312,7 +318,7 @@ export function ExpensesPage() {
                   {/* Right: Amount & Compact Icon Buttons [✎] [🗑] */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                     <span style={{ fontSize: '13px', fontWeight: '700', color: isIncome ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
-                      {isIncome ? '+' : '-'}₹{exp.amount.toLocaleString()}
+                      {isIncome ? '+' : '-'}₹{(exp.amount || 0).toLocaleString()}
                     </span>
 
                     {/* Small Edit Icon Button [✎] */}

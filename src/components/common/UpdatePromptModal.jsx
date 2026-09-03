@@ -8,12 +8,17 @@ export function UpdatePromptModal() {
     latestVersion, 
     getReleaseHighlights, 
     applyUpdate, 
-    dismissUpdate 
+    dismissUpdate,
+    downloadStatus,
+    downloadProgress,
+    downloadError
   } = usePWAUpdate();
 
   if (!showUpdatePrompt) return null;
 
   const highlights = getReleaseHighlights(latestVersion);
+  const isDownloading = downloadStatus === 'downloading';
+  const isError = downloadStatus === 'error';
 
   return (
     <div
@@ -65,14 +70,14 @@ export function UpdatePromptModal() {
                 color: 'var(--color-primary)'
               }}
             >
-              <RefreshCw size={20} className="animate-spin" />
+              <RefreshCw size={20} className={isDownloading ? "animate-spin" : ""} />
             </div>
             <div>
               <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                UPDATE AVAILABLE
+                DAYSYNC UPDATE AVAILABLE
               </span>
               <h3 id="update-prompt-title" style={{ margin: '2px 0 0 0', fontSize: '1.15rem', fontWeight: '700' }}>
-                DaySync {latestVersion} is ready
+                DaySync v{latestVersion} is ready
               </h3>
             </div>
           </div>
@@ -87,37 +92,74 @@ export function UpdatePromptModal() {
           </button>
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
-          <h4 style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-secondary)', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            What's new
-          </h4>
+        {isDownloading && (
+          <div style={{ marginBottom: '18px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+              <span>Downloading update APK...</span>
+              <span>{downloadProgress}%</span>
+            </div>
+            <div style={{ width: '100%', height: '8px', borderRadius: '4px', background: 'var(--border-muted)', overflow: 'hidden' }}>
+              <div
+                style={{
+                  width: `${downloadProgress}%`,
+                  height: '100%',
+                  background: 'var(--color-primary)',
+                  transition: 'width 200ms ease'
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {isError && (
           <div
             style={{
-              maxHeight: '260px',
-              overflowY: 'auto',
-              paddingRight: '6px'
+              padding: '10px 14px',
+              borderRadius: '8px',
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              color: '#ef4444',
+              fontSize: '0.82rem',
+              marginBottom: '16px'
             }}
           >
-            <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {highlights.map((item, idx) => (
-                <li
-                  key={idx}
-                  style={{
-                    fontSize: '0.85rem',
-                    color: 'var(--text-primary)',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '8px',
-                    lineHeight: '1.4'
-                  }}
-                >
-                  <span style={{ color: 'var(--color-primary)', fontWeight: '700', flexShrink: 0 }}>•</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+            {downloadError || 'Failed to download update APK. Please try again.'}
           </div>
-        </div>
+        )}
+
+        {!isDownloading && (
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-secondary)', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              What's new
+            </h4>
+            <div
+              style={{
+                maxHeight: '220px',
+                overflowY: 'auto',
+                paddingRight: '6px'
+              }}
+            >
+              <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {highlights.map((item, idx) => (
+                  <li
+                    key={idx}
+                    style={{
+                      fontSize: '0.85rem',
+                      color: 'var(--text-primary)',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '8px',
+                      lineHeight: '1.4'
+                    }}
+                  >
+                    <span style={{ color: 'var(--color-primary)', fontWeight: '700', flexShrink: 0 }}>•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
           <button
@@ -131,10 +173,11 @@ export function UpdatePromptModal() {
           <button
             type="button"
             onClick={applyUpdate}
+            disabled={isDownloading}
             className="btn-primary"
-            style={{ padding: '8px 20px', fontSize: '0.88rem', minHeight: '38px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            style={{ padding: '8px 20px', fontSize: '0.88rem', minHeight: '38px', display: 'inline-flex', alignItems: 'center', gap: '6px', opacity: isDownloading ? 0.7 : 1 }}
           >
-            <Sparkles size={16} /> Update Now
+            <Sparkles size={16} /> {isError ? 'Retry Download' : isDownloading ? `Downloading (${downloadProgress}%)` : 'Update Now'}
           </button>
         </div>
       </div>

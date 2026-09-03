@@ -5,7 +5,8 @@ import { formatTimeAgo } from '../../services/clientCache';
 export function StaleIndicator({ timestamp }) {
   if (!timestamp) return null;
   const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
-  const prefix = isOffline ? 'Offline' : 'Server unreachable';
+  if (!isOffline) return null;
+
   return (
     <div
       style={{
@@ -23,7 +24,7 @@ export function StaleIndicator({ timestamp }) {
       }}
     >
       <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-amber)' }} />
-      <span>{prefix} • Last synced {formatTimeAgo(timestamp)}</span>
+      <span>Offline • Last synced {formatTimeAgo(timestamp)}</span>
     </div>
   );
 }

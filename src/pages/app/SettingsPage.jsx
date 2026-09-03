@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
 import { useAuth } from '../../context/AuthContext';
 import { useLuna } from '../../context/LunaContext';
@@ -6,34 +7,98 @@ import { useNotifications } from '../../context/NotificationContext';
 import { usePWAUpdate } from '../../context/PWAUpdateContext';
 import { useToast } from '../../context/ToastContext';
 import { ConfirmationModal } from '../../components/common/ConfirmationModal';
+import { WidgetPickerModal } from '../../components/dashboard/WidgetPickerModal';
+import { DEFAULT_WIDGET_LAYOUT } from '../../components/dashboard/widgetCatalog';
 import { api } from '../../services/api';
-import { 
+import { AVATAR_LIST, CartoonAvatar, UserAvatar } from '../../components/common/CartoonAvatars';
+import {
   User,
-  Bell, 
-  Moon, 
-  Sun, 
-  Download, 
-  Trash2, 
-  LogOut, 
-  UserX, 
-  RefreshCw, 
-  Shield, 
-  Check, 
-  Mail, 
-  Layout, 
+  Bell,
+  Moon,
+  Sun,
+  Trash2,
+  LogOut,
+  UserX,
+  RefreshCw,
+  Shield,
+  Check,
+  Mail,
+  Layout,
   Sparkles,
   Smartphone,
   Info,
   Sliders,
   Database,
   Lock,
-  ExternalLink
+  Zap,
+  X,
+  Eye,
+  EyeOff,
+  Edit2,
+  Plus,
+  CreditCard,
+  Key,
+  CheckCircle,
+  AlertCircle,
+  SlidersHorizontal,
+  Layers,
+  Activity,
+  Repeat,
+  Users,
+  Calendar,
+  Globe,
+  HelpCircle,
+  Download,
+  Upload
 } from 'lucide-react';
-import pkg from '../../../package.json';
+
+function ToggleSwitch({ checked, onChange, label, description }) {
+  return (
+    <div
+      onClick={() => onChange(!checked)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '10px 0',
+        cursor: 'pointer',
+        userSelect: 'none'
+      }}
+    >
+      <div style={{ flex: 1, paddingRight: '12px' }}>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{label}</div>
+        {description && <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>{description}</div>}
+      </div>
+
+      <div style={{
+        width: '44px',
+        height: '24px',
+        borderRadius: '12px',
+        background: checked ? 'var(--accent-primary)' : 'var(--bg-tertiary, rgba(255,255,255,0.15))',
+        border: '1px solid var(--border-color)',
+        padding: '2px',
+        display: 'flex',
+        alignItems: 'center',
+        transition: 'background-color 0.2s ease',
+        flexShrink: 0
+      }}>
+        <div style={{
+          width: '18px',
+          height: '18px',
+          borderRadius: '50%',
+          background: '#FFFFFF',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+          transform: checked ? 'translateX(20px)' : 'translateX(0px)',
+          transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+        }} />
+      </div>
+    </div>
+  );
+}
 
 export function SettingsPage() {
-  const { user, theme, toggleTheme, logout, deleteAccount } = useAuth();
-  const { clearChatHistory } = useLuna();
+  const navigate = useNavigate();
+  const { user, token, theme, toggleTheme, logout, deleteAccount, updateUser } = useAuth();
   const {
     preferences,
     updatePreferences,
@@ -44,105 +109,370 @@ export function SettingsPage() {
     enablePush,
     disablePush
   } = useNotifications();
+  const { tasks, expenses, memories, startingBalance, updateStartingBalance, refreshData, clearChatHistory } = useLuna();
   const {
     currentVersion,
-    latestVersion,
     updateAvailable,
     checking,
     hasCheckedManually,
     fetchError,
     checkForUpdates,
-    applyUpdate,
-    getReleaseHighlights,
+    updateApp,
     openWhatsNewModal
   } = usePWAUpdate();
-
   const { showToast } = useToast();
 
-  // Section scroll refs
+  const [isEditingBalance, setIsEditingBalance] = useState(false);
+  const [balanceInput, setBalanceInput] = useState('');
+
+  // Data Export & Restore State
+  const [restorePayload, setRestorePayload] = useState(null);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const restoreFileInputRef = useRef(null);
+
+  // 1. Export Data Handler
+  const handleExportData = () => {
+    try {
+      const exportData = {
+        app: 'DaySync',
+        version: '2.0.0',
+        exportedAt: new Date().toISOString(),
+        userProfile: {
+          id: user?.id || 'user',
+          name: user?.name || 'DaySync User',
+          email: user?.email || '',
+          avatar: user?.avatar || 'dog'
+        },
+        tasks: tasks || [],
+        expenses: expenses || [],
+        memories: memories || [],
+        startingBalance: startingBalance !== null ? startingBalance : 0,
+        settings: {
+          theme,
+          transactionMsgBehavior: localStorage.getItem('daysync_transaction_msg_behavior') || 'automatic',
+          autoBackup: localStorage.getItem('daysync_auto_backup') !== 'false',
+          weekStartDay: localStorage.getItem('daysync_week_start') || 'monday',
+          dateFormat: localStorage.getItem('daysync_date_format') || 'DD MMM YYYY',
+          confirmDelete: localStorage.getItem('daysync_confirm_delete') !== 'false',
+          activeWidgetIds: (() => {
+            try {
+              const layoutKey = `daysync_dashboard_layout_${user?.id || 'guest'}`;
+              const saved = localStorage.getItem(layoutKey);
+              if (saved) return JSON.parse(saved);
+            } catch (e) {}
+            return [];
+          })()
+        }
+      };
+
+      const jsonStr = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `daysync-backup-${todayStr}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      if (showToast) showToast('DaySync data exported successfully!', 'success');
+    } catch (err) {
+      if (showToast) showToast('Failed to export data. Please try again.', 'error');
+    }
+  };
+
+  // 2. Select File for Restore
+  const handleFileSelectForRestore = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target.result;
+        const parsed = JSON.parse(text);
+
+        if (!parsed || typeof parsed !== 'object') {
+          throw new Error('Invalid JSON format');
+        }
+
+        if (parsed.app !== 'DaySync' && !parsed.tasks && !parsed.expenses && !parsed.settings) {
+          throw new Error('Unrecognized DaySync backup structure');
+        }
+
+        setRestorePayload(parsed);
+        setShowRestoreModal(true);
+      } catch (err) {
+        if (showToast) showToast('Invalid or corrupted DaySync backup file. Please select a valid JSON backup.', 'error');
+      }
+    };
+
+    reader.readAsText(file);
+    if (e.target) e.target.value = '';
+  };
+
+  // 3. Confirm Restore Handler
+  const handleConfirmRestore = async () => {
+    if (!restorePayload) return;
+
+    try {
+      const { settings, tasks: restoredTasks, expenses: restoredExpenses, memories: restoredMemories, startingBalance: restoredBal, userProfile } = restorePayload;
+
+      // 1. Restore User Profile Avatar
+      if (userProfile && userProfile.avatar) {
+        updateUser({ avatar: userProfile.avatar });
+      }
+
+      // 2. Restore Baseline Balance
+      if (restoredBal !== undefined) {
+        updateStartingBalance(restoredBal);
+      }
+
+      // 3. Restore Settings to localStorage
+      if (settings) {
+        if (settings.theme && settings.theme !== theme) {
+          toggleTheme();
+        }
+        if (settings.transactionMsgBehavior) {
+          localStorage.setItem('daysync_transaction_msg_behavior', settings.transactionMsgBehavior);
+        }
+        if (settings.autoBackup !== undefined) {
+          localStorage.setItem('daysync_auto_backup', String(settings.autoBackup));
+        }
+        if (settings.weekStartDay) {
+          localStorage.setItem('daysync_week_start', settings.weekStartDay);
+        }
+        if (settings.dateFormat) {
+          localStorage.setItem('daysync_date_format', settings.dateFormat);
+        }
+        if (settings.confirmDelete !== undefined) {
+          localStorage.setItem('daysync_confirm_delete', String(settings.confirmDelete));
+        }
+        if (settings.activeWidgetIds && user?.id) {
+          const layoutKey = `daysync_dashboard_layout_${user.id}`;
+          localStorage.setItem(layoutKey, JSON.stringify(settings.activeWidgetIds));
+        }
+      }
+
+      // 4. Restore Tasks, Expenses, Memories to clientCache
+      if (user?.id) {
+        if (Array.isArray(restoredTasks)) clientCache.save(user.id, 'tasks', restoredTasks);
+        if (Array.isArray(restoredExpenses)) clientCache.save(user.id, 'expenses', restoredExpenses);
+        if (Array.isArray(restoredMemories)) clientCache.save(user.id, 'memories', restoredMemories);
+      }
+
+      setShowRestoreModal(false);
+      setRestorePayload(null);
+
+      if (showToast) showToast('Data restored successfully! Refreshing app...', 'success');
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (err) {
+      if (showToast) showToast('Failed to restore data. Please check the backup file.', 'error');
+    }
+  };
+
+  const handleSaveStartingBalance = (e) => {
+    e.preventDefault();
+    if (!balanceInput) return;
+    updateStartingBalance(balanceInput);
+    setIsEditingBalance(false);
+    if (showToast) showToast('Starting balance updated.', 'success');
+  };
+
+  const handleStartEditBalance = () => {
+    setBalanceInput(startingBalance !== null ? startingBalance.toString() : '');
+    setIsEditingBalance(true);
+  };
+
+  // Section Scroll Refs
   const accountRef = useRef(null);
-  const appearanceRef = useRef(null);
+  const preferencesRef = useRef(null);
+  const dashboardRef = useRef(null);
   const notificationsRef = useRef(null);
   const lunaRef = useRef(null);
+  const defaultsRef = useRef(null);
   const privacyRef = useRef(null);
-  const updatesRef = useRef(null);
-  const supportRef = useRef(null);
+  const appRef = useRef(null);
   const aboutRef = useRef(null);
+  const actionsRef = useRef(null);
 
   const [activeSection, setActiveSection] = useState('account');
 
-  // Confirmation Modals State
+  // Modals & Sheets State
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isEditingAvatar, setIsEditingAvatar] = useState(false);
+
+  const handleSelectAvatar = async (avatarId) => {
+    updateUser({ avatar: avatarId });
+    if (showToast) showToast(`Avatar updated to ${avatarId.charAt(0).toUpperCase() + avatarId.slice(1)}!`, 'success');
+    setIsEditingAvatar(false);
+    setShowProfileModal(false);
+
+    try {
+      const res = await api.updateProfile({ avatar: avatarId });
+      if (res && res.user) {
+        updateUser(res.user);
+      }
+    } catch (err) {
+      console.warn('Backend profile update notice:', err);
+    }
+  };
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
-  const [showExportModal, setShowExportModal] = useState(false);
+  const [showDashboardResetModal, setShowDashboardResetModal] = useState(false);
+  const [showQuietHoursModal, setShowQuietHoursModal] = useState(false);
+  const [isWidgetPickerOpen, setIsWidgetPickerOpen] = useState(false);
 
-  // Loading States
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  const [isClearingHistory, setIsClearingHistory] = useState(false);
-  const [isExportingData, setIsExportingData] = useState(false);
+  // Account Modals State
+  const [showChangeNameModal, setShowChangeNameModal] = useState(false);
+  const [newNameInput, setNewNameInput] = useState('');
+  const [isSavingName, setIsSavingName] = useState(false);
 
-  // Luna Preferences (stored locally)
-  const [lunaProactive, setLunaProactive] = useState(() => {
-    return localStorage.getItem('daysync_luna_proactive') !== 'false';
+  const [showChangeEmailModal, setShowChangeEmailModal] = useState(false);
+  const [newEmailInput, setNewEmailInput] = useState('');
+  const [emailOtpStep, setEmailOtpStep] = useState(1);
+  const [otpInput, setOtpInput] = useState('');
+  const [isSendingEmailOtp, setIsSendingEmailOtp] = useState(false);
+  const [isVerifyingEmailOtp, setIsVerifyingEmailOtp] = useState(false);
+  const [demoOtpHint, setDemoOtpHint] = useState('');
+
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [currentPassInput, setCurrentPassInput] = useState('');
+  const [newPassInput, setNewPassInput] = useState('');
+  const [confirmPassInput, setConfirmPassInput] = useState('');
+  const [showPassToggle, setShowPassToggle] = useState(false);
+  const [isChangingPass, setIsChangingPass] = useState(false);
+
+  // Functional System Preferences
+  const [transactionMsgBehavior, setTransactionMsgBehavior] = useState(() => {
+    return localStorage.getItem('daysync_transaction_msg_behavior') || 'automatic';
   });
-  const [lunaMemory, setLunaMemory] = useState(() => {
-    return localStorage.getItem('daysync_luna_memory') !== 'false';
+  const [autoBackup, setAutoBackup] = useState(() => {
+    return localStorage.getItem('daysync_auto_backup') !== 'false';
+  });
+  const [weekStartDay, setWeekStartDay] = useState(() => {
+    return localStorage.getItem('daysync_week_start') || 'monday';
+  });
+  const [dateFormat, setDateFormat] = useState(() => {
+    return localStorage.getItem('daysync_date_format') || 'DD MMM YYYY';
+  });
+  const [confirmDelete, setConfirmDelete] = useState(() => {
+    return localStorage.getItem('daysync_confirm_delete') !== 'false';
   });
 
-  const toggleLunaProactive = (val) => {
-    setLunaProactive(val);
-    localStorage.setItem('daysync_luna_proactive', val.toString());
-    if (showToast) showToast(val ? 'Luna proactive suggestions enabled.' : 'Luna proactive suggestions disabled.', 'info');
-  };
-
-  const toggleLunaMemory = (val) => {
-    setLunaMemory(val);
-    localStorage.setItem('daysync_luna_memory', val.toString());
-    if (showToast) showToast(val ? 'Luna conversation memory enabled.' : 'Luna conversation memory disabled.', 'info');
-  };
-
-  // Starting Account Balance
-  const [startingBalanceInput, setStartingBalanceInput] = useState(() => {
-    return localStorage.getItem('daysync_starting_account_amount') || localStorage.getItem('luna_monthly_budget_target') || '';
+  // Quiet Hours Preferences
+  const [quietHoursEnabled, setQuietHoursEnabled] = useState(() => {
+    return localStorage.getItem('daysync_quiet_hours_enabled') === 'true';
   });
-  const [balanceSavedMsg, setBalanceSavedMsg] = useState(false);
+  const [quietStart, setQuietStart] = useState(() => {
+    return localStorage.getItem('daysync_quiet_hours_start') || '22:00';
+  });
+  const [quietEnd, setQuietEnd] = useState(() => {
+    return localStorage.getItem('daysync_quiet_hours_end') || '08:00';
+  });
 
-  // Widget Preferences
-  const [widgets, setWidgets] = useState(() => {
+  const [tempQuietStart, setTempQuietStart] = useState(quietStart);
+  const [tempQuietEnd, setTempQuietEnd] = useState(quietEnd);
+
+  // Active Dashboard Widgets Layout
+  const [activeWidgetIds, setActiveWidgetIds] = useState(() => {
     try {
-      const saved = localStorage.getItem('daysync_dashboard_widgets');
-      return saved ? JSON.parse(saved) : { task: true, expense: true, memory: true, habit: true, progress: true };
-    } catch (e) {
-      return { task: true, expense: true, memory: true, habit: true, progress: true };
-    }
+      const storageKey = `daysync_dashboard_layout_${user?.id || 'guest'}`;
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.map(w => w.id || w);
+      }
+    } catch (e) {}
+    return DEFAULT_WIDGET_LAYOUT.map(w => w.id);
   });
 
-  const toggleWidget = (key) => {
-    setWidgets(prev => {
-      const updated = { ...prev, [key]: !prev[key] };
-      localStorage.setItem('daysync_dashboard_widgets', JSON.stringify(updated));
-      return updated;
-    });
-  };
+  // Notifications Toggles
+  const [notifSettings, setNotifSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('daysync_notif_settings');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      masterPush: true,
+      taskDue: true,
+      taskOverdue: true,
+      planExpiry: true,
+      planPayment: true,
+      habitReminders: true,
+      splitUpdates: true,
+      lunaSuggestions: true
+    };
+  });
 
-  const VALID_STARTUP_PAGES = ['dashboard', 'tasks', 'expenses', 'habits', 'goals', 'memories', 'notifications', 'chat', 'summary'];
+  // Luna Toggles
+  const [lunaSettings, setLunaSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('daysync_luna_settings');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      enabled: true,
+      suggestions: true,
+      dailyBriefing: true,
+      taskSuggestions: true,
+      planReminders: true,
+      splitAssistance: true,
+      proactiveHelp: true
+    };
+  });
 
   // Startup Page preference state
+  const VALID_STARTUP_PAGES = ['dashboard', 'tasks', 'expenses', 'plans', 'splits', 'chat', 'settings'];
   const [startupPage, setStartupPage] = useState(() => {
     try {
       const saved = localStorage.getItem('daysync_startup_page');
       if (saved && VALID_STARTUP_PAGES.includes(saved.toLowerCase())) {
         return saved.toLowerCase();
       }
-      if (saved && saved.startsWith('/app/')) {
-        const key = saved.replace('/app/', '').replace('task', 'tasks');
-        if (VALID_STARTUP_PAGES.includes(key)) return key;
-      }
     } catch (e) {}
     return 'dashboard';
   });
+
+  // Defaults Settings
+  const [defaults, setDefaults] = useState(() => {
+    try {
+      const saved = localStorage.getItem('daysync_app_defaults');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      transactionType: 'spent',
+      taskDuration: '30',
+      expenseCategory: 'General',
+      startupPage: localStorage.getItem('daysync_startup_page') || 'dashboard'
+    };
+  });
+
+  // Loading States
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [isClearingHistory, setIsClearingHistory] = useState(false);
+  const [pushStatus, setPushStatus] = useState('Enabled');
+
+  useEffect(() => {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      setPushStatus('Unsupported');
+    } else if (Notification.permission === 'granted') {
+      setPushStatus('Enabled');
+    } else if (Notification.permission === 'denied') {
+      setPushStatus('Permission blocked');
+    } else {
+      setPushStatus('Disabled');
+    }
+  }, []);
 
   const handleTogglePush = async () => {
     if (pushEnabled) {
@@ -167,15 +497,207 @@ export function SettingsPage() {
     if (showToast) showToast('Startup page updated.', 'success');
   };
 
-  const handleSaveStartingBalance = (e) => {
+  const handleTransactionMsgBehaviorChange = (mode) => {
+    setTransactionMsgBehavior(mode);
+    localStorage.setItem('daysync_transaction_msg_behavior', mode);
+    if (showToast) showToast(`Transaction message behavior set to ${mode}.`, 'success');
+  };
+
+  const handleToggleAutoBackup = (val) => {
+    setAutoBackup(val);
+    localStorage.setItem('daysync_auto_backup', val ? 'true' : 'false');
+    if (showToast) showToast(val ? 'Automatic user data backup enabled.' : 'Automatic user data backup disabled.', 'info');
+  };
+
+  const handleWeekStartChange = (day) => {
+    setWeekStartDay(day);
+    localStorage.setItem('daysync_week_start', day);
+    if (showToast) showToast(`Week start day set to ${day === 'monday' ? 'Monday' : 'Sunday'}.`, 'success');
+  };
+
+  const handleDateFormatChange = (fmt) => {
+    setDateFormat(fmt);
+    localStorage.setItem('daysync_date_format', fmt);
+    if (showToast) showToast(`Date format updated to ${fmt}.`, 'success');
+  };
+
+  const handleToggleConfirmDelete = (val) => {
+    setConfirmDelete(val);
+    localStorage.setItem('daysync_confirm_delete', val ? 'true' : 'false');
+    if (showToast) showToast(val ? 'Confirmation modal before deletion enabled.' : 'Direct item deletion enabled.', 'info');
+  };
+
+  const handleToggleQuietHours = (val) => {
+    setQuietHoursEnabled(val);
+    localStorage.setItem('daysync_quiet_hours_enabled', val ? 'true' : 'false');
+    if (showToast) showToast(val ? `Quiet Hours enabled (${quietStart} – ${quietEnd}).` : 'Quiet Hours disabled.', 'info');
+  };
+
+  const handleOpenQuietHoursModal = () => {
+    setTempQuietStart(quietStart);
+    setTempQuietEnd(quietEnd);
+    setShowQuietHoursModal(true);
+  };
+
+  const handleSaveQuietHoursModal = (e) => {
+    e?.preventDefault();
+    setQuietStart(tempQuietStart);
+    setQuietEnd(tempQuietEnd);
+    localStorage.setItem('daysync_quiet_hours_start', tempQuietStart);
+    localStorage.setItem('daysync_quiet_hours_end', tempQuietEnd);
+    setShowQuietHoursModal(false);
+    if (showToast) showToast(`Quiet Hours schedule updated to ${tempQuietStart} – ${tempQuietEnd}.`, 'success');
+  };
+
+  const handleToggleNotifSetting = (key) => {
+    setNotifSettings(prev => {
+      const updated = { ...prev, [key]: !prev[key] };
+      localStorage.setItem('daysync_notif_settings', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleToggleLunaSetting = (key) => {
+    setLunaSettings(prev => {
+      const updated = { ...prev, [key]: !prev[key] };
+      localStorage.setItem('daysync_luna_settings', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleDefaultChange = (key, val) => {
+    setDefaults(prev => {
+      const updated = { ...prev, [key]: val };
+      localStorage.setItem('daysync_app_defaults', JSON.stringify(updated));
+      if (key === 'startupPage') {
+        localStorage.setItem('daysync_startup_page', val);
+      }
+      return updated;
+    });
+    if (showToast) showToast('Default preference updated.', 'success');
+  };
+
+  // Account Handlers
+  const handleOpenChangeName = () => {
+    setNewNameInput(user?.name || '');
+    setShowChangeNameModal(true);
+  };
+
+  const handleSaveName = async (e) => {
     e.preventDefault();
-    const val = parseFloat(startingBalanceInput);
-    if (!isNaN(val) && val >= 0) {
-      localStorage.setItem('daysync_starting_account_amount', val.toString());
-      setBalanceSavedMsg(true);
-      if (showToast) showToast('Base account balance updated across all features!', 'success');
-      setTimeout(() => setBalanceSavedMsg(false), 2500);
+    if (!newNameInput.trim()) return;
+    setIsSavingName(true);
+    try {
+      const res = await api.updateProfile({ name: newNameInput.trim() });
+      updateUser(res.user);
+      setShowChangeNameModal(false);
+      if (showToast) showToast('Profile name updated successfully!', 'success');
+    } catch (err) {
+      if (showToast) showToast(err.error || 'Failed to update name.', 'error');
+    } finally {
+      setIsSavingName(false);
     }
+  };
+
+  const handleOpenChangeEmail = () => {
+    setNewEmailInput('');
+    setOtpInput('');
+    setEmailOtpStep(1);
+    setDemoOtpHint('');
+    setShowChangeEmailModal(true);
+  };
+
+  const handleSendEmailOtp = async (e) => {
+    e.preventDefault();
+    if (!newEmailInput.trim() || !newEmailInput.includes('@')) return;
+    setIsSendingEmailOtp(true);
+    try {
+      const res = await api.sendEmailOTP({ newEmail: newEmailInput.trim() });
+      setEmailOtpStep(2);
+      if (res.demoOtp) setDemoOtpHint(res.demoOtp);
+      if (showToast) showToast(`Verification code sent to ${newEmailInput.trim()}`, 'info');
+    } catch (err) {
+      if (showToast) showToast(err.error || 'Unable to send OTP to new email.', 'error');
+    } finally {
+      setIsSendingEmailOtp(false);
+    }
+  };
+
+  const handleVerifyEmailOtp = async (e) => {
+    e.preventDefault();
+    if (!otpInput.trim()) return;
+    setIsVerifyingEmailOtp(true);
+    try {
+      const res = await api.verifyEmailOTP({ newEmail: newEmailInput.trim(), otp: otpInput.trim() });
+      if (res.token) localStorage.setItem('luna_token', res.token);
+      updateUser(res.user);
+      setShowChangeEmailModal(false);
+      if (showToast) showToast('Email address verified and updated successfully!', 'success');
+    } catch (err) {
+      if (showToast) showToast(err.error || 'Invalid verification code.', 'error');
+    } finally {
+      setIsVerifyingEmailOtp(false);
+    }
+  };
+
+  const handleOpenChangePassword = () => {
+    setCurrentPassInput('');
+    setNewPassInput('');
+    setConfirmPassInput('');
+    setShowChangePasswordModal(true);
+  };
+
+  const handleSavePassword = async (e) => {
+    e.preventDefault();
+    if (!currentPassInput || !newPassInput) return;
+    if (newPassInput !== confirmPassInput) {
+      if (showToast) showToast('New password and confirm password do not match.', 'error');
+      return;
+    }
+    if (newPassInput.length < 6) {
+      if (showToast) showToast('New password must be at least 6 characters.', 'error');
+      return;
+    }
+
+    setIsChangingPass(true);
+    try {
+      await api.changePassword({ currentPassword: currentPassInput, newPassword: newPassInput });
+      setShowChangePasswordModal(false);
+      if (showToast) showToast('Password changed successfully!', 'success');
+    } catch (err) {
+      if (showToast) showToast(err.error || 'Failed to change password. Verify your current password.', 'error');
+    } finally {
+      setIsChangingPass(false);
+    }
+  };
+
+  const handleConfirmResetDashboard = () => {
+    setShowDashboardResetModal(false);
+    const storageKey = `daysync_dashboard_layout_${user?.id || 'guest'}`;
+    localStorage.setItem(storageKey, JSON.stringify(DEFAULT_WIDGET_LAYOUT));
+    setActiveWidgetIds(DEFAULT_WIDGET_LAYOUT.map(w => w.id));
+    if (showToast) showToast('Dashboard layout reset to default.', 'info');
+  };
+
+  const handleAddWidget = (widget) => {
+    setActiveWidgetIds(prev => {
+      if (prev.includes(widget.id)) return prev;
+      return [...prev, widget.id];
+    });
+
+    try {
+      const storageKey = `daysync_dashboard_layout_${user?.id || 'guest'}`;
+      const saved = localStorage.getItem(storageKey);
+      let currentLayout = saved ? JSON.parse(saved) : DEFAULT_WIDGET_LAYOUT;
+      if (!Array.isArray(currentLayout)) currentLayout = DEFAULT_WIDGET_LAYOUT;
+
+      if (!currentLayout.some(w => w.id === widget.id)) {
+        currentLayout.push({ id: widget.id, size: widget.defaultSize || 'W', visible: true });
+        localStorage.setItem(storageKey, JSON.stringify(currentLayout));
+      }
+    } catch (e) {}
+
+    if (showToast) showToast(`Added ${widget.title} widget to Dashboard.`, 'success');
   };
 
   const scrollToSection = (ref, sectionKey) => {
@@ -183,7 +705,6 @@ export function SettingsPage() {
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  // Privacy & Data Actions
   const handleConfirmClearHistory = async () => {
     if (isClearingHistory) return;
     setIsClearingHistory(true);
@@ -196,8 +717,7 @@ export function SettingsPage() {
       setShowClearHistoryModal(false);
       if (showToast) showToast('Chat history cleared.', 'success');
     } catch (err) {
-      setShowClearHistoryModal(false);
-      if (showToast) showToast('Unable to clear your chat history right now. Please try again.', 'error');
+      if (showToast) showToast('Unable to clear history right now.', 'error');
     } finally {
       setIsClearingHistory(false);
     }
@@ -219,547 +739,340 @@ export function SettingsPage() {
       await deleteAccount();
       setShowDeleteModal(false);
     } catch (err) {
-      if (showToast) showToast('Unable to delete your account right now. Please try again.', 'error');
+      if (showToast) showToast('Unable to delete your account right now.', 'error');
     } finally {
       setIsDeletingAccount(false);
     }
   };
 
-  const currentHighlights = getReleaseHighlights(currentVersion);
-
-  const sectionsNav = [
-    { key: 'account', label: 'Account', icon: User, ref: accountRef },
-    { key: 'appearance', label: 'Appearance', icon: Sun, ref: appearanceRef },
-    { key: 'notifications', label: 'Notifications', icon: Bell, ref: notificationsRef },
-    { key: 'luna', label: 'Luna', icon: Sparkles, ref: lunaRef },
-    { key: 'privacy', label: 'Privacy & Data', icon: Shield, ref: privacyRef },
-    { key: 'updates', label: 'App Updates', icon: RefreshCw, ref: updatesRef },
-    { key: 'support', label: 'Support', icon: Mail, ref: supportRef },
-    { key: 'about', label: 'About', icon: Info, ref: aboutRef }
-  ];
-
   return (
-    <div className="page-container" style={{ maxWidth: '840px' }}>
-      <PageHeaderRow title="Settings" />
+    <div className="page-container settings-page-container">
+      {/* Top Header Row: Title SETTINGS */}
+      <PageHeaderRow title="SETTINGS" />
 
-      {/* Sticky Section Navigation Chips Bar */}
-      <div className="scroll-row" style={{ marginBottom: 'var(--space-md)', paddingBottom: '4px' }}>
-        {sectionsNav.map(sec => {
-          const IconComp = sec.icon;
-          const isActive = activeSection === sec.key;
-          return (
-            <button
-              key={sec.key}
-              type="button"
-              onClick={() => scrollToSection(sec.ref, sec.key)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 'var(--radius-full)',
-                border: `1px solid ${isActive ? 'var(--accent-primary)' : 'var(--border-color)'}`,
-                background: isActive ? 'var(--accent-primary)' : 'var(--bg-card)',
-                color: isActive ? '#FFFFFF' : 'var(--text-secondary)',
-                fontSize: '12px',
-                fontWeight: isActive ? '700' : '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                cursor: 'pointer',
-                flexShrink: 0,
-                transition: 'all 0.18s ease'
-              }}
-            >
-              <IconComp size={13} /> {sec.label}
-            </button>
-          );
-        })}
-      </div>
+      {/* COMPACT SINGLE-PAGE SETTINGS CONTAINER */}
+      <div className="settings-compact-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-        {/* 1. ACCOUNT SECTION */}
-        <div ref={accountRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <User size={18} color="var(--accent-primary)" /> Account
-          </h3>
-
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '14px 16px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-            border: '1px solid var(--border-color)', marginBottom: 'var(--space-md)', flexWrap: 'wrap', gap: '12px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '44px', height: '44px', borderRadius: '50%', background: 'var(--accent-primary)',
-                color: '#FFFFFF', fontWeight: '700', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>
-                {(user?.name || 'U').charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)' }}>{user?.name || 'User'}</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{user?.email || 'user@daysync.app'}</div>
+        {/* 1. USER PROFILE SECTION */}
+        <div ref={accountRef} className="glass-card settings-compact-card">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
+            <div style={{ cursor: 'pointer' }} onClick={() => setShowProfileModal(true)} title="Click to view/edit cartoon avatar">
+              <UserAvatar avatarId={user?.avatar} name={user?.name} size={64} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                {user?.name || 'DaySync User'}
+              </h3>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {user?.email || 'user@daysync.app'}
               </div>
             </div>
-            <span style={{ fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '12px', background: 'var(--color-primary-soft)', color: 'var(--color-primary)' }}>
-              Active Account
-            </span>
           </div>
 
-          <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
+          <div className="profile-actions-grid-2">
+            <button type="button" onClick={() => setShowProfileModal(true)} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
+              <Sparkles size={13} /> Avatar & Profile
+            </button>
+            <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
+              <Edit2 size={13} /> Edit Name
+            </button>
+            <button type="button" onClick={handleOpenChangeEmail} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
+              <Mail size={13} /> Edit Email
+            </button>
+            <button type="button" onClick={handleOpenChangePassword} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
+              <Key size={13} /> Change Password
+            </button>
+          </div>
+        </div>
+
+        {/* 2. APP & SYSTEM PREFERENCES */}
+        <div ref={preferencesRef} className="glass-card settings-compact-card">
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <SlidersHorizontal size={18} color="var(--accent-primary)" /> App & System Preferences
+          </h3>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {/* Theme Mode */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Theme Mode</div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Current: <strong style={{ color: 'var(--text-primary)', textTransform: 'capitalize' }}>{theme} Mode</strong></div>
+              </div>
+              <button type="button" onClick={toggleTheme} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {theme === 'dark' ? <Sun size={14} color="var(--accent-warning)" /> : <Moon size={14} />}
+                Switch to {theme === 'dark' ? 'Light' : 'Dark'}
+              </button>
+            </div>
+
+            {/* Push Notifications Toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Push Notifications</div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Receive system and device alerts</div>
+              </div>
+              {pushSupported && pushPermission !== 'denied' && (
+                <button
+                  type="button"
+                  onClick={handleTogglePush}
+                  disabled={pushLoading}
+                  className={pushEnabled ? 'btn-secondary' : 'btn-primary'}
+                  style={{ fontSize: '12px', padding: '6px 14px' }}
+                >
+                  {pushLoading ? 'Processing...' : pushEnabled ? 'Disable' : 'Enable'}
+                </button>
+              )}
+            </div>
+
+            {/* Startup Page Selection */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Open Page on Startup</div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Initial landing screen on app launch</div>
+              </div>
+              <select
+                value={startupPage}
+                onChange={handleStartupPageChange}
+                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+              >
+                <option value="dashboard">Dashboard</option>
+                <option value="tasks">Tasks</option>
+                <option value="expenses">Expenses</option>
+                <option value="plans">Plans</option>
+                <option value="splits">Splits</option>
+                <option value="chat">Luna Chat</option>
+                <option value="settings">Settings</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. DATA BACKUP & RESTORE SECTION */}
+        <div className="glass-card settings-compact-card">
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Database size={18} color="var(--accent-primary)" /> Backup & Restore Data
+          </h3>
+          <p className="settings-compact-subtitle" style={{ color: 'var(--text-muted)' }}>
+            Export or restore your DaySync tasks, expenses, plans, and preferences to a JSON backup file.
+          </p>
+
+          <div style={{ display: 'flex', gap: '10px', marginTop: '12px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={handleExportData}
+              className="btn-primary"
+              style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Download size={14} /> Export Backup (.json)
+            </button>
+
+            <button
+              type="button"
+              onClick={() => restoreFileInputRef.current?.click()}
+              className="btn-secondary"
+              style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Upload size={14} /> Restore from File
+            </button>
+
+            <input
+              type="file"
+              ref={restoreFileInputRef}
+              onChange={handleFileSelectForRestore}
+              accept=".json"
+              style={{ display: 'none' }}
+            />
+          </div>
+        </div>
+
+        {/* 4. PRIVACY & ACCOUNT ACTIONS */}
+        <div ref={privacyRef} className="glass-card settings-compact-card">
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Shield size={18} color="var(--accent-primary)" /> Privacy & Account Actions
+          </h3>
+
+          <div style={{ display: 'flex', gap: '10px', marginTop: '12px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setShowClearHistoryModal(true)}
+              className="btn-secondary"
+              style={{ color: 'var(--accent-warning)', fontSize: '12px', padding: '8px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Trash2 size={14} /> Clear Chat History
+            </button>
+
             <button
               type="button"
               onClick={() => setShowLogoutModal(true)}
               className="btn-secondary"
-              style={{ fontSize: '13px' }}
+              style={{ fontSize: '12px', padding: '8px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              <LogOut size={15} /> Log Out
+              <LogOut size={14} /> Log Out
             </button>
+
             <button
               type="button"
               onClick={() => setShowDeleteModal(true)}
               className="btn-secondary"
-              style={{
-                color: 'var(--accent-danger)',
-                borderColor: 'var(--accent-danger)',
-                background: 'rgba(200, 92, 92, 0.1)',
-                fontSize: '13px'
-              }}
+              style={{ color: 'var(--accent-danger)', fontSize: '12px', padding: '8px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              <UserX size={15} /> Delete Account
-            </button>
-          </div>
-        </div>
-
-        {/* 2. APPEARANCE SECTION */}
-        <div ref={appearanceRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-md)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sun size={18} color="var(--accent-primary)" /> Appearance
-          </h3>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
-            <div>
-              <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>Theme Mode</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Choose between Light Mode and Dark Mode</div>
-            </div>
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="btn-secondary"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}
-            >
-              {theme === 'dark' ? <Sun size={15} color="var(--accent-warning)" /> : <Moon size={15} />}
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </button>
-          </div>
-
-          {/* Dashboard Customization Cards */}
-          <div style={{ paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--border-color)' }}>
-            <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '8px' }}>
-              Executive Dashboard Cards
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--space-xs)' }}>
-              {[
-                { key: 'task', label: 'Task Performance' },
-                { key: 'expense', label: 'Financial Overview' },
-                { key: 'memory', label: 'Memory Center' },
-                { key: 'habit', label: 'Habit Tracker' },
-                { key: 'progress', label: 'Overall Progress' }
-              ].map(widget => (
-                <label key={widget.key} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)', cursor: 'pointer'
-                }}>
-                  <span style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{widget.label}</span>
-                  <input
-                    type="checkbox"
-                    checked={widgets[widget.key]}
-                    onChange={() => toggleWidget(widget.key)}
-                    style={{ width: '16px', height: '16px', accentColor: 'var(--accent-primary)' }}
-                  />
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Open Page on Startup Setting */}
-          <div style={{ paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--border-color)', marginTop: 'var(--space-sm)' }}>
-            <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>
-              Open Page on Startup
-            </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-              Choose which DaySync page opens when you launch the app.
-            </div>
-            <select
-              value={startupPage}
-              onChange={handleStartupPageChange}
-              style={{ width: '100%', maxWidth: '280px', padding: '6px 10px', fontSize: '13px' }}
-              aria-label="Open Page on Startup"
-            >
-              <option value="dashboard">Dashboard</option>
-              <option value="tasks">Tasks</option>
-              <option value="expenses">Expenses</option>
-              <option value="plans">Plans</option>
-              <option value="habits">Habits</option>
-              <option value="goals">Goals</option>
-              <option value="memories">Memories</option>
-              <option value="notifications">Notifications</option>
-              <option value="chat">Chat</option>
-              <option value="summary">Summary</option>
-            </select>
-          </div>
-        </div>
-
-        {/* 3. NOTIFICATIONS SECTION */}
-        <div ref={notificationsRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Bell size={18} color="var(--accent-primary)" /> Notifications
-          </h3>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>
-            Control category alerts and browser push notification permissions.
-          </p>
-
-          <div style={{
-            padding: '12px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-            border: `1px solid ${pushEnabled ? 'var(--accent-primary)' : 'var(--border-color)'}`, marginBottom: 'var(--space-md)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px'
-          }}>
-            <div>
-              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Smartphone size={15} color="var(--accent-primary)" /> Push Notifications
-                {pushEnabled && (
-                  <span style={{ fontSize: '11px', background: 'rgba(47, 111, 115, 0.15)', color: 'var(--accent-primary)', padding: '2px 6px', borderRadius: '4px', fontWeight: '700' }}>
-                    Enabled ✓
-                  </span>
-                )}
-              </div>
-              <div style={{ fontSize: '11px', color: pushPermission === 'denied' ? 'var(--accent-danger)' : 'var(--text-muted)', marginTop: '2px' }}>
-                {!pushSupported
-                  ? 'Push notifications are not supported on this device/browser.'
-                  : pushPermission === 'denied'
-                  ? 'Notifications are blocked in your browser/device settings.'
-                  : pushEnabled
-                  ? 'DaySync can send notifications to this device.'
-                  : 'Receive system/phone alerts for tasks, plans, and events.'}
-              </div>
-            </div>
-
-            {pushSupported && pushPermission !== 'denied' && (
-              <button
-                type="button"
-                onClick={handleTogglePush}
-                disabled={pushLoading}
-                className={pushEnabled ? 'btn-secondary' : 'btn-primary'}
-                style={{ fontSize: '12px', padding: '6px 14px' }}
-              >
-                {pushLoading ? 'Processing...' : pushEnabled ? 'Disable' : 'Enable'}
-              </button>
-            )}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-sm)' }}>
-            {[
-              { key: 'daily', label: 'Daily DayStart Notification' },
-              { key: 'task', label: 'Task notifications' },
-              { key: 'habit', label: 'Habit notifications' },
-              { key: 'goal', label: 'Goal notifications' },
-              { key: 'budget', label: 'Budget/expense notifications' },
-              { key: 'luna', label: 'Luna suggestions' },
-              { key: 'system', label: 'System notifications' },
-              { key: 'update', label: 'App update notifications' }
-            ].map(item => (
-              <label
-                key={item.key}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)', cursor: 'pointer'
-                }}
-              >
-                <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{item.label}</span>
-                <input
-                  type="checkbox"
-                  checked={Boolean(preferences[item.key])}
-                  onChange={(e) => updatePreferences({ [item.key]: e.target.checked })}
-                  style={{ width: '16px', height: '16px', accentColor: 'var(--accent-primary)' }}
-                />
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* 4. LUNA SECTION */}
-        <div ref={lunaRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles size={18} color="var(--accent-primary)" /> Luna Preferences
-          </h3>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>
-            Configure proactive intelligence behavior and starting financial baseline.
-          </p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
-            <label style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)', cursor: 'pointer'
-            }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Proactive suggestions</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Allow Luna to generate daily productivity & spending insights</div>
-              </div>
-              <input
-                type="checkbox"
-                checked={lunaProactive}
-                onChange={(e) => toggleLunaProactive(e.target.checked)}
-                style={{ width: '16px', height: '16px', accentColor: 'var(--accent-primary)' }}
-              />
-            </label>
-
-            <label style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)', cursor: 'pointer'
-            }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Conversation memory</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Allow Luna to retain memory context across chat sessions</div>
-              </div>
-              <input
-                type="checkbox"
-                checked={lunaMemory}
-                onChange={(e) => toggleLunaMemory(e.target.checked)}
-                style={{ width: '16px', height: '16px', accentColor: 'var(--accent-primary)' }}
-              />
-            </label>
-          </div>
-
-          <div style={{ paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--border-color)' }}>
-            <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)', marginBottom: '4px' }}>
-              Starting Base Account Balance
-            </div>
-            <form onSubmit={handleSaveStartingBalance} style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center', maxWidth: '360px' }}>
-              <input
-                type="number"
-                placeholder="Starting Amount (₹)"
-                value={startingBalanceInput}
-                onChange={(e) => setStartingBalanceInput(e.target.value)}
-                style={{ flex: 1, padding: '8px 12px', fontSize: '13px' }}
-              />
-              <button type="submit" className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}>
-                Save
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {/* 5. PRIVACY & DATA SECTION */}
-        <div ref={privacyRef} className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Shield size={18} color="var(--accent-primary)" /> Privacy & Data
-          </h3>
-          <p className="settings-compact-subtitle" style={{ color: 'var(--text-muted)' }}>
-            Manage stored conversation history and privacy.
-          </p>
-
-          <div style={{ marginTop: 'var(--space-xs)' }}>
-            <button
-              type="button"
-              onClick={() => setShowClearHistoryModal(true)}
-              disabled={isClearingHistory}
-              className="btn-secondary"
-              style={{ color: 'var(--accent-warning)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <Trash2 size={14} /> Clear Chat History
-            </button>
-          </div>
-        </div>
-
-        {/* 6. APP UPDATES SECTION */}
-        <div ref={updatesRef} className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <RefreshCw size={18} color="var(--accent-primary)" /> App Updates
-          </h3>
-          <div className="settings-compact-subtitle" style={{ color: 'var(--text-secondary)' }}>
-            DaySync Version {currentVersion || pkg.version || '1.1.2'}
-          </div>
-
-          {updateAvailable && (
-            <div style={{
-              marginBottom: 'var(--space-md)',
-              padding: '10px 14px',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--accent-primary)',
-              color: 'var(--text-primary)',
-              fontSize: '13px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '12px',
-              flexWrap: 'wrap'
-            }}>
-              <div>
-                <strong>Update available</strong>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                  Version {latestVersion} is available.
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={applyUpdate}
-                className="btn-primary"
-                style={{ padding: '6px 16px', fontSize: '13px', minHeight: '34px', flexShrink: 0 }}
-              >
-                Update Now
-              </button>
-            </div>
-          )}
-
-          <div className="settings-btn-grid-2">
-            {!updateAvailable && (
-              <button
-                type="button"
-                onClick={checkForUpdates}
-                disabled={checking}
-                className="btn-secondary"
-              >
-                <RefreshCw size={14} className={checking ? 'animate-spin' : ''} />
-                {checking
-                  ? 'Checking...'
-                  : fetchError
-                  ? 'Try Again'
-                  : hasCheckedManually && !fetchError
-                  ? "Up to Date"
-                  : 'Check for Updates'}
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={openWhatsNewModal}
-              className="btn-secondary"
-            >
-              <Sparkles size={14} /> View Release Notes
-            </button>
-          </div>
-
-          {fetchError && !checking && (
-            <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--accent-danger)', fontWeight: '500' }}>
-              {!navigator.onLine ? "Couldn't check for updates while you're offline." : "Couldn't check for updates right now."}
-            </div>
-          )}
-        </div>
-
-        {/* 7. SUPPORT SECTION */}
-        <div ref={supportRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-sm)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Mail size={18} color="var(--accent-primary)" /> Support
-          </h3>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>
-            Need help or have suggestions? Contact the developer directly via email.
-          </p>
-
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '12px 16px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-            border: '1px solid var(--border-color)', flexWrap: 'wrap', gap: '12px'
-          }}>
-            <div>
-              <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-primary)' }}>Contact Developer</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                Support Email: <a href="mailto:johnmalik2222@gmail.com" style={{ color: 'var(--accent-primary)', fontWeight: '600', textDecoration: 'none' }}>support@daysync.app</a>
-              </div>
-            </div>
-
-            <a
-              href="mailto:johnmalik2222@gmail.com"
-              className="btn-primary"
-              style={{ padding: '8px 18px', fontSize: '13px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <Mail size={14} /> Contact Developer
-            </a>
-          </div>
-        </div>
-
-        {/* 8. ABOUT SECTION */}
-        <div ref={aboutRef} className="glass-card">
-          <h3 style={{ marginBottom: 'var(--space-xs)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Info size={18} color="var(--accent-primary)" /> About DaySync
-          </h3>
-
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: '0 0 14px 0' }}>
-            Your personal productivity companion.
-          </p>
-
-          <div style={{
-            padding: '12px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-            border: '1px solid var(--border-color)', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.7',
-            marginBottom: '14px'
-          }}>
-            <div><strong>Application:</strong> DaySync</div>
-            <div><strong>Version:</strong> Version {currentVersion || pkg.version || '1.1.2'}</div>
-            <div><strong>Support Email:</strong> <a href="mailto:support@daysync.app" style={{ color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: '600' }}>support@daysync.app</a></div>
-            <div><strong>Architecture:</strong> Vite PWA + Luna Intelligence Engine</div>
-            <div><strong>Copyright:</strong> © 2026 DaySync. All rights reserved.</div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <a
-              href="mailto:support@daysync.app"
-              className="btn-primary"
-              style={{ padding: '6px 14px', fontSize: '12px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '34px' }}
-            >
-              <Mail size={14} /> Contact Developer
-            </a>
-
-            <button
-              type="button"
-              onClick={openWhatsNewModal}
-              className="btn-secondary"
-              style={{ fontSize: '12px', padding: '6px 14px', minHeight: '34px' }}
-            >
-              <Sparkles size={14} /> View What's New
+              <UserX size={14} /> Delete Account
             </button>
           </div>
         </div>
       </div>
 
-      {/* CONFIRMATION MODALS */}
-      {/* 1. Log Out Confirmation Modal */}
+      {/* Account Modals */}
+      {showChangeNameModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '20px', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Edit Display Name</h3>
+              <button type="button" onClick={() => setShowChangeNameModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+            <form onSubmit={handleSaveName}>
+              <input
+                type="text"
+                value={newNameInput}
+                onChange={(e) => setNewNameInput(e.target.value)}
+                placeholder="Full Name"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginBottom: '14px', fontSize: '13px' }}
+                autoFocus
+              />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button type="button" onClick={() => setShowChangeNameModal(false)} className="btn-secondary" style={{ fontSize: '12px' }}>Cancel</button>
+                <button type="submit" disabled={isSavingName} className="btn-primary" style={{ fontSize: '12px' }}>
+                  {isSavingName ? 'Saving...' : 'Save Name'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showChangeEmailModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '20px', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Change Email Address</h3>
+              <button type="button" onClick={() => setShowChangeEmailModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+
+            {emailOtpStep === 1 ? (
+              <form onSubmit={handleSendEmailOtp}>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                  Enter your new email address. A 6-digit verification code will be sent.
+                </p>
+                <input
+                  type="email"
+                  value={newEmailInput}
+                  onChange={(e) => setNewEmailInput(e.target.value)}
+                  placeholder="newemail@example.com"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginBottom: '14px', fontSize: '13px' }}
+                  autoFocus
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                  <button type="button" onClick={() => setShowChangeEmailModal(false)} className="btn-secondary" style={{ fontSize: '12px' }}>Cancel</button>
+                  <button type="submit" disabled={isSendingEmailOtp} className="btn-primary" style={{ fontSize: '12px' }}>
+                    {isSendingEmailOtp ? 'Sending Code...' : 'Send Verification OTP'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyEmailOtp}>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                  Enter the 6-digit verification OTP sent to <strong>{newEmailInput}</strong>.
+                </p>
+                {demoOtpHint && (
+                  <div style={{ fontSize: '11px', color: 'var(--accent-primary)', marginBottom: '10px' }}>
+                    [Demo Mode Code: <strong>{demoOtpHint}</strong>]
+                  </div>
+                )}
+                <input
+                  type="text"
+                  value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value)}
+                  placeholder="6-Digit OTP"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginBottom: '14px', fontSize: '14px', letterSpacing: '2px', textAlign: 'center', fontWeight: '700' }}
+                  autoFocus
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                  <button type="button" onClick={() => setEmailOtpStep(1)} className="btn-secondary" style={{ fontSize: '12px' }}>Back</button>
+                  <button type="submit" disabled={isVerifyingEmailOtp} className="btn-primary" style={{ fontSize: '12px' }}>
+                    {isVerifyingEmailOtp ? 'Verifying...' : 'Verify & Update Email'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showChangePasswordModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '20px', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Change Password</h3>
+              <button type="button" onClick={() => setShowChangePasswordModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+            <form onSubmit={handleSavePassword}>
+              <div style={{ position: 'relative', marginBottom: '10px' }}>
+                <input
+                  type={showPassToggle ? 'text' : 'password'}
+                  value={currentPassInput}
+                  onChange={(e) => setCurrentPassInput(e.target.value)}
+                  placeholder="Current Password"
+                  style={{ width: '100%', padding: '8px 36px 8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '13px' }}
+                />
+                <button type="button" onClick={() => setShowPassToggle(!showPassToggle)} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                  {showPassToggle ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+
+              <input
+                type={showPassToggle ? 'text' : 'password'}
+                value={newPassInput}
+                onChange={(e) => setNewPassInput(e.target.value)}
+                placeholder="New Password (min 6 chars)"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginBottom: '10px', fontSize: '13px' }}
+              />
+
+              <input
+                type={showPassToggle ? 'text' : 'password'}
+                value={confirmPassInput}
+                onChange={(e) => setConfirmPassInput(e.target.value)}
+                placeholder="Confirm New Password"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginBottom: '14px', fontSize: '13px' }}
+              />
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button type="button" onClick={() => setShowChangePasswordModal(false)} className="btn-secondary" style={{ fontSize: '12px' }}>Cancel</button>
+                <button type="submit" disabled={isChangingPass} className="btn-primary" style={{ fontSize: '12px' }}>
+                  {isChangingPass ? 'Updating...' : 'Update Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modals */}
+      <ConfirmationModal isOpen={showLogoutModal} title="Log out of DaySync?" message="Are you sure you want to log out of your session?" confirmText="Log Out" cancelText="Cancel" isDanger={false} isLoading={isLoggingOut} onConfirm={handleConfirmLogout} onCancel={() => setShowLogoutModal(false)} />
+      <ConfirmationModal isOpen={showDeleteModal} title="Delete your DaySync account?" message="Your account and associated data will be permanently deleted. This action cannot be undone." confirmText="Delete Account" cancelText="Cancel" isDanger={true} isLoading={isDeletingAccount} onConfirm={handleConfirmDeleteAccount} onCancel={() => setShowDeleteModal(false)} />
+      <ConfirmationModal isOpen={showClearHistoryModal} title="Clear your conversation history?" message="Are you sure you want to clear your stored chat messages? This action cannot be undone." confirmText="Clear History" cancelText="Cancel" isDanger={true} isLoading={isClearingHistory} onConfirm={handleConfirmClearHistory} onCancel={() => setShowClearHistoryModal(false)} />
+
+      {/* RESTORE DATA CONFIRMATION MODAL */}
       <ConfirmationModal
-        isOpen={showLogoutModal}
-        title="Log out of DaySync?"
-        message="Are you sure you want to log out of your session?"
-        confirmText="Log Out"
+        isOpen={showRestoreModal}
+        title="Restore DaySync Data?"
+        message="This will restore your tasks, expenses, plans, habits, memories, and settings from the backup file. Existing local data will be replaced/updated."
+        confirmText="Confirm Restore"
         cancelText="Cancel"
         isDanger={false}
-        isLoading={isLoggingOut}
-        onConfirm={handleConfirmLogout}
-        onCancel={() => setShowLogoutModal(false)}
-      />
-
-      {/* 2. Delete Account Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showDeleteModal}
-        title="Delete your DaySync account?"
-        message="Your account and associated data will be permanently deleted. This action cannot be undone."
-        confirmText="Delete Account"
-        cancelText="Cancel"
-        isDanger={true}
-        isLoading={isDeletingAccount}
-        onConfirm={handleConfirmDeleteAccount}
-        onCancel={() => setShowDeleteModal(false)}
-      />
-
-      {/* 3. Clear History Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showClearHistoryModal}
-        title="Clear your chat history?"
-        message="Your conversations with Luna will be permanently removed."
-        confirmText={isClearingHistory ? "Clearing..." : "Clear History"}
-        cancelText="Cancel"
-        isDanger={true}
-        isLoading={isClearingHistory}
-        onConfirm={handleConfirmClearHistory}
-        onCancel={() => setShowClearHistoryModal(false)}
+        onConfirm={handleConfirmRestore}
+        onCancel={() => {
+          setShowRestoreModal(false);
+          setRestorePayload(null);
+        }}
       />
     </div>
   );

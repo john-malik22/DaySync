@@ -65,10 +65,11 @@ export function normalizeInput(text) {
 }
 
 export function parseNumberAndCurrency(text) {
-  const numRegex = /(?:₹|\$|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:rupees|rs|inr|bucks)?/i;
+  const numRegex = /(?:₹|\$|rs\.?|inr)?\s*([\d,]+(?:\.\d+)?)\s*(?:rupees|rs|inr|bucks)?/i;
   const match = text.match(numRegex);
   if (match) {
-    const val = parseFloat(match[1]);
+    const raw = match[1].replace(/,/g, '');
+    const val = parseFloat(raw);
     if (!isNaN(val)) return val;
   }
   return null;
@@ -193,9 +194,100 @@ export function classifyIntent(message, context = {}) {
       return { intent: 'READ_MEMORIES', confidence: 0.95, entities: {} };
     }
 
+    if (lower.includes('plan') || lower.includes('plans') || lower.includes('subscription') || lower.includes('recharge') || lower.includes('warranty') || lower.includes('recurring payment')) {
+      return { intent: 'READ_PLANS', confidence: 0.95, entities: {} };
+    }
+
+    if (lower.includes('birthday') || lower.includes('birthdays')) {
+      return { intent: 'READ_BIRTHDAYS', confidence: 0.95, entities: {} };
+    }
+
+    if (lower.includes('meeting') || lower.includes('meetings')) {
+      return { intent: 'READ_MEETINGS', confidence: 0.95, entities: {} };
+    }
+
     if (lower.includes('summary') || lower.includes('report') || lower.includes('productivity')) {
       return { intent: 'READ_SUMMARY', confidence: 0.95, entities: {} };
     }
+
+    if (lower.includes('split') || lower.includes('splits') || lower.includes('who owes me') || lower.includes('what do i owe')) {
+      if (lower.includes('create a split') || lower.includes('new split') || lower.includes('make a split')) {
+        const nameMatch = lower.match(/(?:called|named|for)\s+([a-zA-Z0-9\s]+)/i);
+        return { intent: 'CREATE_SPLIT', confidence: 0.95, entities: { splitName: nameMatch ? nameMatch[1].trim() : 'New Split' } };
+      }
+      return { intent: 'READ_SPLITS', confidence: 0.95, entities: {} };
+    }
+  }
+
+  // 2b-1. UPDATE PLAN / EXTEND PLAN INTENT
+  if (lower.includes('extend') || lower.includes('change') || lower.includes('is now ₹') || lower.includes('is now ') || lower.includes('update plan')) {
+    if (lower.includes('netflix') || lower.includes('spotify') || lower.includes('wifi') || lower.includes('wi-fi') || lower.includes('jio') || lower.includes('airtel') || lower.includes('plan')) {
+      const num = parseNumberAndCurrency(lower);
+      const durMatch = lower.match(/(\d+|one|two|three|four|five|six|seven|eight|nine|ten|twelve)\s*(months?|years?|days?|weeks?)/i);
+
+      let targetTitle = 'Plan';
+      if (lower.includes('netflix')) targetTitle = 'Netflix';
+      else if (lower.includes('spotify')) targetTitle = 'Spotify';
+      else if (lower.includes('jio')) targetTitle = 'Jio';
+      else if (lower.includes('airtel')) targetTitle = 'Airtel';
+      else if (lower.includes('wifi') || lower.includes('wi-fi')) targetTitle = 'Wi-Fi';
+
+      return {
+        intent: 'UPDATE_PLAN',
+        confidence: 0.90,
+        entities: {
+          targetTitle,
+          newAmount: num,
+          extendDuration: durMatch ? durMatch[0] : null
+        }
+      };
+    }
+  }
+
+  // 2b. CREATE PLAN / RECURRING EXPENSE DIRECT INTENTS
+  if (/netflix|spotify|recharge|jio|airtel|vi\b|wifi|internet|gym|warranty|subscription/i.test(lower) && (/add|create|log|pay|monthly|every month|per month|yearly|28 days/i.test(lower))) {
+    const num = parseNumberAndCurrency(lower);
+    let title = 'Plan';
+    if (lower.includes('netflix')) title = 'Netflix';
+    else if (lower.includes('spotify')) title = 'Spotify';
+    else if (lower.includes('jio')) title = 'Jio Recharge';
+    else if (lower.includes('airtel')) title = 'Airtel Recharge';
+    else if (lower.includes('wifi') || lower.includes('internet')) title = 'Wi-Fi Internet';
+    else if (lower.includes('warranty')) title = 'Appliance Warranty';
+
+    let freq = 'Monthly';
+    if (lower.includes('28 days') || lower.includes('28 day')) freq = '28 Days';
+    else if (lower.includes('yearly') || lower.includes('per year') || lower.includes('every year')) freq = 'Yearly';
+
+    let dur = '1 month';
+    const durMatch = lower.match(/(\d+|one|two|three|four|five|six|seven|eight|nine|ten|twelve)\s*(months?|years?|days?|weeks?)/i);
+    if (durMatch) {
+      dur = durMatch[0];
+    } else if (freq === '28 Days' || lower.includes('28 days')) {
+      dur = '28 days';
+    } else if (lower.includes('1 year') || lower.includes('one year') || lower.includes('a year')) {
+      dur = '1 year';
+    } else if (lower.includes('2 years') || lower.includes('two years')) {
+      dur = '2 years';
+    } else if (lower.includes('6 months') || lower.includes('six months')) {
+      dur = '6 months';
+    } else if (lower.includes('3 months') || lower.includes('three months')) {
+      dur = '3 months';
+    } else if (lower.includes('1 month') || lower.includes('one month') || lower.includes('a month')) {
+      dur = '1 month';
+    }
+
+    return {
+      intent: 'CREATE_PLAN',
+      confidence: 0.95,
+      entities: {
+        title,
+        amount: num || 199,
+        frequency: freq,
+        duration: dur,
+        startDate: new Date().toISOString().split('T')[0]
+      }
+    };
   }
 
   // 3. MULTI-TURN PENDING ACTION FOLLOW-UP (context.pendingAction)

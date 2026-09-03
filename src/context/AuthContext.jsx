@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import { clientCache } from '../services/clientCache';
 
@@ -8,6 +8,8 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isVerifyingSession, setIsVerifyingSession] = useState(false);
+  const lastVerifyTimestamp = useRef(0);
 
   // LIGHT MODE IS THE DEFAULT THEME
   const [theme, setTheme] = useState(() => localStorage.getItem('daysync_theme') || 'light');
@@ -20,9 +22,29 @@ export function AuthProvider({ children }) {
       document.documentElement.classList.remove('dark');
     }
     localStorage.setItem('daysync_theme', theme);
+
+    // Dynamic Mobile & PWA Status Bar Color and Icon Appearance Sync
+    const isDark = theme === 'dark';
+    const statusBarColor = isDark ? '#0E0E10' : '#F6F3EC';
+
+    let themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (!themeMeta) {
+      themeMeta = document.createElement('meta');
+      themeMeta.name = 'theme-color';
+      document.head.appendChild(themeMeta);
+    }
+    themeMeta.setAttribute('content', statusBarColor);
+
+    let appleMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (!appleMeta) {
+      appleMeta = document.createElement('meta');
+      appleMeta.name = 'apple-mobile-web-app-status-bar-style';
+      document.head.appendChild(appleMeta);
+    }
+    appleMeta.setAttribute('content', isDark ? 'black-translucent' : 'default');
   }, [theme]);
 
-  // Restore authenticated session safely
+  // Fast Session Restore & Silent Background Authentication
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('luna_token');
@@ -40,44 +62,63 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      try {
-        const res = await api.getMe();
-        if (res && res.user) {
-          setUser(res.user);
-          setToken(storedToken);
-          localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
-        } else if (cachedUser) {
-          setUser(cachedUser);
-          setToken(storedToken);
-        } else {
-          throw new Error('Invalid user response');
-        }
-      } catch (err) {
-        console.warn('Auth initialization response:', err);
-        if (err && err.status === 401) {
-          console.warn('Token explicitly rejected with HTTP 401 Unauthorized. Clearing session.');
-          if (cachedUser?.id) clientCache.clearUserCache(cachedUser.id);
-          localStorage.removeItem('luna_token');
-          localStorage.removeItem('daysync_user_profile');
-          setToken(null);
-          setUser(null);
-        } else if (storedToken && cachedUser) {
-          // Network loss / backend outage / Render cold start
-          // Preserve session and user profile so user remains logged in offline!
-          console.warn('Network or server error during session verification. Restoring cached authenticated session.');
-          setToken(storedToken);
-          setUser(cachedUser);
-        } else {
-          setToken(null);
-          setUser(null);
-        }
-      } finally {
-        setLoading(false);
-      }
+      // Step 1: RESTORE SESSION IMMEDIATELY (0ms Delay)
+      setToken(storedToken);
+      setUser(cachedUser || { id: 'cached_user', name: 'User' });
+      setLoading(false);
+
+      // Step 2: SILENT BACKGROUND SESSION VERIFICATION
+      verifySessionInBackground(storedToken, cachedUser);
     };
 
     initAuth();
+
+    function handleAuthExpired() {
+      setToken(null);
+      setUser(null);
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('daysync_auth_expired', handleAuthExpired);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('daysync_auth_expired', handleAuthExpired);
+      }
+    };
   }, []);
+
+  const verifySessionInBackground = async (storedToken, cachedUser) => {
+    // Prevent duplicated session verification requests within 30 seconds
+    if (Date.now() - lastVerifyTimestamp.current < 30000) return;
+    lastVerifyTimestamp.current = Date.now();
+
+    setIsVerifyingSession(true);
+    try {
+      const res = await api.getMe();
+      if (res && res.user) {
+        setUser(res.user);
+        setToken(storedToken);
+        localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
+      }
+    } catch (err) {
+      console.warn('Background auth verification status:', err);
+      if (err && (err.status === 401 || err.status === 403)) {
+        console.warn('Token explicitly rejected by server (401/403). Expiring session.');
+        if (cachedUser?.id) clientCache.clearUserCache(cachedUser.id);
+        localStorage.removeItem('luna_token');
+        localStorage.removeItem('daysync_user_profile');
+        setToken(null);
+        setUser(null);
+      } else {
+        // Network loss / backend timeout / Render cold start -> Keep user in app safely!
+        console.warn('Network offline or backend timeout. Preserving cached authenticated session.');
+      }
+    } finally {
+      setIsVerifyingSession(false);
+    }
+  };
 
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
@@ -120,6 +161,15 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateUser = (updatedUserObj) => {
+    if (!updatedUserObj) return;
+    setUser(prev => {
+      const merged = { ...prev, ...updatedUserObj };
+      localStorage.setItem('daysync_user_profile', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
   const logout = () => {
     if (user?.id) clientCache.clearUserCache(user.id);
     localStorage.removeItem('luna_token');
@@ -129,7 +179,20 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, theme, toggleTheme, login, signup, setSession, deleteAccount, logout }}>
+    <AuthContext.Provider value={{
+      user,
+      token,
+      loading,
+      isVerifyingSession,
+      theme,
+      toggleTheme,
+      login,
+      signup,
+      setSession,
+      deleteAccount,
+      logout,
+      updateUser
+    }}>
       {children}
     </AuthContext.Provider>
   );

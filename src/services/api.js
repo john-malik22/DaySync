@@ -3,15 +3,32 @@
  * Global Error Classification & Timeout Control
  */
 
-const envApiBase = typeof import.meta !== 'undefined' && import.meta.env ? (import.meta.env.VITE_API_URL || '') : '';
-const configuredApiBase = envApiBase.replace(/\/+$/, '');
+const DEFAULT_REMOTE_BACKEND = 'https://daysync-1.onrender.com';
 
-const API_BASE =
-  configuredApiBase === ''
-    ? '/api'
-    : configuredApiBase.endsWith('/api')
-      ? configuredApiBase
-      : `${configuredApiBase}/api`;
+export function getApiBase() {
+  const envApiBase = typeof import.meta !== 'undefined' && import.meta.env ? (import.meta.env.VITE_API_URL || import.meta.env.VITE_RENDER_URL || '') : '';
+  if (envApiBase) {
+    const cleanEnv = envApiBase.replace(/\/+$/, '');
+    return cleanEnv.endsWith('/api') ? cleanEnv : `${cleanEnv}/api`;
+  }
+
+  // Detect if running inside Capacitor Android / native platform
+  const isCapacitorNative = typeof window !== 'undefined' && (
+    Boolean(window.Capacitor?.isNativePlatform()) ||
+    window.Capacitor?.platform === 'android' ||
+    window.Capacitor?.platform === 'ios' ||
+    window.location.protocol === 'capacitor:' ||
+    (window.location.hostname === 'localhost' && !import.meta.env.DEV)
+  );
+
+  if (isCapacitorNative) {
+    const cleanRemote = DEFAULT_REMOTE_BACKEND.replace(/\/+$/, '');
+    return cleanRemote.endsWith('/api') ? cleanRemote : `${cleanRemote}/api`;
+  }
+
+  // Web / PWA / Vercel relative path
+  return '/api';
+}
 
 function getAuthHeader() {
   const token = localStorage.getItem('luna_token');
@@ -107,7 +124,8 @@ async function request(url, options = {}) {
   };
 
   try {
-    const res = await fetch(`${API_BASE}${url}`, config);
+    const apiBase = getApiBase();
+    const res = await fetch(`${apiBase}${url}`, config);
     clearTimeout(timeoutId);
 
     if (!res.ok) {
@@ -115,7 +133,16 @@ async function request(url, options = {}) {
       const rawMsg = errorData.error || errorData.message;
 
       let errorType = 'UNKNOWN';
-      if (res.status === 401) errorType = 'UNAUTHORIZED';
+      if (res.status === 401) {
+        errorType = 'UNAUTHORIZED';
+        try {
+          localStorage.removeItem('luna_token');
+          localStorage.removeItem('daysync_user_profile');
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('daysync_auth_expired'));
+          }
+        } catch (e) {}
+      }
       else if (res.status === 404) errorType = 'NOT_FOUND';
       else if (res.status >= 500) errorType = 'SERVER_UNAVAILABLE';
       else if (rawMsg) errorType = 'VALIDATION';
@@ -166,6 +193,10 @@ export const api = {
   resetPassword: (data) => request('/auth/reset-password', { method: 'POST', body: JSON.stringify(data) }),
   deleteAccount: () => request('/auth/delete-account', { method: 'DELETE' }),
   getMe: () => request('/auth/me'),
+  updateProfile: (data) => request('/auth/profile', { method: 'PUT', body: JSON.stringify(data) }),
+  changePassword: (data) => request('/auth/change-password', { method: 'POST', body: JSON.stringify(data) }),
+  sendEmailOTP: (data) => request('/auth/send-email-otp', { method: 'POST', body: JSON.stringify(data) }),
+  verifyEmailOTP: (data) => request('/auth/verify-email-otp', { method: 'POST', body: JSON.stringify(data) }),
 
   // Chat
   sendMessage: (message) => request('/chat', { method: 'POST', body: JSON.stringify({ message }) }),
@@ -210,5 +241,27 @@ export const api = {
 
   // Privacy & Data
   exportData: () => request('/privacy/export', { method: 'POST' }),
-  clearHistory: () => request('/privacy/clear-history', { method: 'POST' })
+  clearHistory: () => request('/privacy/clear-history', { method: 'POST' }),
+
+  // Splits Shared Expenses
+  getSplits: () => request('/splits'),
+  createSplit: (data) => request('/splits', { method: 'POST', body: JSON.stringify(data) }),
+  getSplitById: (id) => request(`/splits/${id}`),
+  updateSplit: (id, data) => request(`/splits/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSplit: (id) => request(`/splits/${id}`, { method: 'DELETE' }),
+
+  previewSplit: (code) => request(`/splits/preview/${encodeURIComponent(code)}`),
+  joinSplit: (code) => request('/splits/join', { method: 'POST', body: JSON.stringify({ code }) }),
+  regenerateSplitCode: (splitId) => request(`/splits/${splitId}/regenerate-code`, { method: 'POST' }),
+
+  inviteSplitMember: (id, targetUser) => request(`/splits/${id}/invitations`, { method: 'POST', body: JSON.stringify({ targetUser }) }),
+  getMySplitInvitations: () => request('/split-invites/my-invites'),
+  acceptSplitInvitation: (token) => request(`/split-invites/${token}/accept`, { method: 'POST' }),
+  declineSplitInvitation: (token) => request(`/split-invites/${token}/decline`, { method: 'POST' }),
+
+  addSplitExpense: (splitId, data) => request(`/splits/${splitId}/expenses`, { method: 'POST', body: JSON.stringify(data) }),
+  updateSplitExpense: (splitId, expenseId, data) => request(`/splits/${splitId}/expenses/${expenseId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSplitExpense: (splitId, expenseId) => request(`/splits/${splitId}/expenses/${expenseId}`, { method: 'DELETE' }),
+
+  createSplitSettlement: (splitId, data) => request(`/splits/${splitId}/settlements`, { method: 'POST', body: JSON.stringify(data) })
 };
