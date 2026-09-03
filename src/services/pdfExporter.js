@@ -68,7 +68,7 @@ export function exportDataToPdf(data) {
   const formattedExportDate = formatDateTime(data.exportDate || new Date());
   doc.setFontSize(8.5);
   doc.text(`Exported: ${formattedExportDate}`, 196, 15, { align: 'right' });
-  doc.text(`DaySync Version: v${pkg.version || '1.1.2'}`, 196, 21, { align: 'right' });
+  doc.text(`DaySync Version: v${pkg.version || '2.0.1'}`, 196, 21, { align: 'right' });
 
   currentY = 34;
 
@@ -406,7 +406,7 @@ export function exportDataToPdf(data) {
   );
   currentY += 5;
   doc.text(
-    `Export Timestamp: ${formattedExportDate} • Version: v${pkg.version || '1.1.2'}`,
+    `Export Timestamp: ${formattedExportDate} • Version: v${pkg.version || '2.0.1'}`,
     14,
     currentY
   );

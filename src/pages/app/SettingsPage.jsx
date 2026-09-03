@@ -138,7 +138,7 @@ export function SettingsPage() {
     try {
       const exportData = {
         app: 'DaySync',
-        version: '2.0.0',
+        version: currentVersion,
         exportedAt: new Date().toISOString(),
         userProfile: {
           id: user?.id || 'user',
@@ -1224,9 +1224,9 @@ export function SettingsPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-color)' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>App Version</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>DaySync Release 2.0.0</div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>DaySync Release {currentVersion}</div>
               </div>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>v2.0.0</span>
+              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>v{currentVersion}</span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-color)' }}>
@@ -1276,7 +1276,7 @@ export function SettingsPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', padding: '12px', borderRadius: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '14px' }}>
             <div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>VERSION</div>
-              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>2.0.0</div>
+              <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>{currentVersion}</div>
             </div>
             <div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>ENGINE</div>
@@ -1573,7 +1573,8 @@ export function SettingsPage() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', width: '100%', maxHeight: '300px', overflowY: 'auto', padding: '4px' }}>
                   {AVATAR_LIST.map((av) => {
-                    const isSelected = user?.avatar === av.id;
+                    const currentAvatar = user?.avatar || (typeof window !== 'undefined' ? localStorage.getItem('daysync_user_avatar') : null) || 'dog';
+                    const isSelected = currentAvatar === av.id;
                     return (
                       <button
                         key={av.id}

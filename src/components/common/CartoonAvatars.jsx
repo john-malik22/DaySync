@@ -257,10 +257,11 @@ export function CartoonAvatar({ id, size = 44, style = {}, className = '' }) {
 }
 
 export function UserAvatar({ avatarId, name, size = 44, style = {}, className = '' }) {
+  const currentAvatar = avatarId || (typeof window !== 'undefined' ? localStorage.getItem('daysync_user_avatar') : null) || 'dog';
   const initial = name ? name.trim()[0].toUpperCase() : 'U';
 
-  if (avatarId && AVATAR_LIST.some(a => a.id === avatarId)) {
-    return <CartoonAvatar id={avatarId} size={size} style={style} className={className} />;
+  if (currentAvatar && AVATAR_LIST.some(a => a.id === currentAvatar)) {
+    return <CartoonAvatar id={currentAvatar} size={size} style={style} className={className} />;
   }
 
   const width = typeof size === 'number' ? `${size}px` : size;

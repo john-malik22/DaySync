@@ -110,12 +110,16 @@ export function getRealSplitsData() {
           if (isUserPayer) {
             const someoneOwes = totalAmount - userShare;
             owed += Math.max(0, someoneOwes);
-            const person = s.otherPerson || s.members?.[0]?.name || 'Alex';
-            personMap[person] = (personMap[person] || 0) + Math.max(0, someoneOwes);
+            const person = s.otherPerson || s.members?.[0]?.name || s.memberName || null;
+            if (person) {
+              personMap[person] = (personMap[person] || 0) + Math.max(0, someoneOwes);
+            }
           } else {
             pay += userShare;
-            const person = s.paidByName || s.paidBy || 'Alex';
-            personMap[person] = (personMap[person] || 0) - userShare;
+            const person = s.paidByName || s.paidBy || s.members?.[0]?.name || null;
+            if (person) {
+              personMap[person] = (personMap[person] || 0) - userShare;
+            }
           }
         });
         return { owed, pay, personMap, rawSplits: parsed };
@@ -173,15 +177,33 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
   const totalIncome = (expenses || []).filter(e => e.type === 'income').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
   const net = totalIncome - totalSpent;
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
   const todaySpent = nonIncomeExpenses.filter(e => (e.date || e.createdAt || '').startsWith(todayStr)).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
-  const thisWeekSpent = totalSpent * 0.35;
-  const thisMonthSpent = totalSpent;
+
+  const thisWeekSpent = nonIncomeExpenses.filter(e => {
+    const d = new Date(e.date || e.createdAt);
+    return !isNaN(d.getTime()) && d >= sevenDaysAgo;
+  }).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+  const thisMonthSpent = nonIncomeExpenses.filter(e => {
+    const d = new Date(e.date || e.createdAt);
+    return !isNaN(d.getTime()) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   const largestExp = nonIncomeExpenses.length > 0
     ? nonIncomeExpenses.reduce((max, curr) => (parseFloat(curr.amount) || 0) > (parseFloat(max.amount) || 0) ? curr : max, nonIncomeExpenses[0])
     : null;
-  const topCategoryName = (nonIncomeExpenses[0] && (nonIncomeExpenses[0].category || nonIncomeExpenses[0].merchant)) || 'General & Living';
+
+  const categoryTotals = {};
+  nonIncomeExpenses.forEach(e => {
+    const cat = e.category || e.merchant || 'General';
+    categoryTotals[cat] = (categoryTotals[cat] || 0) + (parseFloat(e.amount) || 0);
+  });
+  const topCatEntry = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
+  const topCategoryName = topCatEntry ? topCatEntry[0] : 'No expenses';
 
   if (widgetSize === 'S') {
     return (
@@ -313,8 +335,9 @@ export function SpendingSnapshotWidget({ widgetSize = 'W' }) {
 
 // 2. ACCOUNT BALANCE (S, W, T, L)
 export function AccountBalanceWidget({ widgetSize = 'S' }) {
-  const { expenses } = useLuna();
-  const startingBalance = parseFloat(localStorage.getItem('daysync_starting_balance') || 0);
+  useRealtimeDataRefresh();
+  const { expenses, startingBalance: ctxStartBalance } = useLuna();
+  const startingBalance = parseFloat(ctxStartBalance !== undefined && ctxStartBalance !== null ? ctxStartBalance : (localStorage.getItem('daysync_starting_balance') || 0));
   const totalSpent = (expenses || []).filter(e => e.type !== 'income').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
   const totalIncome = (expenses || []).filter(e => e.type === 'income').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
   const totalBalance = startingBalance + totalIncome - totalSpent;
@@ -336,8 +359,8 @@ export function AccountBalanceWidget({ widgetSize = 'S' }) {
           <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
             ACCOUNT BALANCE
           </div>
-          <div style={{ fontSize: '10.5px', fontWeight: '700', color: 'var(--accent-success)', letterSpacing: '1px' }}>
-            •••• •••• •••• 2481
+          <div style={{ fontSize: '10.5px', fontWeight: '700', color: 'var(--accent-success)', letterSpacing: '0.5px' }}>
+            DAYSYNC
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
@@ -369,8 +392,8 @@ export function AccountBalanceWidget({ widgetSize = 'S' }) {
           <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
             ACCOUNT CARD PANEL
           </div>
-          <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--accent-success)', letterSpacing: '1px' }}>
-            •••• 2481
+          <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--accent-success)', letterSpacing: '0.5px' }}>
+            PRIMARY
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
@@ -401,8 +424,8 @@ export function AccountBalanceWidget({ widgetSize = 'S' }) {
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           COMPLETE ACCOUNT OVERVIEW
         </div>
-        <div style={{ fontSize: '10.5px', fontWeight: '700', color: 'var(--accent-success)', letterSpacing: '1.5px' }}>
-          •••• •••• •••• 2481
+        <div style={{ fontSize: '10.5px', fontWeight: '700', color: 'var(--accent-success)', letterSpacing: '0.5px' }}>
+          DAYSYNC
         </div>
       </div>
       <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.04))', border: '1px solid rgba(16, 185, 129, 0.22)', borderRadius: '6px', padding: '12px', margin: '8px 0' }}>
@@ -439,16 +462,39 @@ export function AccountBalanceWidget({ widgetSize = 'S' }) {
 
 // 3. MONTHLY EXPENSES (S, W, T, L)
 export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
+  useRealtimeDataRefresh();
   const { expenses } = useLuna();
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const monthlySpent = (expenses || []).filter(e => {
-    if (e.type === 'income') return false;
+  const nonIncomeExpenses = (expenses || []).filter(e => e.type !== 'income');
+
+  const currentMonthExpenses = nonIncomeExpenses.filter(e => {
     const d = new Date(e.date || e.createdAt);
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
+  const monthlySpent = currentMonthExpenses.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+  const thisWeekSpent = currentMonthExpenses.filter(e => {
+    const d = new Date(e.date || e.createdAt);
+    return !isNaN(d.getTime()) && d >= sevenDaysAgo;
   }).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+  const thisYearSpent = nonIncomeExpenses.filter(e => {
+    const d = new Date(e.date || e.createdAt);
+    return d.getFullYear() === currentYear;
+  }).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+  const categoryTotals = {};
+  currentMonthExpenses.forEach(e => {
+    const cat = e.category || e.merchant || 'General';
+    categoryTotals[cat] = (categoryTotals[cat] || 0) + (parseFloat(e.amount) || 0);
+  });
+  const topCatEntry = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
+  const topCategoryName = topCatEntry ? topCatEntry[0] : 'No expenses';
 
   if (widgetSize === 'S') {
     return (
@@ -469,7 +515,7 @@ export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
           <div style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>THIS WEEK</div>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>${(monthlySpent * 0.25).toFixed(2)}</div>
+            <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>${thisWeekSpent.toFixed(2)}</div>
           </div>
           <div style={{ background: 'rgba(139, 92, 246, 0.12)', border: '1px solid rgba(139, 92, 246, 0.22)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>THIS MONTH</div>
@@ -477,12 +523,12 @@ export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>THIS YEAR</div>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-muted)' }}>${(monthlySpent * 12).toFixed(2)}</div>
+            <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-muted)' }}>${thisYearSpent.toFixed(2)}</div>
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
-          <span>Top Category: <strong>Food & Living</strong></span>
-          <span>Pacing: <strong>Normal</strong></span>
+          <span>Top Category: <strong>{topCategoryName}</strong></span>
+          <span>Pacing: <strong>{monthlySpent > 0 ? 'Active' : 'No expenses'}</strong></span>
         </div>
       </div>
     );
@@ -497,7 +543,7 @@ export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
           <div style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>This Week</span>
-            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>${(monthlySpent * 0.25).toFixed(2)}</strong>
+            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>${thisWeekSpent.toFixed(2)}</strong>
           </div>
           <div style={{ background: 'rgba(139, 92, 246, 0.12)', border: '1px solid rgba(139, 92, 246, 0.22)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>This Month</span>
@@ -505,11 +551,11 @@ export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>This Year</span>
-            <strong style={{ fontSize: '14px', color: 'var(--text-muted)' }}>${(monthlySpent * 12).toFixed(2)}</strong>
+            <strong style={{ fontSize: '14px', color: 'var(--text-muted)' }}>${thisYearSpent.toFixed(2)}</strong>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Top Category</span>
-            <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>Food & Living</strong>
+            <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{topCategoryName}</strong>
           </div>
         </div>
       </div>
@@ -524,7 +570,7 @@ export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', margin: '8px 0' }}>
         <div style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.18)', borderRadius: '6px', padding: '10px' }}>
           <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>This Week</div>
-          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>${(monthlySpent * 0.25).toFixed(2)}</div>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>${thisWeekSpent.toFixed(2)}</div>
         </div>
         <div style={{ background: 'rgba(139, 92, 246, 0.14)', border: '1px solid rgba(139, 92, 246, 0.24)', borderRadius: '6px', padding: '10px' }}>
           <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>This Month Total</div>
@@ -555,14 +601,37 @@ export function MonthlyExpensesWidget({ widgetSize = 'S' }) {
 
 // 4. TODAY'S SPENDING (S, W, T, L)
 export function TodaySpendingWidget({ widgetSize = 'S' }) {
+  useRealtimeDataRefresh();
   const { expenses } = useLuna();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
 
-  const todaySpent = (expenses || []).filter(e => {
-    if (e.type === 'income') return false;
-    const dateStr = (e.date || e.createdAt || '').split('T')[0];
-    return dateStr === todayStr;
-  }).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  const dayBefore = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+  const dayBeforeStr = dayBefore.toISOString().split('T')[0];
+
+  const nonIncomeExpenses = (expenses || []).filter(e => e.type !== 'income');
+
+  const todayExpenses = nonIncomeExpenses.filter(e => (e.date || e.createdAt || '').startsWith(todayStr));
+  const todaySpent = todayExpenses.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+  const yesterdaySpent = nonIncomeExpenses
+    .filter(e => (e.date || e.createdAt || '').startsWith(yesterdayStr))
+    .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+  const dayBeforeSpent = nonIncomeExpenses
+    .filter(e => (e.date || e.createdAt || '').startsWith(dayBeforeStr))
+    .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+  const categoryTotals = {};
+  todayExpenses.forEach(e => {
+    const cat = e.category || e.merchant || 'General';
+    categoryTotals[cat] = (categoryTotals[cat] || 0) + (parseFloat(e.amount) || 0);
+  });
+  const topCatEntry = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
+  const topCategoryName = topCatEntry ? topCatEntry[0] : 'No expenses';
 
   if (widgetSize === 'S') {
     return (
@@ -587,16 +656,16 @@ export function TodaySpendingWidget({ widgetSize = 'S' }) {
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>YESTERDAY</div>
-            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>$0.00</div>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>${yesterdaySpent.toFixed(2)}</div>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>DAY BEFORE</div>
-            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>$0.00</div>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>${dayBeforeSpent.toFixed(2)}</div>
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
-          <span>Top Category: <strong>General</strong></span>
-          <span>Transactions: <strong>{(expenses || []).length}</strong></span>
+          <span>Top Category: <strong>{topCategoryName}</strong></span>
+          <span>Transactions: <strong>{todayExpenses.length}</strong></span>
         </div>
       </div>
     );
@@ -615,15 +684,15 @@ export function TodaySpendingWidget({ widgetSize = 'S' }) {
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Yesterday</span>
-            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>$0.00</strong>
+            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>${yesterdaySpent.toFixed(2)}</strong>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Day Before</span>
-            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>$0.00</strong>
+            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>${dayBeforeSpent.toFixed(2)}</strong>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Top Category</span>
-            <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>General & Living</strong>
+            <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{topCategoryName}</strong>
           </div>
         </div>
       </div>
@@ -642,21 +711,21 @@ export function TodaySpendingWidget({ widgetSize = 'S' }) {
         </div>
         <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '10px' }}>
           <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Yesterday</div>
-          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>$0.00</div>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>${yesterdaySpent.toFixed(2)}</div>
         </div>
         <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '10px' }}>
           <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Day Before</div>
-          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>$0.00</div>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>${dayBeforeSpent.toFixed(2)}</div>
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '4px' }}>
         <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Top Category</span>
-          <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>General & Living</strong>
+          <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{topCategoryName}</strong>
         </div>
         <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Logged Items</span>
-          <strong style={{ fontSize: '12px', color: 'var(--accent-warning)' }}>{(expenses || []).length} items</strong>
+          <strong style={{ fontSize: '12px', color: 'var(--accent-warning)' }}>{todayExpenses.length} items</strong>
         </div>
       </div>
     </div>
@@ -882,9 +951,19 @@ export function UpcomingPlansWidget({ widgetSize = 'S' }) {
 
 // 7. SHARED SPLITS (S, W, T, L)
 export function SplitBalancesWidget({ widgetSize = 'S' }) {
-  const owedAmount = parseFloat(localStorage.getItem('daysync_splits_owed') || 0);
-  const payAmount = parseFloat(localStorage.getItem('daysync_splits_pay') || 0);
+  useRealtimeDataRefresh();
+  const { owed: owedAmount, pay: payAmount, personMap } = getRealSplitsData();
   const netSplit = owedAmount - payAmount;
+
+  const personEntries = Object.entries(personMap || {});
+  let topPersonText = 'No split contacts';
+  let topPersonName = 'None';
+  if (personEntries.length > 0) {
+    personEntries.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+    const [pName, pAmt] = personEntries[0];
+    topPersonName = pName;
+    topPersonText = `${pName} (${pAmt >= 0 ? '$' + pAmt.toFixed(2) : '-$' + Math.abs(pAmt).toFixed(2)})`;
+  }
 
   if (widgetSize === 'S') {
     return (
@@ -922,8 +1001,8 @@ export function SplitBalancesWidget({ widgetSize = 'S' }) {
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
-          <span>Important Contact: <strong>Alex ($45.00)</strong></span>
-          <span>Settlement: <strong>Pending</strong></span>
+          <span>Important Contact: <strong>{topPersonText}</strong></span>
+          <span>Settlement: <strong>{personEntries.length > 0 ? 'Active' : 'Balanced'}</strong></span>
         </div>
       </div>
     );
@@ -950,7 +1029,7 @@ export function SplitBalancesWidget({ widgetSize = 'S' }) {
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Important Contact</span>
-            <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>Alex</strong>
+            <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{topPersonName}</strong>
           </div>
         </div>
       </div>
@@ -979,11 +1058,11 @@ export function SplitBalancesWidget({ widgetSize = 'S' }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '4px' }}>
         <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Person Breakdown</span>
-          <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>Alex ($45.00)</strong>
+          <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{topPersonText}</strong>
         </div>
         <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Settlement Status</span>
-          <strong style={{ fontSize: '12px', color: 'var(--accent-success)' }}>Balanced</strong>
+          <strong style={{ fontSize: '12px', color: 'var(--accent-success)' }}>{personEntries.length > 0 ? 'Pending' : 'Balanced'}</strong>
         </div>
       </div>
     </div>
@@ -1369,11 +1448,12 @@ export function UnreadNotificationsWidget({ widgetSize = 'S' }) {
 
 // 14. TODAY'S PROGRESS (S, W, T, L)
 export function DailyProgressWidget({ widgetSize = 'S' }) {
+  useRealtimeDataRefresh();
   const { tasks } = useLuna();
   const todayStr = new Date().toISOString().split('T')[0];
   const todayTasks = (tasks || []).filter(t => t.dueDate === todayStr || !t.dueDate);
   const doneCount = todayTasks.filter(t => t.completed).length;
-  const progressPct = todayTasks.length > 0 ? Math.round((doneCount / todayTasks.length) * 100) : 75;
+  const progressPct = todayTasks.length > 0 ? Math.round((doneCount / todayTasks.length) * 100) : 0;
 
   if (widgetSize === 'S') {
     return (
@@ -1398,7 +1478,7 @@ export function DailyProgressWidget({ widgetSize = 'S' }) {
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>TASKS</div>
-            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>{doneCount}/{todayTasks.length || 1}</div>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>{doneCount}/{todayTasks.length}</div>
           </div>
         </div>
       </div>
@@ -1687,7 +1767,7 @@ export function ClockDateWidget({ widgetSize = 'S' }) {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
           <span>Timezone: <strong>{timezoneStr}</strong></span>
-          <span>Status: <strong>Standard Time</strong></span>
+          <span>Status: <strong>Live Clock</strong></span>
         </div>
       </div>
     );
@@ -1888,7 +1968,21 @@ export function LunaSuggestionWidget({ widgetSize = 'S' }) {
 
 // 20. IMPORTANT PERSON SPLITS (S, W, T, L)
 export function NextImportantItemWidget({ widgetSize = 'S' }) {
-  const importantPerson = JSON.parse(localStorage.getItem('daysync_important_person_split') || '{"name":"Alex","owedAmount":45.00}');
+  useRealtimeDataRefresh();
+  const { personMap, rawSplits } = getRealSplitsData();
+
+  const personEntries = Object.entries(personMap || {});
+  let importantPerson = null;
+  if (personEntries.length > 0) {
+    personEntries.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+    const [pName, pAmt] = personEntries[0];
+    const relatedSplit = (rawSplits || []).find(s => s.otherPerson === pName || s.paidByName === pName || s.members?.some(m => m.name === pName));
+    importantPerson = {
+      name: pName,
+      owedAmount: pAmt,
+      splitTitle: relatedSplit ? (relatedSplit.title || relatedSplit.name || 'Shared Expense') : 'Shared Expense'
+    };
+  }
 
   if (widgetSize === 'S') {
     return (
@@ -1898,12 +1992,12 @@ export function NextImportantItemWidget({ widgetSize = 'S' }) {
             <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {importantPerson.name}
             </div>
-            <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--accent-success, #10B981)', marginTop: '2px' }}>
-              Owes ${parseFloat(importantPerson.owedAmount).toFixed(2)}
+            <div style={{ fontSize: '13px', fontWeight: '800', color: importantPerson.owedAmount >= 0 ? 'var(--accent-success, #10B981)' : 'var(--accent-danger, #EF4444)', marginTop: '2px' }}>
+              {importantPerson.owedAmount >= 0 ? `Owes $${importantPerson.owedAmount.toFixed(2)}` : `You owe $${Math.abs(importantPerson.owedAmount).toFixed(2)}`}
             </div>
           </>
         ) : (
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No split balances</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No split contacts</div>
         )}
       </SmallWidgetWrapper>
     );
@@ -1915,24 +2009,34 @@ export function NextImportantItemWidget({ widgetSize = 'S' }) {
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           IMPORTANT PERSON SPLIT
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
-          <div style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>PERSON</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>{importantPerson.name}</div>
+        {importantPerson ? (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', flex: 1, margin: '8px 0' }}>
+              <div style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>PERSON</div>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>{importantPerson.name}</div>
+              </div>
+              <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>BALANCE</div>
+                <div style={{ fontSize: '14px', fontWeight: '800', color: importantPerson.owedAmount >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>
+                  {importantPerson.owedAmount >= 0 ? `$${importantPerson.owedAmount.toFixed(2)}` : `-$${Math.abs(importantPerson.owedAmount).toFixed(2)}`}
+                </div>
+              </div>
+              <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>STATUS</div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-muted)' }}>Pending</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
+              <span>Split: <strong>{importantPerson.splitTitle}</strong></span>
+              <span>Settlement: <strong>Unsettled</strong></span>
+            </div>
+          </>
+        ) : (
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            No split contacts found
           </div>
-          <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>OWED TO YOU</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-success)' }}>${parseFloat(importantPerson.owedAmount).toFixed(2)}</div>
-          </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>STATUS</div>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-muted)' }}>Pending</div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px' }}>
-          <span>Split: <strong>Lunch & Drinks</strong></span>
-          <span>Settlement: <strong>Unsettled</strong></span>
-        </div>
+        )}
       </div>
     );
   }
@@ -1943,24 +2047,32 @@ export function NextImportantItemWidget({ widgetSize = 'S' }) {
         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           PERSON SPLIT DETAILS
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
-          <div style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Person Name</span>
-            <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{importantPerson.name}</strong>
+        {importantPerson ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-around', margin: '8px 0' }}>
+            <div style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Person Name</span>
+              <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{importantPerson.name}</strong>
+            </div>
+            <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Net Balance</span>
+              <strong style={{ fontSize: '15px', color: importantPerson.owedAmount >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>
+                {importantPerson.owedAmount >= 0 ? `$${importantPerson.owedAmount.toFixed(2)}` : `-$${Math.abs(importantPerson.owedAmount).toFixed(2)}`}
+              </strong>
+            </div>
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Recent Split</span>
+              <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{importantPerson.splitTitle}</strong>
+            </div>
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Settlement Status</span>
+              <strong style={{ fontSize: '12px', color: 'var(--accent-warning)' }}>Unsettled</strong>
+            </div>
           </div>
-          <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Amount Owed</span>
-            <strong style={{ fontSize: '15px', color: 'var(--accent-success)' }}>${parseFloat(importantPerson.owedAmount).toFixed(2)}</strong>
+        ) : (
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            No split contacts found
           </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Recent Split</span>
-            <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>Lunch & Drinks</strong>
-          </div>
-          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Settlement Status</span>
-            <strong style={{ fontSize: '12px', color: 'var(--accent-warning)' }}>Unsettled</strong>
-          </div>
-        </div>
+        )}
       </div>
     );
   }
@@ -1970,16 +2082,24 @@ export function NextImportantItemWidget({ widgetSize = 'S' }) {
       <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
         COMPLETE PERSON SPLIT REPORT
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', margin: '8px 0' }}>
-        <div style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.18)', borderRadius: '6px', padding: '10px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Person</div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>{importantPerson.name}</div>
+      {importantPerson ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', margin: '8px 0' }}>
+          <div style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.18)', borderRadius: '6px', padding: '10px' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Person</div>
+            <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>{importantPerson.name}</div>
+          </div>
+          <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '10px' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Net Owed</div>
+            <div style={{ fontSize: '18px', fontWeight: '800', color: importantPerson.owedAmount >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>
+              {importantPerson.owedAmount >= 0 ? `$${importantPerson.owedAmount.toFixed(2)}` : `-$${Math.abs(importantPerson.owedAmount).toFixed(2)}`}
+            </div>
+          </div>
         </div>
-        <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.18)', borderRadius: '6px', padding: '10px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Total Owed to You</div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-success)' }}>${parseFloat(importantPerson.owedAmount).toFixed(2)}</div>
+      ) : (
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          No split contacts found
         </div>
-      </div>
+      )}
     </div>
   );
 }

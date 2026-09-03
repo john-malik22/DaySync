@@ -98,6 +98,11 @@ export function AuthProvider({ children }) {
     try {
       const res = await api.getMe();
       if (res && res.user) {
+        if (res.user.avatar) {
+          localStorage.setItem('daysync_user_avatar', res.user.avatar);
+        } else if (cachedUser?.avatar) {
+          res.user.avatar = cachedUser.avatar;
+        }
         setUser(res.user);
         setToken(storedToken);
         localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
@@ -109,6 +114,7 @@ export function AuthProvider({ children }) {
         if (cachedUser?.id) clientCache.clearUserCache(cachedUser.id);
         localStorage.removeItem('luna_token');
         localStorage.removeItem('daysync_user_profile');
+        localStorage.removeItem('daysync_user_avatar');
         setToken(null);
         setUser(null);
       } else {
@@ -127,6 +133,9 @@ export function AuthProvider({ children }) {
   const setSession = (newToken, newUser) => {
     localStorage.setItem('luna_token', newToken);
     if (newUser) {
+      if (newUser.avatar) {
+        localStorage.setItem('daysync_user_avatar', newUser.avatar);
+      }
       localStorage.setItem('daysync_user_profile', JSON.stringify(newUser));
     }
     setToken(newToken);
@@ -153,6 +162,7 @@ export function AuthProvider({ children }) {
       await api.deleteAccount();
       localStorage.removeItem('luna_token');
       localStorage.removeItem('daysync_user_profile');
+      localStorage.removeItem('daysync_user_avatar');
       localStorage.removeItem('luna_monthly_budget_target');
       setToken(null);
       setUser(null);
@@ -165,6 +175,9 @@ export function AuthProvider({ children }) {
     if (!updatedUserObj) return;
     setUser(prev => {
       const merged = { ...prev, ...updatedUserObj };
+      if (merged.avatar) {
+        localStorage.setItem('daysync_user_avatar', merged.avatar);
+      }
       localStorage.setItem('daysync_user_profile', JSON.stringify(merged));
       return merged;
     });
@@ -174,6 +187,7 @@ export function AuthProvider({ children }) {
     if (user?.id) clientCache.clearUserCache(user.id);
     localStorage.removeItem('luna_token');
     localStorage.removeItem('daysync_user_profile');
+    localStorage.removeItem('daysync_user_avatar');
     setToken(null);
     setUser(null);
   };
