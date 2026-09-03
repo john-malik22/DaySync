@@ -35,6 +35,11 @@ export function PWAUpdateProvider({ children }) {
   const [fetchError, setFetchError] = useState(false);
   const [dismissedVersion, setDismissedVersion] = useState(null);
 
+  // APK Download state
+  const [downloadStatus, setDownloadStatus] = useState('idle'); // 'idle' | 'downloading' | 'completed' | 'error'
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadError, setDownloadError] = useState(null);
+
   // Release notes dictionary
   const [releases, setReleases] = useState({});
   const [showWhatsNewModal, setShowWhatsNewModal] = useState(false);
@@ -261,10 +266,69 @@ export function PWAUpdateProvider({ children }) {
     }, 1000);
   };
 
+  const startApkDownload = useCallback(async (targetUrl) => {
+    const apkUrl = targetUrl || downloadUrl;
+    if (!apkUrl) return;
+
+    setDownloadStatus('downloading');
+    setDownloadProgress(10);
+    setDownloadError(null);
+
+    const isNativeAndroid = typeof window !== 'undefined' && (window.Capacitor?.isNativePlatform() || window.Capacitor?.getPlatform() === 'android');
+
+    try {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', apkUrl, true);
+      xhr.responseType = 'blob';
+
+      xhr.onprogress = (event) => {
+        if (event.lengthComputable && event.total > 0) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          setDownloadProgress(percentComplete);
+        } else {
+          setDownloadProgress((prev) => Math.min(prev + 20, 90));
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          setDownloadProgress(100);
+          setDownloadStatus('completed');
+          
+          // Trigger system APK installation flow
+          if (isNativeAndroid) {
+            window.open(apkUrl, '_system');
+          } else {
+            window.open(apkUrl, '_blank');
+          }
+        } else {
+          setDownloadStatus('error');
+          setDownloadError(`Download failed with status ${xhr.status}`);
+        }
+      };
+
+      xhr.onerror = () => {
+        setDownloadStatus('error');
+        setDownloadError('Network error while downloading update APK. Please try again.');
+      };
+
+      xhr.send();
+    } catch (err) {
+      console.warn('XHR download error, opening system handler directly:', err);
+      setDownloadProgress(100);
+      setDownloadStatus('completed');
+      if (isNativeAndroid) {
+        window.open(apkUrl, '_system');
+      } else {
+        window.open(apkUrl, '_blank');
+      }
+    }
+  }, [downloadUrl]);
+
   const applyUpdate = () => {
     const isNativeAndroid = typeof window !== 'undefined' && (window.Capacitor?.isNativePlatform() || window.Capacitor?.getPlatform() === 'android');
     if ((isNativeAndroid || downloadUrl) && downloadUrl) {
-      window.open(downloadUrl, '_system');
+      startApkDownload(downloadUrl);
     } else {
       updateApp();
     }
@@ -283,6 +347,10 @@ export function PWAUpdateProvider({ children }) {
         updateAvailable: isUpdateAvailable,
         showUpdatePrompt,
         downloadUrl,
+        downloadStatus,
+        downloadProgress,
+        downloadError,
+        startApkDownload,
         dismissedVersion,
         checking,
         hasCheckedManually,
