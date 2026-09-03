@@ -24,12 +24,14 @@ const DEFAULT_HIGHLIGHTS = [
 ];
 
 export function PWAUpdateProvider({ children }) {
-  const currentVersion = pkg.version || '1.1.2';
+  const currentVersion = pkg.version || '2.0.0';
 
   const [checking, setChecking] = useState(false);
   const [hasCheckedManually, setHasCheckedManually] = useState(false);
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [latestVersion, setLatestVersion] = useState(null);
+  const [downloadUrl, setDownloadUrl] = useState(null);
+  const [releaseNotes, setReleaseNotes] = useState([]);
   const [fetchError, setFetchError] = useState(false);
   const [dismissedVersion, setDismissedVersion] = useState(null);
 
@@ -38,6 +40,47 @@ export function PWAUpdateProvider({ children }) {
   const [showWhatsNewModal, setShowWhatsNewModal] = useState(false);
 
   const registrationRef = useRef(null);
+
+  // GitHub Release API for Android Updates
+  const checkGitHubRelease = useCallback(async () => {
+    try {
+      const res = await fetch('https://api.github.com/repos/john-malik22/DaySync/releases/latest', {
+        headers: { 'Accept': 'application/vnd.github.v3+json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const rawTag = data.tag_name || '';
+        const cleanVersion = rawTag.replace(/^v/i, '').trim();
+
+        if (cleanVersion) {
+          setLatestVersion(cleanVersion);
+          
+          // Locate attached APK asset
+          const apkAsset = Array.isArray(data.assets) ? data.assets.find(a => a.name && a.name.endsWith('.apk')) : null;
+          const targetUrl = apkAsset?.browser_download_url || data.html_url || 'https://github.com/john-malik22/DaySync/releases/latest';
+          setDownloadUrl(targetUrl);
+
+          if (data.body) {
+            const lines = data.body.split('\n')
+              .map(l => l.replace(/^[-*•]\s*/, '').trim())
+              .filter(l => l && !l.startsWith('#'));
+            if (lines.length > 0) {
+              setReleaseNotes(lines);
+            }
+          }
+
+          const isNewer = compareSemVer(cleanVersion, currentVersion) > 0;
+          const isNativeAndroid = typeof window !== 'undefined' && (window.Capacitor?.isNativePlatform() || window.Capacitor?.getPlatform() === 'android');
+          
+          if (isNativeAndroid && isNewer) {
+            setIsUpdateAvailable(true);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Unable to check GitHub Releases:', e);
+    }
+  }, [currentVersion]);
 
   // Fetch release notes metadata
   const fetchReleases = useCallback(async () => {
@@ -56,7 +99,8 @@ export function PWAUpdateProvider({ children }) {
 
   useEffect(() => {
     fetchReleases();
-  }, [fetchReleases]);
+    checkGitHubRelease();
+  }, [fetchReleases, checkGitHubRelease]);
 
   // Check post-update "What's New" modal trigger
   useEffect(() => {
@@ -77,13 +121,16 @@ export function PWAUpdateProvider({ children }) {
   };
 
   const getReleaseHighlights = useCallback((versionStr) => {
+    if (releaseNotes && releaseNotes.length > 0) {
+      return releaseNotes;
+    }
     if (!versionStr) return DEFAULT_HIGHLIGHTS;
     const targetKey = String(versionStr).replace(/^v/i, '');
     if (releases[targetKey] && Array.isArray(releases[targetKey].highlights)) {
       return releases[targetKey].highlights;
     }
     return DEFAULT_HIGHLIGHTS;
-  }, [releases]);
+  }, [releases, releaseNotes]);
 
   const dismissUpdate = (versionToDismiss) => {
     setDismissedVersion(versionToDismiss || latestVersion || 'dismissed');
@@ -128,7 +175,10 @@ export function PWAUpdateProvider({ children }) {
     let foundWaiting = false;
     let remoteVersion = null;
 
-    // 1. Fetch latest version from /version.json & releases.json
+    // 1. Check GitHub Release for Android / PWA
+    await checkGitHubRelease();
+
+    // 2. Fetch latest version from /version.json & releases.json
     try {
       await fetchReleases();
       const res = await fetch(`/version.json?t=${Date.now()}`);
@@ -146,7 +196,7 @@ export function PWAUpdateProvider({ children }) {
       setFetchError(true);
     }
 
-    // 2. Query service worker registration update
+    // 3. Query service worker registration update
     try {
       let reg = registrationRef.current;
       if (!reg && 'serviceWorker' in navigator) {
@@ -173,7 +223,7 @@ export function PWAUpdateProvider({ children }) {
         );
         const isNewerVersion = remoteVersion ? compareSemVer(remoteVersion, currentVersion) > 0 : false;
 
-        setIsUpdateAvailable(isNewerVersion || hasWaitingWorker);
+        setIsUpdateAvailable(prev => prev || isNewerVersion || hasWaitingWorker);
         setHasCheckedManually(true);
         setChecking(false);
       }, 800);
@@ -211,6 +261,15 @@ export function PWAUpdateProvider({ children }) {
     }, 1000);
   };
 
+  const applyUpdate = () => {
+    const isNativeAndroid = typeof window !== 'undefined' && (window.Capacitor?.isNativePlatform() || window.Capacitor?.getPlatform() === 'android');
+    if ((isNativeAndroid || downloadUrl) && downloadUrl) {
+      window.open(downloadUrl, '_system');
+    } else {
+      updateApp();
+    }
+  };
+
   // Determine if update modal prompt should be displayed
   const effectiveLatest = latestVersion || currentVersion;
   const isPromptDismissed = dismissedVersion && compareSemVer(dismissedVersion, effectiveLatest) >= 0;
@@ -223,6 +282,7 @@ export function PWAUpdateProvider({ children }) {
         latestVersion: effectiveLatest,
         updateAvailable: isUpdateAvailable,
         showUpdatePrompt,
+        downloadUrl,
         dismissedVersion,
         checking,
         hasCheckedManually,
@@ -236,7 +296,7 @@ export function PWAUpdateProvider({ children }) {
         checkForUpdates,
         checkForUpdate: checkForUpdates,
         updateApp,
-        applyUpdate: updateApp
+        applyUpdate
       }}
     >
       {children}

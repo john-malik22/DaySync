@@ -69,10 +69,10 @@ export function UpdatePromptModal() {
             </div>
             <div>
               <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                UPDATE AVAILABLE
+                DAYSYNC UPDATE AVAILABLE
               </span>
               <h3 id="update-prompt-title" style={{ margin: '2px 0 0 0', fontSize: '1.15rem', fontWeight: '700' }}>
-                DaySync {latestVersion} is ready
+                DaySync v{latestVersion} is ready
               </h3>
             </div>
           </div>
