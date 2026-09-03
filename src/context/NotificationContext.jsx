@@ -2,8 +2,20 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { api } from '../services/api';
 import { useAuth } from './AuthContext';
 import { clientCache } from '../services/clientCache';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 const NotificationContext = createContext();
+
+// Simple numerical hash helper for Capacitor Notification IDs
+function stringToId(str) {
+  let hash = 0;
+  if (!str) return Math.floor(Math.random() * 100000);
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
 
 const DEFAULT_PREFERENCES = {
   enabled: true,
@@ -53,6 +65,32 @@ export function NotificationProvider({ children }) {
   };
 
   const requestBrowserPermission = async () => {
+    if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
+      try {
+        const permResult = await LocalNotifications.requestPermissions();
+        if (permResult.display === 'granted') {
+          updatePreferences({ browser: true, enabled: true });
+          LocalNotifications.schedule({
+            notifications: [{
+              id: 99911,
+              title: 'DaySync Notifications Enabled',
+              body: 'You will now receive native alerts for tasks, meetings, birthdays, and plans.',
+              schedule: { at: new Date(Date.now() + 500) },
+              smallIcon: 'ic_launcher',
+              iconColor: '#0F172A'
+            }]
+          });
+          return true;
+        } else {
+          updatePreferences({ browser: false });
+          return false;
+        }
+      } catch (err) {
+        console.error('Error requesting native notification permission:', err);
+        return false;
+      }
+    }
+
     if (!('Notification' in window)) {
       alert('Browser notifications are not supported in your current browser environment.');
       return false;
@@ -126,15 +164,36 @@ export function NotificationProvider({ children }) {
             }
           };
 
-          if (!isQuietHours() && preferences.browser && 'Notification' in window && Notification.permission === 'granted') {
-            newItems.forEach(item => {
+          if (!isQuietHours()) {
+            // 1. Native Capacitor Android Local Notifications
+            if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
               try {
-                new Notification(item.title, {
-                  body: item.message,
-                  icon: '/icons/icon-192.png'
+                LocalNotifications.schedule({
+                  notifications: newItems.map((item, idx) => ({
+                    id: stringToId(item.id || `${Date.now()}_${idx}`),
+                    title: item.title || 'DaySync Reminder',
+                    body: item.message || 'You have a new DaySync alert',
+                    schedule: { at: new Date(Date.now() + 500) },
+                    smallIcon: 'ic_launcher',
+                    iconColor: '#0F172A'
+                  }))
                 });
-              } catch (e) {}
-            });
+              } catch (e) {
+                console.warn('Native LocalNotifications schedule error:', e);
+              }
+            }
+
+            // 2. Web Browser Fallback Notifications
+            if (preferences.browser && 'Notification' in window && Notification.permission === 'granted') {
+              newItems.forEach(item => {
+                try {
+                  new Notification(item.title, {
+                    body: item.message,
+                    icon: '/icons/icon-192.png'
+                  });
+                } catch (e) {}
+              });
+            }
           }
         }
 
