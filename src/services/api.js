@@ -3,7 +3,7 @@
  * Global Error Classification & Timeout Control
  */
 
-const DEFAULT_REMOTE_BACKEND = 'http://192.168.1.21:5000';
+const DEFAULT_REMOTE_BACKEND = 'https://daysync-1.onrender.com';
 
 export function getApiBase() {
   const envApiBase = typeof import.meta !== 'undefined' && import.meta.env ? (import.meta.env.VITE_API_URL || import.meta.env.VITE_RENDER_URL || '') : '';
