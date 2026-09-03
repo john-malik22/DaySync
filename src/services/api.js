@@ -7,18 +7,19 @@ const DEFAULT_REMOTE_BACKEND = 'https://daysync-backend.onrender.com';
 
 export function getApiBase() {
   const envApiBase = typeof import.meta !== 'undefined' && import.meta.env ? (import.meta.env.VITE_API_URL || import.meta.env.VITE_RENDER_URL || '') : '';
-  const configuredApiBase = envApiBase.replace(/\/+$/, '');
+  if (envApiBase) {
+    const cleanEnv = envApiBase.replace(/\/+$/, '');
+    return cleanEnv.endsWith('/api') ? cleanEnv : `${cleanEnv}/api`;
+  }
 
   // Detect if running inside Capacitor Android / native platform
   const isCapacitorNative = typeof window !== 'undefined' && (
-    (window.Capacitor && (window.Capacitor.isNativePlatform() || window.Capacitor.platform !== 'web')) ||
+    Boolean(window.Capacitor?.isNativePlatform()) ||
+    window.Capacitor?.platform === 'android' ||
+    window.Capacitor?.platform === 'ios' ||
     window.location.protocol === 'capacitor:' ||
-    (window.location.hostname === 'localhost' && typeof window.Capacitor !== 'undefined')
+    (window.location.hostname === 'localhost' && !import.meta.env.DEV)
   );
-
-  if (configuredApiBase !== '') {
-    return configuredApiBase.endsWith('/api') ? configuredApiBase : `${configuredApiBase}/api`;
-  }
 
   if (isCapacitorNative) {
     const cleanRemote = DEFAULT_REMOTE_BACKEND.replace(/\/+$/, '');
