@@ -271,56 +271,35 @@ export function PWAUpdateProvider({ children }) {
     if (!apkUrl) return;
 
     setDownloadStatus('downloading');
-    setDownloadProgress(10);
+    setDownloadProgress(50);
     setDownloadError(null);
 
-    const isNativeAndroid = typeof window !== 'undefined' && (window.Capacitor?.isNativePlatform() || window.Capacitor?.getPlatform() === 'android');
+    const isNativeAndroid = typeof window !== 'undefined' && (
+      Boolean(window.Capacitor?.isNativePlatform()) ||
+      window.Capacitor?.getPlatform() === 'android' ||
+      window.Capacitor?.platform === 'android'
+    );
 
     try {
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', apkUrl, true);
-      xhr.responseType = 'blob';
-
-      xhr.onprogress = (event) => {
-        if (event.lengthComputable && event.total > 0) {
-          const percentComplete = Math.round((event.loaded / event.total) * 100);
-          setDownloadProgress(percentComplete);
-        } else {
-          setDownloadProgress((prev) => Math.min(prev + 20, 90));
-        }
-      };
-
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          setDownloadProgress(100);
-          setDownloadStatus('completed');
-
-          // Trigger system APK installation flow
-          if (isNativeAndroid) {
-            window.open(apkUrl, '_system');
-          } else {
-            window.open(apkUrl, '_blank');
-          }
-        } else {
-          setDownloadStatus('error');
-          setDownloadError(`Download failed with status ${xhr.status}`);
-        }
-      };
-
-      xhr.onerror = () => {
-        setDownloadStatus('error');
-        setDownloadError('Network error while downloading update APK. Please try again.');
-      };
-
-      xhr.send();
-    } catch (err) {
-      console.warn('XHR download error, opening system handler directly:', err);
-      setDownloadProgress(100);
-      setDownloadStatus('completed');
       if (isNativeAndroid) {
+        // Open system download manager / native browser for direct APK download & installation
         window.open(apkUrl, '_system');
       } else {
+        // Web / PWA fallback
         window.open(apkUrl, '_blank');
+      }
+
+      setDownloadProgress(100);
+      setDownloadStatus('completed');
+    } catch (err) {
+      console.warn('System browser launch error, attempting location fallback:', err);
+      try {
+        window.location.href = apkUrl;
+        setDownloadProgress(100);
+        setDownloadStatus('completed');
+      } catch (e) {
+        setDownloadStatus('error');
+        setDownloadError('Unable to launch APK download. Please try downloading directly from GitHub Releases.');
       }
     }
   }, [downloadUrl]);
