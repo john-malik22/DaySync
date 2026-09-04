@@ -1,3 +1,5 @@
+import { authStorage } from './storage';
+
 /**
  * API Service Client for Luna Engine Backend
  * Global Error Classification & Timeout Control
@@ -136,8 +138,7 @@ async function request(url, options = {}) {
       if (res.status === 401) {
         errorType = 'UNAUTHORIZED';
         try {
-          localStorage.removeItem('luna_token');
-          localStorage.removeItem('daysync_user_profile');
+          authStorage.clearSession();
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new Event('daysync_auth_expired'));
           }

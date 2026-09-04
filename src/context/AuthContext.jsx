@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import { clientCache } from '../services/clientCache';
+import { authStorage } from '../services/storage';
 
 const AuthContext = createContext();
 
@@ -47,13 +48,8 @@ export function AuthProvider({ children }) {
   // Fast Session Restore & Silent Background Authentication
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = localStorage.getItem('luna_token');
-      const storedProfileRaw = localStorage.getItem('daysync_user_profile');
-      let cachedUser = null;
-
-      try {
-        if (storedProfileRaw) cachedUser = JSON.parse(storedProfileRaw);
-      } catch (e) {}
+      const storedToken = await authStorage.getToken();
+      const cachedUser = await authStorage.getUserProfile();
 
       const isValidToken = storedToken &&
         typeof storedToken === 'string' &&
@@ -70,7 +66,7 @@ export function AuthProvider({ children }) {
 
       const cleanToken = storedToken.trim();
 
-      // Step 1: RESTORE SESSION IMMEDIATELY (0ms Delay)
+      // Step 1: RESTORE SESSION IMMEDIATELY
       setToken(cleanToken);
       setUser(cachedUser || { id: 'cached_user', name: 'User' });
       setLoading(false);
@@ -82,6 +78,7 @@ export function AuthProvider({ children }) {
     initAuth();
 
     function handleAuthExpired() {
+      authStorage.clearSession();
       setToken(null);
       setUser(null);
     }
@@ -108,15 +105,14 @@ export function AuthProvider({ children }) {
       if (res && res.user) {
         setUser(res.user);
         setToken(storedToken);
-        localStorage.setItem('daysync_user_profile', JSON.stringify(res.user));
+        await authStorage.setSession(storedToken, res.user);
       }
     } catch (err) {
       console.warn('Background auth verification status:', err);
       if (err && (err.status === 401 || err.status === 403)) {
         console.warn('Token explicitly rejected by server (401/403). Expiring session.');
         if (cachedUser?.id) clientCache.clearUserCache(cachedUser.id);
-        localStorage.removeItem('luna_token');
-        localStorage.removeItem('daysync_user_profile');
+        await authStorage.clearSession();
         setToken(null);
         setUser(null);
       } else {
@@ -133,10 +129,7 @@ export function AuthProvider({ children }) {
   };
 
   const setSession = (newToken, newUser) => {
-    localStorage.setItem('luna_token', newToken);
-    if (newUser) {
-      localStorage.setItem('daysync_user_profile', JSON.stringify(newUser));
-    }
+    authStorage.setSession(newToken, newUser);
     setToken(newToken);
     setUser(newUser);
   };
@@ -144,7 +137,9 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const res = await api.login({ email, password });
     if (res.token && res.user) {
-      setSession(res.token, res.user);
+      await authStorage.setSession(res.token, res.user);
+      setToken(res.token);
+      setUser(res.user);
     }
     return res;
   };
@@ -159,9 +154,8 @@ export function AuthProvider({ children }) {
     try {
       if (user?.id) clientCache.clearUserCache(user.id);
       await api.deleteAccount();
-      localStorage.removeItem('luna_token');
-      localStorage.removeItem('daysync_user_profile');
-      localStorage.removeItem('luna_monthly_budget_target');
+      await authStorage.clearSession();
+      try { localStorage.removeItem('luna_monthly_budget_target'); } catch (e) {}
       setToken(null);
       setUser(null);
     } finally {
@@ -173,15 +167,14 @@ export function AuthProvider({ children }) {
     if (!updatedUserObj) return;
     setUser(prev => {
       const merged = { ...prev, ...updatedUserObj };
-      localStorage.setItem('daysync_user_profile', JSON.stringify(merged));
+      authStorage.updateUserProfile(merged);
       return merged;
     });
   };
 
-  const logout = () => {
+  const logout = async () => {
     if (user?.id) clientCache.clearUserCache(user.id);
-    localStorage.removeItem('luna_token');
-    localStorage.removeItem('daysync_user_profile');
+    await authStorage.clearSession();
     setToken(null);
     setUser(null);
   };

@@ -47,50 +47,62 @@ export function PWAUpdateProvider({ children }) {
   const [releases, setReleases] = useState({});
   const [showWhatsNewModal, setShowWhatsNewModal] = useState(false);
 
+  const [releaseHtmlUrl, setReleaseHtmlUrl] = useState(null);
+  const [apkAssetName, setApkAssetName] = useState(null);
+
   const registrationRef = useRef(null);
 
   // GitHub Release API for Android Updates
   const checkGitHubRelease = useCallback(async () => {
     try {
-      const res = await fetch('https://api.github.com/repos/john-malik22/DaySync/releases/latest', {
+      const res = await fetch('https://api.github.com/repos/john-malik22/DaySync/releases', {
         headers: { 'Accept': 'application/vnd.github.v3+json' }
       });
       if (res.ok) {
-        const data = await res.json();
-        const rawTag = data.tag_name || '';
-        const cleanVersion = rawTag.replace(/^v/i, '').trim();
+        const releasesData = await res.json();
+        if (Array.isArray(releasesData) && releasesData.length > 0) {
+          // Find the newest release that has an attached .apk asset
+          const targetRelease = releasesData.find(r =>
+            Array.isArray(r.assets) && r.assets.some(a => a && a.name && a.name.toLowerCase().endsWith('.apk'))
+          ) || releasesData[0];
 
-        if (cleanVersion) {
-          setLatestVersion(cleanVersion);
+          const rawTag = targetRelease.tag_name || '';
+          const cleanVersion = rawTag.replace(/^v/i, '').trim();
 
           // Locate attached APK asset from release assets (never use HTML release page URL)
-          const apkAsset = Array.isArray(data.assets)
-            ? data.assets.find(a => a && a.name && a.name.toLowerCase().endsWith('.apk'))
+          const apkAsset = Array.isArray(targetRelease.assets)
+            ? targetRelease.assets.find(a => a && a.name && a.name.toLowerCase().endsWith('.apk'))
             : null;
 
           const apkDownloadUrl = apkAsset?.browser_download_url || null;
 
+          setReleaseHtmlUrl(targetRelease.html_url || null);
+          setApkAssetName(apkAsset ? apkAsset.name : 'NONE FOUND');
+
           console.log('[DaySync Update] GitHub Release check:');
-          console.log('  - release.html_url:', data.html_url);
+          console.log('  - release.html_url:', targetRelease.html_url);
           console.log('  - selected APK asset name:', apkAsset ? apkAsset.name : 'NONE FOUND');
           console.log('  - selected APK browser_download_url:', apkDownloadUrl);
 
-          setDownloadUrl(apkDownloadUrl);
+          if (cleanVersion) {
+            setLatestVersion(cleanVersion);
+            setDownloadUrl(apkDownloadUrl);
 
-          if (data.body) {
-            const lines = data.body.split('\n')
-              .map(l => l.replace(/^[-*•]\s*/, '').trim())
-              .filter(l => l && !l.startsWith('#'));
-            if (lines.length > 0) {
-              setReleaseNotes(lines);
+            if (targetRelease.body) {
+              const lines = targetRelease.body.split('\n')
+                .map(l => l.replace(/^[-*•]\s*/, '').trim())
+                .filter(l => l && !l.startsWith('#'));
+              if (lines.length > 0) {
+                setReleaseNotes(lines);
+              }
             }
-          }
 
-          const isNewer = compareSemVer(cleanVersion, currentVersion) > 0;
-          const isNativeAndroid = typeof window !== 'undefined' && (window.Capacitor?.isNativePlatform() || window.Capacitor?.getPlatform() === 'android');
+            const isNewer = compareSemVer(cleanVersion, currentVersion) > 0;
+            const isNativeAndroid = typeof window !== 'undefined' && (window.Capacitor?.isNativePlatform() || window.Capacitor?.getPlatform() === 'android');
 
-          if (isNativeAndroid && isNewer) {
-            setIsUpdateAvailable(true);
+            if (isNativeAndroid && isNewer && apkDownloadUrl) {
+              setIsUpdateAvailable(true);
+            }
           }
         }
       }
@@ -297,9 +309,11 @@ export function PWAUpdateProvider({ children }) {
       window.Capacitor?.platform === 'android'
     );
 
-    console.log('[DaySync Update] startApkDownload invoked:');
-    console.log('  - isNativeAndroid:', isNativeAndroid);
-    console.log('  - apkUrl:', apkUrl);
+    console.log('[DaySync Update] Runtime update download triggered:');
+    console.log('  - release.html_url:', releaseHtmlUrl);
+    console.log('  - APK asset name:', apkAssetName);
+    console.log('  - APK browser_download_url:', apkUrl);
+    console.log('  - final downloadUrl passed to AppUpdate.downloadAndInstall():', apkUrl);
 
     try {
       if (isNativeAndroid) {
@@ -319,7 +333,7 @@ export function PWAUpdateProvider({ children }) {
       setDownloadStatus('error');
       setDownloadError('Failed to download update APK: ' + (err?.message || err || 'Unknown error'));
     }
-  }, [downloadUrl]);
+  }, [downloadUrl, releaseHtmlUrl, apkAssetName]);
 
   const applyUpdate = () => {
     const isNativeAndroid = typeof window !== 'undefined' && (window.Capacitor?.isNativePlatform() || window.Capacitor?.getPlatform() === 'android');

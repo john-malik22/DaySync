@@ -10,6 +10,7 @@ import { ConfirmationModal } from '../../components/common/ConfirmationModal';
 import { WidgetPickerModal } from '../../components/dashboard/WidgetPickerModal';
 import { DEFAULT_WIDGET_LAYOUT } from '../../components/dashboard/widgetCatalog';
 import { api } from '../../services/api';
+import { authStorage } from '../../services/storage';
 import { AVATAR_LIST, CartoonAvatar, UserAvatar } from '../../components/common/CartoonAvatars';
 import {
   User,
@@ -632,7 +633,7 @@ export function SettingsPage() {
     setIsVerifyingEmailOtp(true);
     try {
       const res = await api.verifyEmailOTP({ newEmail: newEmailInput.trim(), otp: otpInput.trim() });
-      if (res.token) localStorage.setItem('luna_token', res.token);
+      if (res.token) await authStorage.setSession(res.token, res.user);
       updateUser(res.user);
       setShowChangeEmailModal(false);
       if (showToast) showToast('Email address verified and updated successfully!', 'success');
