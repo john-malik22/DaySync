@@ -308,7 +308,7 @@ export function TaskManager({ searchFilter }) {
                 </div>
 
                 {/* Row 2 → Due Date + Time + Priority */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px', alignItems: 'center' }}>
+                <div className="task-form-row-fields" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px', alignItems: 'center' }}>
                   <div>
                     <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>DUE DATE</label>
                     <input
@@ -381,7 +381,7 @@ export function TaskManager({ searchFilter }) {
                 </div>
 
                 {/* Row 2 → Date + Reminder + Repeat Rule */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px', alignItems: 'center' }}>
+                <div className="task-form-row-fields" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px', alignItems: 'center' }}>
                   <div>
                     <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>BIRTHDAY DATE</label>
                     <input
@@ -448,7 +448,7 @@ export function TaskManager({ searchFilter }) {
                 </div>
 
                 {/* Row 2 → Date + Time + Recurring */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px', alignItems: 'center' }}>
+                <div className="task-form-row-fields" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px', alignItems: 'center' }}>
                   <div>
                     <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px', fontWeight: '600' }}>DATE</label>
                     <input

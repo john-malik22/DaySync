@@ -1806,4 +1806,75 @@ option {
   form {
     padding-bottom: env(safe-area-inset-bottom, 12px);
   }
+
+  /* Mobile Compact Task Form Fields (Due Date, Time, Priority) */
+  .task-form-row-fields {
+    gap: 4px !important;
+  }
+
+  .task-form-row-fields label {
+    font-size: 9px !important;
+    margin-bottom: 1px !important;
+    letter-spacing: -0.2px;
+  }
+
+  .task-form-row-fields input[type="date"],
+  .task-form-row-fields input[type="time"],
+  .task-form-row-fields select {
+    font-size: 11px !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    padding: 2px 4px !important;
+  }
+
+  /* Mobile Luna Chat Spacing & Keyboard Reflow Rules */
+  .main-content-area:has(.chat-page-layout) {
+    padding-bottom: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .chat-page-layout {
+    height: calc(100dvh - 58px - env(safe-area-inset-bottom, 0px) - 28px) !important;
+    max-height: calc(100dvh - 58px - env(safe-area-inset-bottom, 0px) - 28px) !important;
+    padding: 10px 12px 6px 12px !important;
+    gap: 6px !important;
+    box-sizing: border-box !important;
+  }
+
+  @media (max-height: 540px) {
+    .chat-page-layout {
+      height: calc(100dvh - 16px) !important;
+      max-height: calc(100dvh - 16px) !important;
+    }
+  }
+
+  .chat-page-layout:focus-within {
+    height: calc(100dvh - 16px) !important;
+    max-height: calc(100dvh - 16px) !important;
+  }
+
+  .chat-composer-bar {
+    margin-top: 2px !important;
+    padding-top: 6px !important;
+    padding-bottom: 4px !important;
+    background: var(--bg-primary) !important;
+  }
+
+  .chat-composer-bar input[type="text"] {
+    scroll-margin-top: 0 !important;
+    scroll-margin-bottom: 0 !important;
+  }
+
+  /* Mobile Dashboard & Widgets Section Stacking */
+  .dashboard-widgets-setting-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .data-backup-history-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
 }

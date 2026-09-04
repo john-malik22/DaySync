@@ -55,20 +55,28 @@ export function AuthProvider({ children }) {
         if (storedProfileRaw) cachedUser = JSON.parse(storedProfileRaw);
       } catch (e) {}
 
-      if (!storedToken) {
+      const isValidToken = storedToken &&
+        typeof storedToken === 'string' &&
+        storedToken !== 'null' &&
+        storedToken !== 'undefined' &&
+        storedToken.trim().length > 0;
+
+      if (!isValidToken) {
         setToken(null);
         setUser(null);
         setLoading(false);
         return;
       }
 
+      const cleanToken = storedToken.trim();
+
       // Step 1: RESTORE SESSION IMMEDIATELY (0ms Delay)
-      setToken(storedToken);
+      setToken(cleanToken);
       setUser(cachedUser || { id: 'cached_user', name: 'User' });
       setLoading(false);
 
       // Step 2: SILENT BACKGROUND SESSION VERIFICATION
-      verifySessionInBackground(storedToken, cachedUser);
+      verifySessionInBackground(cleanToken, cachedUser);
     };
 
     initAuth();

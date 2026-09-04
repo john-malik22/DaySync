@@ -758,7 +758,7 @@ export function SettingsPage() {
           </h3>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
-            <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setShowProfileModal(true)} title="Click to edit cartoon avatar">
+            <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setShowProfileModal(prev => !prev)} title="Click to edit cartoon avatar">
               <UserAvatar avatarId={user?.avatar} name={user?.name} size={72} />
               <div style={{
                 position: 'absolute', bottom: '0', right: '0',
@@ -781,8 +781,75 @@ export function SettingsPage() {
             </div>
           </div>
 
+          {/* AVATAR SELECTION POPUP DIRECTLY BELOW THE PFP / AVATAR ROW */}
+          {showProfileModal && (
+            <div
+              className="animate-fade-in"
+              style={{
+                marginTop: '10px',
+                marginBottom: '16px',
+                padding: '16px',
+                borderRadius: '16px',
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)',
+                boxShadow: 'var(--shadow-md)',
+                position: 'relative'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                  Choose Cartoon Avatar
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setShowProfileModal(false)}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', maxHeight: '260px', overflowY: 'auto', padding: '2px' }}>
+                {AVATAR_LIST.map((av) => {
+                  const isSelected = user?.avatar === av.id;
+                  return (
+                    <button
+                      key={av.id}
+                      type="button"
+                      onClick={() => handleSelectAvatar(av.id)}
+                      style={{
+                        background: isSelected ? 'rgba(91, 80, 230, 0.14)' : 'var(--bg-card)',
+                        border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                        borderRadius: '12px',
+                        padding: '10px 4px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '6px',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'all 0.15s ease',
+                        outline: 'none'
+                      }}
+                    >
+                      <CartoonAvatar id={av.id} size={44} />
+                      <span style={{ fontSize: '11px', fontWeight: isSelected ? '700' : '500', color: isSelected ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
+                        {av.name}
+                      </span>
+                      {isSelected && (
+                        <div style={{ position: 'absolute', top: '-4px', right: '-4px', background: 'var(--accent-primary)', color: '#FFFFFF', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                          <Check size={11} strokeWidth={3} />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="profile-actions-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
-            <button type="button" onClick={() => setShowProfileModal(true)} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
+            <button type="button" onClick={() => setShowProfileModal(prev => !prev)} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
               <Sparkles size={13} /> Edit Avatar
             </button>
             <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
@@ -968,14 +1035,14 @@ export function SettingsPage() {
             <Layout size={18} color="var(--accent-primary)" /> Dashboard & Widgets
           </h3>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Active Widgets Count</div>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+          <div className="dashboard-widgets-setting-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)', gap: '16px' }}>
+            <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Active Widgets Count</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
                 <strong>{activeWidgetIds.length}</strong> widget{activeWidgetIds.length !== 1 ? 's' : ''} visible on your dashboard
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div className="dashboard-widgets-buttons-wrapper" style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
               <button type="button" onClick={() => setIsWidgetPickerOpen(true)} className="btn-primary" style={{ fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Plus size={13} /> Manage Widgets
               </button>
@@ -1162,20 +1229,20 @@ export function SettingsPage() {
 
         {/* 7. DATA BACKUP & RESTORE */}
         <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
             <Database size={18} color="var(--accent-primary)" /> Data & Backup Management
           </h3>
 
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
             Export or restore your DaySync tasks, expenses, plans, and preferences to a JSON backup file.
           </p>
 
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
+          <div className="data-backup-buttons-row" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
             <button
               type="button"
               onClick={handleExportData}
               className="btn-primary"
-              style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '36px' }}
             >
               <Download size={14} /> Export My Data (.json)
             </button>
@@ -1184,7 +1251,7 @@ export function SettingsPage() {
               type="button"
               onClick={() => restoreFileInputRef.current?.click()}
               className="btn-secondary"
-              style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '36px' }}
             >
               <Upload size={14} /> Restore Data File
             </button>
@@ -1198,16 +1265,16 @@ export function SettingsPage() {
             />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Conversation History</div>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Stored chat logs with Luna AI</div>
+          <div className="data-backup-history-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid var(--border-color)', gap: '16px' }}>
+            <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Conversation History</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>Stored chat logs with Luna AI</div>
             </div>
             <button
               type="button"
               onClick={() => setShowClearHistoryModal(true)}
               className="btn-secondary"
-              style={{ color: 'var(--accent-warning)', fontSize: '12px', padding: '6px 12px' }}
+              style={{ color: 'var(--accent-warning)', fontSize: '12px', padding: '6px 12px', flexShrink: 0 }}
             >
               <Trash2 size={13} /> Clear Chat History
             </button>
@@ -1273,7 +1340,7 @@ export function SettingsPage() {
             DaySync 2.0 is your intelligent life, expense, subscription, and split-sharing companion powered by Luna AI.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', padding: '12px', borderRadius: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginBottom: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', padding: '12px', borderRadius: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             <div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>VERSION</div>
               <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>2.0.0</div>
@@ -1295,15 +1362,6 @@ export function SettingsPage() {
               </div>
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={() => navigate('/app/chat')}
-            className="btn-primary"
-            style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-          >
-            <MessageSquare size={14} /> Ask Luna Assistant
-          </button>
         </div>
 
         {/* 10. ACCOUNT ACTIONS */}
@@ -1503,112 +1561,6 @@ export function SettingsPage() {
                 <button type="submit" className="btn-primary" style={{ fontSize: '12px' }}>Save Schedule</button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Profile & Avatar Preview Modal */}
-      {showProfileModal && (
-        <div className="modal-overlay" onClick={() => setShowProfileModal(false)}>
-          <div
-            className="modal-content glass-card"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '420px', width: '90%', padding: '24px', textAlign: 'center', position: 'relative' }}
-          >
-            <button
-              type="button"
-              onClick={() => setShowProfileModal(false)}
-              style={{ position: 'absolute', top: '14px', right: '14px', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-            >
-              <X size={18} />
-            </button>
-
-            {!isEditingAvatar ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-                <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setIsEditingAvatar(true)} title="Click to edit avatar">
-                  <UserAvatar avatarId={user?.avatar} name={user?.name} size={96} />
-                  <div style={{
-                    position: 'absolute', bottom: '2px', right: '2px',
-                    background: 'var(--accent-primary)', color: '#FFFFFF',
-                    borderRadius: '50%', width: '28px', height: '28px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: '2px solid var(--bg-card)'
-                  }}>
-                    <Edit2 size={13} />
-                  </div>
-                </div>
-
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>
-                    {user?.name || 'User'}
-                  </h3>
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    {user?.email || 'user@daysync.app'}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsEditingAvatar(true)}
-                  className="btn-primary"
-                  style={{ width: '100%', padding: '10px', fontSize: '13px', fontWeight: '700', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                >
-                  <Edit2 size={15} /> Edit Cartoon Avatar
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '4px' }}>
-                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                    Choose Cartoon Avatar
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingAvatar(false)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                  >
-                    Back
-                  </button>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', width: '100%', maxHeight: '300px', overflowY: 'auto', padding: '4px' }}>
-                  {AVATAR_LIST.map((av) => {
-                    const isSelected = user?.avatar === av.id;
-                    return (
-                      <button
-                        key={av.id}
-                        type="button"
-                        onClick={() => handleSelectAvatar(av.id)}
-                        style={{
-                          background: isSelected ? 'rgba(91, 80, 230, 0.14)' : 'var(--bg-card)',
-                          border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                          borderRadius: '12px',
-                          padding: '10px 4px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '6px',
-                          cursor: 'pointer',
-                          position: 'relative',
-                          transition: 'all 0.15s ease',
-                          outline: 'none'
-                        }}
-                      >
-                        <CartoonAvatar id={av.id} size={48} />
-                        <span style={{ fontSize: '11px', fontWeight: isSelected ? '700' : '500', color: isSelected ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
-                          {av.name}
-                        </span>
-                        {isSelected && (
-                          <div style={{ position: 'absolute', top: '-4px', right: '-4px', background: 'var(--accent-primary)', color: '#FFFFFF', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                            <Check size={11} strokeWidth={3} />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}

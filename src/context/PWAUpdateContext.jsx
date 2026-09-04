@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import { registerPlugin } from '@capacitor/core';
 import pkg from '../../package.json';
+
+const NativeAppUpdate = registerPlugin('AppUpdate');
 
 const PWAUpdateContext = createContext();
 
@@ -268,10 +271,15 @@ export function PWAUpdateProvider({ children }) {
 
   const startApkDownload = useCallback(async (targetUrl) => {
     const apkUrl = targetUrl || downloadUrl;
-    if (!apkUrl) return;
+    if (!apkUrl) {
+      console.error('[DaySync Update] No download URL available!');
+      setDownloadStatus('error');
+      setDownloadError('No download URL available for update.');
+      return;
+    }
 
     setDownloadStatus('downloading');
-    setDownloadProgress(50);
+    setDownloadProgress(30);
     setDownloadError(null);
 
     const isNativeAndroid = typeof window !== 'undefined' && (
@@ -280,27 +288,27 @@ export function PWAUpdateProvider({ children }) {
       window.Capacitor?.platform === 'android'
     );
 
+    console.log('[DaySync Update] startApkDownload invoked:');
+    console.log('  - isNativeAndroid:', isNativeAndroid);
+    console.log('  - apkUrl:', apkUrl);
+
     try {
       if (isNativeAndroid) {
-        // Open system download manager / native browser for direct APK download & installation
-        window.open(apkUrl, '_system');
+        console.log('[DaySync Update] Invoking NativeAppUpdate.downloadAndInstall({ url }) via native Java plugin...');
+        setDownloadProgress(60);
+        await NativeAppUpdate.downloadAndInstall({ url: apkUrl });
+        console.log('[DaySync Update] Native download and package installer launch completed!');
       } else {
-        // Web / PWA fallback
+        console.log('[DaySync Update] Opening external window for Web/PWA...');
         window.open(apkUrl, '_blank');
       }
 
       setDownloadProgress(100);
       setDownloadStatus('completed');
     } catch (err) {
-      console.warn('System browser launch error, attempting location fallback:', err);
-      try {
-        window.location.href = apkUrl;
-        setDownloadProgress(100);
-        setDownloadStatus('completed');
-      } catch (e) {
-        setDownloadStatus('error');
-        setDownloadError('Unable to launch APK download. Please try downloading directly from GitHub Releases.');
-      }
+      console.error('[DaySync Update] Native download/install error:', err);
+      setDownloadStatus('error');
+      setDownloadError('Failed to download update APK: ' + (err?.message || err || 'Unknown error'));
     }
   }, [downloadUrl]);
 
