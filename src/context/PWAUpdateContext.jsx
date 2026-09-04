@@ -63,10 +63,19 @@ export function PWAUpdateProvider({ children }) {
         if (cleanVersion) {
           setLatestVersion(cleanVersion);
 
-          // Locate attached APK asset
-          const apkAsset = Array.isArray(data.assets) ? data.assets.find(a => a.name && a.name.endsWith('.apk')) : null;
-          const targetUrl = apkAsset?.browser_download_url || data.html_url || 'https://github.com/john-malik22/DaySync/releases/latest';
-          setDownloadUrl(targetUrl);
+          // Locate attached APK asset from release assets (never use HTML release page URL)
+          const apkAsset = Array.isArray(data.assets)
+            ? data.assets.find(a => a && a.name && a.name.toLowerCase().endsWith('.apk'))
+            : null;
+
+          const apkDownloadUrl = apkAsset?.browser_download_url || null;
+
+          console.log('[DaySync Update] GitHub Release check:');
+          console.log('  - release.html_url:', data.html_url);
+          console.log('  - selected APK asset name:', apkAsset ? apkAsset.name : 'NONE FOUND');
+          console.log('  - selected APK browser_download_url:', apkDownloadUrl);
+
+          setDownloadUrl(apkDownloadUrl);
 
           if (data.body) {
             const lines = data.body.split('\n')
