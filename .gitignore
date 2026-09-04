@@ -24,3 +24,5 @@ server/data_store.json
 *.keystore
 *.jks
 key.properties
+
+android/app/release/
