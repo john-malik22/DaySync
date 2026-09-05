@@ -48,6 +48,7 @@ export function AuthProvider({ children }) {
   // Fast Session Restore & Silent Background Authentication
   useEffect(() => {
     const initAuth = async () => {
+      console.log('[DaySync AuthContext] initAuth starting...');
       const storedToken = await authStorage.getToken();
       const cachedUser = await authStorage.getUserProfile();
 
@@ -58,6 +59,7 @@ export function AuthProvider({ children }) {
         storedToken.trim().length > 0;
 
       if (!isValidToken) {
+        console.log('[DaySync AuthContext] initAuth: No valid token found in storage.');
         setToken(null);
         setUser(null);
         setLoading(false);
@@ -67,6 +69,9 @@ export function AuthProvider({ children }) {
       const cleanToken = storedToken.trim();
 
       // Step 1: RESTORE SESSION IMMEDIATELY
+      console.log('[DaySync AuthContext] initAuth: Restoring session state into React Context.');
+      console.log('  - token:', cleanToken.substring(0, 15) + '...');
+      console.log('  - user:', cachedUser?.email || cachedUser?.name || cachedUser?.id);
       setToken(cleanToken);
       setUser(cachedUser || { id: 'cached_user', name: 'User' });
       setLoading(false);
@@ -78,7 +83,8 @@ export function AuthProvider({ children }) {
     initAuth();
 
     function handleAuthExpired() {
-      authStorage.clearSession();
+      console.warn('[DaySync AuthContext] handleAuthExpired event received. Clearing session.');
+      authStorage.clearSession('daysync_auth_expired event');
       setToken(null);
       setUser(null);
     }
@@ -101,23 +107,25 @@ export function AuthProvider({ children }) {
 
     setIsVerifyingSession(true);
     try {
+      console.log('[DaySync AuthContext] verifySessionInBackground starting API request...');
       const res = await api.getMe();
       if (res && res.user) {
+        console.log('[DaySync AuthContext] verifySessionInBackground succeeded. User:', res.user.email || res.user.name);
         setUser(res.user);
         setToken(storedToken);
         await authStorage.setSession(storedToken, res.user);
       }
     } catch (err) {
-      console.warn('Background auth verification status:', err);
+      console.warn('[DaySync AuthContext] Background auth verification status:', err);
       if (err && (err.status === 401 || err.status === 403)) {
-        console.warn('Token explicitly rejected by server (401/403). Expiring session.');
+        console.warn('[DaySync AuthContext] Server returned 401/403. Session explicitly expired.');
         if (cachedUser?.id) clientCache.clearUserCache(cachedUser.id);
-        await authStorage.clearSession();
+        await authStorage.clearSession('401/403 server rejection');
         setToken(null);
         setUser(null);
       } else {
         // Network loss / backend timeout / Render cold start -> Keep user in app safely!
-        console.warn('Network offline or backend timeout. Preserving cached authenticated session.');
+        console.warn('[DaySync AuthContext] Network loss / timeout / server unreachable. Preserving session.');
       }
     } finally {
       setIsVerifyingSession(false);

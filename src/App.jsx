@@ -228,17 +228,30 @@ function AppIndexRedirect() {
 
 function PublicOnlyRoute({ children }) {
   const { user, token, loading } = useAuth();
-  if (loading) return null;
-  if (user || token) {
-    return <Navigate to={getStartupRoute()} replace />;
+  if (loading) {
+    console.log('[DaySync Routing] PublicOnlyRoute waiting for AuthContext loading...');
+    return null;
   }
+  if (user || token) {
+    const startupRoute = getStartupRoute();
+    console.log('[DaySync Routing] PublicOnlyRoute detected authenticated user/token. Redirecting to:', startupRoute);
+    return <Navigate to={startupRoute} replace />;
+  }
+  console.log('[DaySync Routing] PublicOnlyRoute rendering public content (unauthenticated).');
   return children || <Outlet />;
 }
 
 function ProtectedRoute({ children }) {
   const { user, token, loading } = useAuth();
-  if (loading) return null;
-  return (user || token) ? (children || <AppLayout />) : <Navigate to="/login" replace />;
+  if (loading) {
+    console.log('[DaySync Routing] ProtectedRoute waiting for AuthContext loading...');
+    return null;
+  }
+  if (user || token) {
+    return children || <AppLayout />;
+  }
+  console.log('[DaySync Routing] ProtectedRoute found no user/token. Redirecting to /login.');
+  return <Navigate to="/login" replace />;
 }
 
 export function App() {
@@ -254,9 +267,9 @@ export function App() {
                 <WhatsNewModal />
                 <Router>
                   <Routes>
-                    <Route path="/" element={<Landing />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/" element={<PublicOnlyRoute><Landing /></PublicOnlyRoute>} />
+                    <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+                    <Route path="/signup" element={<PublicOnlyRoute><Signup /></PublicOnlyRoute>} />
                     <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
                     <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
