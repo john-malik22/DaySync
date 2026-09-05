@@ -5,7 +5,7 @@ import { authStorage } from './storage';
  * Global Error Classification & Timeout Control
  */
 
-const DEFAULT_REMOTE_BACKEND = 'https://daysync-1.onrender.com';
+const DEFAULT_REMOTE_BACKEND = 'https://daysync-qb16.onrender.com';
 
 export function getApiBase() {
   const envApiBase = typeof import.meta !== 'undefined' && import.meta.env ? (import.meta.env.VITE_API_URL || import.meta.env.VITE_RENDER_URL || '') : '';

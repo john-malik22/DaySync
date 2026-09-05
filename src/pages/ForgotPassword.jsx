@@ -82,12 +82,7 @@ export function ForgotPassword() {
       if (!navigator.onLine) {
         setError('Unable to connect right now. Please check your internet connection.');
       } else {
-        const msg = err.message || '';
-        if (msg.includes("couldn't find") || msg.includes('404') || err?.status === 404) {
-          setError('Unable to send the reset code right now. Please try again.');
-        } else {
-          setError(msg || 'Unable to send the reset code right now. Please try again.');
-        }
+        setError(err.message || 'Unable to send the reset code right now. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -120,12 +115,7 @@ export function ForgotPassword() {
         setInfoMessage('Code verified successfully! Enter your new password below.');
       }
     } catch (err) {
-      const msg = err.message || '';
-      if (msg.includes("couldn't find") || msg.includes('404') || err?.status === 404) {
-        setError('Invalid or expired reset code.');
-      } else {
-        setError(msg || 'Invalid or expired reset code.');
-      }
+      setError(err.message || 'Invalid or expired reset code.');
     } finally {
       setLoading(false);
     }

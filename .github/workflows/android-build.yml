@@ -33,7 +33,7 @@ jobs:
       - name: Build Production Web Dist
         run: npm run build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://daysync-1.onrender.com/api' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://daysync-qb16.onrender.com/api' }}
 
       - name: Sync Capacitor Android
         run: npx cap sync android
@@ -95,7 +95,7 @@ jobs:
             ## DaySync v${{ steps.get_version.outputs.APP_VERSION }} Production Android Release
 
             - **Signed Production APK**: Download `DaySync-v${{ steps.get_version.outputs.APP_VERSION }}-release.apk` below to install directly on your Android phone.
-            - **API Target**: Production Render HTTPS Backend (`https://daysync-1.onrender.com/api`)
+            - **API Target**: Production Render HTTPS Backend (`https://daysync-qb16.onrender.com/api`)
             - **Build Status**: Verified and signed with production release keystore.
           files: |
             android/app/build/outputs/apk/release/DaySync-v${{ steps.get_version.outputs.APP_VERSION }}-release.apk
