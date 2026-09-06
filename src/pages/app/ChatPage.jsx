@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, RefreshCw, AlertCircle, Sparkles, HelpCircle, Zap } from 'lucide-react';
 import { PageHeaderRow } from '../../components/common/PageHeaderRow';
@@ -12,8 +12,11 @@ export function ChatPage() {
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
   const [lastFailedMsg, setLastFailedMsg] = useState(null);
+
+  const chatFeedRef = useRef(null);
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
+  const navigate = useNavigate();
 
   const quickQuestions = [
     "What tasks do I have pending?",
@@ -42,11 +45,23 @@ export function ChatPage() {
     "Change ___ to ___"
   ];
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversations, loading]);
+  const scrollToBottom = useCallback((smooth = true) => {
+    if (chatFeedRef.current) {
+      const feed = chatFeedRef.current;
+      feed.scrollTo({
+        top: feed.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto'
+      });
+    }
+  }, []);
 
-  const navigate = useNavigate();
+  // Smooth scroll to bottom on message list change or loading state change
+  useEffect(() => {
+    const rafId = requestAnimationFrame(() => {
+      scrollToBottom(true);
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [conversations.length, loading, scrollToBottom]);
 
   const handleShortcutClick = (text) => {
     setInput(text);
@@ -55,16 +70,23 @@ export function ChatPage() {
     }
   };
 
+  const handleInputFocus = () => {
+    // On mobile keyboard open, bring latest messages into view smoothly
+    setTimeout(() => {
+      scrollToBottom(true);
+    }, 150);
+  };
+
   const handleSend = async (e) => {
     e?.preventDefault();
-    if (!input.trim() || loading) return;
+    const text = input.trim();
+    if (!text || loading) return;
 
     if (!navigator.onLine) {
       if (showToast) showToast("You're offline. Connect to the internet to chat with Luna.", 'error');
       return;
     }
 
-    const text = input;
     setInput('');
     setLastFailedMsg(null);
 
@@ -171,7 +193,7 @@ export function ChatPage() {
       </div>
 
       {/* Independent Scrollable Conversation Feed */}
-      <div className="chat-conversation-feed">
+      <div ref={chatFeedRef} className="chat-conversation-feed">
         {filteredConversations.length === 0 && !loading && (
           <div style={{ textAlign: 'center', padding: '36px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', margin: 'auto 0' }}>
             <img src="/icons/icon-192.png" alt="DaySync Logo" style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid var(--accent-primary)', boxShadow: '0 0 12px rgba(99, 102, 241, 0.25)' }} />
@@ -184,14 +206,29 @@ export function ChatPage() {
           <ChatBubble key={msg.id} msg={msg} />
         ))}
 
+        {/* Render thinking indicator ONLY during active request processing */}
         {loading && (
-          <div style={{ color: 'var(--text-muted)', fontSize: '13px', fontStyle: 'italic', margin: '8px 0' }}>
-            Luna is thinking & processing intent...
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: 'var(--text-muted)',
+            fontSize: '13px',
+            fontStyle: 'italic',
+            margin: '8px 0',
+            padding: '8px 12px',
+            borderRadius: 'var(--radius-md)',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-color)',
+            maxWidth: 'fit-content'
+          }}>
+            <Sparkles size={14} className="animate-spin" color="var(--accent-primary)" />
+            <span>Luna is thinking & processing intent...</span>
           </div>
         )}
 
         {/* Failed Chat Request Retry Banner */}
-        {lastFailedMsg && (
+        {lastFailedMsg && !loading && (
           <div
             role="alert"
             style={{
@@ -234,6 +271,7 @@ export function ChatPage() {
           placeholder="Message Luna AI or select a quick shortcut..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onFocus={handleInputFocus}
           style={{
             flex: 1,
             minHeight: '42px',
@@ -253,7 +291,7 @@ export function ChatPage() {
           style={{
             padding: '0 18px',
             minHeight: '42px',
-            opacity: input.trim() ? 1 : 0.6,
+            opacity: input.trim() && !loading ? 1 : 0.6,
             flexShrink: 0
           }}
         >

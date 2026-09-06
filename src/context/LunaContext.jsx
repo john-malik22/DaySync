@@ -264,20 +264,30 @@ export function LunaProvider({ children }) {
     setErrors(prev => ({ ...prev, chat: null }));
     try {
       const res = await api.sendMessage(messageText);
-      setConversations(prev => [...prev, res.userMessage, res.assistantMessage]);
 
-      if (enableVoice && res.assistantMessage && res.assistantMessage.message) {
-        voice.speak(res.assistantMessage.message);
+      // 1. Immediately append user & assistant messages to conversation feed
+      if (res && res.userMessage && res.assistantMessage) {
+        setConversations(prev => [...prev, res.userMessage, res.assistantMessage]);
+
+        if (enableVoice && res.assistantMessage && res.assistantMessage.message) {
+          voice.speak(res.assistantMessage.message);
+        }
       }
 
-      await fetchAllData();
+      // 2. Immediately stop loading indicator so "thinking" UI vanishes at the exact moment assistant message is rendered
+      setLoading(false);
+
+      // 3. Trigger auxiliary data refresh asynchronously in the background (non-blocking)
+      fetchAllData().catch(err => {
+        console.warn('[LunaContext] Non-critical background data refresh error after chat message:', err);
+      });
+
       return res;
     } catch (err) {
+      setLoading(false);
       const classified = classifyApiError(err);
       setErrors(prev => ({ ...prev, chat: classified }));
       throw err;
-    } finally {
-      setLoading(false);
     }
   };
 
