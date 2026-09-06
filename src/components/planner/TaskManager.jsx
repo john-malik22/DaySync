@@ -45,95 +45,74 @@ export function TaskManager({ searchFilter }) {
     handleRestoreTaskDraft
   );
 
-  const handleAddTask = async (e) => {
+  const handleAddTask = (e) => {
     e.preventDefault();
     if (!title.trim() || isSubmitting) return;
 
-    if (!navigator.onLine) {
-      if (showToast) showToast("You're offline. Connect to the internet to save this task.", 'error');
-      return;
+    let finalTitle = title.trim();
+    if (taskType === 'birthday' && personName.trim()) {
+      finalTitle = `${personName.trim()}'s Birthday`;
     }
 
-    setIsSubmitting(true);
-    try {
-      let finalTitle = title.trim();
-      if (taskType === 'birthday' && personName.trim()) {
-        finalTitle = `${personName.trim()}'s Birthday`;
-      }
+    const payload = {
+      title: finalTitle,
+      priority,
+      category: taskType === 'birthday' ? 'Birthday' : taskType === 'meeting' ? 'Meeting' : 'General',
+      taskType,
+      personName: taskType === 'birthday' ? personName.trim() : null,
+      meetingPeople: taskType === 'meeting' ? meetingPeople.trim() : null,
+      location: taskType === 'meeting' ? location.trim() : null,
+      dueDate,
+      dueTime,
+      timeBlock: `${dueTime} - ${dueTime}`,
+      recurring: recurring !== 'None' ? recurring : null,
+      subtasks: [],
+      completed: false
+    };
 
-      await addTask({
-        title: finalTitle,
-        priority,
-        category: taskType === 'birthday' ? 'Birthday' : taskType === 'meeting' ? 'Meeting' : 'General',
-        taskType,
-        personName: taskType === 'birthday' ? personName.trim() : null,
-        meetingPeople: taskType === 'meeting' ? meetingPeople.trim() : null,
-        location: taskType === 'meeting' ? location.trim() : null,
-        dueDate,
-        dueTime,
-        timeBlock: `${dueTime} - ${dueTime}`,
-        recurring: recurring !== 'None' ? recurring : null,
-        subtasks: [],
-        completed: false
-      });
+    setTitle('');
+    setPersonName('');
+    setMeetingPeople('');
+    setLocation('');
+    setRecurring('None');
+    clearDraft();
 
-      setTitle('');
-      setPersonName('');
-      setMeetingPeople('');
-      setLocation('');
-      setRecurring('None');
-      clearDraft();
+    if (showMemeReaction) {
+      showMemeReaction(taskType === 'meeting' ? 'MEETING_ADDED' : taskType === 'birthday' ? 'BIRTHDAY_ADDED' : 'TASK_ADDED');
+    } else if (showToast) {
+      showToast(`${taskType === 'birthday' ? 'Birthday reminder' : taskType === 'meeting' ? 'Meeting' : 'Task'} saved.`, 'success');
+    }
 
-      if (showMemeReaction) {
-        showMemeReaction(taskType === 'meeting' ? 'MEETING_ADDED' : taskType === 'birthday' ? 'BIRTHDAY_ADDED' : 'TASK_ADDED');
-      } else if (showToast) {
-        showToast(`${taskType === 'birthday' ? 'Birthday reminder' : taskType === 'meeting' ? 'Meeting' : 'Task'} saved.`, 'success');
-      }
-    } catch (err) {
+    addTask(payload).catch(err => {
       if (showToast) showToast(err.message || 'Couldn\'t save task. Please try again.', 'error');
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   };
 
-  const handleDeleteTask = async (id) => {
-    if (!navigator.onLine) {
-      if (showToast) showToast("You're offline. Connect to internet to delete this task.", 'error');
-      return;
-    }
-
+  const handleDeleteTask = (id) => {
     const needsConfirm = localStorage.getItem('daysync_confirm_delete') !== 'false';
     if (!needsConfirm || confirm('Are you sure you want to delete this item?')) {
-      try {
-        await deleteTask(id);
-        if (showToast) showToast('Item deleted.', 'info');
-      } catch (err) {
+      if (showToast) showToast('Item deleted.', 'info');
+      deleteTask(id).catch(err => {
         if (showToast) showToast('Couldn\'t delete this task. Nothing was changed.', 'error');
-      }
+      });
     }
   };
 
-  const handleToggleTask = async (id, completed) => {
-    if (!navigator.onLine) {
-      if (showToast) showToast("You're offline. Connect to internet to update task status.", 'error');
-      return;
+  const handleToggleTask = (id, completed) => {
+    const targetTask = tasks.find(t => t.id === id);
+    if (!completed) {
+      if (showMemeReaction) {
+        showMemeReaction(targetTask?.taskType === 'meeting' ? 'MEETING_COMPLETED' : 'TASK_COMPLETED');
+      } else if (showToast) {
+        showToast('Task completed!', 'success');
+      }
+    } else if (showToast) {
+      showToast('Task reopened.', 'info');
     }
 
-    try {
-      await toggleTask(id, completed);
-      const targetTask = tasks.find(t => t.id === id);
-      if (!completed) {
-        if (showMemeReaction) {
-          showMemeReaction(targetTask?.taskType === 'meeting' ? 'MEETING_COMPLETED' : 'TASK_COMPLETED');
-        } else if (showToast) {
-          showToast('Task completed!', 'success');
-        }
-      } else if (showToast) {
-        showToast('Task reopened.', 'info');
-      }
-    } catch (err) {
+    toggleTask(id, completed).catch(err => {
       if (showToast) showToast('Could not update task status.', 'error');
-    }
+    });
   };
 
   const handleAddSubtask = async (taskId) => {

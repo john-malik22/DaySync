@@ -32,7 +32,7 @@ const INCOME_CATEGORIES = [
 ];
 
 export function ExpensesPage() {
-  const { expenses, updateExpense, deleteExpense, startingBalance, updateStartingBalance, errors, resourceLoading, fetchExpenses, isFromCache, lastSyncedAt } = useLuna();
+  const { expenses, updateExpense, deleteExpense, startingBalance, updateStartingBalance, errors, resourceLoading, hasFetched, fetchExpenses, isFromCache, lastSyncedAt } = useLuna();
   const { showToast } = useToast();
   const [search, setSearch] = useState('');
 
@@ -94,24 +94,38 @@ export function ExpensesPage() {
       const t = new Date(item.createdAt).getTime();
       if (!isNaN(t) && t > 0) return t;
     }
+    if (typeof item.id === 'string') {
+      const match = item.id.match(/\d+/);
+      if (match) {
+        const val = parseInt(match[0], 10);
+        if (!isNaN(val) && val > 1000000000) return val;
+      }
+    }
     if (item.date) {
       const t = new Date(item.date).getTime();
       if (!isNaN(t) && t > 0) return t;
     }
-    if (typeof item.id === 'string') {
-      const match = item.id.match(/\d+/);
-      if (match) return parseInt(match[0], 10);
-    }
     return 0;
   };
 
-  const filteredExpenses = (expenses || [])
-    .filter(exp =>
-      exp && (!search ||
-      (exp.description && exp.description.toLowerCase().includes(search.toLowerCase())) ||
-      (exp.category && exp.category.toLowerCase().includes(search.toLowerCase())))
-    )
-    .sort((a, b) => getItemTimestamp(a) - getItemTimestamp(b));
+  const filteredExpenses = React.useMemo(() => {
+    const items = (expenses || [])
+      .map((exp, idx) => ({ exp, originalIndex: idx }))
+      .filter(({ exp }) =>
+        exp && (!search ||
+        (exp.description && exp.description.toLowerCase().includes(search.toLowerCase())) ||
+        (exp.category && exp.category.toLowerCase().includes(search.toLowerCase())))
+      );
+
+    return items
+      .sort((a, b) => {
+        const timeA = getItemTimestamp(a.exp);
+        const timeB = getItemTimestamp(b.exp);
+        if (timeA !== timeB) return timeA - timeB;
+        return a.originalIndex - b.originalIndex;
+      })
+      .map(({ exp }) => exp);
+  }, [expenses, search]);
 
   return (
     <div className="page-container expenses-page-container">
@@ -234,7 +248,7 @@ export function ExpensesPage() {
             onRetry={fetchExpenses}
             isRetrying={resourceLoading?.expenses}
           />
-        ) : resourceLoading?.expenses && expenses.length === 0 ? (
+        ) : resourceLoading?.expenses && !hasFetched?.expenses && expenses.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '13px' }}>
             Loading expenses...
           </div>

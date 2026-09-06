@@ -24,7 +24,15 @@ export function LunaProvider({ children }) {
 
   // Sync state tracking: 'synced' | 'offline' | 'syncing' | 'pending' | 'failed'
   const [syncState, setSyncState] = useState(() => (typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'synced'));
-  const [pendingQueue, setPendingQueue] = useState([]);
+  const [pendingQueue, setPendingQueue] = useState(() => (userId ? syncQueue.getPending(userId) : []));
+
+  // Resource fetched tracking to prevent background refetches from flickering UI
+  const [hasFetched, setHasFetched] = useState({
+    tasks: false,
+    expenses: false,
+    memories: false,
+    summaries: false
+  });
 
   // Stale cache tracking
   const [lastSyncedAt, setLastSyncedAt] = useState({
@@ -97,10 +105,18 @@ export function LunaProvider({ children }) {
     setSidebarOpen(false);
   };
 
+  const isTempId = (id) => {
+    if (!id) return false;
+    const str = String(id);
+    return str.startsWith('local_') || str.startsWith('tsk_') || str.startsWith('exp_') || str.startsWith('mem_');
+  };
+
   // Dedicated Resource Fetchers with safe user-scoped client caching
   const fetchTasks = useCallback(async () => {
     if (!userId) return;
-    setResourceLoading(prev => ({ ...prev, tasks: true }));
+    if (!hasFetched.tasks) {
+      setResourceLoading(prev => ({ ...prev, tasks: true }));
+    }
     try {
       const data = await api.getTasks();
       setTasks(data);
@@ -108,6 +124,7 @@ export function LunaProvider({ children }) {
       setIsFromCache(prev => ({ ...prev, tasks: false }));
       const now = Date.now();
       setLastSyncedAt(prev => ({ ...prev, tasks: now }));
+      setHasFetched(prev => ({ ...prev, tasks: true }));
       if (userId) clientCache.save(userId, 'tasks', data);
     } catch (err) {
       const classified = classifyApiError(err);
@@ -120,16 +137,19 @@ export function LunaProvider({ children }) {
           setTasks(cached.data);
           setIsFromCache(prev => ({ ...prev, tasks: true }));
           setLastSyncedAt(prev => ({ ...prev, tasks: cached.timestamp }));
+          setHasFetched(prev => ({ ...prev, tasks: true }));
         }
       }
     } finally {
       setResourceLoading(prev => ({ ...prev, tasks: false }));
     }
-  }, [userId]);
+  }, [userId, hasFetched.tasks]);
 
   const fetchExpenses = useCallback(async () => {
     if (!userId) return;
-    setResourceLoading(prev => ({ ...prev, expenses: true }));
+    if (!hasFetched.expenses) {
+      setResourceLoading(prev => ({ ...prev, expenses: true }));
+    }
     try {
       const data = await api.getExpenses();
       setExpenses(data);
@@ -137,6 +157,7 @@ export function LunaProvider({ children }) {
       setIsFromCache(prev => ({ ...prev, expenses: false }));
       const now = Date.now();
       setLastSyncedAt(prev => ({ ...prev, expenses: now }));
+      setHasFetched(prev => ({ ...prev, expenses: true }));
       if (userId) clientCache.save(userId, 'expenses', data);
     } catch (err) {
       const classified = classifyApiError(err);
@@ -148,16 +169,19 @@ export function LunaProvider({ children }) {
           setExpenses(cached.data);
           setIsFromCache(prev => ({ ...prev, expenses: true }));
           setLastSyncedAt(prev => ({ ...prev, expenses: cached.timestamp }));
+          setHasFetched(prev => ({ ...prev, expenses: true }));
         }
       }
     } finally {
       setResourceLoading(prev => ({ ...prev, expenses: false }));
     }
-  }, [userId]);
+  }, [userId, hasFetched.expenses]);
 
   const fetchMemories = useCallback(async () => {
     if (!userId) return;
-    setResourceLoading(prev => ({ ...prev, memories: true }));
+    if (!hasFetched.memories) {
+      setResourceLoading(prev => ({ ...prev, memories: true }));
+    }
     try {
       const data = await api.getMemories();
       setMemories(data);
@@ -165,6 +189,7 @@ export function LunaProvider({ children }) {
       setIsFromCache(prev => ({ ...prev, memories: false }));
       const now = Date.now();
       setLastSyncedAt(prev => ({ ...prev, memories: now }));
+      setHasFetched(prev => ({ ...prev, memories: true }));
       if (userId) clientCache.save(userId, 'memories', data);
     } catch (err) {
       const classified = classifyApiError(err);
@@ -176,16 +201,19 @@ export function LunaProvider({ children }) {
           setMemories(cached.data);
           setIsFromCache(prev => ({ ...prev, memories: true }));
           setLastSyncedAt(prev => ({ ...prev, memories: cached.timestamp }));
+          setHasFetched(prev => ({ ...prev, memories: true }));
         }
       }
     } finally {
       setResourceLoading(prev => ({ ...prev, memories: false }));
     }
-  }, [userId]);
+  }, [userId, hasFetched.memories]);
 
   const fetchSummaries = useCallback(async () => {
     if (!userId) return;
-    setResourceLoading(prev => ({ ...prev, summaries: true }));
+    if (!hasFetched.summaries) {
+      setResourceLoading(prev => ({ ...prev, summaries: true }));
+    }
     try {
       const data = await api.getSummaries();
       setSummaries(data);
@@ -193,6 +221,7 @@ export function LunaProvider({ children }) {
       setIsFromCache(prev => ({ ...prev, summaries: false }));
       const now = Date.now();
       setLastSyncedAt(prev => ({ ...prev, summaries: now }));
+      setHasFetched(prev => ({ ...prev, summaries: true }));
       if (userId) clientCache.save(userId, 'summaries', data);
     } catch (err) {
       const classified = classifyApiError(err);
@@ -204,11 +233,57 @@ export function LunaProvider({ children }) {
           setSummaries(cached.data);
           setIsFromCache(prev => ({ ...prev, summaries: true }));
           setLastSyncedAt(prev => ({ ...prev, summaries: cached.timestamp }));
+          setHasFetched(prev => ({ ...prev, summaries: true }));
         }
       }
     } finally {
       setResourceLoading(prev => ({ ...prev, summaries: false }));
     }
+  }, [userId, hasFetched.summaries]);
+
+  // Process and drain offline pending sync queue
+  const processPendingSyncQueue = useCallback(async () => {
+    if (!userId || !navigator.onLine) return;
+    const queue = syncQueue.getPending(userId);
+    if (queue.length === 0) {
+      setPendingQueue([]);
+      setSyncState('synced');
+      return;
+    }
+
+    setSyncState('syncing');
+    const processedIds = [];
+
+    for (const item of queue) {
+      try {
+        if (item.type === 'CREATE_TASK') {
+          const created = await api.createTask(item.payload);
+          if (created && item.tempId) {
+            setTasks(prev => prev.map(t => t.id === item.tempId ? { ...t, ...created } : t));
+          }
+        } else if (item.type === 'UPDATE_TASK' || item.type === 'TOGGLE_TASK') {
+          await api.updateTask(item.targetId, item.payload || { completed: item.completed });
+        } else if (item.type === 'DELETE_TASK') {
+          await api.deleteTask(item.targetId);
+        } else if (item.type === 'CREATE_EXPENSE') {
+          const created = await api.createExpense(item.payload);
+          if (created && item.tempId) {
+            setExpenses(prev => prev.map(e => e.id === item.tempId ? { ...e, ...created } : e));
+          }
+        } else if (item.type === 'UPDATE_EXPENSE') {
+          await api.updateExpense(item.targetId, item.payload);
+        } else if (item.type === 'DELETE_EXPENSE') {
+          await api.deleteExpense(item.targetId);
+        }
+        processedIds.push(item.id);
+      } catch (err) {
+        console.warn('[syncQueue] Retry item error:', item, err);
+      }
+    }
+
+    const remaining = syncQueue.removeItems(userId, processedIds);
+    setPendingQueue(remaining);
+    setSyncState(remaining.length === 0 ? 'synced' : 'pending');
   }, [userId]);
 
   // Automatically evaluate contextual suggestion when tasks, expenses, or starting balance change
@@ -250,7 +325,14 @@ export function LunaProvider({ children }) {
 
   useEffect(() => {
     if (userId) {
+      const pending = syncQueue.getPending(userId);
+      setPendingQueue(pending);
       fetchAllData();
+      if (navigator.onLine && pending.length > 0) {
+        processPendingSyncQueue();
+      }
+    } else {
+      setPendingQueue([]);
     }
   }, [userId]);
 
@@ -259,10 +341,11 @@ export function LunaProvider({ children }) {
     function handleOnline() {
       console.log('DaySync reconnected to internet. Auto-refreshing read data...');
       fetchAllData();
+      processPendingSyncQueue();
     }
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
-  }, [fetchAllData]);
+  }, [fetchAllData, processPendingSyncQueue]);
 
   const sendMessage = async (messageText, enableVoice = false) => {
     setIsSendingMessage(true);
@@ -271,7 +354,6 @@ export function LunaProvider({ children }) {
     try {
       const res = await api.sendMessage(messageText);
 
-      // 1. Immediately append user & assistant messages to conversation feed
       if (res && res.userMessage && res.assistantMessage) {
         setConversations(prev => [...prev, res.userMessage, res.assistantMessage]);
 
@@ -280,11 +362,9 @@ export function LunaProvider({ children }) {
         }
       }
 
-      // 2. Immediately stop message sending state so thinking UI vanishes at exact moment assistant message is rendered
       setIsSendingMessage(false);
       setLoading(false);
 
-      // 3. Trigger auxiliary data refresh (tasks, expenses, etc) asynchronously in background without overwriting chat history
       refreshAuxiliaryData().catch(err => {
         console.warn('[LunaContext] Non-critical background data refresh error after chat message:', err);
       });
@@ -322,7 +402,7 @@ export function LunaProvider({ children }) {
     };
 
     setTasks(prev => [...prev, optimisticTask]);
-    clientCache.save(userId, 'tasks', [...tasks, optimisticTask]);
+    if (userId) clientCache.save(userId, 'tasks', [...tasks, optimisticTask]);
 
     if (!navigator.onLine) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'CREATE_TASK', payload: taskData, tempId });
@@ -335,11 +415,11 @@ export function LunaProvider({ children }) {
       const createdTask = await api.createTask(taskData);
       const finalTask = { ...optimisticTask, ...createdTask, id: createdTask?.id || tempId };
       setTasks(prev => prev.map(t => t.id === tempId ? finalTask : t));
-      clientCache.save(userId, 'tasks', tasks.map(t => t.id === tempId ? finalTask : t));
+      if (userId) clientCache.save(userId, 'tasks', tasks.map(t => t.id === tempId ? finalTask : t));
       return finalTask;
     } catch (err) {
       setTasks(prev => prev.filter(t => t.id !== tempId));
-      clientCache.save(userId, 'tasks', tasks.filter(t => t.id !== tempId));
+      if (userId) clientCache.save(userId, 'tasks', tasks.filter(t => t.id !== tempId));
       throw err;
     }
   };
@@ -350,7 +430,7 @@ export function LunaProvider({ children }) {
     setTasks(newTasks);
     if (userId) clientCache.save(userId, 'tasks', newTasks);
 
-    if (!navigator.onLine || String(id).startsWith('local_')) {
+    if (!navigator.onLine || isTempId(id)) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'UPDATE_TASK', targetId: id, payload: taskData });
       setPendingQueue(updatedQueue);
       return { id, ...taskData };
@@ -372,11 +452,11 @@ export function LunaProvider({ children }) {
   const toggleTask = async (id, currentCompleted) => {
     const newCompleted = !currentCompleted;
     const previousTasks = [...tasks];
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: newCompleted } : t));
-    const updatedTasks = tasks.map(t => t.id === id ? { ...t, completed: newCompleted } : t);
-    clientCache.save(userId, 'tasks', updatedTasks);
+    const newTasks = previousTasks.map(t => t.id === id ? { ...t, completed: newCompleted } : t);
+    setTasks(newTasks);
+    if (userId) clientCache.save(userId, 'tasks', newTasks);
 
-    if (!navigator.onLine || String(id).startsWith('local_')) {
+    if (!navigator.onLine || isTempId(id)) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'TOGGLE_TASK', targetId: id, completed: newCompleted });
       setPendingQueue(updatedQueue);
       return { id, completed: newCompleted };
@@ -387,18 +467,18 @@ export function LunaProvider({ children }) {
       return updated;
     } catch (err) {
       setTasks(previousTasks);
-      clientCache.save(userId, 'tasks', previousTasks);
+      if (userId) clientCache.save(userId, 'tasks', previousTasks);
       throw err;
     }
   };
 
   const deleteTask = async (id) => {
     const previousTasks = [...tasks];
-    setTasks(prev => prev.filter(t => t.id !== id));
-    const remainingTasks = tasks.filter(t => t.id !== id);
-    clientCache.save(userId, 'tasks', remainingTasks);
+    const remainingTasks = previousTasks.filter(t => t.id !== id);
+    setTasks(remainingTasks);
+    if (userId) clientCache.save(userId, 'tasks', remainingTasks);
 
-    if (!navigator.onLine || String(id).startsWith('local_')) {
+    if (!navigator.onLine || isTempId(id)) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'DELETE_TASK', targetId: id });
       setPendingQueue(updatedQueue);
       return;
@@ -408,7 +488,7 @@ export function LunaProvider({ children }) {
       await api.deleteTask(id);
     } catch (err) {
       setTasks(previousTasks);
-      clientCache.save(userId, 'tasks', previousTasks);
+      if (userId) clientCache.save(userId, 'tasks', previousTasks);
       throw err;
     }
   };
@@ -428,7 +508,7 @@ export function LunaProvider({ children }) {
     };
 
     setExpenses(prev => [...prev, optimisticExp]);
-    clientCache.save(userId, 'expenses', [...expenses, optimisticExp]);
+    if (userId) clientCache.save(userId, 'expenses', [...expenses, optimisticExp]);
 
     if (!navigator.onLine) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'CREATE_EXPENSE', payload: expData, tempId });
@@ -441,11 +521,11 @@ export function LunaProvider({ children }) {
       const createdExp = await api.createExpense(expData);
       const finalExp = { ...optimisticExp, ...createdExp, id: createdExp?.id || tempId };
       setExpenses(prev => prev.map(e => e.id === tempId ? finalExp : e));
-      clientCache.save(userId, 'expenses', expenses.map(e => e.id === tempId ? finalExp : e));
+      if (userId) clientCache.save(userId, 'expenses', expenses.map(e => e.id === tempId ? finalExp : e));
       return finalExp;
     } catch (err) {
       setExpenses(prev => prev.filter(e => e.id !== tempId));
-      clientCache.save(userId, 'expenses', expenses.filter(e => e.id !== tempId));
+      if (userId) clientCache.save(userId, 'expenses', expenses.filter(e => e.id !== tempId));
       throw err;
     }
   };
@@ -456,7 +536,7 @@ export function LunaProvider({ children }) {
     setExpenses(newExpenses);
     if (userId) clientCache.save(userId, 'expenses', newExpenses);
 
-    if (!navigator.onLine || String(id).startsWith('local_')) {
+    if (!navigator.onLine || isTempId(id)) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'UPDATE_EXPENSE', targetId: id, payload: expData });
       setPendingQueue(updatedQueue);
       return { id, ...expData };
@@ -477,11 +557,11 @@ export function LunaProvider({ children }) {
 
   const deleteExpense = async (id) => {
     const previousExpenses = [...expenses];
-    setExpenses(prev => prev.filter(e => e.id !== id));
-    const remaining = expenses.filter(e => e.id !== id);
-    clientCache.save(userId, 'expenses', remaining);
+    const remaining = previousExpenses.filter(e => e.id !== id);
+    setExpenses(remaining);
+    if (userId) clientCache.save(userId, 'expenses', remaining);
 
-    if (!navigator.onLine || String(id).startsWith('local_')) {
+    if (!navigator.onLine || isTempId(id)) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'DELETE_EXPENSE', targetId: id });
       setPendingQueue(updatedQueue);
       return;
@@ -491,7 +571,7 @@ export function LunaProvider({ children }) {
       await api.deleteExpense(id);
     } catch (err) {
       setExpenses(previousExpenses);
-      clientCache.save(userId, 'expenses', previousExpenses);
+      if (userId) clientCache.save(userId, 'expenses', previousExpenses);
       throw err;
     }
   };
@@ -509,7 +589,7 @@ export function LunaProvider({ children }) {
     };
 
     setMemories(prev => [...prev, optimisticMem]);
-    clientCache.save(userId, 'memories', [...memories, optimisticMem]);
+    if (userId) clientCache.save(userId, 'memories', [...memories, optimisticMem]);
 
     try {
       const newMem = await api.createMemory(data);
@@ -567,6 +647,7 @@ export function LunaProvider({ children }) {
         isSendingMessage,
         errors,
         resourceLoading,
+        hasFetched,
         lastSyncedAt,
         isFromCache,
         sidebarCollapsed,
