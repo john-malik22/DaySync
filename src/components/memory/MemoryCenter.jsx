@@ -20,9 +20,23 @@ export function MemoryCenter({ searchFilter }) {
 
   const categories = ['All', 'Preferences', 'Routine', 'Goals', 'Financial'];
 
+  const getItemTimestamp = (item) => {
+    if (!item) return 0;
+    if (item.createdAt) {
+      const t = new Date(item.createdAt).getTime();
+      if (!isNaN(t) && t > 0) return t;
+    }
+    if (typeof item.id === 'string') {
+      const match = item.id.match(/\d+/);
+      if (match) return parseInt(match[0], 10);
+    }
+    return 0;
+  };
+
   const filteredMemories = memories
     .filter(m => filter === 'All' || m.type?.toLowerCase() === filter.toLowerCase())
-    .filter(m => !searchFilter || m.content.toLowerCase().includes(searchFilter.toLowerCase()));
+    .filter(m => !searchFilter || m.content.toLowerCase().includes(searchFilter.toLowerCase()))
+    .sort((a, b) => getItemTimestamp(a) - getItemTimestamp(b));
 
   const handleManualAdd = async (e) => {
     e.preventDefault();

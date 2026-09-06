@@ -532,6 +532,23 @@ export function SplitsPage() {
     };
   }, [selectedSplit, userId, membersMap]);
 
+  const getItemTimestamp = (item) => {
+    if (!item) return 0;
+    if (item.createdAt) {
+      const t = new Date(item.createdAt).getTime();
+      if (!isNaN(t) && t > 0) return t;
+    }
+    if (item.date) {
+      const t = new Date(item.date).getTime();
+      if (!isNaN(t) && t > 0) return t;
+    }
+    if (typeof item.id === 'string') {
+      const match = item.id.match(/\d+/);
+      if (match) return parseInt(match[0], 10);
+    }
+    return 0;
+  };
+
   const formatDate = (dateStr) => {
     if (!dateStr) return 'Recently';
     try {
@@ -540,6 +557,8 @@ export function SplitsPage() {
       return dateStr;
     }
   };
+
+  const sortedSplits = [...splits].sort((a, b) => getItemTimestamp(a) - getItemTimestamp(b));
 
   return (
     <div className="page-container" style={{ maxWidth: '920px' }}>
@@ -599,7 +618,7 @@ export function SplitsPage() {
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
               Loading your Splits...
             </div>
-          ) : splits.length === 0 ? (
+          ) : sortedSplits.length === 0 ? (
             <EmptyState
               icon={Users}
               title="No shared splits yet"
@@ -611,7 +630,7 @@ export function SplitsPage() {
             />
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-md)' }}>
-              {splits.map(split => {
+              {sortedSplits.map(split => {
                 const members = Array.isArray(split.members) ? split.members : [];
                 const expenses = Array.isArray(split.expenses) ? split.expenses : [];
                 const memberCount = members.length || 1;
@@ -955,7 +974,9 @@ export function SplitsPage() {
                   No shared expenses logged in this Split yet. Tap <strong>+ Add Expense</strong> to start!
                 </div>
               ) : (
-                (selectedSplit.expenses || []).map(exp => {
+                [...(selectedSplit.expenses || [])]
+                  .sort((a, b) => getItemTimestamp(a) - getItemTimestamp(b))
+                  .map(exp => {
                   const paidByUid = exp.paidByUserId || exp.paidBy;
                   const paidByName = membersMap[paidByUid] || exp.paidByName || 'Member';
                   const isPayer = paidByUid === userId;

@@ -89,11 +89,30 @@ export function ExpensesPage() {
     }
   };
 
-  const filteredExpenses = (expenses || []).filter(exp =>
-    exp && (!search ||
-    (exp.description && exp.description.toLowerCase().includes(search.toLowerCase())) ||
-    (exp.category && exp.category.toLowerCase().includes(search.toLowerCase())))
-  );
+  const getItemTimestamp = (item) => {
+    if (!item) return 0;
+    if (item.createdAt) {
+      const t = new Date(item.createdAt).getTime();
+      if (!isNaN(t) && t > 0) return t;
+    }
+    if (item.date) {
+      const t = new Date(item.date).getTime();
+      if (!isNaN(t) && t > 0) return t;
+    }
+    if (typeof item.id === 'string') {
+      const match = item.id.match(/\d+/);
+      if (match) return parseInt(match[0], 10);
+    }
+    return 0;
+  };
+
+  const filteredExpenses = (expenses || [])
+    .filter(exp =>
+      exp && (!search ||
+      (exp.description && exp.description.toLowerCase().includes(search.toLowerCase())) ||
+      (exp.category && exp.category.toLowerCase().includes(search.toLowerCase())))
+    )
+    .sort((a, b) => getItemTimestamp(a) - getItemTimestamp(b));
 
   return (
     <div className="page-container expenses-page-container">

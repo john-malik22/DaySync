@@ -211,9 +211,9 @@ export function LunaProvider({ children }) {
     }
   }, [userId]);
 
-  const fetchSuggestion = useCallback(async () => {
+  // Automatically evaluate contextual suggestion when tasks, expenses, or starting balance change
+  useEffect(() => {
     if (!userId) return;
-    setResourceLoading(prev => ({ ...prev, suggestion: true }));
     try {
       const computed = evaluateContextualLunaSuggestion({
         tasks,
@@ -224,8 +224,6 @@ export function LunaProvider({ children }) {
       setErrors(prev => ({ ...prev, suggestion: null }));
     } catch (err) {
       setErrors(prev => ({ ...prev, suggestion: null }));
-    } finally {
-      setResourceLoading(prev => ({ ...prev, suggestion: false }));
     }
   }, [userId, tasks, expenses, startingBalance]);
 
@@ -236,10 +234,9 @@ export function LunaProvider({ children }) {
       fetchExpenses(),
       fetchMemories(),
       fetchSummaries(),
-      fetchSuggestion(),
       api.getNotices().then(setNotices).catch(() => {})
     ]);
-  }, [userId, fetchTasks, fetchExpenses, fetchMemories, fetchSummaries, fetchSuggestion]);
+  }, [userId, fetchTasks, fetchExpenses, fetchMemories, fetchSummaries]);
 
   const fetchAllData = useCallback(async () => {
     if (!userId) return;
@@ -255,7 +252,7 @@ export function LunaProvider({ children }) {
     if (userId) {
       fetchAllData();
     }
-  }, [userId, fetchAllData]);
+  }, [userId]);
 
   // Reconnect Listener: Auto-refetch safe GET queries when internet is restored
   useEffect(() => {
@@ -438,8 +435,8 @@ export function LunaProvider({ children }) {
         createdAt: new Date().toISOString()
       };
 
-      setTasks(prev => [newTask, ...prev]);
-      clientCache.save(userId, 'tasks', [newTask, ...tasks]);
+      setTasks(prev => [...prev, newTask]);
+      clientCache.save(userId, 'tasks', [...tasks, newTask]);
       const updatedQueue = syncQueue.enqueue(userId, { type: 'CREATE_TASK', payload: taskData, tempId });
       setPendingQueue(updatedQueue);
       setSyncState('pending');
