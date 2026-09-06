@@ -633,6 +633,60 @@ export function LunaProvider({ children }) {
     if (userId) clientCache.save(userId, 'chat_history', []);
   };
 
+  const clearAllUserData = async () => {
+    if (!userId) return;
+
+    try {
+      await api.clearHistory();
+    } catch (err) {
+      console.warn('[LunaContext] Backend clear error:', err);
+    }
+
+    clientCache.clearUserCache(userId);
+    syncQueue.clearQueue(userId);
+
+    if (typeof localStorage !== 'undefined') {
+      const token = localStorage.getItem('luna_token');
+      const profile = localStorage.getItem('daysync_user_profile');
+      const keys = Object.keys(localStorage);
+      keys.forEach(k => {
+        if (k !== 'luna_token' && k !== 'daysync_user_profile') {
+          localStorage.removeItem(k);
+        }
+      });
+      if (token) localStorage.setItem('luna_token', token);
+      if (profile) localStorage.setItem('daysync_user_profile', profile);
+    }
+
+    setConversations([]);
+    setTasks([]);
+    setExpenses([]);
+    setMemories([]);
+    setSummaries([]);
+    setNotices([]);
+    setSuggestion(null);
+    setPendingQueue([]);
+    setStartingBalance(0);
+
+    setHasFetched({
+      tasks: true,
+      expenses: true,
+      memories: true,
+      summaries: true
+    });
+
+    setIsFromCache({
+      tasks: false,
+      expenses: false,
+      memories: false,
+      summaries: false
+    });
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('daysync_data_changed'));
+    }
+  };
+
   return (
     <LunaContext.Provider
       value={{
@@ -658,6 +712,7 @@ export function LunaProvider({ children }) {
         closeSidebar,
         sendMessage,
         clearChatHistory,
+        clearAllUserData,
         addMemory,
         updateMemory,
         deleteMemory,

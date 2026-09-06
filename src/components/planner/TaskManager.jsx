@@ -7,6 +7,7 @@ import { formatDate } from '../dashboard/WidgetComponents';
 import { useFormDraft } from '../../hooks/useFormDraft';
 import { EmptyState } from '../common/EmptyState';
 import { handleMobileInputFocus } from '../../utils/mobileKeyboard';
+import { HistoryDetailModal } from '../common/HistoryDetailModal';
 
 export function TaskManager({ searchFilter }) {
   const { tasks, addTask, updateTask, toggleTask, deleteTask, errors, resourceLoading, fetchTasks, isFromCache, lastSyncedAt } = useLuna();
@@ -25,6 +26,7 @@ export function TaskManager({ searchFilter }) {
   const [expandedTaskId, setExpandedTaskId] = useState(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedTaskForDetail, setSelectedTaskForDetail] = useState(null);
 
   // Auto-Save & Draft Recovery Hook
   const handleRestoreTaskDraft = useCallback((draftData) => {
@@ -643,7 +645,11 @@ export function TaskManager({ searchFilter }) {
                         {task.completed && <Check size={14} strokeWidth={3} />}
                       </button>
 
-                      <div style={{ minWidth: 0, flex: 1 }}>
+                      <div
+                        style={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
+                        onClick={() => setSelectedTaskForDetail(task)}
+                        title="Click to view details"
+                      >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           {task.taskType === 'birthday' && <Cake size={14} color="var(--accent-warning)" />}
                           {task.taskType === 'meeting' && <Users size={14} color="var(--accent-primary)" />}
@@ -670,7 +676,10 @@ export function TaskManager({ searchFilter }) {
                       {subtasks.length > 0 && (
                         <button
                           type="button"
-                          onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedTaskId(isExpanded ? null : task.id);
+                          }}
                           style={{
                             fontSize: '11px', padding: '2px 8px', borderRadius: '4px',
                             background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)',
@@ -691,7 +700,10 @@ export function TaskManager({ searchFilter }) {
 
                       <button
                         type="button"
-                        onClick={() => handleDeleteTask(task.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTask(task.id);
+                        }}
                         className="btn-secondary"
                         title="Delete Task"
                         style={{ padding: '4px 8px', minHeight: '30px', color: 'var(--accent-danger)' }}
@@ -712,7 +724,10 @@ export function TaskManager({ searchFilter }) {
                           <input
                             type="checkbox"
                             checked={sub.completed}
-                            onChange={() => handleToggleSubtask(task.id, sub.id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              handleToggleSubtask(task.id, sub.id);
+                            }}
                             style={{ accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
                           />
                           <span style={{
@@ -752,6 +767,12 @@ export function TaskManager({ searchFilter }) {
           </div>
         )}
       </div>
+
+      <HistoryDetailModal
+        isOpen={!!selectedTaskForDetail}
+        onClose={() => setSelectedTaskForDetail(null)}
+        data={selectedTaskForDetail}
+      />
     </div>
   );
 }

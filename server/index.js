@@ -42,17 +42,22 @@ function authenticate(req, res, next) {
 
 // --- AUTHENTICATION ENDPOINTS (PASSWORD-BASED) ---
 
-// 1. Strict Password Signup Route
-app.post('/api/auth/signup', (req, res) => {
+// 1. Strict Password Signup Route (Stages Pending Registration & Sends Verification OTP)
+app.post('/api/auth/signup', async (req, res) => {
   const { name, email, password } = req.body;
   if (!email || !password || !name) {
     return res.status(400).json({ error: 'Name, Email, and Password are all required.' });
   }
 
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+  }
+
   const normalizedEmail = email.toLowerCase().trim();
   const store = db.read();
 
-  const existingUser = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
+  // Check if permanent user already exists
+  const existingUser = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
   if (existingUser) {
     return res.status(400).json({
       error: 'An account with this email address already exists. Please Log In.',
@@ -60,33 +65,48 @@ app.post('/api/auth/signup', (req, res) => {
     });
   }
 
+  // Hash password securely (NEVER store plain-text password)
   const salt = bcrypt.genSaltSync(10);
   const passwordHash = bcrypt.hashSync(password, salt);
 
-  const newUser = {
-    id: `usr_${Date.now()}`,
-    name: name.trim(),
-    email: normalizedEmail,
-    passwordHash: passwordHash,
-    preferences: { theme: 'dark', currency: '₹' },
-    createdAt: new Date().toISOString()
-  };
+  // Generate secure 6-digit OTP with 10-minute expiration
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = Date.now() + 10 * 60 * 1000;
 
-  store.users.push(newUser);
+  // Store in pendingSignups (replacing any previous pending signup for this email)
+  store.pendingSignups = store.pendingSignups || [];
+  store.pendingSignups = store.pendingSignups.filter(p => p.email !== normalizedEmail);
+  store.pendingSignups.push({
+    email: normalizedEmail,
+    name: name.trim(),
+    passwordHash: passwordHash,
+    otp: otp,
+    expiresAt: expiresAt,
+    lastSentAt: Date.now(),
+    createdAt: new Date().toISOString()
+  });
+
   db.write(store);
 
-  console.log(`[SIGNUP SUCCESS] Created new user: ${normalizedEmail}`);
+  console.log(`[SIGNUP STAGED] Pending registration created for ${normalizedEmail}. Sending verification OTP via Brevo...`);
 
-  const token = jwt.sign({ id: newUser.id, name: newUser.name, email: newUser.email }, JWT_SECRET, { expiresIn: '7d' });
+  // Dispatch OTP email via Brevo
+  const emailRes = await sendVerificationEmail({ to: normalizedEmail, otp });
+  if (!emailRes.success) {
+    console.error(`[SIGNUP OTP EMAIL ERROR] Failed to send verification OTP to ${normalizedEmail}:`, emailRes.error);
+    return res.status(500).json({
+      error: emailRes.error || 'Failed to send verification email. Please check server configuration.',
+      code: 'EMAIL_SEND_FAILED'
+    });
+  }
+
+  console.log(`[SIGNUP OTP SENT] Verification OTP sent successfully to ${normalizedEmail}`);
+
   res.json({
-    token,
-    user: {
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-      avatar: newUser.avatar || null,
-      preferences: newUser.preferences
-    }
+    success: true,
+    requiresVerification: true,
+    email: normalizedEmail,
+    message: `Verification code sent to ${normalizedEmail}.`
   });
 });
 
@@ -351,7 +371,7 @@ app.post('/api/auth/reset-password', (req, res) => {
   });
 });
 
-// General Verification OTP Routes
+// General Verification OTP Routes (Signup Verification & Account Creation)
 app.post('/api/auth/send-verification-otp', async (req, res) => {
   const { email } = req.body;
   if (!email || !email.includes('@')) {
@@ -359,18 +379,51 @@ app.post('/api/auth/send-verification-otp', async (req, res) => {
   }
 
   const normalizedEmail = email.toLowerCase().trim();
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = Date.now() + 10 * 60 * 1000;
-
   const store = db.read();
-  store.otps = store.otps || [];
-  store.otps = store.otps.filter(o => o.email !== normalizedEmail);
-  store.otps.push({ email: normalizedEmail, otp, expiresAt, createdAt: new Date().toISOString() });
+
+  // Check if permanent user already exists
+  const existingUser = (store.users || []).find(u => u.email.toLowerCase() === normalizedEmail);
+  if (existingUser) {
+    return res.status(400).json({
+      error: 'An account with this email address already exists. Please Log In.',
+      code: 'USER_EXISTS'
+    });
+  }
+
+  // Lookup pending signup record
+  store.pendingSignups = store.pendingSignups || [];
+  const pending = store.pendingSignups.find(p => p.email === normalizedEmail);
+
+  if (!pending) {
+    return res.status(400).json({
+      error: 'No pending registration found for this email address. Please fill out the signup form first.'
+    });
+  }
+
+  // Rate limiting: Prevent repeated rapid "Send OTP" requests within 30 seconds
+  if (pending.lastSentAt && Date.now() - pending.lastSentAt < 30000) {
+    const waitSec = Math.ceil((30000 - (Date.now() - pending.lastSentAt)) / 1000);
+    return res.status(429).json({
+      error: `Please wait ${waitSec} second${waitSec > 1 ? 's' : ''} before requesting a new verification code.`
+    });
+  }
+
+  // Generate new 6-digit OTP and refresh 10-minute expiry
+  const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  pending.otp = newOtp;
+  pending.expiresAt = Date.now() + 10 * 60 * 1000;
+  pending.lastSentAt = Date.now();
+
   db.write(store);
 
-  const emailRes = await sendVerificationEmail({ to: normalizedEmail, otp });
+  console.log(`[RESEND OTP] Re-issuing OTP for pending signup ${normalizedEmail}. Dispatching email via Brevo...`);
+
+  const emailRes = await sendVerificationEmail({ to: normalizedEmail, otp: newOtp });
   if (!emailRes.success) {
-    return res.status(500).json({ error: emailRes.error || 'Failed to send verification email.' });
+    console.error(`[RESEND OTP EMAIL ERROR] Failed to send verification email to ${normalizedEmail}:`, emailRes.error);
+    return res.status(500).json({
+      error: emailRes.error || 'Failed to send verification email. Please check server email configuration.'
+    });
   }
 
   res.json({ success: true, message: `Verification code sent to ${normalizedEmail}.` });
@@ -386,21 +439,77 @@ app.post('/api/auth/verify-verification-otp', (req, res) => {
   const cleanOtp = String(otp).trim();
   const store = db.read();
 
-  store.otps = store.otps || [];
-  const record = store.otps.find(o => o.email === normalizedEmail && o.otp === cleanOtp);
+  store.pendingSignups = store.pendingSignups || [];
+  const pendingIndex = store.pendingSignups.findIndex(p => p.email === normalizedEmail);
 
-  if (!record) {
-    return res.status(400).json({ error: 'Invalid verification code.' });
+  if (pendingIndex === -1) {
+    return res.status(400).json({
+      error: 'No pending registration found for this email address. Please start signup again.'
+    });
   }
 
-  if (Date.now() > record.expiresAt) {
-    return res.status(400).json({ error: 'Verification code has expired.' });
+  const pending = store.pendingSignups[pendingIndex];
+
+  // Verify OTP matches
+  if (pending.otp !== cleanOtp) {
+    return res.status(400).json({ error: 'Invalid verification code. Please check the code and try again.' });
   }
 
-  store.otps = store.otps.filter(o => o.email !== normalizedEmail);
+  // Verify OTP has not expired
+  if (Date.now() > pending.expiresAt) {
+    return res.status(400).json({ error: 'Verification code has expired. Please request a new verification code.' });
+  }
+
+  // Check duplicate user record again (defense in depth)
+  store.users = store.users || [];
+  const userExists = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
+  if (userExists) {
+    store.pendingSignups.splice(pendingIndex, 1);
+    db.write(store);
+    return res.status(400).json({
+      error: 'An account with this email address already exists. Please Log In.',
+      code: 'USER_EXISTS'
+    });
+  }
+
+  // CREATE PERMANENT USER RECORD & GENERATE UNIQUE PERMANENT USER ID
+  const newUserId = `usr_${Date.now()}`;
+  const newUser = {
+    id: newUserId,
+    name: pending.name,
+    email: pending.email,
+    passwordHash: pending.passwordHash,
+    emailVerified: true,
+    preferences: { theme: 'light', currency: '₹' },
+    createdAt: new Date().toISOString()
+  };
+
+  store.users.push(newUser);
+  // Clear single-use pending signup record
+  store.pendingSignups.splice(pendingIndex, 1);
+
   db.write(store);
 
-  res.json({ success: true, message: 'Code verified successfully.' });
+  console.log(`[SIGNUP SUCCESS] OTP verified. Permanent user account created: ${newUser.id} (${normalizedEmail})`);
+
+  // Issue session JWT token
+  const token = jwt.sign(
+    { id: newUser.id, name: newUser.name, email: newUser.email },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+
+  res.json({
+    success: true,
+    token,
+    user: {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      avatar: newUser.avatar || null,
+      preferences: newUser.preferences
+    }
+  });
 });
 
 // Send Email Change OTP
@@ -1833,9 +1942,38 @@ app.post('/api/privacy/export', authenticate, (req, res) => {
 
 app.post('/api/privacy/clear-history', authenticate, (req, res) => {
   const store = db.read();
-  store.conversations = store.conversations.filter(c => c.userId !== req.user.id);
+  const userId = req.user.id;
+
+  store.conversations = (store.conversations || []).filter(c => c.userId !== userId);
+  store.tasks = (store.tasks || []).filter(t => t.userId !== userId);
+  store.expenses = (store.expenses || []).filter(e => e.userId !== userId);
+  store.habits = (store.habits || []).filter(h => h.userId !== userId);
+  store.goals = (store.goals || []).filter(g => g.userId !== userId);
+  store.memories = (store.memories || []).filter(m => m.userId !== userId);
+  store.notifications = (store.notifications || []).filter(n => n.userId !== userId);
+  store.summaries = (store.summaries || []).filter(s => s.userId !== userId);
+  store.notices = (store.notices || []).filter(n => n.userId !== userId);
+
+  if (Array.isArray(store.splits)) {
+    store.splits = store.splits.filter(s => s.createdById !== userId);
+    store.splits.forEach(s => {
+      if (Array.isArray(s.members)) {
+        s.members = s.members.filter(m => m.userId !== userId && m.id !== userId);
+      }
+    });
+  }
+  if (Array.isArray(store.splitExpenses)) {
+    store.splitExpenses = store.splitExpenses.filter(e => e.createdById !== userId && e.payerId !== userId);
+  }
+  if (Array.isArray(store.splitSettlements)) {
+    store.splitSettlements = store.splitSettlements.filter(s => s.fromUserId !== userId && s.toUserId !== userId);
+  }
+  if (Array.isArray(store.splitInvitations)) {
+    store.splitInvitations = store.splitInvitations.filter(i => i.inviterId !== userId && i.targetUser !== userId);
+  }
+
   db.write(store);
-  res.json({ success: true, message: 'Chat history cleared successfully.' });
+  res.json({ success: true, message: 'All user data and history cleared successfully.' });
 });
 
 // Helper to generate secure random Split Share Codes (e.g. GOA-7K4P2)

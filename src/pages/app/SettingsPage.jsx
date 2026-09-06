@@ -111,9 +111,10 @@ export function SettingsPage() {
     pushEnabled,
     pushLoading,
     enablePush,
-    disablePush
+    disablePush,
+    clearNotifications
   } = useNotifications();
-  const { tasks, expenses, memories, startingBalance, updateStartingBalance, refreshData, clearChatHistory } = useLuna();
+  const { tasks, expenses, memories, startingBalance, updateStartingBalance, refreshData, clearChatHistory, clearAllUserData } = useLuna();
   const {
     currentVersion,
     updateAvailable,
@@ -713,15 +714,36 @@ export function SettingsPage() {
     if (isClearingHistory) return;
     setIsClearingHistory(true);
     try {
-      if (clearChatHistory) {
-        await clearChatHistory();
+      if (clearAllUserData) {
+        await clearAllUserData();
       } else {
         await api.clearHistory();
       }
+
+      if (clearNotifications) {
+        await clearNotifications();
+      }
+
+      // Reset local Settings states to fresh default values
+      setTransactionMsgBehavior('automatic');
+      setAutoBackup(true);
+      setWeekStartDay('monday');
+      setDateFormat('DD MMM YYYY');
+      setConfirmDelete(true);
+      setCurrency('INR (₹)');
+      setQuietHoursEnabled(false);
+
+      // Reset dashboard layout to default
+      if (user?.id) {
+        const storageKey = `daysync_widget_layout_${user.id}`;
+        localStorage.setItem(storageKey, JSON.stringify(DEFAULT_WIDGET_LAYOUT));
+        setActiveWidgetIds(DEFAULT_WIDGET_LAYOUT);
+      }
+
       setShowClearHistoryModal(false);
-      if (showToast) showToast('Chat history cleared.', 'success');
+      if (showToast) showToast('All app data cleared and reset to fresh state.', 'success');
     } catch (err) {
-      if (showToast) showToast('Unable to clear history right now.', 'error');
+      if (showToast) showToast('Unable to clear data right now.', 'error');
     } finally {
       setIsClearingHistory(false);
     }
@@ -1377,7 +1399,7 @@ export function SettingsPage() {
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Need help or found a bug?</div>
               </div>
               <a
-                href="mailto:support@daysync.ai"
+                href="mailto:johnmalik057@gmail.com"
                 className="btn-secondary"
                 style={{ fontSize: '12px', padding: '6px 12px', textDecoration: 'none' }}
               >
@@ -1624,7 +1646,7 @@ export function SettingsPage() {
       {/* Confirmation Modals */}
       <ConfirmationModal isOpen={showLogoutModal} title="Log out of DaySync?" message="Are you sure you want to log out of your session?" confirmText="Log Out" cancelText="Cancel" isDanger={false} isLoading={isLoggingOut} onConfirm={handleConfirmLogout} onCancel={() => setShowLogoutModal(false)} />
       <ConfirmationModal isOpen={showDeleteModal} title="Delete your DaySync account?" message="Your account and associated data will be permanently deleted. This action cannot be undone." confirmText="Delete Account" cancelText="Cancel" isDanger={true} isLoading={isDeletingAccount} onConfirm={handleConfirmDeleteAccount} onCancel={() => setShowDeleteModal(false)} />
-      <ConfirmationModal isOpen={showClearHistoryModal} title="Clear stored data?" message="Are you sure you want to clear your stored conversation history and DaySync data logs? This action cannot be undone." confirmText="Clear Data" cancelText="Cancel" isDanger={true} isLoading={isClearingHistory} onConfirm={handleConfirmClearHistory} onCancel={() => setShowClearHistoryModal(false)} />
+      <ConfirmationModal isOpen={showClearHistoryModal} title="Clear All DaySync Data?" message="Are you sure you want to clear all your tasks, expenses, plans, recurring items, splits, birthdays, meetings, memories, chat history, and settings? You will remain logged in, but all data will be permanently reset to a fresh state." confirmText="Clear Data" cancelText="Cancel" isDanger={true} isLoading={isClearingHistory} onConfirm={handleConfirmClearHistory} onCancel={() => setShowClearHistoryModal(false)} />
       <ConfirmationModal isOpen={showDashboardResetModal} title="Reset Dashboard Layout?" message="This will restore the default widget arrangement and sizes. Your tasks, expenses, and data will not be affected." confirmText="Reset Layout" cancelText="Cancel" isDanger={true} onConfirm={handleConfirmResetDashboard} onCancel={() => setShowDashboardResetModal(false)} />
 
       {/* RESTORE DATA CONFIRMATION MODAL */}

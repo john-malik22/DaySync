@@ -7,6 +7,7 @@ import { ErrorState, StaleIndicator } from '../../components/common/ErrorState';
 import { ReactionBadge } from '../../components/common/ReactionBadge';
 import { ArrowUpRight, ArrowDownRight, Wallet, Edit2, Trash2, Check, X, CreditCard } from 'lucide-react';
 import { EmptyState } from '../../components/common/EmptyState';
+import { HistoryDetailModal } from '../../components/common/HistoryDetailModal';
 
 const EXPENSE_CATEGORIES = [
   { value: 'Recharges', label: '📱 Recharge', ariaLabel: 'Recharge category' },
@@ -41,6 +42,7 @@ export function ExpensesPage() {
   const [editAmount, setEditAmount] = useState('');
   const [editCategory, setEditCategory] = useState('Recharges');
   const [editDescription, setEditDescription] = useState('');
+  const [selectedExpenseForDetail, setSelectedExpenseForDetail] = useState(null);
 
   const totalIncome = (expenses || [])
     .filter(e => e && e.type === 'income')
@@ -328,11 +330,15 @@ export function ExpensesPage() {
               }
 
               return (
-                <div key={exp.id} style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)', gap: '8px'
-                }}>
+                <div
+                  key={exp.id}
+                  onClick={() => setSelectedExpenseForDetail(exp)}
+                  style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-color)', gap: '8px', cursor: 'pointer'
+                  }}
+                >
                   {/* Left: Transaction Title & Category Metadata */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
                     <div style={{
@@ -361,7 +367,10 @@ export function ExpensesPage() {
                     {/* Small Edit Icon Button [✎] */}
                     <button
                       type="button"
-                      onClick={() => startEdit(exp)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEdit(exp);
+                      }}
                       title="Edit Transaction"
                       style={{
                         padding: '4px',
@@ -383,7 +392,10 @@ export function ExpensesPage() {
                     {/* Small Trash/Delete Icon Button [🗑] */}
                     <button
                       type="button"
-                      onClick={() => handleDelete(exp.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(exp.id);
+                      }}
                       title="Delete Transaction"
                       style={{
                         padding: '4px',
@@ -408,6 +420,13 @@ export function ExpensesPage() {
           </div>
         )}
       </div>
+
+      <HistoryDetailModal
+        isOpen={!!selectedExpenseForDetail}
+        onClose={() => setSelectedExpenseForDetail(null)}
+        type="expense"
+        data={selectedExpenseForDetail}
+      />
     </div>
   );
 }

@@ -23,6 +23,139 @@ function stringToId(str) {
   return Math.abs(hash);
 }
 
+// Native Android Notification Channels Setup
+const initAndroidNotificationChannels = async () => {
+  if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
+    try {
+      const channels = [
+        {
+          id: 'daysync_tasks',
+          name: 'Tasks & Reminders',
+          description: 'Alerts for due dates, overdue items, and task reminders',
+          importance: 4, // HIGH
+          visibility: 1
+        },
+        {
+          id: 'daysync_plans',
+          name: 'Plans & Subscriptions',
+          description: 'Notifications for plan renewals, expirations, and bills',
+          importance: 4, // HIGH
+          visibility: 1
+        },
+        {
+          id: 'daysync_splits',
+          name: 'Splits & Group Expenses',
+          description: 'Alerts for group expense splits and settlements',
+          importance: 3, // DEFAULT
+          visibility: 1
+        },
+        {
+          id: 'daysync_expenses',
+          name: 'Expenses & Transactions',
+          description: 'Notifications for logged expenses and transaction alerts',
+          importance: 3, // DEFAULT
+          visibility: 1
+        },
+        {
+          id: 'daysync_birthdays',
+          name: 'Birthdays',
+          description: 'Birthday reminders and personal dates',
+          importance: 4, // HIGH
+          visibility: 1
+        },
+        {
+          id: 'daysync_meetings',
+          name: 'Meetings & Schedule',
+          description: 'Upcoming meeting alerts and scheduled event reminders',
+          importance: 4, // HIGH
+          visibility: 1
+        },
+        {
+          id: 'daysync_luna',
+          name: 'Luna AI & Companion',
+          description: 'Daily focus summaries, companion tips, and insights',
+          importance: 3, // DEFAULT
+          visibility: 1
+        },
+        {
+          id: 'daysync_general',
+          name: 'General System Alerts',
+          description: 'System and general app notification updates',
+          importance: 3, // DEFAULT
+          visibility: 1
+        }
+      ];
+
+      for (const channel of channels) {
+        await LocalNotifications.createChannel(channel);
+      }
+
+      await LocalNotifications.registerActionTypes({
+        types: [
+          {
+            id: 'TASK_ACTIONS',
+            actions: [
+              { id: 'complete', title: 'Mark Completed' },
+              { id: 'open', title: 'Open DaySync' }
+            ]
+          },
+          {
+            id: 'GENERAL_ACTIONS',
+            actions: [
+              { id: 'open', title: 'Open DaySync' }
+            ]
+          }
+        ]
+      });
+    } catch (err) {
+      console.warn('[NotificationContext] Error initializing Android notification channels:', err);
+    }
+  }
+};
+
+function buildNativeNotificationPayload(item, idx = 0) {
+  const cat = (item.category || '').toLowerCase();
+  let channelId = 'daysync_general';
+  let group = 'daysync_general';
+  let actionTypeId = 'GENERAL_ACTIONS';
+
+  if (cat.includes('task')) {
+    channelId = 'daysync_tasks';
+    group = 'daysync_tasks';
+    actionTypeId = 'TASK_ACTIONS';
+  } else if (cat.includes('birthday')) {
+    channelId = 'daysync_birthdays';
+    group = 'daysync_birthdays';
+  } else if (cat.includes('meeting') || cat.includes('schedule')) {
+    channelId = 'daysync_meetings';
+    group = 'daysync_meetings';
+  } else if (cat.includes('plan') || cat.includes('subscription') || cat.includes('recharge')) {
+    channelId = 'daysync_plans';
+    group = 'daysync_plans';
+  } else if (cat.includes('split') || cat.includes('group')) {
+    channelId = 'daysync_splits';
+    group = 'daysync_splits';
+  } else if (cat.includes('expense') || cat.includes('transaction')) {
+    channelId = 'daysync_expenses';
+    group = 'daysync_expenses';
+  } else if (cat.includes('luna') || cat.includes('ai')) {
+    channelId = 'daysync_luna';
+    group = 'daysync_luna';
+  }
+
+  return {
+    id: stringToId(item.id || `${Date.now()}_${idx}`),
+    title: item.title || 'DaySync Alert',
+    body: item.message || item.body || 'You have a new DaySync update.',
+    channelId,
+    group,
+    actionTypeId,
+    smallIcon: 'ic_notification',
+    iconColor: '#5B50E6',
+    schedule: { at: new Date(Date.now() + 500) }
+  };
+}
+
 const DEFAULT_PREFERENCES = {
   enabled: true,
   daily: true,
@@ -135,9 +268,10 @@ export function NotificationProvider({ children }) {
               id: 99911,
               title: 'DaySync Notifications Enabled',
               body: 'You will now receive native alerts for tasks, meetings, birthdays, and plans.',
+              channelId: 'daysync_general',
               schedule: { at: new Date(Date.now() + 500) },
-              smallIcon: 'ic_launcher',
-              iconColor: '#0F172A'
+              smallIcon: 'ic_notification',
+              iconColor: '#5B50E6'
             }]
           });
           return true;
@@ -209,14 +343,7 @@ export function NotificationProvider({ children }) {
             if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
               try {
                 LocalNotifications.schedule({
-                  notifications: newItems.map((item, idx) => ({
-                    id: stringToId(item.id || `${Date.now()}_${idx}`),
-                    title: item.title || 'DaySync Reminder',
-                    body: item.message || 'You have a new DaySync alert',
-                    schedule: { at: new Date(Date.now() + 500) },
-                    smallIcon: 'ic_launcher',
-                    iconColor: '#0F172A'
-                  }))
+                  notifications: newItems.map((item, idx) => buildNativeNotificationPayload(item, idx))
                 });
               } catch (e) {
                 console.warn('Native LocalNotifications schedule error:', e);
@@ -254,6 +381,10 @@ export function NotificationProvider({ children }) {
       if (!isSilent) setLoading(false);
     }
   }, [userId, preferences.browser]);
+
+  useEffect(() => {
+    initAndroidNotificationChannels();
+  }, []);
 
   useEffect(() => {
     if (userId) {
@@ -371,25 +502,25 @@ export function NotificationProvider({ children }) {
         // OVERDUE
         if (!settings.taskOverdue) return;
         stage = 'OVERDUE';
-        title = `⚠️ Overdue: ${task.title || 'Task'}`;
+        title = `Task Overdue: ${task.title || 'Task'}`;
         message = `Your ${taskType === 'birthday' ? 'birthday reminder' : taskType === 'meeting' ? 'meeting' : 'task'} was due ${Math.abs(Math.floor(diffMins / 60))} hours ago.`;
       } else if (diffMins >= -5 && diffMins <= 15) {
         // DUE NOW
         if (!settings.taskDue) return;
         stage = 'DUE_NOW';
-        title = `⏰ Due Now: ${task.title || 'Task'}`;
-        message = taskType === 'birthday' ? `Wish ${task.personName || 'them'} a Happy Birthday today!` : taskType === 'meeting' ? `Meeting starting now (${task.dueTime || 'now'}).` : `Time to complete "${task.title}".`;
+        title = taskType === 'birthday' ? `Birthday Today: ${task.personName || task.title}` : taskType === 'meeting' ? `Meeting Starting: ${task.title}` : `Task Due: ${task.title}`;
+        message = taskType === 'birthday' ? `Wish ${task.personName || 'them'} a Happy Birthday today!` : taskType === 'meeting' ? `Meeting starting now (${task.dueTime || 'now'}).` : `"${task.title}" is scheduled for ${task.dueTime || 'today'}.`;
       } else if (diffMins > 15 && diffMins <= 60 && isHighPriority) {
         // DUE SOON (High Priority)
         if (!settings.taskDue) return;
         stage = 'DUE_SOON';
-        title = `🔥 High Priority Due Soon: ${task.title}`;
-        message = `Important item due in ${diffMins} minutes.`;
+        title = `High Priority Task Due: ${task.title}`;
+        message = `Important task due in ${diffMins} minutes.`;
       } else if (diffMins > 60 && diffMins <= 1440 && (taskType === 'meeting' || taskType === 'birthday')) {
         // UPCOMING (1 day before)
         if (!settings.taskDue) return;
         stage = 'UPCOMING';
-        title = `📅 Upcoming ${taskType === 'birthday' ? 'Birthday' : 'Meeting'}: ${task.title || task.personName}`;
+        title = `Upcoming ${taskType === 'birthday' ? 'Birthday' : 'Meeting'}: ${task.title || task.personName}`;
         message = `Scheduled for ${task.dueDate || 'tomorrow'}.`;
       }
 
@@ -439,15 +570,15 @@ export function NotificationProvider({ children }) {
 
         if (diffDays < 0 && Math.abs(diffDays) <= 30) {
           stage = 'EXPIRED';
-          title = `⚠️ Plan Expired: ${plan.description || plan.category}`;
+          title = `Plan Expired: ${plan.description || plan.category}`;
           message = `Your ${plan.category} plan expired on ${endDateStr.split('T')[0]}.`;
         } else if (diffDays >= 0 && diffDays <= 3) {
           stage = 'DUE_SOON';
-          title = `🔔 Plan Renewal Due: ${plan.description || plan.category}`;
+          title = `Plan Renewal Due: ${plan.description || plan.category}`;
           message = `Renewal of ₹${plan.amount || 0} due in ${diffDays === 0 ? 'today' : diffDays + ' days'}.`;
         } else if (diffDays > 3 && diffDays <= 7) {
           stage = 'UPCOMING';
-          title = `📅 Upcoming Plan Renewal: ${plan.description || plan.category}`;
+          title = `Upcoming Plan Renewal: ${plan.description || plan.category}`;
           message = `Payment due on ${endDateStr.split('T')[0]}.`;
         }
 
@@ -480,15 +611,27 @@ export function NotificationProvider({ children }) {
       setNewArrival(true);
       setTimeout(() => setNewArrival(false), 3000);
 
-      if (!quiet && preferences.browser && 'Notification' in window && Notification.permission === 'granted') {
-        newGeneratedNotifs.forEach(item => {
+      if (!quiet) {
+        if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
           try {
-            new Notification(item.title, {
-              body: item.message,
-              icon: '/icons/icon-192.png'
+            LocalNotifications.schedule({
+              notifications: newGeneratedNotifs.map((item, idx) => buildNativeNotificationPayload(item, idx))
             });
-          } catch (e) {}
-        });
+          } catch (e) {
+            console.warn('Native LocalNotifications schedule error:', e);
+          }
+        }
+
+        if (preferences.browser && 'Notification' in window && Notification.permission === 'granted') {
+          newGeneratedNotifs.forEach(item => {
+            try {
+              new Notification(item.title, {
+                body: item.message,
+                icon: '/icons/icon-192.png'
+              });
+            } catch (e) {}
+          });
+        }
       }
     }
   }, [userId, preferences.browser]);
