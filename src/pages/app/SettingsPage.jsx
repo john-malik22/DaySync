@@ -66,34 +66,34 @@ function ToggleSwitch({ checked, onChange, label, description }) {
         justifyContent: 'space-between',
         padding: '10px 0',
         cursor: 'pointer',
-        userSelect: 'none'
+        userSelect: 'none',
+        gap: '12px'
       }}
     >
-      <div style={{ flex: 1, paddingRight: '12px' }}>
+      <div style={{ flex: '1 1 auto', minWidth: 0, paddingRight: '8px' }}>
         <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{label}</div>
         {description && <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>{description}</div>}
       </div>
 
       <div style={{
-        width: '44px',
-        height: '24px',
-        borderRadius: '12px',
-        background: checked ? 'var(--accent-primary)' : 'var(--bg-tertiary, rgba(255,255,255,0.15))',
-        border: '1px solid var(--border-color)',
+        width: '38px',
+        height: '20px',
+        borderRadius: '10px',
+        background: checked ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+        border: checked ? '1px solid var(--accent-primary)' : '1px solid var(--border-highlight)',
         padding: '2px',
         display: 'flex',
         alignItems: 'center',
-        transition: 'background-color 0.2s ease',
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         flexShrink: 0
       }}>
         <div style={{
-          width: '18px',
-          height: '18px',
+          width: '14px',
+          height: '14px',
           borderRadius: '50%',
-          background: '#FFFFFF',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-          transform: checked ? 'translateX(20px)' : 'translateX(0px)',
-          transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          background: checked ? '#FFFFFF' : 'var(--text-muted)',
+          transform: checked ? 'translateX(18px)' : 'translateX(0px)',
+          transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease'
         }} />
       </div>
     </div>
@@ -1072,17 +1072,19 @@ export function SettingsPage() {
                 <div
                   onClick={handleTogglePush}
                   style={{
-                    width: '44px', height: '24px', borderRadius: '12px',
-                    background: pushEnabled ? 'var(--accent-primary)' : 'var(--bg-tertiary, rgba(255,255,255,0.15))',
-                    border: '1px solid var(--border-color)', padding: '2px', display: 'flex', alignItems: 'center',
-                    cursor: 'pointer', flexShrink: 0, transition: 'background-color 0.2s ease'
+                    width: '38px', height: '20px', borderRadius: '10px',
+                    background: pushEnabled ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                    border: pushEnabled ? '1px solid var(--accent-primary)' : '1px solid var(--border-highlight)',
+                    padding: '2px', display: 'flex', alignItems: 'center',
+                    cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                   title={pushEnabled ? "Disable push notifications" : "Enable push notifications"}
                 >
                   <div style={{
-                    width: '18px', height: '18px', borderRadius: '50%', background: '#FFFFFF',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                    transform: pushEnabled ? 'translateX(20px)' : 'translateX(0px)', transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                    width: '14px', height: '14px', borderRadius: '50%',
+                    background: pushEnabled ? '#FFFFFF' : 'var(--text-muted)',
+                    transform: pushEnabled ? 'translateX(18px)' : 'translateX(0px)',
+                    transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease'
                   }} />
                 </div>
               ) : (
@@ -1174,16 +1176,18 @@ export function SettingsPage() {
                   <div
                     onClick={() => handleToggleQuietHours(!quietHoursEnabled)}
                     style={{
-                      width: '44px', height: '24px', borderRadius: '12px',
-                      background: quietHoursEnabled ? 'var(--accent-primary)' : 'var(--bg-tertiary, rgba(255,255,255,0.15))',
-                      border: '1px solid var(--border-color)', padding: '2px', display: 'flex', alignItems: 'center',
-                      cursor: 'pointer', flexShrink: 0, transition: 'background-color 0.2s ease'
+                      width: '38px', height: '20px', borderRadius: '10px',
+                      background: quietHoursEnabled ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                      border: quietHoursEnabled ? '1px solid var(--accent-primary)' : '1px solid var(--border-highlight)',
+                      padding: '2px', display: 'flex', alignItems: 'center',
+                      cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}
                   >
                     <div style={{
-                      width: '18px', height: '18px', borderRadius: '50%', background: '#FFFFFF',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                      transform: quietHoursEnabled ? 'translateX(20px)' : 'translateX(0px)', transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                      width: '14px', height: '14px', borderRadius: '50%',
+                      background: quietHoursEnabled ? '#FFFFFF' : 'var(--text-muted)',
+                      transform: quietHoursEnabled ? 'translateX(18px)' : 'translateX(0px)',
+                      transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease'
                     }} />
                   </div>
                 </div>

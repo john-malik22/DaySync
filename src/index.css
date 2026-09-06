@@ -1,10 +1,11 @@
 /* DaySync Design System - Minimalist 2D Illustration & Paper Theme System */
 
 :root, [data-theme='light'] {
-  /* Brand Identity Palette - Warm Soft Indigo & Clean Aqua */
+  /* Brand Identity Palette - Warm Soft Indigo & Clean Aqua Accent System */
   --color-primary: #5B50E6;          /* Soft Warm Indigo */
   --color-primary-hover: #4A3FD1;
   --color-primary-soft: rgba(91, 80, 230, 0.08);
+  --color-primary-text: #FFFFFF;
   --color-secondary: #00B4D8;
   --color-secondary-hover: #0096B4;
   --color-secondary-soft: rgba(0, 180, 216, 0.08);
@@ -22,6 +23,7 @@
   --accent-tint: rgba(0, 180, 216, 0.08);
   --accent-dark: #262523;
 
+  /* Meaningful Status Colors */
   --accent-success: #10B981;
   --accent-warning: #F59E0B;
   --accent-danger: #EF4444;
@@ -29,38 +31,38 @@
   --warning-color: #F59E0B;
   --danger-color: #EF4444;
 
-  /* Surfaces & Backgrounds - Soft Warm Wheat / Cream Paper Style */
-  --bg-primary: #F6F3EC;              /* Warm cream paper canvas (no harsh white) */
-  --bg-card: #ECE8DF;                 /* Slightly darker cream card surface */
-  --bg-surface: #ECE8DF;
-  --bg-surface-glass: #ECE8DF;
-  --bg-secondary: #E3DFD5;            /* Inset secondary container */
-  --bg-surface-soft: #E3DFD5;
-  --bg-tertiary: #D8D3C7;             /* Muted tertiary highlight */
+  /* Hierarchy: Background -> Surface -> Border -> Secondary -> Primary */
+  --bg-primary: #FFFFFF;              /* Clean White Canvas */
+  --bg-card: #F5F5F5;                 /* Soft Light Gray Surface */
+  --bg-surface: #F5F5F5;
+  --bg-surface-glass: #F5F5F5;
+  --bg-secondary: #EAEAEA;            /* Inset Secondary Gray Container */
+  --bg-surface-soft: #EAEAEA;
+  --bg-tertiary: #D4D4D4;             /* Highlight Gray Surface */
 
-  /* Borders & Highlights - Subtle 2D Outlines */
-  --border-color: rgba(60, 56, 48, 0.10);
-  --border-subtle: rgba(60, 56, 48, 0.06);
+  /* Borders & Focus */
+  --border-color: #E5E5E5;            /* Soft Silver / Gray Outline */
+  --border-subtle: #F0F0F0;
   --border-highlight: rgba(91, 80, 230, 0.30);
   --focus-ring: rgba(91, 80, 230, 0.25);
 
   /* Sidebar */
-  --sidebar-bg: #ECE8DF;
-  --sidebar-text: #262523;
-  --sidebar-muted: #6E695F;
+  --sidebar-bg: #F5F5F5;
+  --sidebar-text: #0A0A0A;
+  --sidebar-muted: #737373;
   --sidebar-active-bg: rgba(91, 80, 230, 0.10);
 
-  /* Text Colors - Muted Dark Ink (No Harsh Black) */
-  --text-primary: #262523;
-  --text-secondary: #58554F;
-  --text-muted: #858076;
+  /* Text Colors */
+  --text-primary: #0A0A0A;            /* Black Primary Text */
+  --text-secondary: #525252;          /* Dark Gray Secondary Text */
+  --text-muted: #737373;              /* Medium Gray Muted Text */
 
-  /* 2D Minimalist Shadow System (No Glossy Glassmorphism) */
+  /* Minimalist 2D Neutral Shadows */
   --glass-blur: none;
-  --glass-shadow: 0 2px 8px rgba(60, 56, 48, 0.05);
-  --shadow-sm: 0 2px 6px rgba(60, 56, 48, 0.04);
-  --shadow-md: 0 4px 12px rgba(60, 56, 48, 0.07);
-  --shadow-lg: 0 8px 20px rgba(60, 56, 48, 0.09);
+  --glass-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.08);
 
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -81,11 +83,12 @@
 }
 
 [data-theme='dark'] {
-  /* Brand Identity Palette */
-  --color-primary: #7C73FF;
+  /* Brand Identity Palette - Warm Indigo & Aqua Accent System */
+  --color-primary: #7C73FF;          /* Bright Warm Indigo Primary */
   --color-primary-hover: #8F87FF;
   --color-primary-soft: rgba(124, 115, 255, 0.15);
-  --color-secondary: #00E5FF;
+  --color-primary-text: #FFFFFF;
+  --color-secondary: #00E5FF;        /* Electric Aqua */
   --color-secondary-hover: #33EBFF;
   --color-secondary-soft: rgba(0, 229, 255, 0.15);
 
@@ -108,38 +111,38 @@
   --warning-color: #FBBF24;
   --danger-color: #F87171;
 
-  /* Surfaces & Backgrounds - Cinematic Deep Black / Charcoal 2D Canvas */
-  --bg-primary: #0E0E10;              /* True deep black background */
-  --bg-card: #17171B;                 /* Lighter charcoal card surface */
-  --bg-surface: #17171B;
-  --bg-surface-glass: #17171B;
-  --bg-secondary: #1F1F26;            /* Secondary charcoal container */
-  --bg-surface-soft: #1F1F26;
-  --bg-tertiary: #272730;             /* Tertiary highlight surface */
+  /* Hierarchy: Background -> Surface -> Border -> Secondary -> Primary */
+  --bg-primary: #0A0A0A;              /* Deep Near-Black Canvas */
+  --bg-card: #171717;                 /* Charcoal Card Surface */
+  --bg-surface: #171717;
+  --bg-surface-glass: #171717;
+  --bg-secondary: #262626;            /* Secondary Charcoal Container */
+  --bg-surface-soft: #262626;
+  --bg-tertiary: #333333;             /* Highlight Charcoal Surface */
 
-  /* Borders & Highlights - Subtle 2D Dark Outlines */
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-subtle: rgba(255, 255, 255, 0.05);
+  /* Borders & Focus */
+  --border-color: #262626;            /* Subtle Dark Gray Outline */
+  --border-subtle: #1F1F1F;
   --border-highlight: rgba(124, 115, 255, 0.35);
   --focus-ring: rgba(124, 115, 255, 0.25);
 
   /* Sidebar */
-  --sidebar-bg: #17171B;
-  --sidebar-text: #E6E6EA;
-  --sidebar-muted: #8E8E9A;
+  --sidebar-bg: #171717;
+  --sidebar-text: #FAFAFA;
+  --sidebar-muted: #A3A3A3;
   --sidebar-active-bg: rgba(124, 115, 255, 0.15);
 
-  /* Text Colors - Soft Off-White (No Harsh Pure White) */
-  --text-primary: #E6E6EA;
-  --text-secondary: #A1A1AA;
-  --text-muted: #71717A;
+  /* Text Colors */
+  --text-primary: #FAFAFA;            /* White Primary Text */
+  --text-secondary: #A3A3A3;          /* Medium/Light Gray Secondary Text */
+  --text-muted: #737373;              /* Medium Gray Muted Text */
 
-  /* 2D Minimalist Shadow System */
+  /* Minimalist 2D Dark Shadows */
   --glass-blur: none;
-  --glass-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.60);
+  --glass-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.70);
 }
 
 /* Reset & Base Setup */
@@ -351,8 +354,8 @@ p {
 /* Buttons System */
 .btn-primary {
   background: var(--color-primary);
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--color-primary-text);
+  border: 1px solid var(--border-highlight);
   padding: 10px 18px;
   min-height: 42px;
   border-radius: var(--radius-md);
@@ -364,7 +367,7 @@ p {
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
-  box-shadow: 0 4px 14px rgba(108, 99, 255, 0.25);
+  box-shadow: var(--shadow-sm);
   transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
   white-space: nowrap;
 }
@@ -372,12 +375,12 @@ p {
 .btn-primary:hover {
   background: var(--color-primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(108, 99, 255, 0.38);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-primary:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(108, 99, 255, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-secondary {
@@ -402,9 +405,9 @@ p {
 }
 
 .btn-secondary:hover {
-  background: var(--color-secondary-soft);
-  border-color: var(--color-secondary);
-  color: var(--color-secondary);
+  background: var(--bg-tertiary);
+  border-color: var(--border-highlight);
+  color: var(--text-primary);
   transform: translateY(-1px);
 }
 
@@ -419,6 +422,7 @@ input[type="password"],
 input[type="number"],
 input[type="date"],
 input[type="time"],
+input[type="datetime-local"],
 select,
 textarea {
   width: 100%;
@@ -426,9 +430,7 @@ textarea {
   padding: 10px 14px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
-  background: var(--bg-surface-glass);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background-color: var(--bg-secondary);
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 14px;
@@ -437,26 +439,77 @@ textarea {
   transition: border-color 180ms ease, box-shadow 180ms ease;
 }
 
-input:focus, select:focus, textarea:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 10px var(--focus-ring);
+select,
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  cursor: pointer;
 }
 
+/* DARK THEME FORM CONTROLS (SELECT, DATE, TIME) */
+[data-theme="dark"] select,
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="time"],
+[data-theme="dark"] input[type="datetime-local"] {
+  color-scheme: dark !important;
+  background-color: #1F1F24 !important;
+  color: #FAFAFA !important;
+  -webkit-text-fill-color: #FAFAFA !important;
+  border-color: #333338 !important;
+}
+
+/* LIGHT THEME FORM CONTROLS (SELECT, DATE, TIME) */
+[data-theme="light"] select,
+[data-theme="light"] input[type="date"],
+[data-theme="light"] input[type="time"],
+[data-theme="light"] input[type="datetime-local"] {
+  color-scheme: light !important;
+  background-color: #F4F4F5 !important;
+  color: #0A0A0A !important;
+  -webkit-text-fill-color: #0A0A0A !important;
+  border-color: #E5E5E5 !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--border-highlight) !important;
+  box-shadow: 0 0 8px var(--focus-ring);
+}
+
+/* WebKit Calendar & Time Picker Indicator Styling */
 input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator {
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
-  opacity: 0.7;
+  opacity: 0.85;
   transition: opacity 0.15s ease;
 }
 
 [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
-[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.8) sepia(1) saturate(5) hue-rotate(200deg);
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.9) !important;
 }
 
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: none !important;
+}
+
+/* Dropdown Option Styling */
 option {
-  background: var(--bg-card);
+  background-color: var(--bg-card);
   color: var(--text-primary);
+}
+
+[data-theme="dark"] option {
+  background-color: #1F1F24 !important;
+  color: #FAFAFA !important;
+}
+
+[data-theme="light"] option {
+  background-color: #FFFFFF !important;
+  color: #0A0A0A !important;
 }
 
 ::placeholder {
