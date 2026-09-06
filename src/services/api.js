@@ -112,8 +112,10 @@ export function classifyApiError(err) {
 }
 
 async function request(url, options = {}) {
+  const timeoutMs = options.timeout || (url.includes('/auth/') ? 45000 : 25000);
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const startTime = Date.now();
 
   const config = {
     ...options,
@@ -127,8 +129,11 @@ async function request(url, options = {}) {
 
   try {
     const apiBase = getApiBase();
+    console.log(`[API REQUEST START] ${options.method || 'GET'} ${url} at ${new Date().toISOString()}`);
     const res = await fetch(`${apiBase}${url}`, config);
     clearTimeout(timeoutId);
+    const duration = Date.now() - startTime;
+    console.log(`[API REQUEST END] ${options.method || 'GET'} ${url} completed in ${duration}ms (Status: ${res.status})`);
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
@@ -151,11 +156,7 @@ async function request(url, options = {}) {
       let userMsg = rawMsg;
       if (!userMsg) {
         if (res.status === 401) userMsg = 'Your session has expired. Please log in again.';
-        else if (res.status === 404) {
-          userMsg = url.includes('/auth/')
-            ? 'Unable to complete your request right now. Please try again.'
-            : "We couldn't find what you're looking for.";
-        }
+        else if (res.status === 404) userMsg = "We couldn't find what you're looking for.";
         else if (res.status >= 500) userMsg = "DaySync couldn't reach the server right now.";
         else userMsg = 'Unable to complete your request right now.';
       }
@@ -165,13 +166,16 @@ async function request(url, options = {}) {
     return await res.json();
   } catch (err) {
     clearTimeout(timeoutId);
+    const duration = Date.now() - startTime;
 
     if (err instanceof ApiError) {
+      console.error(`[API ERROR] ${options.method || 'GET'} ${url} failed in ${duration}ms:`, err.message);
       throw err;
     }
 
     if (err.name === 'AbortError') {
-      throw new ApiError('DaySync is taking a little longer to connect.', 408, 'TIMEOUT');
+      console.error(`[API TIMEOUT] ${options.method || 'GET'} ${url} aborted after ${duration}ms (limit: ${timeoutMs}ms)`);
+      throw new ApiError('DaySync is taking a little longer to connect. Please try again.', 408, 'TIMEOUT');
     }
 
     const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
@@ -179,6 +183,7 @@ async function request(url, options = {}) {
       throw new ApiError("You're offline right now.", 0, 'OFFLINE');
     }
 
+    console.error(`[API NETWORK ERROR] ${options.method || 'GET'} ${url} failed in ${duration}ms:`, err.message);
     throw new ApiError("DaySync couldn't reach the server right now.", 0, 'SERVER_UNAVAILABLE');
   }
 }

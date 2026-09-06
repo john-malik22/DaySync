@@ -207,6 +207,7 @@ app.post('/api/auth/change-password', authenticate, (req, res) => {
 
 // Forgot Password: Request OTP Route
 app.post('/api/auth/forgot-password', async (req, res) => {
+  const routeStartTime = Date.now();
   const { email } = req.body;
   if (!email || !email.includes('@')) {
     return res.status(400).json({ error: 'Valid email address is required.' });
@@ -217,6 +218,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
   const user = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
   if (!user) {
+    console.log(`[FORGOT PASSWORD ROUTE] User lookup failed for ${normalizedEmail} in ${Date.now() - routeStartTime}ms`);
     return res.status(404).json({
       error: 'Account does not exist. No user found with this email address.',
       code: 'USER_NOT_FOUND'
@@ -242,20 +244,21 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
   db.write(store);
 
-  console.log(`[FORGOT PASSWORD] Generated OTP for ${normalizedEmail}. Sending email...`);
+  console.log(`[FORGOT PASSWORD ROUTE] OTP stored at t=${Date.now() - routeStartTime}ms. Dispatching email via Brevo...`);
 
   // Attempt to send email via Brevo
   const emailRes = await sendPasswordResetEmail({ to: normalizedEmail, otp });
 
   if (!emailRes.success) {
-    console.error(`[FORGOT PASSWORD EMAIL ERROR] Failed to send email to ${normalizedEmail}:`, emailRes.error);
+    console.error(`[FORGOT PASSWORD EMAIL ERROR] Failed to send email to ${normalizedEmail} after ${Date.now() - routeStartTime}ms:`, emailRes.error);
     return res.status(500).json({
       error: emailRes.error || 'Failed to send password reset email. Please check server email configuration.',
       code: 'EMAIL_SEND_FAILED'
     });
   }
 
-  console.log(`[FORGOT PASSWORD SUCCESS] Password reset OTP email sent to ${normalizedEmail}`);
+  const totalDuration = Date.now() - routeStartTime;
+  console.log(`[FORGOT PASSWORD SUCCESS] Password reset OTP email sent to ${normalizedEmail} in ${totalDuration}ms total`);
   res.json({
     success: true,
     message: `Password reset code sent to ${normalizedEmail}.`

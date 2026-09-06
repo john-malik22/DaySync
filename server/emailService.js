@@ -43,9 +43,15 @@ export async function sendBrevoEmail({ to, subject, textContent }) {
     return { success: false, error: `Invalid recipient email: ${cleanRecipient}` };
   }
 
+  const startTime = Date.now();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+
   try {
+    console.log(`[BREVO EMAIL REQUEST START] Initiating fetch to Brevo API...`);
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         'accept': 'application/json',
         'api-key': cleanApiKey,
@@ -66,18 +72,26 @@ export async function sendBrevoEmail({ to, subject, textContent }) {
       })
     });
 
+    clearTimeout(timeoutId);
+    const duration = Date.now() - startTime;
     const resData = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      console.error(`[BREVO EMAIL FAILURE] HTTP Status: ${response.status}`);
+      console.error(`[BREVO EMAIL FAILURE] HTTP Status: ${response.status} in ${duration}ms`);
       console.error(`[BREVO EMAIL FAILURE] Response Details:`, resData.code || resData.message || JSON.stringify(resData));
       return { success: false, status: response.status, error: resData.message || 'Brevo API rejected email request.' };
     }
 
-    console.log(`[BREVO EMAIL ACCEPTED] Message ID:`, resData.messageId || 'Success');
-    return { success: true, messageId: resData.messageId };
+    console.log(`[BREVO EMAIL ACCEPTED] Message ID: ${resData.messageId || 'Success'} in ${duration}ms`);
+    return { success: true, messageId: resData.messageId, durationMs: duration };
   } catch (err) {
-    console.error('[BREVO EMAIL EXCEPTION] Request failed:', err.message);
+    clearTimeout(timeoutId);
+    const duration = Date.now() - startTime;
+    if (err.name === 'AbortError') {
+      console.error(`[BREVO EMAIL TIMEOUT] Request to Brevo timed out after ${duration}ms`);
+      return { success: false, error: 'Brevo email delivery request timed out after 12 seconds.' };
+    }
+    console.error(`[BREVO EMAIL EXCEPTION] Request failed in ${duration}ms:`, err.message);
     return { success: false, error: err.message };
   }
 }

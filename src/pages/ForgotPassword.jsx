@@ -57,6 +57,8 @@ export function ForgotPassword() {
   // STEP 1: Submit Email for Reset Code
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return; // Prevent duplicate requests
+
     const cleanEmail = email.trim();
 
     if (!cleanEmail) {
@@ -71,14 +73,20 @@ export function ForgotPassword() {
 
     setError('');
     setLoading(true);
+    const startTime = Date.now();
 
     try {
+      console.log(`[UI FORGOT PASSWORD START] Requesting reset code for email...`);
       const res = await api.forgotPassword(cleanEmail);
+      const duration = Date.now() - startTime;
+      console.log(`[UI FORGOT PASSWORD SUCCESS] Received response in ${duration}ms:`, res.message);
       setInfoMessage(res.message || 'If an account exists with that email address, a password reset code has been sent.');
       setStep('OTP');
       setResendTimer(45);
       setCanResend(false);
     } catch (err) {
+      const duration = Date.now() - startTime;
+      console.error(`[UI FORGOT PASSWORD ERROR] Request failed after ${duration}ms:`, err.message);
       if (!navigator.onLine) {
         setError('Unable to connect right now. Please check your internet connection.');
       } else {
@@ -92,6 +100,7 @@ export function ForgotPassword() {
   // STEP 2: Verify 6-Digit Reset OTP
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return; // Prevent duplicate requests
     const cleanOtp = otp.trim();
 
     if (!cleanOtp || cleanOtp.length !== 6) {
@@ -123,23 +132,24 @@ export function ForgotPassword() {
 
   // Resend OTP Code
   const handleResendOtp = async () => {
-    if (!canResend) return;
+    if (!canResend || loading) return; // Prevent duplicate requests
     setError('');
     setInfoMessage('');
     setLoading(true);
+    const startTime = Date.now();
 
     try {
+      console.log(`[UI RESEND OTP START] Requesting new reset code...`);
       const res = await api.forgotPassword(email.trim());
+      const duration = Date.now() - startTime;
+      console.log(`[UI RESEND OTP SUCCESS] Received response in ${duration}ms:`, res.message);
       setInfoMessage(res.message || 'If an account exists with that email address, a password reset code has been sent.');
       setResendTimer(45);
       setCanResend(false);
     } catch (err) {
-      const msg = err.message || '';
-      if (msg.includes("couldn't find") || msg.includes('404') || err?.status === 404) {
-        setError('Unable to send the reset code right now. Please try again.');
-      } else {
-        setError(msg || 'Unable to send the reset code right now. Please try again.');
-      }
+      const duration = Date.now() - startTime;
+      console.error(`[UI RESEND OTP ERROR] Request failed after ${duration}ms:`, err.message);
+      setError(err.message || 'Unable to send the reset code right now. Please try again.');
     } finally {
       setLoading(false);
     }
