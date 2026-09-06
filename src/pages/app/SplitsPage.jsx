@@ -128,30 +128,26 @@ export function SplitsPage() {
   // Handle Confirm Delete Split
   const handleConfirmDeleteSplit = async () => {
     if (!splitToDelete?.id) return;
-    setIsDeletingSplit(true);
+    const targetId = splitToDelete.id;
+    const previousSplits = [...splits];
+
+    // Optimistic UI deletion
+    setSplits(prev => prev.filter(s => s.id !== targetId));
+    if (selectedSplit?.id === targetId) {
+      setSelectedSplit(null);
+      navigate('/app/splits');
+    }
+    setShowDeleteModal(false);
+    if (showToast) showToast(`Split "${splitToDelete.name || ''}" deleted.`, 'info');
+
     try {
-      await api.deleteSplit(splitToDelete.id);
-      const updated = splits.filter(s => s.id !== splitToDelete.id);
-      setSplits(updated);
-      try {
-        localStorage.setItem(`daysync_splits_${userId}`, JSON.stringify(updated));
-        localStorage.setItem('daysync_splits', JSON.stringify(updated));
-      } catch (e) {}
-      window.dispatchEvent(new Event('daysync_data_changed'));
-
-      if (selectedSplit?.id === splitToDelete.id) {
-        setSelectedSplit(null);
-        navigate('/app/splits');
-      }
-
-      if (showToast) showToast(`Split "${splitToDelete.name || ''}" deleted successfully.`, 'success');
+      await api.deleteSplit(targetId);
     } catch (err) {
-      console.error('Error deleting split:', err);
-      if (showToast) showToast(err?.message || 'Failed to delete split. Please try again.', 'error');
+      setSplits(previousSplits);
+      if (showToast) showToast(err?.message || 'Failed to delete split.', 'error');
     } finally {
       setIsDeletingSplit(false);
       setSplitToDelete(null);
-      setShowDeleteModal(false);
     }
   };
 
@@ -163,7 +159,7 @@ export function SplitsPage() {
       return;
     }
 
-    if (!userId) return; // Wait for auth initialization on refresh
+    if (!userId) return;
 
     let isMounted = true;
     const loadSplitDetail = async () => {
@@ -305,8 +301,28 @@ export function SplitsPage() {
       }
     }
 
+    const newSplitExp = {
+      id: `exp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      description: expDesc.trim(),
+      amount: totalAmt,
+      paidByUserId: expPaidBy || userId,
+      paidByName: membersMap[expPaidBy || userId] || 'Member',
+      splitMethod: expSplitMethod,
+      participants: participantsData,
+      date: new Date().toISOString()
+    };
+
+    // Optimistic UI update
+    setSelectedSplit(prev => prev ? {
+      ...prev,
+      expenses: [...(prev.expenses || []), newSplitExp]
+    } : prev);
+
+    setShowAddExpense(false);
+    if (showToast) showToast(`Added expense "${expDesc}" to ${selectedSplit.name}!`, 'success');
+
     try {
-      await api.addSplitExpense(selectedSplit.id, {
+      const serverExp = await api.addSplitExpense(selectedSplit.id, {
         description: expDesc.trim(),
         amount: totalAmt,
         paidByUserId: expPaidBy || userId,
@@ -314,12 +330,17 @@ export function SplitsPage() {
         participants: participantsData
       });
 
-      setShowAddExpense(false);
-      if (showToast) showToast(`Added expense "${expDesc}" to ${selectedSplit.name}!`, 'success');
-      const refreshed = await api.getSplitById(selectedSplit.id).catch(() => null);
-      if (refreshed) setSelectedSplit(refreshed);
-      await fetchSplitsData();
+      if (serverExp && serverExp.id) {
+        setSelectedSplit(prev => prev ? {
+          ...prev,
+          expenses: (prev.expenses || []).map(x => x.id === newSplitExp.id ? { ...newSplitExp, ...serverExp } : x)
+        } : prev);
+      }
     } catch (err) {
+      setSelectedSplit(prev => prev ? {
+        ...prev,
+        expenses: (prev.expenses || []).filter(x => x.id !== newSplitExp.id)
+      } : prev);
       if (showToast) showToast(err.message || 'Could not add expense.', 'error');
     }
   };
@@ -329,20 +350,41 @@ export function SplitsPage() {
     e.preventDefault();
     if (!settleToUser || !settleAmount || parseFloat(settleAmount) <= 0) return;
 
+    const newSettlement = {
+      id: `stl_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      fromUserId: userId,
+      toUserId: settleToUser,
+      amount: parseFloat(settleAmount),
+      date: new Date().toISOString()
+    };
+
+    setSelectedSplit(prev => prev ? {
+      ...prev,
+      settlements: [...(prev.settlements || []), newSettlement]
+    } : prev);
+
+    setShowSettleModal(false);
+    setSettleToUser('');
+    setSettleAmount('');
+    if (showMemeReaction) showMemeReaction('SPLIT_SETTLED');
+    else if (showToast) showToast('Settlement marked as paid!', 'success');
+
     try {
-      await api.createSplitSettlement(selectedSplit.id, {
+      const serverSettle = await api.createSplitSettlement(selectedSplit.id, {
         toUserId: settleToUser,
         amount: parseFloat(settleAmount)
       });
-      setShowSettleModal(false);
-      setSettleToUser('');
-      setSettleAmount('');
-      if (showMemeReaction) showMemeReaction('SPLIT_SETTLED');
-      else if (showToast) showToast('Settlement marked as paid!', 'success');
-      const refreshed = await api.getSplitById(selectedSplit.id).catch(() => null);
-      if (refreshed) setSelectedSplit(refreshed);
-      await fetchSplitsData();
+      if (serverSettle && serverSettle.id) {
+        setSelectedSplit(prev => prev ? {
+          ...prev,
+          settlements: (prev.settlements || []).map(s => s.id === newSettlement.id ? { ...newSettlement, ...serverSettle } : s)
+        } : prev);
+      }
     } catch (err) {
+      setSelectedSplit(prev => prev ? {
+        ...prev,
+        settlements: (prev.settlements || []).filter(s => s.id !== newSettlement.id)
+      } : prev);
       if (showToast) showToast(err.message || 'Could not record settlement.', 'error');
     }
   };

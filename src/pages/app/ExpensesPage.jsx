@@ -61,31 +61,30 @@ export function ExpensesPage() {
     setEditDescription(exp.description || '');
   };
 
-  const handleSaveEdit = async (id) => {
+  const handleSaveEdit = (id) => {
     if (!editAmount) return;
-    try {
-      await updateExpense(id, {
-        type: editTxType,
-        amount: parseFloat(editAmount),
-        category: editCategory,
-        description: editDescription
-      });
-      setEditingId(null);
-      if (showToast) showToast('Transaction updated successfully.', 'success');
-    } catch (err) {
+    const payload = {
+      type: editTxType,
+      amount: parseFloat(editAmount),
+      category: editCategory,
+      description: editDescription
+    };
+
+    setEditingId(null);
+    if (showToast) showToast('Transaction updated successfully.', 'success');
+
+    updateExpense(id, payload).catch(err => {
       if (showToast) showToast('Couldn\'t save changes. Please try again.', 'error');
-    }
+    });
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     const needsConfirm = localStorage.getItem('daysync_confirm_delete') !== 'false';
     if (!needsConfirm || confirm('Are you sure you want to delete this expense transaction?')) {
-      try {
-        await deleteExpense(id);
-        if (showToast) showToast('Expense transaction deleted.', 'info');
-      } catch (err) {
+      if (showToast) showToast('Expense transaction deleted.', 'info');
+      deleteExpense(id).catch(err => {
         if (showToast) showToast('Couldn\'t delete this item. Nothing was changed.', 'error');
-      }
+      });
     }
   };
 

@@ -156,43 +156,42 @@ export function RecurringManager() {
   }, [recurringItems, search, typeFilter, statusFilter]);
 
   // Toggle Pause / Resume
-  const handleTogglePause = async (item) => {
+  const handleTogglePause = (item) => {
     const newPaused = !item.isPaused;
-    try {
-      if (item.kind === 'expense') {
-        await updateExpense(item.id, { isPaused: newPaused });
-      } else {
-        await updateTask(item.id, { isPaused: newPaused });
-      }
+    const kind = item.kind;
 
-      if (showToast) {
-        showToast(
-          `"${item.name}" ${newPaused ? 'paused' : 'resumed'}.`,
-          newPaused ? 'info' : 'success'
-        );
-      }
-    } catch (err) {
-      if (showToast) showToast('Failed to update recurring status.', 'error');
+    if (showToast) {
+      showToast(
+        `"${item.name}" ${newPaused ? 'paused' : 'resumed'}.`,
+        newPaused ? 'info' : 'success'
+      );
     }
+
+    const syncPromise = kind === 'expense'
+      ? updateExpense(item.id, { isPaused: newPaused })
+      : updateTask(item.id, { isPaused: newPaused });
+
+    syncPromise.catch((err) => {
+      if (showToast) showToast('Failed to update recurring status.', 'error');
+    });
   };
 
   // Delete Item with Confirmation
-  const handleDeleteItem = async (item) => {
+  const handleDeleteItem = (item) => {
     const confirmDelete = localStorage.getItem('daysync_confirm_delete') !== 'false';
     if (confirmDelete && !confirm(`Are you sure you want to delete recurring "${item.name}"?`)) {
       return;
     }
 
-    try {
-      if (item.kind === 'expense') {
-        await deleteExpense(item.id);
-      } else {
-        await deleteTask(item.id);
-      }
-      if (showToast) showToast(`"${item.name}" deleted.`, 'info');
-    } catch (err) {
+    if (showToast) showToast(`"${item.name}" deleted.`, 'info');
+
+    const syncPromise = item.kind === 'expense'
+      ? deleteExpense(item.id)
+      : deleteTask(item.id);
+
+    syncPromise.catch((err) => {
       if (showToast) showToast('Failed to delete item.', 'error');
-    }
+    });
   };
 
   // Start Editing Item
@@ -204,34 +203,34 @@ export function RecurringManager() {
   };
 
   // Save Edit
-  const handleSaveEdit = async (e) => {
+  const handleSaveEdit = (e) => {
     e.preventDefault();
-    if (!editingItem || !editName.trim() || isSubmittingEdit) return;
+    if (!editingItem || !editName.trim()) return;
 
-    setIsSubmittingEdit(true);
-    try {
-      if (editingItem.kind === 'expense') {
-        await updateExpense(editingItem.id, {
-          description: editName.trim(),
-          nextDueDate: editDate,
-          endDate: editDate,
-          duration: editRule
-        });
-      } else {
-        await updateTask(editingItem.id, {
-          title: editName.trim(),
-          dueDate: editDate,
-          recurring: editRule
-        });
-      }
+    const trimmedName = editName.trim();
+    const itemToEdit = editingItem;
+    const targetDate = editDate;
+    const targetRule = editRule;
 
-      if (showToast) showToast(`"${editName.trim()}" updated.`, 'success');
-      setEditingItem(null);
-    } catch (err) {
+    setEditingItem(null);
+    if (showToast) showToast(`"${trimmedName}" updated.`, 'success');
+
+    const syncPromise = itemToEdit.kind === 'expense'
+      ? updateExpense(itemToEdit.id, {
+          description: trimmedName,
+          nextDueDate: targetDate,
+          endDate: targetDate,
+          duration: targetRule
+        })
+      : updateTask(itemToEdit.id, {
+          title: trimmedName,
+          dueDate: targetDate,
+          recurring: targetRule
+        });
+
+    syncPromise.catch((err) => {
       if (showToast) showToast('Failed to save changes.', 'error');
-    } finally {
-      setIsSubmittingEdit(false);
-    }
+    });
   };
 
   const getTypeIcon = (type) => {

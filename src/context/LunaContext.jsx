@@ -299,201 +299,79 @@ export function LunaProvider({ children }) {
     }
   };
 
-  // Memory Actions
-  const addMemory = async (data) => {
-    const newMem = await api.createMemory(data);
-    await fetchMemories();
-    return newMem;
-  };
-
-  const updateMemory = async (id, data) => {
-    const updated = await api.updateMemory(id, data);
-    await fetchMemories();
-    return updated;
-  };
-
-  const deleteMemory = async (id) => {
-    await api.deleteMemory(id);
-    await fetchMemories();
-  };
-
-  const retryCount = useRef(0);
-  const backoffTimeoutRef = useRef(null);
-
-  // Process pending offline sync queue with Exponential Backoff
-  const processPendingSyncQueue = useCallback(async () => {
-    if (!userId) return;
-    const items = syncQueue.getPending(userId);
-    setPendingQueue(items);
-
-    if (items.length === 0) {
-      if (navigator.onLine) setSyncState('synced');
-      retryCount.current = 0;
-      return;
-    }
-
-    if (!navigator.onLine) {
-      setSyncState('offline');
-      return;
-    }
-
-    setSyncState('syncing');
-
-    const processedIds = [];
-    let hasError = false;
-
-    for (const item of items) {
-      try {
-        if (item.type === 'CREATE_TASK') {
-          await api.createTask(item.payload);
-        } else if (item.type === 'TOGGLE_TASK') {
-          await api.updateTask(item.targetId, { completed: item.completed });
-        } else if (item.type === 'UPDATE_TASK') {
-          await api.updateTask(item.targetId, item.payload);
-        } else if (item.type === 'DELETE_TASK') {
-          await api.deleteTask(item.targetId);
-        } else if (item.type === 'CREATE_EXPENSE') {
-          await api.createExpense(item.payload);
-        } else if (item.type === 'UPDATE_EXPENSE') {
-          await api.updateExpense(item.targetId, item.payload);
-        } else if (item.type === 'DELETE_EXPENSE') {
-          await api.deleteExpense(item.targetId);
-        }
-        processedIds.push(item.id);
-      } catch (err) {
-        console.warn('Sync attempt failed for item:', item, err);
-        hasError = true;
-        break;
-      }
-    }
-
-    if (processedIds.length > 0) {
-      syncQueue.removeItems(userId, processedIds);
-    }
-
-    const remaining = syncQueue.getPending(userId);
-    setPendingQueue(remaining);
-
-    if (remaining.length === 0) {
-      retryCount.current = 0;
-      setSyncState('synced');
-      fetchTasks();
-      fetchExpenses();
-    } else if (hasError) {
-      setSyncState('failed');
-      // Exponential Backoff Retry (3s -> 6s -> 12s -> 24s -> max 60s)
-      retryCount.current = Math.min(retryCount.current + 1, 5);
-      const delayMs = Math.min(3000 * Math.pow(2, retryCount.current - 1), 60000);
-
-      if (backoffTimeoutRef.current) clearTimeout(backoffTimeoutRef.current);
-      backoffTimeoutRef.current = setTimeout(() => {
-        if (navigator.onLine) {
-          processPendingSyncQueue();
-        }
-      }, delayMs);
-    }
-  }, [userId, fetchTasks, fetchExpenses]);
-
-  // Handle network status changes & auto-sync
-  useEffect(() => {
-    if (userId) {
-      const remaining = syncQueue.getPending(userId);
-      setPendingQueue(remaining);
-      if (remaining.length > 0) {
-        setSyncState(!navigator.onLine ? 'offline' : 'pending');
-      }
-    }
-
-    function handleOnline() {
-      processPendingSyncQueue();
-    }
-
-    function handleOffline() {
-      setSyncState('offline');
-    }
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [userId, processPendingSyncQueue]);
-
-  // Task Actions (Offline resilient)
+  // Task Actions (Instant Optimistic UI)
   const addTask = async (taskData) => {
-    if (!navigator.onLine) {
-      const tempId = `local_task_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-      const newTask = {
-        id: tempId,
-        text: taskData.text,
-        completed: false,
-        type: taskData.type || 'task',
-        dueDate: taskData.dueDate || new Date().toISOString(),
-        isLocal: true,
-        createdAt: new Date().toISOString()
-      };
+    const tempId = `tsk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const optimisticTask = {
+      id: tempId,
+      title: taskData.title || taskData.text || 'Task',
+      priority: taskData.priority || 'Medium',
+      category: taskData.category || 'General',
+      taskType: taskData.taskType || 'task',
+      personName: taskData.personName || null,
+      meetingPeople: taskData.meetingPeople || null,
+      location: taskData.location || null,
+      dueDate: taskData.dueDate || new Date().toISOString().split('T')[0],
+      dueTime: taskData.dueTime || '19:00',
+      timeBlock: taskData.timeBlock || '19:00 - 20:00',
+      recurring: taskData.recurring || null,
+      subtasks: taskData.subtasks || [],
+      completed: false,
+      createdAt: new Date().toISOString(),
+      ...taskData
+    };
 
-      setTasks(prev => [...prev, newTask]);
-      clientCache.save(userId, 'tasks', [...tasks, newTask]);
+    setTasks(prev => [...prev, optimisticTask]);
+    clientCache.save(userId, 'tasks', [...tasks, optimisticTask]);
+
+    if (!navigator.onLine) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'CREATE_TASK', payload: taskData, tempId });
       setPendingQueue(updatedQueue);
-      setSyncState('pending');
-      return newTask;
+      setSyncState('offline');
+      return optimisticTask;
     }
 
     try {
-      const newTask = await api.createTask(taskData);
-      await fetchTasks();
-      return newTask;
+      const createdTask = await api.createTask(taskData);
+      const finalTask = { ...optimisticTask, ...createdTask, id: createdTask?.id || tempId };
+      setTasks(prev => prev.map(t => t.id === tempId ? finalTask : t));
+      clientCache.save(userId, 'tasks', tasks.map(t => t.id === tempId ? finalTask : t));
+      return finalTask;
     } catch (err) {
-      const tempId = `local_task_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-      const newTask = {
-        id: tempId,
-        text: taskData.text,
-        completed: false,
-        type: taskData.type || 'task',
-        dueDate: taskData.dueDate || new Date().toISOString(),
-        isLocal: true,
-        createdAt: new Date().toISOString()
-      };
-
-      setTasks(prev => [newTask, ...prev]);
-      clientCache.save(userId, 'tasks', [newTask, ...tasks]);
-      const updatedQueue = syncQueue.enqueue(userId, { type: 'CREATE_TASK', payload: taskData, tempId });
-      setPendingQueue(updatedQueue);
-      setSyncState('failed');
-      return newTask;
+      setTasks(prev => prev.filter(t => t.id !== tempId));
+      clientCache.save(userId, 'tasks', tasks.filter(t => t.id !== tempId));
+      throw err;
     }
   };
 
   const updateTask = async (id, taskData) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...taskData } : t));
-    const updatedTasks = tasks.map(t => t.id === id ? { ...t, ...taskData } : t);
-    clientCache.save(userId, 'tasks', updatedTasks);
+    const previousTasks = [...tasks];
+    const newTasks = previousTasks.map(t => t.id === id ? { ...t, ...taskData } : t);
+    setTasks(newTasks);
+    if (userId) clientCache.save(userId, 'tasks', newTasks);
 
     if (!navigator.onLine || String(id).startsWith('local_')) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'UPDATE_TASK', targetId: id, payload: taskData });
       setPendingQueue(updatedQueue);
-      setSyncState('pending');
       return { id, ...taskData };
     }
 
     try {
       const updated = await api.updateTask(id, taskData);
-      await fetchTasks();
+      if (updated && typeof updated === 'object') {
+        setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updated } : t));
+      }
       return updated;
     } catch (err) {
-      const updatedQueue = syncQueue.enqueue(userId, { type: 'UPDATE_TASK', targetId: id, payload: taskData });
-      setPendingQueue(updatedQueue);
-      setSyncState('failed');
-      return { id, ...taskData };
+      setTasks(previousTasks);
+      if (userId) clientCache.save(userId, 'tasks', previousTasks);
+      throw err;
     }
   };
 
   const toggleTask = async (id, currentCompleted) => {
     const newCompleted = !currentCompleted;
+    const previousTasks = [...tasks];
     setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: newCompleted } : t));
     const updatedTasks = tasks.map(t => t.id === id ? { ...t, completed: newCompleted } : t);
     clientCache.save(userId, 'tasks', updatedTasks);
@@ -501,23 +379,21 @@ export function LunaProvider({ children }) {
     if (!navigator.onLine || String(id).startsWith('local_')) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'TOGGLE_TASK', targetId: id, completed: newCompleted });
       setPendingQueue(updatedQueue);
-      setSyncState('pending');
       return { id, completed: newCompleted };
     }
 
     try {
       const updated = await api.updateTask(id, { completed: newCompleted });
-      await fetchTasks();
       return updated;
     } catch (err) {
-      const updatedQueue = syncQueue.enqueue(userId, { type: 'TOGGLE_TASK', targetId: id, completed: newCompleted });
-      setPendingQueue(updatedQueue);
-      setSyncState('failed');
-      return { id, completed: newCompleted };
+      setTasks(previousTasks);
+      clientCache.save(userId, 'tasks', previousTasks);
+      throw err;
     }
   };
 
   const deleteTask = async (id) => {
+    const previousTasks = [...tasks];
     setTasks(prev => prev.filter(t => t.id !== id));
     const remainingTasks = tasks.filter(t => t.id !== id);
     clientCache.save(userId, 'tasks', remainingTasks);
@@ -525,92 +401,82 @@ export function LunaProvider({ children }) {
     if (!navigator.onLine || String(id).startsWith('local_')) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'DELETE_TASK', targetId: id });
       setPendingQueue(updatedQueue);
-      setSyncState('pending');
       return;
     }
 
     try {
       await api.deleteTask(id);
-      await fetchTasks();
     } catch (err) {
-      const updatedQueue = syncQueue.enqueue(userId, { type: 'DELETE_TASK', targetId: id });
-      setPendingQueue(updatedQueue);
-      setSyncState('failed');
+      setTasks(previousTasks);
+      clientCache.save(userId, 'tasks', previousTasks);
+      throw err;
     }
   };
 
-  // Expense Actions (Offline resilient)
+  // Expense Actions (Instant Optimistic UI)
   const addExpense = async (expData) => {
-    if (!navigator.onLine) {
-      const tempId = `local_exp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-      const newExp = {
-        id: tempId,
-        amount: Number(expData.amount),
-        type: expData.type || 'EXPENSE',
-        category: expData.category || 'General',
-        note: expData.note || '',
-        date: expData.date || new Date().toISOString(),
-        isLocal: true
-      };
+    const tempId = `exp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const optimisticExp = {
+      id: tempId,
+      amount: Number(expData.amount),
+      type: expData.type || 'expense',
+      category: expData.category || 'Other',
+      description: expData.description || expData.note || expData.category || 'Expense',
+      date: expData.date || new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString(),
+      ...expData
+    };
 
-      setExpenses(prev => [newExp, ...prev]);
-      clientCache.save(userId, 'expenses', [newExp, ...expenses]);
+    setExpenses(prev => [...prev, optimisticExp]);
+    clientCache.save(userId, 'expenses', [...expenses, optimisticExp]);
+
+    if (!navigator.onLine) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'CREATE_EXPENSE', payload: expData, tempId });
       setPendingQueue(updatedQueue);
-      setSyncState('pending');
-      return newExp;
+      setSyncState('offline');
+      return optimisticExp;
     }
 
     try {
-      const newExp = await api.createExpense(expData);
-      await fetchExpenses();
-      return newExp;
+      const createdExp = await api.createExpense(expData);
+      const finalExp = { ...optimisticExp, ...createdExp, id: createdExp?.id || tempId };
+      setExpenses(prev => prev.map(e => e.id === tempId ? finalExp : e));
+      clientCache.save(userId, 'expenses', expenses.map(e => e.id === tempId ? finalExp : e));
+      return finalExp;
     } catch (err) {
-      const tempId = `local_exp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-      const newExp = {
-        id: tempId,
-        amount: Number(expData.amount),
-        type: expData.type || 'EXPENSE',
-        category: expData.category || 'General',
-        note: expData.note || '',
-        date: expData.date || new Date().toISOString(),
-        isLocal: true
-      };
-
-      setExpenses(prev => [newExp, ...prev]);
-      clientCache.save(userId, 'expenses', [newExp, ...expenses]);
-      const updatedQueue = syncQueue.enqueue(userId, { type: 'CREATE_EXPENSE', payload: expData, tempId });
-      setPendingQueue(updatedQueue);
-      setSyncState('failed');
-      return newExp;
+      setExpenses(prev => prev.filter(e => e.id !== tempId));
+      clientCache.save(userId, 'expenses', expenses.filter(e => e.id !== tempId));
+      throw err;
     }
   };
 
   const updateExpense = async (id, expData) => {
-    setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...expData } : e));
-    const updatedExps = expenses.map(e => e.id === id ? { ...e, ...expData } : e);
-    clientCache.save(userId, 'expenses', updatedExps);
+    const previousExpenses = [...expenses];
+    const newExpenses = previousExpenses.map(e => e.id === id ? { ...e, ...expData } : e);
+    setExpenses(newExpenses);
+    if (userId) clientCache.save(userId, 'expenses', newExpenses);
 
     if (!navigator.onLine || String(id).startsWith('local_')) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'UPDATE_EXPENSE', targetId: id, payload: expData });
       setPendingQueue(updatedQueue);
-      setSyncState('pending');
       return { id, ...expData };
     }
 
     try {
       const updated = await api.updateExpense(id, expData);
-      await fetchExpenses();
+      if (updated && typeof updated === 'object') {
+        setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...updated } : e));
+      }
       return updated;
     } catch (err) {
-      const updatedQueue = syncQueue.enqueue(userId, { type: 'UPDATE_EXPENSE', targetId: id, payload: expData });
-      setPendingQueue(updatedQueue);
-      setSyncState('failed');
-      return { id, ...expData };
+      setExpenses(previousExpenses);
+      if (userId) clientCache.save(userId, 'expenses', previousExpenses);
+      throw err;
     }
   };
 
   const deleteExpense = async (id) => {
+    const previousExpenses = [...expenses];
     setExpenses(prev => prev.filter(e => e.id !== id));
     const remaining = expenses.filter(e => e.id !== id);
     clientCache.save(userId, 'expenses', remaining);
@@ -618,17 +484,66 @@ export function LunaProvider({ children }) {
     if (!navigator.onLine || String(id).startsWith('local_')) {
       const updatedQueue = syncQueue.enqueue(userId, { type: 'DELETE_EXPENSE', targetId: id });
       setPendingQueue(updatedQueue);
-      setSyncState('pending');
       return;
     }
 
     try {
       await api.deleteExpense(id);
-      await fetchExpenses();
     } catch (err) {
-      const updatedQueue = syncQueue.enqueue(userId, { type: 'DELETE_EXPENSE', targetId: id });
-      setPendingQueue(updatedQueue);
-      setSyncState('failed');
+      setExpenses(previousExpenses);
+      clientCache.save(userId, 'expenses', previousExpenses);
+      throw err;
+    }
+  };
+
+  // Memory Actions (Instant Optimistic UI)
+  const addMemory = async (data) => {
+    const tempId = `mem_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const optimisticMem = {
+      id: tempId,
+      type: data.type || 'Preferences',
+      content: data.content,
+      confidence: data.confidence || 1.0,
+      approved: data.approved !== undefined ? data.approved : true,
+      createdAt: new Date().toISOString()
+    };
+
+    setMemories(prev => [...prev, optimisticMem]);
+    clientCache.save(userId, 'memories', [...memories, optimisticMem]);
+
+    try {
+      const newMem = await api.createMemory(data);
+      const finalMem = { ...optimisticMem, ...newMem, id: newMem?.id || tempId };
+      setMemories(prev => prev.map(m => m.id === tempId ? finalMem : m));
+      return finalMem;
+    } catch (err) {
+      setMemories(prev => prev.filter(m => m.id !== tempId));
+      throw err;
+    }
+  };
+
+  const updateMemory = async (id, data) => {
+    const previous = [...memories];
+    setMemories(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
+
+    try {
+      const updated = await api.updateMemory(id, data);
+      return updated;
+    } catch (err) {
+      setMemories(previous);
+      throw err;
+    }
+  };
+
+  const deleteMemory = async (id) => {
+    const previous = [...memories];
+    setMemories(prev => prev.filter(m => m.id !== id));
+
+    try {
+      await api.deleteMemory(id);
+    } catch (err) {
+      setMemories(previous);
+      throw err;
     }
   };
 

@@ -126,7 +126,7 @@ export function ExpenseForm({ onSuccess }) {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!amount || isSubmitting) return;
 
@@ -135,67 +135,65 @@ export function ExpenseForm({ onSuccess }) {
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const isPlan = addAs !== 'transaction';
-      let payloadDescription = description;
-      if (!payloadDescription) {
-        if (addAs === 'recharge') {
-          payloadDescription = `${operator} Recharge (${activeDurationInfo.durationStr})`;
-        } else if (addAs === 'subscription') {
-          payloadDescription = `Subscription (${billingCycle})`;
-        } else {
-          payloadDescription = txType === 'income' ? 'Income Received' : category;
-        }
+    const isPlan = addAs !== 'transaction';
+    let payloadDescription = description;
+    if (!payloadDescription) {
+      if (addAs === 'recharge') {
+        payloadDescription = `${operator} Recharge (${activeDurationInfo.durationStr})`;
+      } else if (addAs === 'subscription') {
+        payloadDescription = `Subscription (${billingCycle})`;
+      } else {
+        payloadDescription = txType === 'income' ? 'Income Received' : category;
       }
-
-      await addExpense({
-        type: txType,
-        amount: parseFloat(amount),
-        category,
-        description: payloadDescription,
-        date: startDate || new Date().toISOString().split('T')[0],
-        isPlan,
-        isRecurring: isPlan,
-        addAsMode: addAs,
-        durationValue: isPlan ? activeDurationInfo.durationValue : null,
-        durationUnit: isPlan ? activeDurationInfo.durationUnit : null,
-        duration: isPlan ? activeDurationInfo.durationStr : null,
-        startDate: isPlan ? startDate : null,
-        endDate: isPlan ? calculatedEndDateIso : null,
-        nextDueDate: isPlan ? calculatedEndDateIso : null,
-        meta: {
-          addAs,
-          billingCycle: addAs === 'subscription' ? billingCycle : null,
-          autoRenew: addAs === 'subscription' ? autoRenew : null,
-          operator: addAs === 'recharge' ? operator : null,
-          phoneOrAccount: addAs === 'recharge' ? phoneOrAccount : null
-        }
-      });
-
-      setAmount('');
-      setDescription('');
-      setPhoneOrAccount('');
-      setAddAs('transaction');
-      clearDraft();
-      if (showMemeReaction) {
-        if (txType === 'income') {
-          showMemeReaction(category === 'Refunds' ? 'REFUND_RECEIVED' : 'MONEY_RECEIVED');
-        } else if (addAs !== 'transaction') {
-          showMemeReaction('PLAN_ADDED');
-        } else {
-          showMemeReaction('EXPENSE_ADDED');
-        }
-      } else if (showToast) {
-        const labels = { transaction: 'Transaction', plan: 'Plan', subscription: 'Subscription', recharge: 'Recharge' };
-        showToast(`${labels[addAs] || 'Item'} saved successfully.`, 'success');
-      }
-      if (onSuccess) onSuccess();
-    } catch (err) {
-      if (showToast) showToast(err.message || 'Couldn\'t save transaction. Please try again.', 'error');
-    } finally {
-      setIsSubmitting(false);
     }
+
+    const payload = {
+      type: txType,
+      amount: parseFloat(amount),
+      category,
+      description: payloadDescription,
+      date: startDate || new Date().toISOString().split('T')[0],
+      isPlan,
+      isRecurring: isPlan,
+      addAsMode: addAs,
+      durationValue: isPlan ? activeDurationInfo.durationValue : null,
+      durationUnit: isPlan ? activeDurationInfo.durationUnit : null,
+      duration: isPlan ? activeDurationInfo.durationStr : null,
+      startDate: isPlan ? startDate : null,
+      endDate: isPlan ? calculatedEndDateIso : null,
+      nextDueDate: isPlan ? calculatedEndDateIso : null,
+      meta: {
+        addAs,
+        billingCycle: addAs === 'subscription' ? billingCycle : null,
+        autoRenew: addAs === 'subscription' ? autoRenew : null,
+        operator: addAs === 'recharge' ? operator : null,
+        phoneOrAccount: addAs === 'recharge' ? phoneOrAccount : null
+      }
+    };
+
+    setAmount('');
+    setDescription('');
+    setPhoneOrAccount('');
+    setAddAs('transaction');
+    clearDraft();
+
+    if (showMemeReaction) {
+      if (txType === 'income') {
+        showMemeReaction(category === 'Refunds' ? 'REFUND_RECEIVED' : 'MONEY_RECEIVED');
+      } else if (addAs !== 'transaction') {
+        showMemeReaction('PLAN_ADDED');
+      } else {
+        showMemeReaction('EXPENSE_ADDED');
+      }
+    } else if (showToast) {
+      const labels = { transaction: 'Transaction', plan: 'Plan', subscription: 'Subscription', recharge: 'Recharge' };
+      showToast(`${labels[addAs] || 'Item'} saved successfully.`, 'success');
+    }
+    if (onSuccess) onSuccess();
+
+    addExpense(payload).catch(err => {
+      if (showToast) showToast(err.message || 'Couldn\'t save transaction. Please try again.', 'error');
+    });
   };
 
   const activeCategories = txType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;

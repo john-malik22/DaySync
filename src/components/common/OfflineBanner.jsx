@@ -46,7 +46,7 @@ export function OfflineBanner() {
     icon = <RefreshCw size={13} className="spin-animation" />;
     bgColor = 'rgba(91, 80, 230, 0.94)'; // Indigo
     isVisible = true;
-  } else if (syncState === 'pending' || (pendingQueueCount && pendingQueueCount > 0)) {
+  } else if (isOffline && (syncState === 'pending' || (pendingQueueCount && pendingQueueCount > 0))) {
     label = `Pending changes (${pendingQueueCount || 1})`;
     icon = <Clock size={13} />;
     bgColor = 'rgba(245, 158, 11, 0.94)'; // Amber
