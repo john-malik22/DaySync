@@ -20,6 +20,7 @@ export function LunaProvider({ children }) {
   const [summaries, setSummaries] = useState([]);
   const [suggestion, setSuggestion] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
 
   // Sync state tracking: 'synced' | 'offline' | 'syncing' | 'pending' | 'failed'
   const [syncState, setSyncState] = useState(() => (typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'synced'));
@@ -228,20 +229,27 @@ export function LunaProvider({ children }) {
     }
   }, [userId, tasks, expenses, startingBalance]);
 
-  const fetchAllData = useCallback(async () => {
+  const refreshAuxiliaryData = useCallback(async () => {
     if (!userId) return;
-    setResourceLoading(prev => ({ ...prev, initial: true }));
     await Promise.allSettled([
       fetchTasks(),
       fetchExpenses(),
       fetchMemories(),
       fetchSummaries(),
       fetchSuggestion(),
-      api.getNotices().then(setNotices).catch(() => {}),
+      api.getNotices().then(setNotices).catch(() => {})
+    ]);
+  }, [userId, fetchTasks, fetchExpenses, fetchMemories, fetchSummaries, fetchSuggestion]);
+
+  const fetchAllData = useCallback(async () => {
+    if (!userId) return;
+    setResourceLoading(prev => ({ ...prev, initial: true }));
+    await Promise.allSettled([
+      refreshAuxiliaryData(),
       api.getChatHistory().then(setConversations).catch(() => {})
     ]);
     setResourceLoading(prev => ({ ...prev, initial: false }));
-  }, [userId, fetchTasks, fetchExpenses, fetchMemories, fetchSummaries, fetchSuggestion]);
+  }, [userId, refreshAuxiliaryData]);
 
   useEffect(() => {
     if (userId) {
@@ -260,6 +268,7 @@ export function LunaProvider({ children }) {
   }, [fetchAllData]);
 
   const sendMessage = async (messageText, enableVoice = false) => {
+    setIsSendingMessage(true);
     setLoading(true);
     setErrors(prev => ({ ...prev, chat: null }));
     try {
@@ -274,16 +283,18 @@ export function LunaProvider({ children }) {
         }
       }
 
-      // 2. Immediately stop loading indicator so "thinking" UI vanishes at the exact moment assistant message is rendered
+      // 2. Immediately stop message sending state so thinking UI vanishes at exact moment assistant message is rendered
+      setIsSendingMessage(false);
       setLoading(false);
 
-      // 3. Trigger auxiliary data refresh asynchronously in the background (non-blocking)
-      fetchAllData().catch(err => {
+      // 3. Trigger auxiliary data refresh (tasks, expenses, etc) asynchronously in background without overwriting chat history
+      refreshAuxiliaryData().catch(err => {
         console.warn('[LunaContext] Non-critical background data refresh error after chat message:', err);
       });
 
       return res;
     } catch (err) {
+      setIsSendingMessage(false);
       setLoading(false);
       const classified = classifyApiError(err);
       setErrors(prev => ({ ...prev, chat: classified }));
@@ -641,6 +652,7 @@ export function LunaProvider({ children }) {
         summaries,
         suggestion,
         loading,
+        isSendingMessage,
         errors,
         resourceLoading,
         lastSyncedAt,

@@ -1835,17 +1835,18 @@ option {
 
   /* Mobile Luna Chat Spacing & Keyboard Reflow Rules */
   .main-content-area:has(.chat-page-layout) {
-    padding-bottom: 0 !important;
+    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
     overflow: hidden !important;
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
+    box-sizing: border-box !important;
   }
 
   .chat-page-layout {
     height: 100% !important;
     max-height: 100% !important;
-    padding: 10px 12px 0 12px !important;
+    padding: 8px 12px 0 12px !important;
     gap: 6px !important;
     box-sizing: border-box !important;
     flex: 1 !important;
@@ -1864,31 +1865,24 @@ option {
   }
 
   .chat-composer-bar {
-    margin-top: 2px !important;
-    padding-top: 8px !important;
-    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+    margin-top: 0 !important;
+    padding: 8px 0 !important;
     background: var(--bg-primary) !important;
-    position: sticky !important;
-    bottom: 0 !important;
-    z-index: 10 !important;
-    transition: padding-bottom 0.15s ease !important;
-  }
-
-  .chat-page-layout:focus-within .chat-composer-bar,
-  .chat-composer-bar:focus-within {
-    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
-  }
-
-  @media (max-height: 540px) {
-    .chat-composer-bar {
-      padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
-    }
+    border-top: 1px solid var(--border-color) !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .chat-composer-bar input[type="text"] {
     scroll-margin-top: 0 !important;
     scroll-margin-bottom: 0 !important;
     font-size: 14px !important;
+  }
+
+  @media (max-height: 520px) {
+    .main-content-area:has(.chat-page-layout) {
+      padding-bottom: 0 !important;
+    }
   }
 
   /* Mobile Dashboard & Widgets Section Stacking */

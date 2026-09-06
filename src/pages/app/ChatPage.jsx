@@ -7,7 +7,7 @@ import { useToast } from '../../context/ToastContext';
 import { ChatBubble } from '../../components/chat/ChatBubble';
 
 export function ChatPage() {
-  const { conversations, sendMessage, loading, errors } = useLuna();
+  const { conversations, sendMessage, isSendingMessage, errors } = useLuna();
   const { showToast } = useToast();
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
@@ -17,6 +17,7 @@ export function ChatPage() {
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
   const navigate = useNavigate();
+  const prevConversationsCountRef = useRef(conversations.length);
 
   const quickQuestions = [
     "What tasks do I have pending?",
@@ -55,13 +56,16 @@ export function ChatPage() {
     }
   }, []);
 
-  // Smooth scroll to bottom on message list change or loading state change
+  // Smooth scroll to bottom ONLY when a new message is added or when sending starts
   useEffect(() => {
-    const rafId = requestAnimationFrame(() => {
-      scrollToBottom(true);
-    });
-    return () => cancelAnimationFrame(rafId);
-  }, [conversations.length, loading, scrollToBottom]);
+    if (conversations.length > prevConversationsCountRef.current || isSendingMessage) {
+      prevConversationsCountRef.current = conversations.length;
+      const rafId = requestAnimationFrame(() => {
+        scrollToBottom(true);
+      });
+      return () => cancelAnimationFrame(rafId);
+    }
+  }, [conversations.length, isSendingMessage, scrollToBottom]);
 
   const handleShortcutClick = (text) => {
     setInput(text);
@@ -80,7 +84,7 @@ export function ChatPage() {
   const handleSend = async (e) => {
     e?.preventDefault();
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || isSendingMessage) return;
 
     if (!navigator.onLine) {
       if (showToast) showToast("You're offline. Connect to the internet to chat with Luna.", 'error');
@@ -104,7 +108,7 @@ export function ChatPage() {
   };
 
   const handleRetryLast = async () => {
-    if (!lastFailedMsg || loading) return;
+    if (!lastFailedMsg || isSendingMessage) return;
     if (!navigator.onLine) {
       if (showToast) showToast("You're offline right now.", 'error');
       return;
@@ -194,7 +198,7 @@ export function ChatPage() {
 
       {/* Independent Scrollable Conversation Feed */}
       <div ref={chatFeedRef} className="chat-conversation-feed">
-        {filteredConversations.length === 0 && !loading && (
+        {filteredConversations.length === 0 && !isSendingMessage && (
           <div style={{ textAlign: 'center', padding: '36px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', margin: 'auto 0' }}>
             <img src="/icons/icon-192.png" alt="DaySync Logo" style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid var(--accent-primary)', boxShadow: '0 0 12px rgba(99, 102, 241, 0.25)' }} />
             <div style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-primary)' }}>Start a conversation with Luna.</div>
@@ -206,8 +210,8 @@ export function ChatPage() {
           <ChatBubble key={msg.id} msg={msg} />
         ))}
 
-        {/* Render thinking indicator ONLY during active request processing */}
-        {loading && (
+        {/* Render thinking indicator ONLY during active message sending */}
+        {isSendingMessage && (
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -228,7 +232,7 @@ export function ChatPage() {
         )}
 
         {/* Failed Chat Request Retry Banner */}
-        {lastFailedMsg && !loading && (
+        {lastFailedMsg && !isSendingMessage && (
           <div
             role="alert"
             style={{
@@ -263,7 +267,7 @@ export function ChatPage() {
         <div ref={chatEndRef} />
       </div>
 
-      {/* Sticky Bottom Message Composer Bar */}
+      {/* Bottom Message Composer Bar */}
       <form onSubmit={handleSend} className="chat-composer-bar">
         <input
           ref={inputRef}
@@ -286,12 +290,12 @@ export function ChatPage() {
 
         <button
           type="submit"
-          disabled={!input.trim() || loading}
+          disabled={!input.trim() || isSendingMessage}
           className="btn-primary"
           style={{
             padding: '0 18px',
             minHeight: '42px',
-            opacity: input.trim() && !loading ? 1 : 0.6,
+            opacity: input.trim() && !isSendingMessage ? 1 : 0.6,
             flexShrink: 0
           }}
         >
