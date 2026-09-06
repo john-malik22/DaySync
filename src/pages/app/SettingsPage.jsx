@@ -403,6 +403,11 @@ export function SettingsPage() {
       taskDue: true,
       planExpiry: true,
       splitUpdates: true,
+      expenses: true,
+      memes: true,
+      luna: true,
+      birthdays: true,
+      meetings: true,
       quietHours: false
     };
   });
@@ -749,36 +754,34 @@ export function SettingsPage() {
       {/* Top Header Row */}
       <PageHeaderRow title="SETTINGS" />
 
-      {/* COMPACT SINGLE-PAGE SETTINGS CONTAINER */}
-      <div className="settings-compact-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+      {/* CLEAN SINGLE-PAGE SETTINGS CONTAINER */}
+      <div className="settings-compact-wrapper" style={{ maxWidth: '840px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
         
         {/* 1. PROFILE SECTION */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+        <div className="settings-clean-section" style={{ padding: '20px 0 16px 0', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px', fontSize: '1.1rem', fontWeight: '700', width: '100%' }}>
             <User size={18} color="var(--accent-primary)" /> Profile & Account Information
           </h3>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
-            <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setShowProfileModal(prev => !prev)} title="Click to edit cartoon avatar">
-              <UserAvatar avatarId={user?.avatar} name={user?.name} size={72} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+            <div style={{ position: 'relative', cursor: 'pointer', marginBottom: '12px' }} onClick={() => setShowProfileModal(prev => !prev)} title="Click to edit cartoon avatar">
+              <UserAvatar avatarId={user?.avatar} name={user?.name} size={84} />
               <div style={{
-                position: 'absolute', bottom: '0', right: '0',
+                position: 'absolute', bottom: '2px', right: '2px',
                 background: 'var(--accent-primary)', color: '#FFFFFF',
-                borderRadius: '50%', width: '24px', height: '24px',
+                borderRadius: '50%', width: '26px', height: '26px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: '2px solid var(--bg-card)'
+                border: '2px solid var(--bg-primary)', boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
               }}>
-                <Edit2 size={12} />
+                <Edit2 size={13} />
               </div>
             </div>
 
-            <div style={{ flex: 1, minWidth: '180px' }}>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-                {user?.name || 'DaySync User'}
-              </h3>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                {user?.email || 'user@daysync.app'}
-              </div>
+            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', textAlign: 'center' }}>
+              {user?.name || 'John Malik'}
+            </h3>
+            <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'center' }}>
+              {user?.email || 'johnmalik2222@gmail.com'}
             </div>
           </div>
 
@@ -787,14 +790,17 @@ export function SettingsPage() {
             <div
               className="animate-fade-in"
               style={{
+                width: '100%',
+                maxWidth: '420px',
                 marginTop: '10px',
                 marginBottom: '16px',
                 padding: '16px',
-                borderRadius: '16px',
+                borderRadius: '14px',
                 background: 'var(--bg-secondary)',
                 border: '1px solid var(--border-color)',
                 boxShadow: 'var(--shadow-md)',
-                position: 'relative'
+                position: 'relative',
+                textAlign: 'left'
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -849,78 +855,68 @@ export function SettingsPage() {
             </div>
           )}
 
-          <div className="profile-actions-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
-            <button type="button" onClick={() => setShowProfileModal(prev => !prev)} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
+          {/* 4 BUTTONS IN TWO ROWS (2x2 GRID) */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', width: '100%', maxWidth: '420px', margin: '0 auto' }}>
+            <button type="button" onClick={() => setShowProfileModal(prev => !prev)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 12px', justifyContent: 'center' }}>
               <Sparkles size={13} /> Edit Avatar
             </button>
-            <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
+            <button type="button" onClick={handleOpenChangeName} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 12px', justifyContent: 'center' }}>
               <Edit2 size={13} /> Edit Name
             </button>
-            <button type="button" onClick={handleOpenChangeEmail} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
+            <button type="button" onClick={handleOpenChangeEmail} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 12px', justifyContent: 'center' }}>
               <Mail size={13} /> Edit Email
             </button>
-            <button type="button" onClick={handleOpenChangePassword} className="btn-secondary" style={{ fontSize: '11.5px', padding: '8px 6px', justifyContent: 'center' }}>
+            <button type="button" onClick={handleOpenChangePassword} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 12px', justifyContent: 'center' }}>
               <Key size={13} /> Change Password
             </button>
           </div>
         </div>
 
         {/* 2. APP & SYSTEM PREFERENCES */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="settings-clean-section" style={{ padding: '16px 0', borderBottom: '1px solid var(--border-color)' }}>
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '1.1rem', fontWeight: '700' }}>
             <SlidersHorizontal size={18} color="var(--accent-primary)" /> App & System Preferences
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {/* Theme Mode */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)', gap: '12px' }}>
+              <div style={{ flex: '1 1 auto', minWidth: 0, paddingRight: '8px' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Theme Mode</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Current: <strong style={{ color: 'var(--text-primary)', textTransform: 'capitalize' }}>{theme} Mode</strong></div>
               </div>
-              <button type="button" onClick={toggleTheme} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button type="button" onClick={toggleTheme} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                 {theme === 'dark' ? <Sun size={14} color="var(--accent-warning)" /> : <Moon size={14} />}
                 Switch to {theme === 'dark' ? 'Light' : 'Dark'}
               </button>
             </div>
 
             {/* Transaction Messages */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)', gap: '12px' }}>
+              <div style={{ flex: '1 1 auto', minWidth: 0, paddingRight: '8px' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Transaction Message Behavior</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Handling for expense and payment messages</div>
               </div>
               <select
                 value={transactionMsgBehavior}
                 onChange={(e) => handleTransactionMsgBehaviorChange(e.target.value)}
-                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', flexShrink: 0, maxWidth: '180px' }}
               >
                 <option value="automatic">Automatic Log</option>
                 <option value="confirm">Confirm Before Sending</option>
               </select>
             </div>
 
-            {/* Clear Luna Chat */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Clear Luna Chat</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Remove all stored conversations with Luna</div>
-              </div>
-              <button type="button" onClick={() => setShowClearHistoryModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px', color: 'var(--accent-warning)' }}>
-                <Trash2 size={13} /> Clear Chat
-              </button>
-            </div>
-
             {/* Open Page on Startup */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)', gap: '12px' }}>
+              <div style={{ flex: '1 1 auto', minWidth: 0, paddingRight: '8px' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Open Page on Startup</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Initial landing screen when launching app</div>
               </div>
               <select
                 value={startupPage}
                 onChange={handleStartupPageChange}
-                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', flexShrink: 0, maxWidth: '160px' }}
               >
                 <option value="dashboard">Dashboard</option>
                 <option value="tasks">Tasks</option>
@@ -933,15 +929,15 @@ export function SettingsPage() {
             </div>
 
             {/* Week Start Day */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)', gap: '12px' }}>
+              <div style={{ flex: '1 1 auto', minWidth: 0, paddingRight: '8px' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Week Start Day</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Calendar & analytics start day</div>
               </div>
               <select
                 value={weekStartDay}
                 onChange={(e) => handleWeekStartChange(e.target.value)}
-                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', flexShrink: 0, maxWidth: '140px' }}
               >
                 <option value="monday">Monday</option>
                 <option value="sunday">Sunday</option>
@@ -949,15 +945,15 @@ export function SettingsPage() {
             </div>
 
             {/* Date Format */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)', gap: '12px' }}>
+              <div style={{ flex: '1 1 auto', minWidth: 0, paddingRight: '8px' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Date Format</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Display format across dates</div>
               </div>
               <select
                 value={dateFormat}
                 onChange={(e) => handleDateFormatChange(e.target.value)}
-                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', flexShrink: 0, maxWidth: '180px' }}
               >
                 <option value="DD MMM YYYY">DD MMM YYYY (e.g. 04 Sep 2026)</option>
                 <option value="MM/DD/YYYY">MM/DD/YYYY (e.g. 09/04/2026)</option>
@@ -974,15 +970,15 @@ export function SettingsPage() {
             />
 
             {/* Currency */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', gap: '12px' }}>
+              <div style={{ flex: '1 1 auto', minWidth: 0, paddingRight: '8px' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Primary Currency</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Symbol used in expense snapshots</div>
               </div>
               <select
                 value={currency}
                 onChange={(e) => handleCurrencyChange(e.target.value)}
-                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', flexShrink: 0, maxWidth: '140px' }}
               >
                 <option value="INR (₹)">INR (₹)</option>
                 <option value="USD ($)">USD ($)</option>
@@ -992,8 +988,8 @@ export function SettingsPage() {
             </div>
 
             {/* Starting Account Balance */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)', gap: '12px' }}>
+              <div style={{ flex: '1 1 auto', minWidth: 0, paddingRight: '8px' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Starting Account Balance</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                   Current Baseline: <strong>₹{(startingBalance !== null ? startingBalance : 0).toLocaleString()}</strong>
@@ -1001,11 +997,11 @@ export function SettingsPage() {
               </div>
 
               {!isEditingBalance ? (
-                <button type="button" onClick={handleStartEditBalance} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px' }}>
+                <button type="button" onClick={handleStartEditBalance} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px', flexShrink: 0 }}>
                   <Edit2 size={13} /> Edit Balance
                 </button>
               ) : (
-                <form onSubmit={handleSaveStartingBalance} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <form onSubmit={handleSaveStartingBalance} style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
                   <input
                     type="number"
                     value={balanceInput}
@@ -1031,21 +1027,21 @@ export function SettingsPage() {
         </div>
 
         {/* 3. DASHBOARD SETTINGS */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+        <div className="settings-clean-section" style={{ padding: '16px 0', borderBottom: '1px solid var(--border-color)' }}>
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '1.1rem', fontWeight: '700' }}>
             <Layout size={18} color="var(--accent-primary)" /> Dashboard & Widgets
           </h3>
 
-          <div className="dashboard-widgets-setting-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)', gap: '16px' }}>
-            <div style={{ flex: '1 1 auto', minWidth: 0 }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Active Widgets Count</div>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', gap: '12px' }}>
+            <div style={{ flex: '1 1 auto', minWidth: 0, paddingRight: '8px' }}>
+              <div style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--text-primary)' }}>Active Widgets Count</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                 <strong>{activeWidgetIds.length}</strong> widget{activeWidgetIds.length !== 1 ? 's' : ''} visible on your dashboard
               </div>
             </div>
-            <div className="dashboard-widgets-buttons-wrapper" style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-              <button type="button" onClick={() => setIsWidgetPickerOpen(true)} className="btn-primary" style={{ fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Plus size={13} /> Manage Widgets
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+              <button type="button" onClick={() => setIsWidgetPickerOpen(true)} className="btn-primary" style={{ fontSize: '12px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <Plus size={14} /> Manage Widgets
               </button>
               <button type="button" onClick={() => setShowDashboardResetModal(true)} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px' }}>
                 Reset Layout
@@ -1055,96 +1051,150 @@ export function SettingsPage() {
         </div>
 
         {/* 4. NOTIFICATION SETTINGS */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <Bell size={18} color="var(--accent-primary)" /> Notification Settings
-          </h3>
+        <div className="settings-clean-section" style={{ padding: '16px 0', borderBottom: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', gap: '12px' }}>
+            <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '1.1rem', fontWeight: '700' }}>
+              <Bell size={18} color="var(--accent-primary)" /> Notification Settings
+            </h3>
+            <button type="button" onClick={handleTestNotification} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+              <Bell size={13} /> Send Test Notification
+            </button>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {/* Master Push */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
+            {/* 1. Master Push Notifications */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-color)', gap: '12px' }}>
+              <div style={{ flex: '1 1 auto', minWidth: 0, paddingRight: '8px' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Push Notifications</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Device and system push alerts</div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>Device and system push alerts</div>
               </div>
-              {pushSupported && pushPermission !== 'denied' && (
-                <button
-                  type="button"
+              {pushSupported && pushPermission !== 'denied' ? (
+                <div
                   onClick={handleTogglePush}
-                  disabled={pushLoading}
-                  className={pushEnabled ? 'btn-secondary' : 'btn-primary'}
-                  style={{ fontSize: '12px', padding: '6px 14px' }}
+                  style={{
+                    width: '44px', height: '24px', borderRadius: '12px',
+                    background: pushEnabled ? 'var(--accent-primary)' : 'var(--bg-tertiary, rgba(255,255,255,0.15))',
+                    border: '1px solid var(--border-color)', padding: '2px', display: 'flex', alignItems: 'center',
+                    cursor: 'pointer', flexShrink: 0, transition: 'background-color 0.2s ease'
+                  }}
+                  title={pushEnabled ? "Disable push notifications" : "Enable push notifications"}
                 >
-                  {pushLoading ? 'Processing...' : pushEnabled ? 'Disable' : 'Enable'}
-                </button>
+                  <div style={{
+                    width: '18px', height: '18px', borderRadius: '50%', background: '#FFFFFF',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                    transform: pushEnabled ? 'translateX(20px)' : 'translateX(0px)', transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }} />
+                </div>
+              ) : (
+                <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', flexShrink: 0 }}>
+                  {pushPermission === 'denied' ? 'Blocked' : 'Unsupported'}
+                </span>
               )}
             </div>
 
-            {/* Task Alerts */}
+            {/* 2. Tasks & Reminders */}
             <ToggleSwitch
-              checked={notifSettings.taskDue}
+              checked={notifSettings.taskDue !== false}
               onChange={() => handleToggleNotifSetting('taskDue')}
               label="Tasks & Reminders"
-              description="Alerts for due dates, overdue items, and meetings"
+              description="Alerts for due dates, overdue items, and task reminders"
             />
 
-            {/* Plan Expiry */}
+            {/* 3. Plans & Subscriptions */}
             <ToggleSwitch
-              checked={notifSettings.planExpiry}
+              checked={notifSettings.planExpiry !== false}
               onChange={() => handleToggleNotifSetting('planExpiry')}
               label="Plans & Subscriptions"
-              description="Notifications for plan renewals and upcoming bills"
+              description="Notifications for plan renewals, expirations, and bills"
             />
 
-            {/* Split Updates */}
+            {/* 4. Splits & Group Expenses */}
             <ToggleSwitch
-              checked={notifSettings.splitUpdates}
+              checked={notifSettings.splitUpdates !== false}
               onChange={() => handleToggleNotifSetting('splitUpdates')}
               label="Splits & Group Expenses"
               description="Alerts when new split expenses or settlements occur"
             />
 
-            {/* Quiet Hours */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Quiet Hours</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-                  Silence non-critical alerts ({quietStart} – {quietEnd})
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <button type="button" onClick={handleOpenQuietHoursModal} className="btn-secondary" style={{ fontSize: '12px', padding: '4px 10px' }}>
-                  Schedule
-                </button>
-                <div
-                  onClick={() => handleToggleQuietHours(!quietHoursEnabled)}
-                  style={{
-                    width: '44px', height: '24px', borderRadius: '12px',
-                    background: quietHoursEnabled ? 'var(--accent-primary)' : 'var(--bg-tertiary, rgba(255,255,255,0.15))',
-                    border: '1px solid var(--border-color)', padding: '2px', display: 'flex', alignItems: 'center',
-                    cursor: 'pointer', flexShrink: 0
-                  }}
-                >
-                  <div style={{
-                    width: '18px', height: '18px', borderRadius: '50%', background: '#FFFFFF',
-                    transform: quietHoursEnabled ? 'translateX(20px)' : 'translateX(0px)', transition: 'transform 0.2s ease'
-                  }} />
-                </div>
-              </div>
-            </div>
+            {/* 5. Expenses / Transaction Notifications */}
+            <ToggleSwitch
+              checked={notifSettings.expenses !== false}
+              onChange={() => handleToggleNotifSetting('expenses')}
+              label="Expenses & Transaction Notifications"
+              description="Notifications for logged expenses, payments, and budget alerts"
+            />
 
-            {/* Test Notification Button */}
-            <div style={{ paddingTop: '12px' }}>
-              <button type="button" onClick={handleTestNotification} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <Bell size={14} /> Send Test Notification
-              </button>
+            {/* 6. Memes / Reactions Notifications */}
+            <ToggleSwitch
+              checked={notifSettings.memes !== false}
+              onChange={() => handleToggleNotifSetting('memes')}
+              label="Memes & Reactions Notifications"
+              description="Alerts for shared memes, funny moments, and chat reactions"
+            />
+
+            {/* 7. Luna AI Notifications */}
+            <ToggleSwitch
+              checked={notifSettings.luna !== false}
+              onChange={() => handleToggleNotifSetting('luna')}
+              label="Luna AI Notifications"
+              description="Proactive daily focus summaries, tips, and companion insights"
+            />
+
+            {/* 8. Important Person / Birthday Notifications */}
+            <ToggleSwitch
+              checked={notifSettings.birthdays !== false}
+              onChange={() => handleToggleNotifSetting('birthdays')}
+              label="Important Person & Birthday Notifications"
+              description="Birthday reminders, anniversaries, and key personal dates"
+            />
+
+            {/* 9. Meetings / Schedule Notifications */}
+            <ToggleSwitch
+              checked={notifSettings.meetings !== false}
+              onChange={() => handleToggleNotifSetting('meetings')}
+              label="Meetings & Schedule Notifications"
+              description="Upcoming meeting alerts and scheduled event reminders"
+            />
+
+            {/* 10. Quiet Hours */}
+            <div style={{ padding: '10px 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                <div style={{ flex: '1 1 auto', minWidth: 0, paddingRight: '8px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Quiet Hours</div>
+                  <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Silence non-critical alerts ({quietStart} – {quietEnd})
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                  {quietHoursEnabled && (
+                    <button type="button" onClick={handleOpenQuietHoursModal} className="btn-secondary" style={{ fontSize: '11.5px', padding: '3px 8px' }}>
+                      Schedule
+                    </button>
+                  )}
+                  <div
+                    onClick={() => handleToggleQuietHours(!quietHoursEnabled)}
+                    style={{
+                      width: '44px', height: '24px', borderRadius: '12px',
+                      background: quietHoursEnabled ? 'var(--accent-primary)' : 'var(--bg-tertiary, rgba(255,255,255,0.15))',
+                      border: '1px solid var(--border-color)', padding: '2px', display: 'flex', alignItems: 'center',
+                      cursor: 'pointer', flexShrink: 0, transition: 'background-color 0.2s ease'
+                    }}
+                  >
+                    <div style={{
+                      width: '18px', height: '18px', borderRadius: '50%', background: '#FFFFFF',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                      transform: quietHoursEnabled ? 'translateX(20px)' : 'translateX(0px)', transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }} />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* 5. LUNA AI SETTINGS */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+        <div className="settings-clean-section" style={{ padding: '16px 0', borderBottom: '1px solid var(--border-color)' }}>
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '1.1rem', fontWeight: '700' }}>
             <Sparkles size={18} color="var(--accent-primary)" /> Luna AI Companion Settings
           </h3>
 
@@ -1200,28 +1250,28 @@ export function SettingsPage() {
         </div>
 
         {/* 6. PRIVACY & SECURITY */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+        <div className="settings-clean-section" style={{ padding: '16px 0', borderBottom: '1px solid var(--border-color)' }}>
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '1.1rem', fontWeight: '700' }}>
             <Shield size={18} color="var(--accent-primary)" /> Privacy & Security
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-color)', gap: '8px' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Security Status</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>JWT Authenticated • Encrypted TLS Session</div>
               </div>
-              <span style={{ fontSize: '11px', background: 'rgba(47, 111, 115, 0.15)', color: 'var(--accent-primary)', padding: '3px 8px', borderRadius: '6px', fontWeight: '700' }}>
+              <span style={{ fontSize: '11px', background: 'rgba(47, 111, 115, 0.15)', color: 'var(--accent-primary)', padding: '3px 8px', borderRadius: '6px', fontWeight: '700', flexShrink: 0 }}>
                 Protected ✓
               </span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', gap: '8px' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Email Verification</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Status for {user?.email || 'account'}</div>
               </div>
-              <span style={{ fontSize: '11px', background: 'rgba(47, 111, 115, 0.15)', color: 'var(--accent-primary)', padding: '3px 8px', borderRadius: '6px', fontWeight: '700' }}>
+              <span style={{ fontSize: '11px', background: 'rgba(47, 111, 115, 0.15)', color: 'var(--accent-primary)', padding: '3px 8px', borderRadius: '6px', fontWeight: '700', flexShrink: 0 }}>
                 Verified ✓
               </span>
             </div>
@@ -1229,21 +1279,21 @@ export function SettingsPage() {
         </div>
 
         {/* 7. DATA BACKUP & RESTORE */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+        <div className="settings-clean-section" style={{ padding: '16px 0', borderBottom: '1px solid var(--border-color)' }}>
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', fontSize: '1.1rem', fontWeight: '700' }}>
             <Database size={18} color="var(--accent-primary)" /> Data & Backup Management
           </h3>
 
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
             Export or restore your DaySync tasks, expenses, plans, and preferences to a JSON backup file.
           </p>
 
-          <div className="data-backup-buttons-row" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+          <div className="data-backup-buttons-row" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
             <button
               type="button"
               onClick={handleExportData}
               className="btn-primary"
-              style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '36px' }}
+              style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
               <Download size={14} /> Export My Data (.json)
             </button>
@@ -1252,7 +1302,7 @@ export function SettingsPage() {
               type="button"
               onClick={() => restoreFileInputRef.current?.click()}
               className="btn-secondary"
-              style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '36px' }}
+              style={{ fontSize: '12px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
               <Upload size={14} /> Restore Data File
             </button>
@@ -1266,30 +1316,32 @@ export function SettingsPage() {
             />
           </div>
 
-          <div className="data-backup-history-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid var(--border-color)', gap: '16px' }}>
-            <div style={{ flex: '1 1 auto', minWidth: 0 }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Conversation History</div>
+          <div style={{ borderBottom: '1px solid var(--border-color)', margin: '14px 0' }} />
+
+          <div className="data-backup-history-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', gap: '12px' }}>
+            <div style={{ flex: '1 1 auto', minWidth: 0, paddingRight: '8px' }}>
+              <div style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--text-primary)' }}>Conversation History</div>
               <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>Stored chat logs with Luna AI</div>
             </div>
             <button
               type="button"
               onClick={() => setShowClearHistoryModal(true)}
               className="btn-secondary"
-              style={{ color: 'var(--accent-warning)', fontSize: '12px', padding: '6px 12px', flexShrink: 0 }}
+              style={{ color: 'var(--accent-warning)', fontSize: '12px', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
             >
-              <Trash2 size={13} /> Clear Chat History
+              <Trash2 size={14} /> Clear Data
             </button>
           </div>
         </div>
 
         {/* 8. APP & PWA STATUS */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+        <div className="settings-clean-section" style={{ padding: '16px 0', borderBottom: '1px solid var(--border-color)' }}>
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '1.1rem', fontWeight: '700' }}>
             <Smartphone size={18} color="var(--accent-primary)" /> App & PWA Status
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap', gap: '8px' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>App Version</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>DaySync Release 2.0.0</div>
@@ -1297,7 +1349,7 @@ export function SettingsPage() {
               <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>v2.0.0</span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', flexWrap: 'wrap', gap: '8px' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Update Status</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
@@ -1315,7 +1367,7 @@ export function SettingsPage() {
               </button>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', flexWrap: 'wrap', gap: '8px' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Developer Support</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Need help or found a bug?</div>
@@ -1332,8 +1384,8 @@ export function SettingsPage() {
         </div>
 
         {/* 9. ABOUT DAYSYNC & HELP */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+        <div className="settings-clean-section" style={{ padding: '16px 0', borderBottom: '1px solid var(--border-color)' }}>
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '1.1rem', fontWeight: '700' }}>
             <Info size={18} color="var(--accent-primary)" /> About DaySync & Help
           </h3>
 
@@ -1366,8 +1418,8 @@ export function SettingsPage() {
         </div>
 
         {/* 10. ACCOUNT ACTIONS */}
-        <div className="glass-card settings-compact-card">
-          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+        <div className="settings-clean-section" style={{ padding: '16px 0' }}>
+          <h3 className="settings-compact-title" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '1.1rem', fontWeight: '700' }}>
             <Lock size={18} color="var(--accent-primary)" /> Account Actions
           </h3>
 
@@ -1391,7 +1443,6 @@ export function SettingsPage() {
             </button>
           </div>
         </div>
-
       </div>
 
       {/* Account Modals */}
@@ -1569,7 +1620,7 @@ export function SettingsPage() {
       {/* Confirmation Modals */}
       <ConfirmationModal isOpen={showLogoutModal} title="Log out of DaySync?" message="Are you sure you want to log out of your session?" confirmText="Log Out" cancelText="Cancel" isDanger={false} isLoading={isLoggingOut} onConfirm={handleConfirmLogout} onCancel={() => setShowLogoutModal(false)} />
       <ConfirmationModal isOpen={showDeleteModal} title="Delete your DaySync account?" message="Your account and associated data will be permanently deleted. This action cannot be undone." confirmText="Delete Account" cancelText="Cancel" isDanger={true} isLoading={isDeletingAccount} onConfirm={handleConfirmDeleteAccount} onCancel={() => setShowDeleteModal(false)} />
-      <ConfirmationModal isOpen={showClearHistoryModal} title="Clear your conversation history?" message="Are you sure you want to clear your stored chat messages? This action cannot be undone." confirmText="Clear History" cancelText="Cancel" isDanger={true} isLoading={isClearingHistory} onConfirm={handleConfirmClearHistory} onCancel={() => setShowClearHistoryModal(false)} />
+      <ConfirmationModal isOpen={showClearHistoryModal} title="Clear stored data?" message="Are you sure you want to clear your stored conversation history and DaySync data logs? This action cannot be undone." confirmText="Clear Data" cancelText="Cancel" isDanger={true} isLoading={isClearingHistory} onConfirm={handleConfirmClearHistory} onCancel={() => setShowClearHistoryModal(false)} />
       <ConfirmationModal isOpen={showDashboardResetModal} title="Reset Dashboard Layout?" message="This will restore the default widget arrangement and sizes. Your tasks, expenses, and data will not be affected." confirmText="Reset Layout" cancelText="Cancel" isDanger={true} onConfirm={handleConfirmResetDashboard} onCancel={() => setShowDashboardResetModal(false)} />
 
       {/* RESTORE DATA CONFIRMATION MODAL */}

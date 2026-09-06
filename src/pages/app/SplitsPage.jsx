@@ -20,7 +20,8 @@ import {
   AlertCircle,
   QrCode,
   RefreshCw,
-  Trash2
+  Trash2,
+  Pencil
 } from 'lucide-react';
 
 // Helper utilities for crash-proof member handling
@@ -61,6 +62,14 @@ export function SplitsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [splitToDelete, setSplitToDelete] = useState(null);
   const [isDeletingSplit, setIsDeletingSplit] = useState(false);
+
+  // Delete Individual Expense Entry Modals & State
+  const [showDeleteExpModal, setShowDeleteExpModal] = useState(false);
+  const [expToDelete, setExpToDelete] = useState(null);
+  const [isDeletingExp, setIsDeletingExp] = useState(false);
+
+  // Edit Expense Entry State
+  const [editingExpense, setEditingExpense] = useState(null);
 
   // Modals
   const [showCreateSplit, setShowCreateSplit] = useState(false);
@@ -151,7 +160,33 @@ export function SplitsPage() {
     }
   };
 
-  // Sync route param with backend fetch (Restores Split on page refresh)
+  // Handle Confirm Delete Individual Expense Entry
+  const handleConfirmDeleteExpense = async () => {
+    if (!expToDelete?.id || !selectedSplit?.id) return;
+    const targetExpId = expToDelete.id;
+    const splitId = selectedSplit.id;
+    const previousExpenses = selectedSplit.expenses || [];
+
+    // Optimistic UI deletion (0ms instant update)
+    const updatedExpenses = previousExpenses.filter(e => e.id !== targetExpId);
+    setSelectedSplit(prev => prev ? { ...prev, expenses: updatedExpenses } : prev);
+    setShowDeleteExpModal(false);
+    if (showToast) showToast('Expense entry deleted.', 'info');
+
+    try {
+      await api.deleteSplitExpense(splitId, targetExpId);
+      setSplits(prev => prev.map(s => s.id === splitId ? { ...s, expenses: updatedExpenses } : s));
+    } catch (err) {
+      // Rollback on failure
+      setSelectedSplit(prev => prev ? { ...prev, expenses: previousExpenses } : prev);
+      if (showToast) showToast(err?.message || 'Failed to delete expense entry.', 'error');
+    } finally {
+      setIsDeletingExp(false);
+      setExpToDelete(null);
+    }
+  };
+
+  // Sync route param with backend fetch (Instant cache display + background refresh)
   useEffect(() => {
     if (!routeSplitId) {
       setSelectedSplit(null);
@@ -162,19 +197,31 @@ export function SplitsPage() {
     if (!userId) return;
 
     let isMounted = true;
-    const loadSplitDetail = async () => {
+
+    // Fast Cache Lookup: check if split already exists in splits array or current selectedSplit
+    const cachedSplit = splits.find(s => String(s.id) === String(routeSplitId)) || (selectedSplit && String(selectedSplit.id) === String(routeSplitId) ? selectedSplit : null);
+
+    if (cachedSplit) {
+      setSelectedSplit(cachedSplit);
+      setSplitDetailLoading(false);
+    } else {
       setSplitDetailLoading(true);
-      setSplitNotFound(false);
+    }
+    setSplitNotFound(false);
+
+    const loadSplitDetail = async () => {
       try {
         const data = await api.getSplitById(routeSplitId);
         if (isMounted) {
           setSelectedSplit(data);
+          setSplits(prev => prev.map(s => String(s.id) === String(data.id) ? data : s));
+          setSplitNotFound(false);
         }
       } catch (err) {
         if (isMounted) {
-          if (err?.status === 404) {
+          if (err?.status === 404 && !cachedSplit) {
             setSplitNotFound(true);
-          } else if (showToast) {
+          } else if (err?.status !== 404 && showToast) {
             showToast(err?.message || 'Could not load Split details.', 'error');
           }
         }
@@ -257,6 +304,7 @@ export function SplitsPage() {
   const handleOpenAddExpense = () => {
     if (!selectedSplit) return;
     const members = selectedSplit.members || [];
+    setEditingExpense(null);
     setExpDesc('');
     setExpAmount('');
     setExpPaidBy(userId);
@@ -266,7 +314,33 @@ export function SplitsPage() {
     setShowAddExpense(true);
   };
 
-  // Submit Add Expense
+  // Open Edit Expense modal for an individual entry
+  const handleOpenEditExpense = (exp) => {
+    if (!selectedSplit || !exp) return;
+    const members = selectedSplit.members || [];
+    setEditingExpense(exp);
+    setExpDesc(exp.description || exp.title || '');
+    setExpAmount(exp.amount !== undefined ? String(exp.amount) : '');
+    setExpPaidBy(exp.paidByUserId || exp.paidBy || userId);
+    setExpSplitMethod(exp.splitMethod || 'EQUAL');
+
+    const participants = Array.isArray(exp.participants) ? exp.participants : (Array.isArray(exp.splitWith) ? exp.splitWith : []);
+    const pUids = participants.map(p => typeof p === 'object' ? (p.userId || p.id) : p).filter(Boolean);
+    setSelectedParticipants(pUids.length > 0 ? pUids : members.map(m => getMemberId(m)).filter(Boolean));
+
+    const initialCustoms = {};
+    if (Array.isArray(exp.participants)) {
+      exp.participants.forEach(p => {
+        if (typeof p === 'object' && p.userId && p.owedAmount !== undefined) {
+          initialCustoms[p.userId] = String(p.owedAmount);
+        }
+      });
+    }
+    setCustomAmounts(initialCustoms);
+    setShowAddExpense(true);
+  };
+
+  // Submit Add/Edit Expense
   const handleAddExpenseSubmit = async (e) => {
     e.preventDefault();
     if (!expDesc.trim() || !expAmount || parseFloat(expAmount) <= 0) {
@@ -301,6 +375,52 @@ export function SplitsPage() {
       }
     }
 
+    if (editingExpense) {
+      // EDIT EXISTING EXPENSE ENTRY (0ms Optimistic UI update)
+      const targetId = editingExpense.id;
+      const splitId = selectedSplit.id;
+      const previousExpenses = selectedSplit.expenses || [];
+      const updatedExpense = {
+        ...editingExpense,
+        description: expDesc.trim(),
+        amount: totalAmt,
+        paidByUserId: expPaidBy || userId,
+        paidByName: membersMap[expPaidBy || userId] || 'Member',
+        splitMethod: expSplitMethod,
+        participants: participantsData,
+        date: editingExpense.date || new Date().toISOString()
+      };
+
+      const updatedExpenses = previousExpenses.map(x => x.id === targetId ? updatedExpense : x);
+
+      setSelectedSplit(prev => prev ? { ...prev, expenses: updatedExpenses } : prev);
+      setShowAddExpense(false);
+      setEditingExpense(null);
+      if (showToast) showToast(`Updated expense "${expDesc.trim()}"!`, 'success');
+
+      try {
+        const serverExp = await api.updateSplitExpense(splitId, targetId, {
+          description: expDesc.trim(),
+          amount: totalAmt,
+          paidByUserId: expPaidBy || userId,
+          splitMethod: expSplitMethod,
+          participants: participantsData
+        });
+        if (serverExp && serverExp.id) {
+          setSelectedSplit(prev => prev ? {
+            ...prev,
+            expenses: (prev.expenses || []).map(x => x.id === targetId ? { ...updatedExpense, ...serverExp } : x)
+          } : prev);
+        }
+      } catch (err) {
+        // Rollback on failure
+        setSelectedSplit(prev => prev ? { ...prev, expenses: previousExpenses } : prev);
+        if (showToast) showToast(err.message || 'Could not update expense entry.', 'error');
+      }
+      return;
+    }
+
+    // ADD NEW EXPENSE ENTRY (0ms Optimistic UI update)
     const newSplitExp = {
       id: `exp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       description: expDesc.trim(),
@@ -312,14 +432,13 @@ export function SplitsPage() {
       date: new Date().toISOString()
     };
 
-    // Optimistic UI update
     setSelectedSplit(prev => prev ? {
       ...prev,
-      expenses: [...(prev.expenses || []), newSplitExp]
+      expenses: [newSplitExp, ...(prev.expenses || [])]
     } : prev);
 
     setShowAddExpense(false);
-    if (showToast) showToast(`Added expense "${expDesc}" to ${selectedSplit.name}!`, 'success');
+    if (showToast) showToast(`Added expense "${expDesc.trim()}" to ${selectedSplit.name}!`, 'success');
 
     try {
       const serverExp = await api.addSplitExpense(selectedSplit.id, {
@@ -1017,7 +1136,7 @@ export function SplitsPage() {
                 </div>
               ) : (
                 [...(selectedSplit.expenses || [])]
-                  .sort((a, b) => getItemTimestamp(a) - getItemTimestamp(b))
+                  .sort((a, b) => getItemTimestamp(b) - getItemTimestamp(a))
                   .map(exp => {
                   const paidByUid = exp.paidByUserId || exp.paidBy;
                   const paidByName = membersMap[paidByUid] || exp.paidByName || 'Member';
@@ -1041,19 +1160,58 @@ export function SplitsPage() {
                         </div>
                       </div>
 
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        {isPayer ? (
-                          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-success)' }}>
-                            You lent {selectedSplit.currency || '₹'}{(exp.amount - owedAmount).toFixed(2)}
-                          </div>
-                        ) : myParticipant ? (
-                          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-danger)' }}>
-                            Your share: {selectedSplit.currency || '₹'}{owedAmount.toFixed(2)}
-                          </div>
-                        ) : (
-                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Not involved</div>
-                        )}
-                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px' }}>{formatDate(exp.date || exp.createdAt)}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                        <div style={{ textAlign: 'right' }}>
+                          {isPayer ? (
+                            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-success)' }}>
+                              You lent {selectedSplit.currency || '₹'}{(exp.amount - owedAmount).toFixed(2)}
+                            </div>
+                          ) : myParticipant ? (
+                            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-danger)' }}>
+                              Your share: {selectedSplit.currency || '₹'}{owedAmount.toFixed(2)}
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Not involved</div>
+                          )}
+                          <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px' }}>{formatDate(exp.date || exp.createdAt)}</div>
+                        </div>
+
+                        {/* Action buttons: Edit & Delete for individual expense entry */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', borderLeft: '1px solid var(--border-color)', paddingLeft: '8px', marginLeft: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEditExpense(exp);
+                            }}
+                            title="Edit Expense"
+                            aria-label="Edit Expense"
+                            style={{
+                              background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+                              color: 'var(--text-secondary)', padding: '5px 7px', borderRadius: '6px', cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                          >
+                            <Pencil size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpToDelete(exp);
+                              setShowDeleteExpModal(true);
+                            }}
+                            title="Delete Expense"
+                            aria-label="Delete Expense"
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)',
+                              color: 'var(--accent-danger)', padding: '5px 7px', borderRadius: '6px', cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -1265,7 +1423,7 @@ export function SplitsPage() {
         </div>
       )}
 
-      {/* MODAL 2: ADD EXPENSE */}
+      {/* MODAL 2: ADD / EDIT EXPENSE */}
       {showAddExpense && selectedSplit && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -1274,7 +1432,7 @@ export function SplitsPage() {
         }}>
           <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '440px', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
             <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', color: 'var(--text-primary)' }}>
-              Add Expense to "{selectedSplit.name}"
+              {editingExpense ? 'Edit Expense' : `Add Expense to "${selectedSplit.name}"`}
             </h3>
 
             <form onSubmit={handleAddExpenseSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -1394,11 +1552,19 @@ export function SplitsPage() {
               </div>
 
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '8px' }}>
-                <button type="button" onClick={() => setShowAddExpense(false)} className="btn-secondary" style={{ fontSize: '12px', padding: '8px 14px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddExpense(false);
+                    setEditingExpense(null);
+                  }}
+                  className="btn-secondary"
+                  style={{ fontSize: '12px', padding: '8px 14px' }}
+                >
                   Cancel
                 </button>
                 <button type="submit" className="btn-primary" style={{ fontSize: '12px', padding: '8px 16px' }}>
-                  Add Expense
+                  {editingExpense ? 'Save Changes' : 'Add Expense'}
                 </button>
               </div>
             </form>
@@ -1550,6 +1716,22 @@ export function SplitsPage() {
         onCancel={() => {
           setShowDeleteModal(false);
           setSplitToDelete(null);
+        }}
+      />
+
+      {/* MODAL 6: DELETE EXPENSE ENTRY CONFIRMATION MODAL */}
+      <ConfirmationModal
+        isOpen={showDeleteExpModal}
+        title={`Delete "${expToDelete?.description || expToDelete?.title || 'Expense'}"?`}
+        message="Are you sure you want to delete this expense entry? This action will remove it from split balance calculations."
+        confirmText="Delete Entry"
+        cancelText="Cancel"
+        isDanger={true}
+        loading={isDeletingExp}
+        onConfirm={handleConfirmDeleteExpense}
+        onCancel={() => {
+          setShowDeleteExpModal(false);
+          setExpToDelete(null);
         }}
       />
     </div>

@@ -94,8 +94,13 @@ export function ExpensesPage() {
       const t = new Date(item.createdAt).getTime();
       if (!isNaN(t) && t > 0) return t;
     }
-    if (typeof item.id === 'string') {
-      const match = item.id.match(/\d+/);
+    if (item.updatedAt) {
+      const t = new Date(item.updatedAt).getTime();
+      if (!isNaN(t) && t > 0) return t;
+    }
+    if (typeof item.id === 'string' || typeof item.id === 'number') {
+      const str = String(item.id);
+      const match = str.match(/\d{10,13}/);
       if (match) {
         const val = parseInt(match[0], 10);
         if (!isNaN(val) && val > 1000000000) return val;
@@ -121,8 +126,8 @@ export function ExpensesPage() {
       .sort((a, b) => {
         const timeA = getItemTimestamp(a.exp);
         const timeB = getItemTimestamp(b.exp);
-        if (timeA !== timeB) return timeA - timeB;
-        return a.originalIndex - b.originalIndex;
+        if (timeA !== timeB) return timeB - timeA; // NEWEST FIRST
+        return b.originalIndex - a.originalIndex;  // NEWEST FIRST
       })
       .map(({ exp }) => exp);
   }, [expenses, search]);

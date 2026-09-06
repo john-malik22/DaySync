@@ -157,20 +157,41 @@ export function TaskManager({ searchFilter }) {
       const t = new Date(item.createdAt).getTime();
       if (!isNaN(t) && t > 0) return t;
     }
-    if (item.dueDate) {
-      const t = new Date(item.dueDate).getTime();
+    if (item.updatedAt) {
+      const t = new Date(item.updatedAt).getTime();
       if (!isNaN(t) && t > 0) return t;
     }
-    if (typeof item.id === 'string') {
-      const match = item.id.match(/\d+/);
-      if (match) return parseInt(match[0], 10);
+    if (typeof item.id === 'string' || typeof item.id === 'number') {
+      const str = String(item.id);
+      const match = str.match(/\d{10,13}/);
+      if (match) {
+        const val = parseInt(match[0], 10);
+        if (!isNaN(val) && val > 1000000000) return val;
+      }
+    }
+    if (item.dueDate) {
+      const timeStr = item.dueTime ? `${item.dueDate}T${item.dueTime}` : item.dueDate;
+      const t = new Date(timeStr).getTime();
+      if (!isNaN(t) && t > 0) return t;
     }
     return 0;
   };
 
   const filteredTasks = useMemo(() => {
-    const list = (tasks || []).filter(t => !searchFilter || (t.title && t.title.toLowerCase().includes(searchFilter.toLowerCase())));
-    return list.sort((a, b) => getItemTimestamp(a) - getItemTimestamp(b));
+    const items = (tasks || [])
+      .map((task, idx) => ({ task, originalIndex: idx }))
+      .filter(({ task }) =>
+        task && (!searchFilter || (task.title && task.title.toLowerCase().includes(searchFilter.toLowerCase())))
+      );
+
+    return items
+      .sort((a, b) => {
+        const timeA = getItemTimestamp(a.task);
+        const timeB = getItemTimestamp(b.task);
+        if (timeA !== timeB) return timeB - timeA; // NEWEST FIRST
+        return b.originalIndex - a.originalIndex;  // NEWEST FIRST
+      })
+      .map(({ task }) => task);
   }, [tasks, searchFilter]);
 
   // Strict Fallback Priority Logic: High -> Medium -> Low (Latest 3 pending tasks)

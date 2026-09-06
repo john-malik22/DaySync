@@ -885,6 +885,20 @@ option {
   }
 }
 
+/* Clean Flat Settings Page Layout (No Outer Cards) */
+.settings-clean-section {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 18px 0 !important;
+}
+
+.settings-clean-section:last-child {
+  border-bottom: none !important;
+}
+
 /* Extra Narrow Phone Breakpoint (320px - 390px) */
 @media (max-width: 390px) {
   .page-container {

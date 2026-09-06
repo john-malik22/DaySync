@@ -675,7 +675,6 @@ export function LunaProvider({ children }) {
         fetchExpenses,
         fetchMemories,
         fetchSummaries,
-        fetchSuggestion,
         refreshData: fetchAllData
       }}
     >
