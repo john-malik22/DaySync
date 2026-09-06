@@ -137,7 +137,7 @@ export function detectExpenseCategory(text) {
 function sanitizeTitle(str) {
   if (!str) return '';
   let cleaned = str
-    .replace(/^(create a task to|add a task to|create a task for|add a task|create task|add task|remind me to|remind me|schedule|create a habit to|create habit to|add habit to|create habit|add habit|create a goal to|create goal to|add goal|create goal)\s*/gi, '')
+    .replace(/^(create a task to|add a task to|create a task for|add a task|create task|add task:|add task|remind me to|remind me:|remind me|schedule|create a habit to|create habit to|add habit to|create habit|add habit|create a goal to|create goal to|add goal|create goal|add reminder:|add plan:|add expense:|add split:|add birthday:|add meeting:|add note:|task:|reminder:|plan:|expense:|split:|birthday:|meeting:|note:)\s*/gi, '')
     .replace(/at\s+\d{1,2}(?::\d{2})?\s*(am|pm|o'clock)?/gi, '')
     .replace(/\d{1,2}\s*(am|pm|o'clock)/gi, '')
     .replace(/tomorrow|today|yesterday|kal|7 baje|tmrw/gi, '')
@@ -160,12 +160,53 @@ export function classifyIntent(message, context = {}) {
     return { intent: 'CANCEL', confidence: 0.98, entities: {} };
   }
 
+  // 1b. CONVERSATIONAL GREETINGS, GRATITUDE, FAREWELL, CAPABILITIES
+  if (/^(hi|hello|hey|hey luna|hi luna|hello luna|good morning|good afternoon|good evening|good night|namaste|greetings|yo)$/i.test(lower)) {
+    return { intent: 'GREETING', confidence: 0.95, entities: {} };
+  }
+
+  if (/^(how are you|how are u|how r u|how is it going|how's it going|how do you do|how are you doing|how's everything)$/i.test(lower)) {
+    return { intent: 'HOW_ARE_YOU', confidence: 0.95, entities: {} };
+  }
+
+  if (/^(thank you|thanks|thank u|thx|ty|thanks luna|thank you luna|awesome thanks|great thanks)$/i.test(lower)) {
+    return { intent: 'GRATITUDE', confidence: 0.95, entities: {} };
+  }
+
+  if (/^(bye|goodbye|see you|see ya|talk to you later|catch you later|good night luna|gn)$/i.test(lower)) {
+    return { intent: 'FAREWELL', confidence: 0.95, entities: {} };
+  }
+
+  if (/what can you do|what can u do|who are you|what are your features|what do you do|capabilities|how do i use luna|what is daysync|how does daysync work|tell me about yourself/i.test(lower)) {
+    return { intent: 'ASSISTANT_CAPABILITIES', confidence: 0.95, entities: {} };
+  }
+
+  // 1c. CONTEXT FOLLOW-UP INTENTS
+  if (/add that as a task|make that a task|remind me about that|turn that into a task/i.test(lower)) {
+    return { intent: 'CONTEXT_FOLLOWUP', confidence: 0.95, entities: { actionType: 'ADD_AS_TASK' } };
+  }
+
+  if (/show me that again|repeat that|say that again|what did you say/i.test(lower)) {
+    return { intent: 'CONTEXT_FOLLOWUP', confidence: 0.95, entities: { actionType: 'REPEAT' } };
+  }
+
+  if (/what about yesterday|how about yesterday|what of yesterday|spent yesterday/i.test(lower)) {
+    return { intent: 'CONTEXT_FOLLOWUP', confidence: 0.95, entities: { actionType: 'YESTERDAY' } };
+  }
+
+  if (/do the same for tomorrow|do that for tomorrow|same for tomorrow/i.test(lower)) {
+    return { intent: 'CONTEXT_FOLLOWUP', confidence: 0.95, entities: { actionType: 'DO_SAME_TOMORROW' } };
+  }
+
   // 2. EXPLICIT QUERY / READ / SEARCH INTENTS (HIGH PRIORITY OVER PENDING CONTEXT!)
   const queryVerbs = /show|display|view|see|tell me|what|which|where|how much|how many|history|list|recent|pending|remaining|overdue|left|summary|analytics|focus|agenda|unfinished|need to do|still need|what do i|where am i/i;
   const isQueryPhrase = queryVerbs.test(lower) || /expenses history|task history|my expenses|my tasks/i.test(lower);
 
   if (isQueryPhrase) {
     if (lower.includes('expense') || lower.includes('spend') || lower.includes('spent') || lower.includes('spending') || lower.includes('money')) {
+      if (lower.includes('today')) {
+        return { intent: 'READ_TODAYS_EXPENSES', confidence: 0.95, entities: { date: 'today' } };
+      }
       if (lower.includes('where i spent last time') || lower.includes('last time') || lower.includes('where did i spend') || lower.includes('last expense')) {
         return { intent: 'READ_LAST_EXPENSE', confidence: 0.95, entities: {} };
       }
@@ -183,7 +224,10 @@ export function classifyIntent(message, context = {}) {
       return { intent: 'READ_EXPENSES', confidence: 0.95, entities: { limit } };
     }
 
-    if (lower.includes('task') || lower.includes('todo') || lower.includes('pending') || lower.includes('left') || lower.includes('unfinished') || lower.includes('focus') || lower.includes('agenda') || lower.includes('need to do') || lower.includes('still need')) {
+    if (lower.includes('task') || lower.includes('todo') || lower.includes('pending') || lower.includes('left') || lower.includes('unfinished') || lower.includes('focus') || lower.includes('agenda') || lower.includes('need to do') || lower.includes('still need') || lower.includes('reminder') || lower.includes('overdue')) {
+      if (lower.includes('overdue')) {
+        return { intent: 'READ_OVERDUE_TASKS', confidence: 0.95, entities: {} };
+      }
       if (lower.includes('today')) {
         return { intent: 'READ_TODAYS_TASKS', confidence: 0.95, entities: { date: 'today' } };
       }
@@ -563,7 +607,7 @@ export function classifyIntent(message, context = {}) {
     };
   }
 
-  const incomeKeywords = /received|got|earned|credited|salary|pocket money|allowance|cashback|refund|gave me|sent me|diye|bheje|mile/i;
+  const incomeKeywords = /receive|received|got|earned|credited|salary|pocket money|allowance|cashback|refund|gave me|sent me|diye|bheje|mile/i;
   const numAmount = parseNumberAndCurrency(lower);
 
   if (incomeKeywords.test(lower) && numAmount !== null) {
@@ -640,8 +684,8 @@ export function classifyIntent(message, context = {}) {
   }
 
   // 9c. CREATE_MEMORY ("remember to buy vegetables", "remember that Rahul owes me 500")
-  if (/^remember\b|^save memory\b|^keep in mind\b/i.test(lower)) {
-    let content = message.replace(/^(remember to|remember that|remember|save memory|keep in mind)\s*/i, '').trim();
+  if (/^remember\b|^save memory\b|^keep in mind\b|^note:?\b/i.test(lower)) {
+    let content = message.replace(/^(remember to|remember that|remember|save memory|keep in mind|add note:|note:)\s*/i, '').trim();
     return {
       intent: 'CREATE_MEMORY',
       confidence: 0.95,
@@ -700,9 +744,21 @@ export function classifyIntent(message, context = {}) {
     };
   }
 
-  // 10. ORPHAN NUMBER OR UNKNOWN
+  // 10. ORPHAN NUMBER
   if (/^\d+$/.test(lower)) {
     return { intent: 'ORPHAN_NUMBER', confidence: 0.50, raw: message };
+  }
+
+  // 11. HELP QUESTIONS & GENERAL CONVERSATION
+  if (/^how (to|do i|can i)\b|help with\b/i.test(lower)) {
+    return { intent: 'HELP_QUESTION', confidence: 0.90, entities: { topic: lower } };
+  }
+
+  // General questions, calculations, advice, or everyday conversation
+  const questionWords = /^(what|why|how|where|when|who|which|can|could|is|are|do|does|did|will|would|should|tell|give|explain|calculate|compute)\b/i;
+  const casualPhrases = /advice|tip|joke|funny|recommend|suggest|opinion|feel|think|say|talk|chat/i;
+  if (questionWords.test(lower) || casualPhrases.test(lower) || lower.length >= 3) {
+    return { intent: 'GENERAL_CHAT', confidence: 0.90, entities: {} };
   }
 
   return {

@@ -493,6 +493,61 @@ app.delete('/api/auth/delete-account', authenticate, (req, res) => {
 // --- AI CHAT & INTENT ROUTE & CONVERSATION CONTEXT ---
 const userContexts = new Map();
 
+function generateGeneralChatResponse(text) {
+  if (!text) return "How can I help you today?";
+  const lower = text.toLowerCase().trim();
+
+  // Simple math solver: e.g. "what is 25 * 4", "calculate 100 / 5", "50 + 20"
+  const mathMatch = lower.match(/(?:what is|calculate|compute|how much is)?\s*(\d+(?:\.\d+)?\s*[\+\-\*\/]\s*\d+(?:\.\d+)?)/i);
+  if (mathMatch) {
+    try {
+      const expr = mathMatch[1];
+      const result = Function(`"use strict"; return (${expr})`)();
+      if (typeof result === 'number' && !isNaN(result)) {
+        return `The answer to ${expr} is **${result}**.`;
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  if (/time management|manage time|productive|productivity|focus|procrastinat/i.test(lower)) {
+    return "Here are 3 quick tips for better time management:\n1. ⏱️ **Timeboxing**: Block specific time slots for key tasks.\n2. 🎯 **The 2-Minute Rule**: If a task takes under 2 minutes, do it right away.\n3. 📋 **Prioritize with DaySync**: Add your top 3 tasks for today and check them off as you finish!";
+  }
+
+  if (/sleep|rest|tired|exhausted/i.test(lower)) {
+    return "Getting 7-8 hours of quality sleep is essential for clear focus and energy! Try setting a consistent evening reminder in DaySync to keep your schedule on track.";
+  }
+
+  if (/study|exam|learn|memorize/i.test(lower)) {
+    return "For effective studying, try the **Pomodoro Technique**: study focused for 25 minutes, then take a 5-minute break. You can ask me to set study reminders whenever you begin!";
+  }
+
+  if (/joke|funny|make me laugh/i.test(lower)) {
+    const jokes = [
+      "Why don't programmers like nature? It has too many bugs! 🐛",
+      "Why did the developer go broke? Because he used up all his cache! 💰",
+      "How do you organize a space party? You planet! 🚀"
+    ];
+    return jokes[Math.floor(Math.random() * jokes.length)];
+  }
+
+  if (/who created you|who made you|who built you/i.test(lower)) {
+    return "I was created as part of the DaySync personal productivity system to help you seamlessly manage tasks, expenses, and daily routines!";
+  }
+
+  if (/weather/i.test(lower)) {
+    return "I don't have real-time weather satellite data right now, but it's always a good idea to check your local weather app before planning outdoor tasks!";
+  }
+
+  const generalResponses = [
+    `That's an interesting topic! While my main specialty is keeping your tasks, expenses, and daily routines on track in DaySync, I'm always happy to chat. How can I help you organize your day?`,
+    `I hear you! I'm here to support your daily flow. Would you like me to set a task, log an expense, or check what's on your agenda today?`,
+    `Great question! As your daily assistant, I can help you organize your schedule, track expenses, save memories, or answer questions. What's on your mind?`
+  ];
+  return generalResponses[Math.floor(Math.random() * generalResponses.length)];
+}
+
 function getUserContext(userId) {
   if (!userContexts.has(userId)) {
     userContexts.set(userId, {
@@ -1038,6 +1093,160 @@ app.post('/api/chat', authenticate, (req, res) => {
       case 'OPEN_CHAT': {
         replyText = `Navigating to ${intentResult.entities.route.replace('/app/', '')}...`;
         toolData = { type: 'NAVIGATE', route: intentResult.entities.route };
+        break;
+      }
+
+      case 'GREETING': {
+        const hour = new Date().getHours();
+        let timeGreeting = "Hello!";
+        if (hour < 12) timeGreeting = "Good morning!";
+        else if (hour < 17) timeGreeting = "Good afternoon!";
+        else timeGreeting = "Good evening!";
+
+        const greetingReplies = [
+          `${timeGreeting} 👋 I'm Luna, your personal assistant. How can I help you manage your day, tasks, or expenses?`,
+          `Hey there! 👋 What can I help you accomplish today? You can ask me to track expenses, set tasks, or check your schedule.`,
+          `${timeGreeting} 😊 Ready to organize your day? Let me know if you need to add tasks, log spending, or set reminders.`
+        ];
+        replyText = greetingReplies[Math.floor(Math.random() * greetingReplies.length)];
+        break;
+      }
+
+      case 'HOW_ARE_YOU': {
+        replyText = "I'm doing great, thank you for asking! 😊 I'm here and ready to help you manage your tasks, expenses, and daily routines. How can I assist you today?";
+        break;
+      }
+
+      case 'GRATITUDE': {
+        replyText = "You're very welcome! 😊 Always happy to help. Let me know if there's anything else you need today.";
+        break;
+      }
+
+      case 'FAREWELL': {
+        replyText = "Goodbye! 👋 Have a wonderful time. Whenever you need help organizing your tasks or tracking expenses, I'll be right here!";
+        break;
+      }
+
+      case 'ASSISTANT_CAPABILITIES': {
+        replyText = `I'm Luna, your AI daily assistant in DaySync! Here is how I can help you:
+
+• 📋 **Tasks & Reminders**: Add tasks, set due dates & times, postpone or complete tasks ("Add task study at 7pm").
+• 💰 **Expenses & Income**: Log daily spending, view spending analysis, record income, or split bills ("Spend 150 on coffee", "Receive 5000 salary").
+• 📅 **Plans & Commitments**: Track subscriptions, recharges, birthdays, and meetings ("Add plan Netflix 199/mo", "Show upcoming birthdays").
+• 🧠 **Memory Center**: Save notes, preferences, or important facts for quick recall ("Remember: John's shoe size is 10").
+• 💬 **Everyday Chat & Answers**: Ask questions, get advice on time management, productivity, or general everyday topics!`;
+        break;
+      }
+
+      case 'HELP_QUESTION': {
+        const query = (intentResult.entities && intentResult.entities.topic) || message.toLowerCase();
+        if (query.includes('task') || query.includes('todo')) {
+          replyText = "To add a task, try typing: 'Add Task: Study physics at 5pm' or 'Remind me to call Mom tomorrow'. You can also view pending tasks by asking 'What tasks do I have today?'";
+        } else if (query.includes('expense') || query.includes('spend') || query.includes('money')) {
+          replyText = "To log an expense, try typing: 'Spend: 200 on dinner' or 'Add expense 150 for cab'. You can ask 'How much did I spend this month?' for a full breakdown.";
+        } else if (query.includes('split')) {
+          replyText = "To create a split, try typing: 'Add Split: Goa trip' or 'Create split Dinner with friends'.";
+        } else if (query.includes('memory') || query.includes('remember')) {
+          replyText = "To save something to memory, try typing: 'Remember: WiFi password is 1234' or 'Save memory: Rahul's birthday is March 12'.";
+        } else {
+          replyText = "You can ask me to manage tasks, track expenses, save memories, set plan reminders, or ask any question! Use the shortcut buttons above for quick actions.";
+        }
+        break;
+      }
+
+      case 'CONTEXT_FOLLOWUP': {
+        const actionType = intentResult.entities?.actionType;
+        const userHistory = store.conversations.filter(c => c.userId === userId);
+        const lastAssistantMsg = [...userHistory].reverse().find(c => c.role === 'assistant');
+        const lastUserMsg = [...userHistory].reverse().slice(1).find(c => c.role === 'user');
+
+        if (actionType === 'ADD_AS_TASK') {
+          const sourceText = lastUserMsg?.message || lastAssistantMsg?.message || 'Follow up task';
+          const cleanTitle = sourceText.length > 50 ? sourceText.slice(0, 47) + '...' : sourceText;
+          const newTask = {
+            id: `tsk_${Date.now()}`,
+            userId,
+            title: `Task: ${cleanTitle}`,
+            priority: 'Medium',
+            dueDate: new Date().toISOString().split('T')[0],
+            timeBlock: '19:00 - 20:00',
+            category: 'Personal',
+            completed: false,
+            createdAt: new Date().toISOString()
+          };
+          store.tasks.push(newTask);
+          userContext.lastTask = newTask;
+          replyText = `Done — I created a task from your previous message: "${newTask.title}" for today.`;
+          toolData = { type: 'TASK_CREATED', task: newTask };
+        } else if (actionType === 'REPEAT') {
+          if (lastAssistantMsg) {
+            replyText = `Here was my previous response:\n\n${lastAssistantMsg.message}`;
+          } else {
+            replyText = "I don't have a previous response to repeat yet.";
+          }
+        } else if (actionType === 'YESTERDAY') {
+          const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+          const yestExps = store.expenses.filter(e => e.userId === userId && e.date === yesterday);
+          if (yestExps.length === 0) {
+            replyText = "You had no expenses recorded for yesterday.";
+          } else {
+            const listText = yestExps.map((e, i) => `${i + 1}. ${e.description || e.category} — ₹${e.amount}`).join('\n');
+            const total = yestExps.reduce((a, b) => a + b.amount, 0);
+            replyText = `Here are your expenses from yesterday (Total: ₹${total}):\n${listText}`;
+          }
+        } else if (actionType === 'DO_SAME_TOMORROW') {
+          if (userContext.lastTask) {
+            const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+            const newTask = {
+              ...userContext.lastTask,
+              id: `tsk_${Date.now()}`,
+              dueDate: tomorrow,
+              completed: false,
+              createdAt: new Date().toISOString()
+            };
+            store.tasks.push(newTask);
+            replyText = `Done — I scheduled "${newTask.title}" for tomorrow as well.`;
+            toolData = { type: 'TASK_CREATED', task: newTask };
+          } else {
+            replyText = "I'm not sure which previous action to repeat. What would you like to schedule for tomorrow?";
+          }
+        } else {
+          replyText = lastAssistantMsg ? `Referring to our previous conversation: ${lastAssistantMsg.message}` : "What would you like me to follow up on?";
+        }
+        break;
+      }
+
+      case 'GENERAL_CHAT': {
+        replyText = generateGeneralChatResponse(message);
+        break;
+      }
+
+      case 'READ_TODAYS_EXPENSES': {
+        const today = new Date().toISOString().split('T')[0];
+        const todayExps = store.expenses.filter(e => e.userId === userId && e.type !== 'income' && e.date === today);
+
+        if (todayExps.length === 0) {
+          replyText = "You haven't recorded any expenses for today yet.";
+        } else {
+          const totalToday = todayExps.reduce((a, b) => a + b.amount, 0);
+          const listText = todayExps.map((e, i) => `${i + 1}. ${e.description || e.category} — ₹${e.amount}`).join('\n');
+          replyText = `Here are your expenses for today (Total: ₹${totalToday.toLocaleString()}):\n${listText}`;
+        }
+        toolData = { type: 'EXPENSES_LIST', expenses: todayExps };
+        break;
+      }
+
+      case 'READ_OVERDUE_TASKS': {
+        const today = new Date().toISOString().split('T')[0];
+        const overdueTasks = store.tasks.filter(t => t.userId === userId && !t.completed && t.dueDate && t.dueDate < today);
+
+        if (overdueTasks.length === 0) {
+          replyText = "Great news! You have no overdue tasks.";
+        } else {
+          const listText = overdueTasks.map((t, i) => `${i + 1}. ${t.title} (Was due: ${t.dueDate})`).join('\n');
+          replyText = `Here are your overdue tasks:\n${listText}`;
+        }
+        toolData = { type: 'PENDING_TASKS', tasks: overdueTasks };
         break;
       }
 

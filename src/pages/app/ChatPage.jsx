@@ -20,30 +20,31 @@ export function ChatPage() {
   const prevConversationsCountRef = useRef(conversations.length);
 
   const quickQuestions = [
-    "What tasks do I have pending?",
-    "What do I have to do today?",
-    "Show my recent expenses",
+    "What tasks do I have today?",
+    "Show my overdue tasks",
+    "What are my upcoming reminders?",
+    "How much did I spend today?",
     "How much did I spend this month?",
-    "Show my habits",
-    "What goals am I working on?",
-    "Show my reminders",
-    "What should I focus on today?",
-    "Give me a summary",
-    "Show my recent memories",
-    "Plan my day",
-    "Review my spending"
+    "Show my splits and debts",
+    "Give me a daily summary",
+    "Show my upcoming meetings",
+    "Show my upcoming birthdays",
+    "What plans or subscriptions do I have?",
+    "Show my recent expenses",
+    "Show my saved memories"
   ];
 
   const quickActionTemplates = [
-    "Spend ₹___ on ___",
-    "Received ₹___ from ___",
-    "Add task: ___ at ___",
-    "Add habit: ___",
-    "Create goal: ___",
-    "Remind me to ___ at ___",
-    "Remember: ___",
-    "Postpone ___ to ___",
-    "Change ___ to ___"
+    "Spend:",
+    "Receive:",
+    "Add Task:",
+    "Add Reminder:",
+    "Add Plan:",
+    "Add Expense:",
+    "Add Split:",
+    "Add Birthday:",
+    "Add Meeting:",
+    "Add Note:"
   ];
 
   const scrollToBottom = useCallback((smooth = true) => {
@@ -68,7 +69,8 @@ export function ChatPage() {
   }, [conversations.length, isSendingMessage, scrollToBottom]);
 
   const handleShortcutClick = (text) => {
-    setInput(text);
+    const textToInsert = text.endsWith(':') ? `${text} ` : text;
+    setInput(textToInsert);
     if (inputRef.current) {
       inputRef.current.focus();
     }
