@@ -554,10 +554,12 @@ export function SplitsPage() {
       setShowJoinModal(false);
       setJoinCodeInput('');
       setJoinPreview(null);
-      await fetchSplitsData();
+
       if (res.split) {
+        setSplits(prev => [res.split, ...prev.filter(s => s.id !== res.split.id)]);
         handleOpenSplit(res.split);
       }
+      await fetchSplitsData();
     } catch (err) {
       setJoinError(err.message || "Couldn't join the Split right now. Please try again.");
     } finally {

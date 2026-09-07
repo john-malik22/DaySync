@@ -2140,6 +2140,7 @@ app.post('/api/splits', authenticate, (req, res) => {
     description: description ? description.trim() : '',
     currency: currency || '₹',
     shareCode,
+    joinCode: shareCode,
     codeActive: true,
     ownerId: userId,
     members: [
@@ -2163,6 +2164,128 @@ app.post('/api/splits', authenticate, (req, res) => {
   store.splits.push(newSplit);
   db.write(store);
   res.json(newSplit);
+});
+
+// --- SPLIT PREVIEW & JOIN ENDPOINTS ---
+
+// GET /api/splits/preview/:code - Preview a split by join code before joining
+app.get('/api/splits/preview/:code', authenticate, (req, res) => {
+  const store = db.read();
+  const rawCode = req.params.code || '';
+  if (!rawCode.trim()) {
+    return res.status(400).json({ error: 'Split code is required.' });
+  }
+
+  const cleanInput = rawCode.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  store.splits = store.splits || [];
+
+  const split = store.splits.find(s => {
+    if (s.codeActive === false) return false;
+    const sShare = (s.shareCode || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const sJoin = (s.joinCode || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return (sShare && sShare === cleanInput) || (sJoin && sJoin === cleanInput);
+  });
+
+  if (!split) {
+    return res.status(404).json({ error: "No Split found with that join code. Please check the code and try again." });
+  }
+
+  const owner = (store.users || []).find(u => u.id === split.ownerId);
+  const isAlreadyMember = (split.members || []).some(m => m.userId === req.user.id || m.id === req.user.id);
+
+  res.json({
+    id: split.id,
+    name: split.name,
+    description: split.description || '',
+    currency: split.currency || '₹',
+    membersCount: (split.members || []).length,
+    memberCount: (split.members || []).length,
+    ownerName: owner?.name || 'A DaySync user',
+    shareCode: split.shareCode || split.joinCode,
+    joinCode: split.joinCode || split.shareCode,
+    isAlreadyMember
+  });
+});
+
+// POST /api/splits/join - Join a split using a join code
+app.post('/api/splits/join', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const userObj = (store.users || []).find(u => u.id === userId);
+  const { code } = req.body;
+
+  if (!code || !code.trim()) {
+    return res.status(400).json({ error: 'Split join code is required.' });
+  }
+
+  const cleanInput = code.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  store.splits = store.splits || [];
+
+  const split = store.splits.find(s => {
+    if (s.codeActive === false) return false;
+    const sShare = (s.shareCode || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const sJoin = (s.joinCode || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return (sShare && sShare === cleanInput) || (sJoin && sJoin === cleanInput);
+  });
+
+  if (!split) {
+    return res.status(404).json({ error: "No Split found with that join code. Please check the code and try again." });
+  }
+
+  split.members = split.members || [];
+  const alreadyMember = split.members.some(m => m.userId === userId || m.id === userId);
+
+  if (!alreadyMember) {
+    split.members.push({
+      userId,
+      id: userId,
+      role: 'member',
+      userName: userObj?.name || req.user.name || 'Member',
+      userEmail: userObj?.email || req.user.email || '',
+      email: userObj?.email || req.user.email || '',
+      joinedAt: new Date().toISOString()
+    });
+    split.updatedAt = new Date().toISOString();
+    db.write(store);
+  }
+
+  const storeExp = (store.splitExpenses || []).filter(e => e.splitId === split.id);
+  const storeSettlements = (store.splitSettlements || []).filter(s => s.splitId === split.id);
+
+  const fullSplit = {
+    ...split,
+    expenses: storeExp.length > 0 ? storeExp : (split.expenses || []),
+    settlements: storeSettlements.length > 0 ? storeSettlements : (split.settlements || [])
+  };
+
+  res.json({
+    success: true,
+    message: `Successfully joined "${split.name}"!`,
+    split: fullSplit
+  });
+});
+
+// POST /api/splits/:id/regenerate-code - Regenerate a split share code (Owner only)
+app.post('/api/splits/:id/regenerate-code', authenticate, (req, res) => {
+  const store = db.read();
+  const userId = req.user.id;
+  const split = (store.splits || []).find(s => s.id === req.params.id);
+
+  if (!split) return res.status(404).json({ error: 'Split not found.' });
+  if (split.ownerId !== userId) return res.status(403).json({ error: 'Only the split owner can regenerate the share code.' });
+
+  let newCode = generateSplitShareCode(split.name);
+  while ((store.splits || []).some(s => s.shareCode === newCode || s.joinCode === newCode)) {
+    newCode = generateSplitShareCode(split.name);
+  }
+
+  split.shareCode = newCode;
+  split.joinCode = newCode;
+  split.codeActive = true;
+  split.updatedAt = new Date().toISOString();
+
+  db.write(store);
+  res.json({ success: true, shareCode: newCode, joinCode: newCode, message: 'Share code regenerated successfully.' });
 });
 
 // 3. GET /api/splits/:id - Get detailed split with expenses & settlements
