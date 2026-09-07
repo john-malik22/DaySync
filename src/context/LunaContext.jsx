@@ -119,13 +119,17 @@ export function LunaProvider({ children }) {
     }
     try {
       const data = await api.getTasks();
-      setTasks(data);
+      const serverTasks = Array.isArray(data) ? data : [];
+      setTasks(prev => {
+        const pendingLocal = prev.filter(t => isTempId(t.id) && !serverTasks.some(st => st.id === t.id));
+        return [...pendingLocal, ...serverTasks];
+      });
       setErrors(prev => ({ ...prev, tasks: null }));
       setIsFromCache(prev => ({ ...prev, tasks: false }));
       const now = Date.now();
       setLastSyncedAt(prev => ({ ...prev, tasks: now }));
       setHasFetched(prev => ({ ...prev, tasks: true }));
-      if (userId) clientCache.save(userId, 'tasks', data);
+      if (userId) clientCache.save(userId, 'tasks', serverTasks);
     } catch (err) {
       const classified = classifyApiError(err);
       setErrors(prev => ({ ...prev, tasks: classified }));
@@ -152,13 +156,17 @@ export function LunaProvider({ children }) {
     }
     try {
       const data = await api.getExpenses();
-      setExpenses(data);
+      const serverExpenses = Array.isArray(data) ? data : [];
+      setExpenses(prev => {
+        const pendingLocal = prev.filter(e => isTempId(e.id) && !serverExpenses.some(se => se.id === e.id));
+        return [...pendingLocal, ...serverExpenses];
+      });
       setErrors(prev => ({ ...prev, expenses: null }));
       setIsFromCache(prev => ({ ...prev, expenses: false }));
       const now = Date.now();
       setLastSyncedAt(prev => ({ ...prev, expenses: now }));
       setHasFetched(prev => ({ ...prev, expenses: true }));
-      if (userId) clientCache.save(userId, 'expenses', data);
+      if (userId) clientCache.save(userId, 'expenses', serverExpenses);
     } catch (err) {
       const classified = classifyApiError(err);
       setErrors(prev => ({ ...prev, expenses: classified }));

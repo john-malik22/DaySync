@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
 
     // Dynamic Mobile & PWA Status Bar Color and Icon Appearance Sync
     const isDark = theme === 'dark';
-    const statusBarColor = isDark ? '#0E0E10' : '#F6F3EC';
+    const statusBarColor = isDark ? '#0E0E10' : '#F8F5EC';
 
     let themeMeta = document.querySelector('meta[name="theme-color"]');
     if (!themeMeta) {

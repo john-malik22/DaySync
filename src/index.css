@@ -32,37 +32,37 @@
   --danger-color: #EF4444;
 
   /* Hierarchy: Background -> Surface -> Border -> Secondary -> Primary */
-  --bg-primary: #F7F1E3;              /* Warm White / Light Cream Canvas */
-  --bg-card: #FBF7EE;                 /* Soft Warm Cream Card Surface */
-  --bg-surface: #FBF7EE;
-  --bg-surface-glass: #FBF7EE;
-  --bg-secondary: #EFE6D2;            /* Soft Wheat / Cream Container */
-  --bg-surface-soft: #EFE6D2;
-  --bg-tertiary: #E5DAC4;             /* Highlight Warm Surface */
+  --bg-primary: #F8F5EC;              /* Soft Warm White Canvas */
+  --bg-card: #FCFAF4;                 /* Clean Warm Cream Surface */
+  --bg-surface: #FCFAF4;
+  --bg-surface-glass: #FCFAF4;
+  --bg-secondary: #F1EDE2;            /* Soft Warm Gray / Cream Container */
+  --bg-surface-soft: #F1EDE2;
+  --bg-tertiary: #E9E3D5;             /* Highlight Soft Surface */
 
   /* Borders & Focus */
-  --border-color: #DDD2BC;            /* Muted Warm Beige / Gray Border */
-  --border-subtle: #E8DECC;
+  --border-color: #DDD7C9;            /* Muted Warm Gray Border */
+  --border-subtle: #EAE4D7;
   --border-highlight: rgba(91, 80, 230, 0.30);
   --focus-ring: rgba(91, 80, 230, 0.25);
 
   /* Sidebar */
-  --sidebar-bg: #FBF7EE;
-  --sidebar-text: #1A1A1A;
-  --sidebar-muted: #66605A;
+  --sidebar-bg: #FCFAF4;
+  --sidebar-text: #1C1C1C;
+  --sidebar-muted: #68645D;
   --sidebar-active-bg: rgba(91, 80, 230, 0.10);
 
   /* Text Colors */
-  --text-primary: #1A1A1A;            /* Dark Charcoal Primary Text */
-  --text-secondary: #66605A;          /* Warm Dark Gray Secondary Text */
-  --text-muted: #78726A;              /* Muted Gray Text */
+  --text-primary: #1C1C1C;            /* Dark Charcoal Primary Text */
+  --text-secondary: #68645D;          /* Warm Dark Gray Secondary Text */
+  --text-muted: #7A756D;              /* Muted Gray Text */
 
   /* Minimalist 2D Neutral Shadows */
   --glass-blur: none;
-  --glass-shadow: 0 2px 8px rgba(90, 80, 70, 0.05);
-  --shadow-sm: 0 2px 6px rgba(90, 80, 70, 0.05);
-  --shadow-md: 0 4px 12px rgba(90, 80, 70, 0.08);
-  --shadow-lg: 0 8px 20px rgba(90, 80, 70, 0.10);
+  --glass-shadow: 0 2px 8px rgba(90, 80, 70, 0.04);
+  --shadow-sm: 0 2px 6px rgba(90, 80, 70, 0.04);
+  --shadow-md: 0 4px 12px rgba(90, 80, 70, 0.06);
+  --shadow-lg: 0 8px 20px rgba(90, 80, 70, 0.08);
 
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -464,10 +464,10 @@ input[type="datetime-local"] {
 [data-theme="light"] input[type="time"],
 [data-theme="light"] input[type="datetime-local"] {
   color-scheme: light !important;
-  background-color: #EFE6D2 !important;
-  color: #1A1A1A !important;
-  -webkit-text-fill-color: #1A1A1A !important;
-  border-color: #DDD2BC !important;
+  background-color: #F1EDE2 !important;
+  color: #1C1C1C !important;
+  -webkit-text-fill-color: #1C1C1C !important;
+  border-color: #DDD7C9 !important;
 }
 
 input:focus, select:focus, textarea:focus {
@@ -508,8 +508,8 @@ option {
 }
 
 [data-theme="light"] option {
-  background-color: #FBF7EE !important;
-  color: #1A1A1A !important;
+  background-color: #FCFAF4 !important;
+  color: #1C1C1C !important;
 }
 
 ::placeholder {

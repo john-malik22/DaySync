@@ -155,7 +155,11 @@ export function classifyIntent(message, context = {}) {
   const normalized = normalizeInput(message);
   const lower = normalized.toLowerCase().trim().replace(/[.\,\!\?]+$/g, '');
 
-  // 1. CANCELLATION ("cancel", "never mind", "forget it", "stop", "don't add it")
+  // 1. CANCELLATION & UNDO ("undo that", "undo", "delete the last one", "delete the one I just added", "cancel", "never mind")
+  if (/^(undo|undo that|undo last|undo action|delete the last one|delete the one i just added|delete last item|remove last item|remove the last one)$/i.test(lower) || /undo that|delete the last one|delete the one i just added|delete last item|undo last action/i.test(lower)) {
+    return { intent: 'UNDO_LAST_ACTION', confidence: 0.98, entities: {} };
+  }
+
   if (/^cancel\b|^never mind\b|^forget it\b|^stop\b|^don't add\b|^cancel that\b/i.test(lower)) {
     return { intent: 'CANCEL', confidence: 0.98, entities: {} };
   }
@@ -499,27 +503,27 @@ export function classifyIntent(message, context = {}) {
     }
   }
 
-  // 4. CORRECTIONS & FOLLOW-UP UPDATES ("actually make it 700", "make it 700", "change that to 8 PM")
-  if (/^actually\b|^no,?\s*make\b|^make it\b|^make that\b|^change\b|^not\b|^i meant\b/i.test(lower)) {
+  // 4. CORRECTIONS & FOLLOW-UP UPDATES ("change it to tomorrow", "make it ₹500", "make it 500", "move it to tomorrow", "reschedule to 5 pm", "actually 700")
+  if (/^actually\b|^no,?\s*make\b|^make it\b|^make that\b|^change\b|^move\b|^reschedule\b|^not\b|^i meant\b|^set it to\b|^change it to\b|^change date to\b|^change time to\b|^change amount to\b/i.test(lower) || /change it to|move it to|reschedule to|make it for|change date to|change time to|change amount to/i.test(lower)) {
     const num = parseNumberAndCurrency(lower);
-    if (num !== null) {
-      if (context.lastMemory) {
-        const updatedContent = context.lastMemory.content.replace(/\d+/, String(num));
-        return {
-          intent: 'UPDATE_MEMORY',
-          confidence: 0.95,
-          entities: { memoryId: context.lastMemory.id, content: updatedContent }
-        };
-      } else if (context.lastExpense) {
-        return {
-          intent: 'UPDATE_EXPENSE',
-          confidence: 0.95,
-          entities: { expenseId: context.lastExpense.id, amount: num }
-        };
-      } else {
-        return { intent: 'ORPHAN_UPDATE', confidence: 0.50, entities: {} };
-      }
+    const dateTime = parseDateTime(normalized);
+
+    let newTitle = null;
+    const titleMatch = lower.match(/(?:title|name|description)\s+(?:to|is)\s+([a-zA-Z0-9\s]+)/i) || lower.match(/rename\s+(?:to|it to)\s+([a-zA-Z0-9\s]+)/i);
+    if (titleMatch) {
+      newTitle = titleMatch[1].trim();
     }
+
+    return {
+      intent: 'UPDATE_LAST_ITEM',
+      confidence: 0.95,
+      entities: {
+        amount: num,
+        dueDate: dateTime.isExplicitDate ? dateTime.dueDate : (lower.includes('tomorrow') ? parseDateTime('tomorrow').dueDate : null),
+        timeBlock: dateTime.isExplicitTime ? dateTime.timeBlock : null,
+        newTitle: newTitle
+      }
+    };
   }
 
   // 5. EXACT PROMPT STARTERS FOR MULTI-TURN CREATION

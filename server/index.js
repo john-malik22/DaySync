@@ -983,6 +983,100 @@ app.post('/api/chat', authenticate, (req, res) => {
         break;
       }
 
+      case 'UNDO_LAST_ACTION': {
+        const last = userContext.lastItem;
+        if (last && last.id) {
+          if (last.type === 'task' || userContext.lastTask) {
+            const taskId = last.id || userContext.lastTask?.id;
+            const idx = store.tasks.findIndex(t => t.id === taskId);
+            const title = userContext.lastTask?.title || 'task';
+            if (idx !== -1) store.tasks.splice(idx, 1);
+            userContext.lastTask = null;
+            userContext.lastItem = null;
+            replyText = `Done — I undid your action and deleted "${title}".`;
+            toolData = { type: 'TASK_DELETED', taskId };
+          } else if (last.type === 'expense' || userContext.lastExpense) {
+            const expId = last.id || userContext.lastExpense?.id;
+            const idx = store.expenses.findIndex(e => e.id === expId);
+            const desc = userContext.lastExpense?.description || 'expense';
+            const amt = userContext.lastExpense?.amount || '';
+            if (idx !== -1) store.expenses.splice(idx, 1);
+            userContext.lastExpense = null;
+            userContext.lastItem = null;
+            replyText = `Done — I undid your action and removed the ₹${amt} ${desc} entry.`;
+            toolData = { type: 'EXPENSE_DELETED', expenseId: expId };
+          } else if (last.type === 'goal' || userContext.lastGoal) {
+            const goalId = last.id || userContext.lastGoal?.id;
+            const idx = (store.goals || []).findIndex(g => g.id === goalId);
+            if (idx !== -1) store.goals.splice(idx, 1);
+            userContext.lastGoal = null;
+            userContext.lastItem = null;
+            replyText = `Done — I undid your action and removed that goal.`;
+          } else if (last.type === 'habit' || userContext.lastHabit) {
+            const habitId = last.id || userContext.lastHabit?.id;
+            const idx = (store.habits || []).findIndex(h => h.id === habitId);
+            if (idx !== -1) store.habits.splice(idx, 1);
+            userContext.lastHabit = null;
+            userContext.lastItem = null;
+            replyText = `Done — I undid your action and removed that habit.`;
+          } else {
+            userContext.lastItem = null;
+            replyText = `Done — I undid your last action.`;
+          }
+        } else if (userContext.lastTask) {
+          const taskId = userContext.lastTask.id;
+          const idx = store.tasks.findIndex(t => t.id === taskId);
+          const title = userContext.lastTask.title;
+          if (idx !== -1) store.tasks.splice(idx, 1);
+          userContext.lastTask = null;
+          replyText = `Done — I undid your action and deleted "${title}".`;
+          toolData = { type: 'TASK_DELETED', taskId };
+        } else if (userContext.lastExpense) {
+          const expId = userContext.lastExpense.id;
+          const idx = store.expenses.findIndex(e => e.id === expId);
+          const amt = userContext.lastExpense.amount;
+          if (idx !== -1) store.expenses.splice(idx, 1);
+          userContext.lastExpense = null;
+          replyText = `Done — I undid your action and removed the ₹${amt} expense.`;
+          toolData = { type: 'EXPENSE_DELETED', expenseId: expId };
+        } else {
+          replyText = "There is no recent action to undo.";
+        }
+        break;
+      }
+
+      case 'UPDATE_LAST_ITEM': {
+        const { amount, dueDate, timeBlock, newTitle } = intentResult.entities;
+        const last = userContext.lastItem;
+
+        if ((last && last.type === 'task') || userContext.lastTask) {
+          const targetTask = store.tasks.find(t => t.id === (last?.id || userContext.lastTask?.id)) || userContext.lastTask;
+          if (targetTask) {
+            if (dueDate) targetTask.dueDate = dueDate;
+            if (timeBlock) targetTask.timeBlock = timeBlock;
+            if (newTitle) targetTask.title = newTitle;
+            const dateDisplay = targetTask.dueDate === new Date().toISOString().split('T')[0] ? 'today' : 'tomorrow';
+            replyText = `Done — I updated "${targetTask.title}" to ${dateDisplay}${targetTask.timeBlock ? ' at ' + targetTask.timeBlock.split(' - ')[0] : ''}.`;
+            toolData = { type: 'TASK_UPDATED', task: targetTask };
+          } else {
+            replyText = "I couldn't find the task to update. Which task would you like to change?";
+          }
+        } else if ((last && last.type === 'expense') || userContext.lastExpense) {
+          const targetExp = store.expenses.find(e => e.id === (last?.id || userContext.lastExpense?.id)) || userContext.lastExpense;
+          if (targetExp) {
+            if (amount !== null && amount !== undefined) targetExp.amount = amount;
+            if (newTitle) targetExp.description = newTitle;
+            replyText = `Done — I updated "${targetExp.description || 'expense'}" to ₹${targetExp.amount}.`;
+            toolData = { type: 'EXPENSE_UPDATED', expense: targetExp };
+          } else {
+            replyText = "I couldn't find the expense to update. Which expense would you like to change?";
+          }
+        } else {
+          replyText = "I'm not sure which item you'd like to update. What task or expense would you like to change?";
+        }
+        break;
+      }
+
       case 'UPDATE_MEMORY': {
         const { memoryId, content } = intentResult.entities;
         const mem = store.memories.find(m => m.id === memoryId && m.userId === userId) || userContext.lastMemory;

@@ -525,7 +525,8 @@ export function NotificationProvider({ children }) {
       }
 
       if (stage) {
-        const dedupKey = `task_${task.id}_${stage}`;
+        const todayStr = new Date().toISOString().split('T')[0];
+        const dedupKey = `task_${task.id}_${stage}_${todayStr}`;
         if (!isAlreadyNotified(dedupKey)) {
           // If in quiet hours, only allow High priority or Overdue items
           if (quiet && !isHighPriority && stage !== 'OVERDUE') {
@@ -583,7 +584,8 @@ export function NotificationProvider({ children }) {
         }
 
         if (stage) {
-          const dedupKey = `plan_${plan.id}_${stage}`;
+          const todayStr = new Date().toISOString().split('T')[0];
+          const dedupKey = `plan_${plan.id}_${stage}_${todayStr}`;
           if (!isAlreadyNotified(dedupKey)) {
             if (quiet) return;
 
